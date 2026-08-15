@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aliascall — 등록하기</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -279,38 +280,38 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 
     <div id="detail-vehicle" class="cat-detail" style="display:none;">
       <div class="field"><label>차량번호</label><input type="text" id="plateNumber" placeholder="12가 3456"></div>
-      <div class="field"><label>제조사 · 모델 <span class="optional-badge">선택</span></label><input type="text" placeholder="현대 아반떼"></div>
-      <div class="field"><label>색상 <span class="optional-badge">선택</span></label><input type="text" placeholder="흰색"></div>
+      <div class="field"><label>제조사 · 모델 <span class="optional-badge">선택</span></label><input type="text" id="vehicleMake" placeholder="현대 아반떼"></div>
+      <div class="field"><label>색상 <span class="optional-badge">선택</span></label><input type="text" id="vehicleColor" placeholder="흰색"></div>
     </div>
 
     <div id="detail-lost_item" class="cat-detail" style="display:none;">
-      <div class="field"><label>물품 종류</label><input type="text" placeholder="가방 / 노트북 / 지갑 등"></div>
+      <div class="field"><label>물품 종류</label><input type="text" id="itemType" placeholder="가방 / 노트북 / 지갑 등"></div>
     </div>
 
     <div id="detail-vulnerable_person" class="cat-detail" style="display:none;">
       <div class="field">
         <label>대상</label>
-        <div class="pill-group">
+        <div class="pill-group" id="personTypePills">
           <div class="pill active" data-pill="child">아동</div>
           <div class="pill" data-pill="dementia_elderly">치매 어르신</div>
         </div>
       </div>
-      <div class="field"><label>출생연도</label><input type="number" placeholder="2019" style="max-width:140px;"></div>
+      <div class="field"><label>출생연도</label><input type="number" id="birthYear" placeholder="2019" style="max-width:140px;"></div>
     </div>
 
     <div id="detail-pet" class="cat-detail" style="display:none;">
-      <div class="field"><label>종류</label><input type="text" placeholder="강아지 / 고양이 등"></div>
-      <div class="field"><label>이름</label><input type="text" placeholder="초코"></div>
+      <div class="field"><label>종류</label><input type="text" id="petSpecies" placeholder="강아지 / 고양이 등"></div>
+      <div class="field"><label>이름</label><input type="text" id="petName" placeholder="초코"></div>
       <div class="field">
         <label>비문(코 무늬) 사진 <span class="recommend-badge">권장</span></label>
-        <div class="dropzone"><b>코 정면 사진 업로드</b>사람 지문처럼 개체마다 고유해, 발견 시 신원 확인에 쓰입니다</div>
+        <div class="dropzone" id="noseprintDropzone"><b>코 정면 사진 업로드</b>사람 지문처럼 개체마다 고유해, 발견 시 신원 확인에 쓰입니다<input type="file" id="noseprintFile" accept="image/*" style="display:none;"></div>
         <a href="aliascall_guide.html#sec-noseprint" target="_blank" class="guide-link">📖 촬영 가이드 보기 — 실패 없이 찍는 법</a>
       </div>
     </div>
 
     <div id="detail-callback_contact" class="cat-detail" style="display:none;">
-      <div class="field"><label>사유</label><input type="text" placeholder="예: 대형폐기물 수거 안내 / 이전 거주지 연락처"></div>
-      <div class="field"><label>부착·게시 장소 <span class="optional-badge">선택</span></label><input type="text" placeholder="예: 아파트 분리수거장 입구"></div>
+      <div class="field"><label>사유</label><input type="text" id="callbackReason" placeholder="예: 대형폐기물 수거 안내 / 이전 거주지 연락처"></div>
+      <div class="field"><label>부착·게시 장소 <span class="optional-badge">선택</span></label><input type="text" id="callbackLocation" placeholder="예: 아파트 분리수거장 입구"></div>
       <div class="hint" style="margin-top:-6px; margin-bottom:18px;">이 카테고리는 실시간 응답보다 나중에 연락이 닿는 게 중요해서, 다음 화면의 백업 알림용 전화번호를 등록해두시길 특히 권해드려요.</div>
     </div>
 
@@ -498,6 +499,9 @@ function renderStep(){
   }
   if (currentStep === 5 && selectedCategory) {
     document.getElementById('doneTitle').textContent = categoryLabels[selectedCategory].done;
+    document.getElementById('doneToken').textContent = createdRegistration
+      ? 'TOKEN · ' + createdRegistration.qr_code_token
+      : 'TOKEN · (생성 실패, 새로고침 후 다시 시도해주세요)';
   }
 }
 
@@ -555,7 +559,8 @@ document.querySelectorAll('.pill').forEach(pill => {
 });
 
 // ── 완료화면: 사이즈 선택 + 100P 차감 다운로드 ──
-// 실제 구현시 apply_point_transaction(uid, -100, 'spend', 'qr_a4_download', registration_id) RPC 호출
+// ⚠ 포인트(profiles.points_balance)는 로그인 사용자 전용 구조. 이 등록화면은 비회원(게스트) 흐름이라
+// 로그인 세션이 없으면 실제 차감 호출 대상이 없음 -> 세션 유무로 분기 (회원가입/로그인 화면은 별도 구현 필요)
 let mockBalance = 3200;
 let selectedSize = '3x3';
 
@@ -567,15 +572,45 @@ document.querySelectorAll('.size-card').forEach(card => {
   });
 });
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   showError('err5', false);
-  if (mockBalance < 100) {
-    showError('err5', true);
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (!session) {
+    alert('지금은 로그인 없이 체험 중이라 포인트 차감이 시뮬레이션으로만 동작합니다.\n실제 서비스에서는 로그인 후 진행하시면 여기서 바로 실제 포인트가 차감됩니다.');
+    if (mockBalance < 100) { showError('err5', true); return; }
+    mockBalance -= 100;
+    document.getElementById('balanceInline').textContent = mockBalance.toLocaleString();
     return;
   }
-  mockBalance -= 100;
-  document.getElementById('balanceInline').textContent = mockBalance.toLocaleString();
-  alert('QR 태그(' + selectedSize + 'cm)가 다운로드됩니다. 100P가 차감되었습니다. (남은 포인트: ' + mockBalance.toLocaleString() + 'P)');
+
+  try {
+    const { data, error } = await sb.rpc('apply_point_transaction', {
+      p_user_id: session.user.id,
+      p_amount: -100,
+      p_txn_type: 'spend',
+      p_action_key: 'qr_a4_download',
+      p_ref_id: createdRegistration ? createdRegistration.id : null,
+    });
+    if (error) throw error;
+
+    await sb.from('qr_download_logs').insert({
+      registration_id: createdRegistration ? createdRegistration.id : null,
+      user_id: session.user.id,
+      label_size: selectedSize,
+      point_transaction_id: data.id,
+    });
+
+    document.getElementById('balanceInline').textContent = Number(data.balance_after).toLocaleString();
+    alert('QR 태그(' + selectedSize + 'cm)가 다운로드됩니다. 100P가 차감되었습니다. (남은 포인트: ' + Number(data.balance_after).toLocaleString() + 'P)');
+  } catch (e) {
+    console.error('[download] apply_point_transaction 호출 오류', e);
+    if (String(e.message || '').includes('포인트 부족')) {
+      showError('err5', true);
+    } else {
+      alert('다운로드에 실패했어요. 잠시 후 다시 시도해주세요.');
+    }
+  }
 });
 
 document.querySelectorAll('.media-tab').forEach(tab => {
@@ -588,8 +623,89 @@ document.querySelectorAll('.media-tab').forEach(tab => {
   });
 });
 
-btnNext.addEventListener('click', () => {
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let selectedPersonType = 'child';
+document.getElementById('personTypePills') && document.getElementById('personTypePills').querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => { selectedPersonType = pill.dataset.pill; });
+});
+
+// 카테고리별 상세필드를 create_registration_full()의 p_detail(jsonb)로 조립
+function buildDetailPayload(){
+  switch (selectedCategory) {
+    case 'vehicle':
+      return {
+        plate_number: document.getElementById('plateNumber').value.trim(),
+        make: document.getElementById('vehicleMake').value.trim() || null,
+        color: document.getElementById('vehicleColor').value.trim() || null,
+      };
+    case 'lost_item':
+      return { item_type: document.getElementById('itemType').value.trim() };
+    case 'vulnerable_person':
+      return {
+        person_type: selectedPersonType,
+        birth_year: document.getElementById('birthYear').value ? Number(document.getElementById('birthYear').value) : null,
+      };
+    case 'pet':
+      return {
+        species: document.getElementById('petSpecies').value.trim(),
+        pet_name: document.getElementById('petName').value.trim() || null,
+      };
+    case 'callback_contact':
+      return {
+        reason: document.getElementById('callbackReason').value.trim(),
+        location_note: document.getElementById('callbackLocation').value.trim() || null,
+      };
+    default:
+      return {};
+  }
+}
+
+// search_key 정규화 규칙: 차량=차량번호, 반려동물=이름, 그 외=설명 앞부분
+function buildSearchKey(){
+  if (selectedCategory === 'vehicle') return document.getElementById('plateNumber').value.trim();
+  if (selectedCategory === 'pet') return document.getElementById('petName').value.trim();
+  return document.getElementById('descriptionText').value.trim().slice(0, 40);
+}
+
+let createdRegistration = null;  // create_registration_full() 반환값 캐시 (QR 화면에서 사용)
+
+async function submitRegistration(){
+  btnNext.disabled = true;
+  btnNext.textContent = '등록 중…';
+  try {
+    const { data, error } = await sb.rpc('create_registration_full', {
+      p_category: selectedCategory,
+      p_country_code: document.getElementById('country').value,
+      p_title: document.getElementById('nickname').value.trim() + ' 님의 등록',
+      p_description: document.getElementById('descriptionText').value.trim() || null,
+      p_search_key: buildSearchKey(),
+      p_guest_password: null,          // TODO: 비회원 등록 비밀번호 입력 UI 추가 시 여기에 연결
+      p_detail: buildDetailPayload(),
+    });
+    if (error) throw error;
+    createdRegistration = data;
+    return true;
+  } catch (e) {
+    console.error('[registration] create_registration_full 호출 오류', e);
+    alert('등록에 실패했어요. 잠시 후 다시 시도해주세요.\n(' + (e.message || '알 수 없는 오류') + ')');
+    return false;
+  } finally {
+    btnNext.disabled = false;
+  }
+}
+
+btnNext.addEventListener('click', async () => {
   if (!validateStep()) return;
+
+  // STEP 4(동의, index 4) -> STEP 5(완료) 전환 시점에 실제 등록 생성
+  if (currentStep === 4) {
+    const ok = await submitRegistration();
+    if (!ok) { renderStep(); return; }
+  }
+
   if (currentStep < panels.length - 1) { currentStep++; renderStep(); window.scrollTo(0,0); }
 });
 btnBack.addEventListener('click', () => {
