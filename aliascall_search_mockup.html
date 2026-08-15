@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliascall — 찾기</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#F6F8F5; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --amber:#D9A441; --amber-tint:#FBF1DE;
+  --line:#DCE3DE; --danger:#C1483A;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:20px 24px 16px; border-bottom:1px solid var(--line); background:var(--card); }
+.brand-row{ display:flex; align-items:center; gap:9px; }
+.guide-nav-link{ margin-left:auto; font-size:12px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:20px; padding:7px 13px; text-decoration:none; }
+.guide-nav-link:hover{ background:var(--teal); color:#fff; }
+.brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:16px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+
+main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
+.page-title{ font-size:22px; margin-bottom:6px; }
+.page-desc{ font-size:13.5px; color:var(--ink-soft); margin-bottom:22px; line-height:1.55; }
+
+/* ── 검색 입력 + 마이크 (등록화면과 동일 패턴 재사용) ── */
+.search-wrap{ position:relative; margin-bottom:8px; }
+.search-wrap input{
+  width:100%; border:2px solid var(--line); border-radius:14px; padding:16px 96px 16px 18px;
+  font-size:16px; font-family:'IBM Plex Mono',monospace; color:var(--ink); background:var(--card);
+}
+.search-wrap input:focus{ outline:none; border-color:var(--teal); }
+.search-btn-group{ position:absolute; right:8px; top:50%; transform:translateY(-50%); display:flex; gap:6px; }
+.circle-btn{
+  width:40px; height:40px; border-radius:50%; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:transform .15s;
+}
+.circle-btn:hover{ transform:scale(1.06); }
+.mic-btn{ background:var(--teal); color:#fff; }
+.mic-btn svg{ width:18px; height:18px; }
+.mic-btn.listening{ background:var(--coral); animation:micPulse 1.3s ease-in-out infinite; }
+@keyframes micPulse{
+  0%{ box-shadow:0 0 0 0 rgba(232,115,74,.45); }
+  70%{ box-shadow:0 0 0 12px rgba(232,115,74,0); }
+  100%{ box-shadow:0 0 0 0 rgba(232,115,74,0); }
+}
+.mic-status{ font-size:12px; color:var(--coral); margin-bottom:6px; min-height:16px; font-weight:600; text-align:center; }
+
+.qr-scan-btn{
+  width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+  border:1.5px dashed var(--line); border-radius:14px; padding:14px; background:var(--card);
+  color:var(--ink-soft); font-size:13px; font-weight:600; cursor:pointer; margin-bottom:22px;
+}
+.qr-scan-btn:hover{ border-color:var(--teal); color:var(--teal-deep); }
+.qr-scan-btn svg{ width:18px; height:18px; }
+
+.divider{ display:flex; align-items:center; gap:10px; margin:20px 0; color:var(--ink-soft); font-size:11.5px; }
+.divider::before, .divider::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+/* ── 카테고리 필터 ── */
+.filter-row{ display:flex; gap:6px; overflow-x:auto; margin-bottom:20px; padding-bottom:2px; }
+.filter-chip{ flex:0 0 auto; padding:8px 14px; border-radius:18px; border:1.5px solid var(--line); background:var(--card); font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
+.filter-chip.active{ background:var(--teal); border-color:var(--teal); color:#fff; }
+
+/* ── 결과 카드 (태그 모양 재사용) ── */
+.result-card{
+  position:relative; background:var(--card); border:1.5px solid var(--line); border-radius:14px;
+  padding:18px 18px 18px 42px; margin-bottom:12px; display:flex; align-items:center; gap:14px; cursor:pointer;
+}
+.result-card::before{ content:''; position:absolute; left:16px; top:50%; transform:translateY(-50%); width:12px; height:12px; border-radius:50%; background:var(--paper); border:2px solid var(--line); }
+.result-card:hover{ border-color:var(--teal); }
+.result-emoji{ font-size:24px; flex-shrink:0; }
+.result-titles{ flex:1; min-width:0; }
+.result-key{ font-size:15px; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+.result-desc{ font-size:12px; color:var(--ink-soft); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.result-arrow{ font-size:18px; color:var(--ink-soft); flex-shrink:0; }
+
+.empty-state{ text-align:center; padding:50px 20px; color:var(--ink-soft); font-size:13px; }
+.empty-state .big{ font-size:36px; margin-bottom:12px; }
+
+/* ── 연결 화면 (검색 결과 클릭시) ── */
+.connect-overlay{ display:none; position:fixed; inset:0; background:rgba(18,48,46,.75); z-index:50; align-items:flex-end; justify-content:center; }
+.connect-overlay.show{ display:flex; }
+.connect-sheet{ background:var(--card); border-radius:22px 22px 0 0; padding:28px 24px 34px; max-width:520px; width:100%; text-align:center; }
+.connect-sheet .big-emoji{ font-size:40px; margin-bottom:10px; }
+.connect-sheet h3{ font-size:18px; margin-bottom:6px; }
+.connect-sheet p{ font-size:13px; color:var(--ink-soft); margin:0 0 22px; line-height:1.6; }
+.connect-btns{ display:flex; flex-direction:column; gap:10px; }
+.connect-btn{ border:none; border-radius:12px; padding:15px; font-size:14.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+.connect-btn.voice{ background:var(--teal); color:#fff; }
+.connect-btn.video{ background:var(--teal-tint); color:var(--teal-deep); }
+.connect-btn.cancel{ background:transparent; color:var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div class="brand-mark">A</div>
+    <div class="brand-name">Alias<em>call</em></div>
+    <a href="aliascall_guide.html" class="guide-nav-link" target="_blank">📖 사용설명서</a>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">무엇을 찾으시나요?</div>
+  <div class="page-desc">QR이 오염되었거나 스캔이 안 되면, 문자나 음성으로 직접 검색해보세요.</div>
+
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="예: 151노8409" autocomplete="off">
+    <div class="search-btn-group">
+      <button class="circle-btn mic-btn" id="micBtn" aria-label="음성으로 검색">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="1.8"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="mic-status" id="micStatus"></div>
+
+  <button class="qr-scan-btn" id="qrScanBtn">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><path d="M14 14h3v3h-3zM19 14h2M14 19h2M19 19h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    QR 다시 스캔하기
+  </button>
+
+  <div class="divider">카테고리로 좁혀보기</div>
+  <div class="filter-row" id="filterRow">
+    <div class="filter-chip active" data-cat="all">전체</div>
+    <div class="filter-chip" data-cat="vehicle">🚗 차량</div>
+    <div class="filter-chip" data-cat="lost_item">🎒 분실물</div>
+    <div class="filter-chip" data-cat="vulnerable_person">🧑‍🦳 아동·노인</div>
+    <div class="filter-chip" data-cat="pet">🐾 반려동물</div>
+    <div class="filter-chip" data-cat="callback_contact">📮 부재중연락</div>
+    <div class="filter-chip" data-cat="misc_incident">❓ 기타</div>
+  </div>
+
+  <div id="resultsArea"></div>
+</main>
+
+<div class="connect-overlay" id="connectOverlay">
+  <div class="connect-sheet">
+    <div class="big-emoji" id="connectEmoji">🚗</div>
+    <h3 id="connectTitle">151노8409</h3>
+    <p>실제 연락처는 노출되지 않습니다. 브라우저에서 바로 연결됩니다.</p>
+    <div class="connect-btns">
+      <button class="connect-btn voice">🎧 음성으로 연결하기</button>
+      <button class="connect-btn video">🎥 영상으로 연결하기</button>
+      <button class="connect-btn cancel" id="closeOverlay">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const CATEGORY_EMOJI = {
+  vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓',
+};
+
+let currentFilter = 'all';
+let debounceTimer = null;
+
+function normalize(s){ return (s || '').replace(/[\s\-]/g, '').toLowerCase(); }
+
+// registrations.search_key ilike 검색 + 카테고리 필터. status='active'인 것만
+// (RLS "누구나 활성 등록 검색 가능" 정책 덕분에 비로그인 상태로도 조회됨 — aliascall_functions_v1.sql 참고)
+async function fetchResults(query){
+  let q = sb.from('registrations')
+    .select('id, category, search_key, title, description')
+    .eq('status', 'active')
+    .limit(20);
+
+  if (currentFilter !== 'all') q = q.eq('category', currentFilter);
+  if (query && query.trim()) q = q.ilike('search_key', '%' + normalize(query) + '%');
+
+  const { data, error } = await q;
+  if (error) {
+    console.error('[search] registrations 조회 오류', error);
+    return { data: null, error };
+  }
+  return { data, error: null };
+}
+
+async function renderResults(query){
+  const area = document.getElementById('resultsArea');
+
+  if (!query && currentFilter === 'all') {
+    area.innerHTML = '<div class="empty-state"><div class="big">🔍</div>검색어를 입력하거나<br>마이크·QR스캔을 이용해보세요</div>';
+    return;
+  }
+
+  area.innerHTML = '<div class="empty-state"><div class="big">⏳</div>검색 중…</div>';
+  const { data, error } = await fetchResults(query);
+
+  if (error) {
+    area.innerHTML = '<div class="empty-state"><div class="big">⚠️</div>검색에 실패했어요. 잠시 후 다시 시도해주세요.</div>';
+    return;
+  }
+  if (!data || data.length === 0) {
+    area.innerHTML = '<div class="empty-state"><div class="big">🙁</div>일치하는 등록 정보를 찾지 못했어요</div>';
+    return;
+  }
+
+  area.innerHTML = data.map(d => `
+    <div class="result-card" data-id="${d.id}" data-emoji="${CATEGORY_EMOJI[d.category] || '❓'}">
+      <span class="result-emoji">${CATEGORY_EMOJI[d.category] || '❓'}</span>
+      <span class="result-titles">
+        <div class="result-key">${d.search_key || d.title || '(제목 없음)'}</div>
+        <div class="result-desc">${d.description || ''}</div>
+      </span>
+      <span class="result-arrow">›</span>
+    </div>
+  `).join('');
+
+  area.querySelectorAll('.result-card').forEach(card => {
+    card.addEventListener('click', () => openConnect(card.dataset.id, card.dataset.emoji));
+  });
+}
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  clearTimeout(debounceTimer);
+  const val = e.target.value;
+  debounceTimer = setTimeout(() => renderResults(val), 350);  // 타이핑 중 매 글자마다 쏘지 않게 디바운스
+});
+
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentFilter = chip.dataset.cat;
+    renderResults(document.getElementById('searchInput').value);
+  });
+});
+
+document.getElementById('qrScanBtn').addEventListener('click', () => {
+  alert('카메라가 열립니다. (실제 구현시 QR 스캔 라이브러리 연동)');
+});
+
+function openConnect(registrationId, emoji){
+  document.getElementById('connectEmoji').textContent = emoji;
+  document.getElementById('connectTitle').textContent = registrationId;  // TODO: webrtc_sessions 생성 로직 연동 시 표시용 텍스트로 교체
+  document.getElementById('connectOverlay').classList.add('show');
+  document.getElementById('connectOverlay').dataset.registrationId = registrationId;
+}
+document.getElementById('closeOverlay').addEventListener('click', () => {
+  document.getElementById('connectOverlay').classList.remove('show');
+});
+
+renderResults('');
+</script>
+
+<script>
+// ── 음성 검색 (Web Speech API) — 등록화면과 동일 패턴 ──
+(function setupVoiceSearch(){
+  const micBtn = document.getElementById('micBtn');
+  const searchInput = document.getElementById('searchInput');
+  const micStatus = document.getElementById('micStatus');
+  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognitionCtor) {
+    micBtn.style.display = 'none';
+    return;
+  }
+
+  const recognition = new SpeechRecognitionCtor();
+  recognition.lang = 'ko-KR';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  let listening = false;
+
+  recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript.trim();
+    if (text) {
+      searchInput.value = text;
+      renderResults(text);
+    }
+  };
+  recognition.onend = () => { listening = false; micBtn.classList.remove('listening'); micStatus.textContent = ''; };
+  recognition.onerror = () => { listening = false; micBtn.classList.remove('listening'); micStatus.textContent = '다시 시도해주세요.'; };
+
+  micBtn.addEventListener('click', () => {
+    if (listening) { recognition.stop(); return; }
+    recognition.start();
+    listening = true;
+    micBtn.classList.add('listening');
+    micStatus.textContent = '🎙️ 듣고 있어요… 번호를 말씀해주세요';
+  });
+})();
+</script>
+</body>
+</html>

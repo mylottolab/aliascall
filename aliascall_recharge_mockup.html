@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliascall — 포인트 충전</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#F6F8F5; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --amber:#D9A441; --amber-tint:#FBF1DE;
+  --line:#DCE3DE; --danger:#C1483A;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:20px 24px 16px; border-bottom:1px solid var(--line); background:var(--card); }
+.brand-row{ display:flex; align-items:center; gap:9px; }
+.guide-nav-link{ margin-left:auto; font-size:12px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:20px; padding:7px 13px; text-decoration:none; }
+.guide-nav-link:hover{ background:var(--teal); color:#fff; }
+.brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:16px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+
+main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
+.page-title{ font-size:22px; margin-bottom:6px; }
+.page-desc{ font-size:13.5px; color:var(--ink-soft); margin-bottom:22px; line-height:1.55; }
+
+.balance-card{ background:var(--teal-deep); color:#fff; border-radius:16px; padding:20px 22px; margin-bottom:24px; }
+.balance-card .label{ font-size:12px; color:rgba(255,255,255,.7); }
+.balance-card .amount{ font-size:28px; font-weight:700; font-family:'Space Grotesk',sans-serif; margin-top:4px; }
+
+.currency-tabs{ display:flex; gap:8px; margin-bottom:20px; }
+.currency-tab{ flex:1; text-align:center; padding:13px 10px; border-radius:12px; border:1.5px solid var(--line); background:var(--card); cursor:pointer; font-weight:600; font-size:14px; }
+.currency-tab .flag{ font-size:18px; margin-right:6px; }
+.currency-tab.active{ border-color:var(--teal); background:var(--teal-tint); color:var(--teal-deep); }
+
+.package-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:26px; }
+.package-card{ position:relative; background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:16px 10px; text-align:center; cursor:pointer; }
+.package-card:hover{ border-color:var(--teal); }
+.package-card.selected{ border-color:var(--teal); background:var(--teal-tint); box-shadow:0 0 0 3px rgba(31,111,107,.12); }
+.package-card .pay-amt{ font-size:16px; font-weight:700; font-family:'Space Grotesk',sans-serif; }
+.package-card .pts{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; }
+.package-card .badge-best{ position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:var(--coral); color:#fff; font-size:9.5px; font-weight:700; padding:2px 8px; border-radius:8px; white-space:nowrap; }
+
+.section-label{ font-size:13px; font-weight:600; margin-bottom:10px; }
+.method-tabs{ display:flex; gap:8px; margin-bottom:20px; }
+.method-tab{ flex:1; text-align:center; padding:11px 8px; border-radius:10px; border:1.5px solid var(--line); background:var(--card); cursor:pointer; font-size:12.5px; font-weight:600; }
+.method-tab.active{ border-color:var(--coral); color:var(--coral); background:var(--coral-tint); }
+
+.bank-info{ background:var(--amber-tint); border-radius:12px; padding:16px 18px; margin-bottom:20px; font-size:12.5px; line-height:1.8; display:none; }
+.bank-info.show{ display:block; }
+.bank-info .row{ display:flex; justify-content:space-between; }
+.bank-info .row b{ font-family:'IBM Plex Mono',monospace; }
+.bank-info .field{ margin-top:10px; }
+.bank-info input{ width:100%; border:1.5px solid var(--line); border-radius:8px; padding:9px 11px; font-size:13px; font-family:'Inter',sans-serif; }
+
+.summary-row{ display:flex; justify-content:space-between; align-items:baseline; padding:16px 0; border-top:1.5px solid var(--line); margin-top:6px; }
+.summary-row .label{ font-size:13px; color:var(--ink-soft); }
+.summary-row .value{ font-size:20px; font-weight:700; font-family:'Space Grotesk',sans-serif; }
+
+.pay-btn{ width:100%; border:none; border-radius:12px; padding:16px; font-size:15px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
+.pay-btn.paypal{ background:#FFC439; color:#111; }
+.pay-btn.inicis{ background:var(--teal); color:#fff; }
+.pay-btn.bank{ background:var(--amber); color:#3a2c0a; }
+.pay-btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+.note{ font-size:11.5px; color:var(--ink-soft); text-align:center; margin-top:14px; line-height:1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div class="brand-mark">A</div>
+    <div class="brand-name">Alias<em>call</em></div>
+    <a href="aliascall_guide.html" class="guide-nav-link" target="_blank">📖 사용설명서</a>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">포인트 충전</div>
+  <div class="page-desc">QR 태그를 인쇄하거나 부가기능을 이용할 때 포인트가 사용됩니다.</div>
+
+  <div class="balance-card">
+    <div class="label">현재 보유 포인트</div>
+    <div class="amount mono" id="currentBalance">3,200P</div>
+  </div>
+
+  <div class="currency-tabs">
+    <div class="currency-tab active" data-currency="USD"><span class="flag">💵</span>USD (PayPal)</div>
+    <div class="currency-tab" data-currency="KRW"><span class="flag">🇰🇷</span>KRW (카드·계좌이체)</div>
+  </div>
+
+  <div class="section-label">패키지 선택</div>
+  <div class="package-grid" id="packageGrid"></div>
+
+  <div id="methodBlock" style="display:none;">
+    <div class="section-label">결제 수단</div>
+    <div class="method-tabs">
+      <div class="method-tab active" data-method="inicis_card">💳 카드결제 (이니시스)</div>
+      <div class="method-tab" data-method="bank_transfer">🏦 계좌이체(무통장)</div>
+    </div>
+  </div>
+
+  <div class="bank-info" id="bankInfo">
+    <div class="row"><span>입금은행</span><b>국민은행</b></div>
+    <div class="row"><span>계좌번호</span><b>123456-04-123456</b></div>
+    <div class="row"><span>예금주</span><b>㈜위브앱솔루션</b></div>
+    <div class="field">
+      <label style="font-weight:600; display:block; margin-bottom:6px;">입금자명</label>
+      <input type="text" id="depositorName" placeholder="실제 입금하실 분 성함">
+    </div>
+    <div style="margin-top:8px; color:var(--ink-soft);">입금 확인 후 포인트가 지급되며, 영업일 기준 최대 1일이 소요될 수 있어요.</div>
+  </div>
+
+  <div class="summary-row">
+    <span class="label">결제 금액</span>
+    <span class="value mono" id="payAmount">$1.00</span>
+  </div>
+
+  <button class="pay-btn paypal" id="payBtn">PayPal로 결제하기</button>
+  <div class="note" id="payNote">외화 결제는 PayPal을 통해 안전하게 처리됩니다.</div>
+</main>
+
+<script>
+const packages = {
+  USD: [
+    { amount: 1,   points: 1000,   symbol:'$' },
+    { amount: 2,   points: 2000,   symbol:'$' },
+    { amount: 5,   points: 5000,   symbol:'$' },
+    { amount: 10,  points: 10000,  symbol:'$', best:true },
+    { amount: 50,  points: 50000,  symbol:'$' },
+    { amount: 100, points: 100000, symbol:'$' },
+  ],
+  KRW: [
+    { amount: 1000,   points: 1000,   symbol:'₩' },
+    { amount: 2000,   points: 2000,   symbol:'₩' },
+    { amount: 5000,   points: 5000,   symbol:'₩' },
+    { amount: 10000,  points: 10000,  symbol:'₩', best:true },
+    { amount: 50000,  points: 50000,  symbol:'₩' },
+    { amount: 100000, points: 100000, symbol:'₩' },
+  ],
+};
+
+let currentCurrency = 'USD';
+let selectedIndex = 3;
+let currentMethod = 'inicis_card';
+
+const grid = document.getElementById('packageGrid');
+const payAmount = document.getElementById('payAmount');
+const payBtn = document.getElementById('payBtn');
+const payNote = document.getElementById('payNote');
+const methodBlock = document.getElementById('methodBlock');
+const bankInfo = document.getElementById('bankInfo');
+
+function fmt(n){ return n.toLocaleString(); }
+
+function renderPackages(){
+  grid.innerHTML = packages[currentCurrency].map((p, i) => `
+    <div class="package-card ${i === selectedIndex ? 'selected' : ''}" data-index="${i}">
+      ${p.best ? '<div class="badge-best">인기</div>' : ''}
+      <div class="pay-amt">${p.symbol}${fmt(p.amount)}</div>
+      <div class="pts">${fmt(p.points)}P</div>
+    </div>
+  `).join('');
+  grid.querySelectorAll('.package-card').forEach(card => {
+    card.addEventListener('click', () => {
+      selectedIndex = Number(card.dataset.index);
+      renderPackages();
+      renderSummary();
+    });
+  });
+}
+
+function renderSummary(){
+  const p = packages[currentCurrency][selectedIndex];
+  payAmount.textContent = p.symbol + fmt(p.amount) + (currentCurrency === 'KRW' ? '원' : '');
+
+  if (currentCurrency === 'USD') {
+    methodBlock.style.display = 'none';
+    bankInfo.classList.remove('show');
+    payBtn.className = 'pay-btn paypal';
+    payBtn.textContent = 'PayPal로 결제하기';
+    payNote.textContent = '외화 결제는 PayPal을 통해 안전하게 처리됩니다.';
+  } else {
+    methodBlock.style.display = 'block';
+    if (currentMethod === 'inicis_card') {
+      bankInfo.classList.remove('show');
+      payBtn.className = 'pay-btn inicis';
+      payBtn.textContent = '카드로 결제하기 (이니시스)';
+      payNote.textContent = '국내 카드결제는 이니시스를 통해 안전하게 처리됩니다.';
+    } else {
+      bankInfo.classList.add('show');
+      payBtn.className = 'pay-btn bank';
+      payBtn.textContent = '입금 신청하기';
+      payNote.textContent = '입금자명을 정확히 입력해주셔야 확인이 빨라집니다.';
+    }
+  }
+}
+
+document.querySelectorAll('.currency-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.currency-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentCurrency = tab.dataset.currency;
+    selectedIndex = 3;
+    renderPackages();
+    renderSummary();
+  });
+});
+
+document.querySelectorAll('.method-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentMethod = tab.dataset.method;
+    renderSummary();
+  });
+});
+
+payBtn.addEventListener('click', () => {
+  const p = packages[currentCurrency][selectedIndex];
+  if (currentCurrency === 'KRW' && currentMethod === 'bank_transfer') {
+    const name = document.getElementById('depositorName').value.trim();
+    if (!name) { alert('입금자명을 입력해주세요.'); return; }
+    alert('입금 신청이 접수되었습니다. 입금 확인 후 ' + fmt(p.points) + 'P가 지급됩니다.');
+    return;
+  }
+  alert((currentCurrency === 'USD' ? 'PayPal' : '이니시스') + ' 결제창으로 이동합니다. (' + p.symbol + fmt(p.amount) + ' → ' + fmt(p.points) + 'P)');
+});
+
+renderPackages();
+renderSummary();
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliascall — 찾습니다 게시판</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#F6F8F5; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --amber:#D9A441; --amber-tint:#FBF1DE;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:20px 24px; border-bottom:1px solid var(--line); background:var(--card); }
+.brand-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.brand-left{ display:flex; align-items:center; gap:9px; }
+.brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:16px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+.public-badge{ font-size:11px; font-weight:700; color:var(--found); background:rgba(46,125,79,.1); border-radius:8px; padding:4px 10px; display:flex; align-items:center; gap:5px; }
+.public-badge::before{ content:''; width:6px; height:6px; border-radius:50%; background:var(--found); }
+.guide-nav-link{ font-size:12px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:20px; padding:7px 13px; text-decoration:none; }
+.guide-nav-link:hover{ background:var(--teal); color:#fff; }
+
+main{ max-width:600px; margin:0 auto; padding:24px 20px 60px; }
+.page-title{ font-size:24px; margin-bottom:4px; }
+.page-desc{ font-size:13.5px; color:var(--ink-soft); margin-bottom:20px; line-height:1.6; }
+
+.control-row{ display:flex; gap:10px; margin-bottom:16px; }
+.country-select{
+  flex:0 0 auto; border:1.5px solid var(--line); border-radius:12px; padding:10px 14px;
+  font-size:13.5px; font-weight:600; background:var(--card); font-family:'Inter',sans-serif; color:var(--ink);
+}
+.filter-row{ display:flex; gap:6px; overflow-x:auto; flex:1; padding-bottom:2px; }
+.filter-chip{ flex:0 0 auto; padding:10px 14px; border-radius:12px; border:1.5px solid var(--line); background:var(--card); font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
+.filter-chip.active{ background:var(--teal); border-color:var(--teal); color:#fff; }
+
+.status-tabs{ display:flex; gap:8px; margin-bottom:20px; }
+.status-tab{ flex:1; text-align:center; padding:11px; border-radius:10px; border:1.5px solid var(--line); background:var(--card); cursor:pointer; font-size:13px; font-weight:600; }
+.status-tab.active{ border-color:var(--coral); color:var(--coral); background:var(--coral-tint); }
+
+.post-card{ background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:18px; margin-bottom:14px; cursor:pointer; }
+.post-card:hover{ border-color:var(--teal); }
+.post-head{ display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; }
+.post-emoji{ font-size:30px; flex-shrink:0; }
+.post-titles{ flex:1; min-width:0; }
+.post-title{ font-size:15.5px; font-weight:700; }
+.post-meta{ font-size:11.5px; color:var(--ink-soft); margin-top:3px; }
+.status-ribbon{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:8px; flex-shrink:0; }
+.status-ribbon.searching{ background:var(--coral-tint); color:var(--coral); }
+.status-ribbon.found{ background:rgba(46,125,79,.1); color:var(--found); }
+.post-desc{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+
+.empty-state{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13px; }
+.empty-state .big{ font-size:36px; margin-bottom:12px; }
+
+.detail-overlay{ display:none; position:fixed; inset:0; background:rgba(18,48,46,.6); z-index:50; overflow-y:auto; }
+.detail-overlay.show{ display:block; }
+.detail-sheet{ background:var(--card); max-width:560px; margin:40px auto; border-radius:20px; padding:26px 24px 30px; position:relative; }
+.detail-close{ position:absolute; top:18px; right:18px; width:32px; height:32px; border-radius:50%; border:none; background:var(--paper); color:var(--ink-soft); font-size:16px; cursor:pointer; }
+.detail-emoji{ font-size:40px; margin-bottom:10px; }
+.detail-title{ font-size:20px; margin-bottom:4px; }
+.detail-status{ display:inline-block; font-size:11px; font-weight:700; padding:4px 10px; border-radius:8px; margin-bottom:18px; }
+
+.sixw-grid{ display:flex; flex-direction:column; gap:14px; margin-bottom:22px; }
+.sixw-item{ display:flex; gap:12px; }
+.sixw-label{ flex:0 0 68px; font-size:12px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:8px; padding:6px 0; text-align:center; height:fit-content; }
+.sixw-value{ flex:1; font-size:13.5px; line-height:1.6; padding-top:5px; }
+
+.contact-cta{ background:var(--teal-deep); color:#fff; border-radius:14px; padding:18px; text-align:center; }
+.contact-cta p{ margin:0 0 12px; font-size:12.5px; color:rgba(255,255,255,.8); line-height:1.6; }
+.contact-cta button{ width:100%; border:none; border-radius:10px; padding:13px; background:var(--coral); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div class="brand-left">
+      <div class="brand-mark">A</div>
+      <div class="brand-name">Alias<em>call</em></div>
+    </div>
+    <div class="public-badge">로그인 없이 열람 가능</div>
+    <a href="aliascall_guide.html" class="guide-nav-link" target="_blank">📖 사용설명서</a>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">찾습니다 게시판</div>
+  <div class="page-desc">분실·실종 소식을 국가별로 확인하고 제보할 수 있는 공익 게시판입니다. 실제 연락처는 노출되지 않습니다.</div>
+
+  <div class="control-row">
+    <select class="country-select" id="countrySelect">
+      <option value="KR">🇰🇷 대한민국</option>
+      <option value="JP">🇯🇵 일본</option>
+      <option value="US">🇺🇸 미국</option>
+      <option value="GB">🇬🇧 영국</option>
+      <option value="FR">🇫🇷 프랑스</option>
+      <option value="IT">🇮🇹 이탈리아</option>
+      <option value="DE">🇩🇪 독일</option>
+    </select>
+    <div class="filter-row" id="filterRow">
+      <div class="filter-chip active" data-cat="all">전체</div>
+      <div class="filter-chip" data-cat="vulnerable_person">🧑‍🦳 아동·노인</div>
+      <div class="filter-chip" data-cat="pet">🐾 반려동물</div>
+      <div class="filter-chip" data-cat="lost_item">🎒 분실물</div>
+      <div class="filter-chip" data-cat="misc_incident">❓ 기타</div>
+    </div>
+  </div>
+
+  <div class="status-tabs">
+    <div class="status-tab active" data-status="searching">찾는 중</div>
+    <div class="status-tab" data-status="found">발견됨</div>
+  </div>
+
+  <div id="postsArea"></div>
+</main>
+
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-sheet">
+    <button class="detail-close" id="detailClose">✕</button>
+    <div class="detail-emoji" id="dEmoji">🧑‍🦳</div>
+    <div class="detail-title" id="dTitle">7세 남아 실종</div>
+    <div class="status-ribbon searching" id="dStatus">찾는 중</div>
+
+    <div class="sixw-grid">
+      <div class="sixw-item"><div class="sixw-label">언제</div><div class="sixw-value" id="dWhen">2026-08-14 오후 3시경</div></div>
+      <div class="sixw-item"><div class="sixw-label">어디서</div><div class="sixw-value" id="dWhere">서울 마포구 망원동 한강공원 인근</div></div>
+      <div class="sixw-item"><div class="sixw-label">어떻게</div><div class="sixw-value" id="dHow">놀이터에서 놀던 중 보호자가 잠시 눈을 뗀 사이 사라짐</div></div>
+      <div class="sixw-item"><div class="sixw-label">특징</div><div class="sixw-value" id="dDesc">파란색 반팔티, 흰색 반바지 착용. 키 120cm 가량, 밝은 갈색 머리</div></div>
+      <div class="sixw-item"><div class="sixw-label">목격시</div><div class="sixw-value">아래 버튼으로 실제 번호 노출 없이 바로 연락하실 수 있어요</div></div>
+    </div>
+
+    <div class="contact-cta">
+      <p>여기서 연락하면 실제 전화번호는 보이지 않습니다. 브라우저에서 바로 음성·영상으로 연결됩니다.</p>
+      <button id="contactBtn">제보하기 · 지금 연결하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const CATEGORY_EMOJI = { vulnerable_person:'🧑‍🦳', pet:'🐾', lost_item:'🎒', misc_incident:'❓' };
+const CATEGORY_TITLE_FALLBACK = { vulnerable_person:'실종', pet:'반려동물 실종', lost_item:'분실물', misc_incident:'기타 사건' };
+
+let currentCat = 'all';
+let currentStatus = 'searching';
+let currentCountry = 'KR';
+let currentPosts = [];  // 상세 오버레이 열 때 재조회 없이 쓰려고 캐시
+
+// public_board_posts는 RLS "누구나 열람 가능" 정책으로 비로그인 상태에서도 select 가능
+async function fetchPosts(){
+  let q = sb.from('public_board_posts')
+    .select('id, category, occurred_at, last_seen_location, circumstance, public_description, status, registrations(title)')
+    .eq('country_code', currentCountry)
+    .eq('status', currentStatus)
+    .order('published_at', { ascending: false })
+    .limit(30);
+
+  if (currentCat !== 'all') q = q.eq('category', currentCat);
+
+  const { data, error } = await q;
+  if (error) { console.error('[board] public_board_posts 조회 오류', error); return []; }
+  return data || [];
+}
+
+function fmtWhen(iso){
+  if (!iso) return '시점 미상';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '시점 미상';
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+async function renderPosts(){
+  const area = document.getElementById('postsArea');
+  area.innerHTML = '<div class="empty-state"><div class="big">⏳</div>불러오는 중…</div>';
+
+  currentPosts = await fetchPosts();
+
+  if (currentPosts.length === 0) {
+    area.innerHTML = '<div class="empty-state"><div class="big">📋</div>해당하는 게시물이 없습니다</div>';
+    return;
+  }
+
+  area.innerHTML = currentPosts.map(p => `
+    <div class="post-card" data-id="${p.id}">
+      <div class="post-head">
+        <span class="post-emoji">${CATEGORY_EMOJI[p.category] || '❓'}</span>
+        <span class="post-titles">
+          <div class="post-title">${(p.registrations && p.registrations.title) || CATEGORY_TITLE_FALLBACK[p.category] || '게시물'}</div>
+          <div class="post-meta">${fmtWhen(p.occurred_at)} · ${p.last_seen_location || '위치 미상'}</div>
+        </span>
+        <span class="status-ribbon ${p.status}">${p.status === 'searching' ? '찾는 중' : '발견됨'}</span>
+      </div>
+      <div class="post-desc">${p.public_description || ''}</div>
+    </div>
+  `).join('');
+
+  area.querySelectorAll('.post-card').forEach(card => {
+    card.addEventListener('click', () => openDetail(card.dataset.id));
+  });
+}
+
+function openDetail(id){
+  const p = currentPosts.find(x => String(x.id) === String(id));
+  if (!p) return;
+  document.getElementById('dEmoji').textContent = CATEGORY_EMOJI[p.category] || '❓';
+  document.getElementById('dTitle').textContent = (p.registrations && p.registrations.title) || CATEGORY_TITLE_FALLBACK[p.category] || '게시물';
+  document.getElementById('dStatus').textContent = p.status === 'searching' ? '찾는 중' : '발견됨';
+  document.getElementById('dStatus').className = 'status-ribbon ' + p.status;
+  document.getElementById('dWhen').textContent = fmtWhen(p.occurred_at);
+  document.getElementById('dWhere').textContent = p.last_seen_location || '위치 미상';
+  document.getElementById('dHow').textContent = p.circumstance || '';
+  document.getElementById('dDesc').textContent = p.public_description || '';
+  document.getElementById('detailOverlay').classList.add('show');
+}
+document.getElementById('detailClose').addEventListener('click', () => {
+  document.getElementById('detailOverlay').classList.remove('show');
+});
+document.getElementById('contactBtn').addEventListener('click', () => {
+  alert('브라우저에서 음성/영상 연결이 시작됩니다. (WebRTC, 실제번호 비노출)');
+});
+
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentCat = chip.dataset.cat;
+    renderPosts();
+  });
+});
+document.querySelectorAll('.status-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentStatus = tab.dataset.status;
+    renderPosts();
+  });
+});
+document.getElementById('countrySelect').addEventListener('change', (e) => {
+  currentCountry = e.target.value;
+  renderPosts();
+});
+
+renderPosts();
+</script>
+</body>
+</html>

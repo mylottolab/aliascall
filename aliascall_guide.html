@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliascall — 사용설명서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#F6F8F5; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --amber:#D9A441; --amber-tint:#FBF1DE;
+  --line:#DCE3DE; --danger:#C1483A; --danger-tint:#FBEAE6; --found:#2E7D4F; --found-tint:rgba(46,125,79,.1);
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:20px 24px; border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:10; }
+.brand-row{ display:flex; align-items:center; gap:9px; }
+.brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:16px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+
+main{ max-width:640px; margin:0 auto; padding:28px 20px 70px; }
+.page-title{ font-size:26px; margin-bottom:6px; }
+.page-desc{ font-size:13.5px; color:var(--ink-soft); margin-bottom:24px; line-height:1.6; }
+
+/* 목차 칩 */
+.toc{ display:flex; gap:8px; overflow-x:auto; margin-bottom:30px; padding-bottom:4px; }
+.toc a{ flex:0 0 auto; text-decoration:none; padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-size:12.5px; font-weight:600; white-space:nowrap; }
+.toc a:hover{ border-color:var(--teal); color:var(--teal-deep); }
+
+section{ margin-bottom:38px; scroll-margin-top:90px; }
+.sec-num{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--teal); color:#fff; font-size:12.5px; font-weight:700; font-family:'Space Grotesk',sans-serif; margin-right:8px; }
+.sec-title{ font-size:19px; display:flex; align-items:center; margin-bottom:14px; }
+
+.step-list{ display:flex; flex-direction:column; gap:10px; }
+.step-item{ display:flex; gap:12px; background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px 16px; }
+.step-item .n{ flex:0 0 auto; font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--teal); font-size:13px; }
+.step-item .t{ font-size:13.5px; line-height:1.6; }
+.step-item .t b{ display:block; font-size:14px; margin-bottom:2px; }
+
+.category-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.category-card{ background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px; }
+.category-card .h{ font-size:13px; font-weight:700; margin-bottom:5px; }
+.category-card .d{ font-size:11.5px; color:var(--ink-soft); line-height:1.5; }
+
+/* ⭐ 비문 촬영 가이드 강조 섹션 */
+.highlight-box{ background:var(--teal-deep); color:#fff; border-radius:18px; padding:24px 22px; margin-bottom:20px; }
+.highlight-box .tag{ display:inline-block; font-size:10.5px; font-weight:700; background:var(--coral); padding:3px 10px; border-radius:8px; margin-bottom:10px; }
+.highlight-box h3{ font-size:18px; margin-bottom:8px; }
+.highlight-box p{ font-size:13px; color:rgba(255,255,255,.8); line-height:1.6; margin:0; }
+
+.dodont-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0; }
+.dodont-col .head{ display:flex; align-items:center; gap:6px; font-weight:700; font-size:14px; margin-bottom:10px; }
+.dodont-col.do .head{ color:var(--found); }
+.dodont-col.dont .head{ color:var(--danger); }
+.dodont-item{ display:flex; gap:9px; align-items:flex-start; padding:10px 12px; border-radius:10px; margin-bottom:8px; font-size:12.5px; line-height:1.5; }
+.dodont-col.do .dodont-item{ background:var(--found-tint); }
+.dodont-col.dont .dodont-item{ background:var(--danger-tint); }
+.dodont-item .icon{ flex-shrink:0; font-size:14px; }
+
+.step-photo-list{ counter-reset:photostep; }
+.step-photo-list .step-item .n{ counter-increment:photostep; }
+.step-photo-list .step-item .n::before{ content:counter(photostep); }
+
+.tip-callout{ background:var(--amber-tint); border-left:4px solid var(--amber); border-radius:0 10px 10px 0; padding:14px 16px; font-size:12.5px; line-height:1.6; margin-top:14px; }
+.tip-callout b{ color:#8a6416; }
+
+.faq-item{ border-bottom:1px solid var(--line); padding:16px 0; }
+.faq-item:last-child{ border-bottom:none; }
+.faq-q{ font-size:13.5px; font-weight:700; margin-bottom:6px; display:flex; gap:8px; }
+.faq-q span{ color:var(--coral); }
+.faq-a{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; padding-left:22px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div class="brand-mark">A</div>
+    <div class="brand-name">Alias<em>call</em></div>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">사용설명서</div>
+  <div class="page-desc">Aliascall을 처음 쓰시는 분들을 위한 안내입니다. 궁금한 항목을 눌러 바로 이동하세요.</div>
+
+  <div class="toc">
+    <a href="#sec-overview">① 전체 흐름</a>
+    <a href="#sec-category">② 카테고리별 등록</a>
+    <a href="#sec-noseprint">③ 비문 촬영법 ⭐</a>
+    <a href="#sec-print">④ QR 인쇄·부착</a>
+    <a href="#sec-finder">⑤ 발견자는 이렇게</a>
+    <a href="#sec-faq">⑥ 자주 묻는 질문</a>
+  </div>
+
+  <section id="sec-overview">
+    <div class="sec-title"><span class="sec-num">1</span>전체 흐름</div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t"><b>등록하기</b>차량, 물품, 아동·어르신, 반려동물 중 하나를 선택하고 정보를 입력합니다.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t"><b>QR 태그 생성</b>등록이 끝나면 그 대상만의 고유 QR이 만들어집니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t"><b>인쇄해서 부착</b>원하는 크기로 인쇄해 대상에 붙이거나 걸어둡니다.</span></div>
+      <div class="step-item"><span class="n">4</span><span class="t"><b>발견자가 연락</b>QR을 스캔하거나 검색하면, 실제 전화번호 노출 없이 바로 연결됩니다.</span></div>
+    </div>
+  </section>
+
+  <section id="sec-category">
+    <div class="sec-title"><span class="sec-num">2</span>카테고리별 등록 팁</div>
+    <div class="category-grid">
+      <div class="category-card"><div class="h">🚗 차량</div><div class="d">차량번호만 있으면 충분해요. 유리창 안쪽에 QR을 붙여두세요.</div></div>
+      <div class="category-card"><div class="h">🎒 분실·도난 우려 물품</div><div class="d">브랜드, 색상, 스티커 등 남과 구별되는 특징을 자세히 적을수록 좋아요.</div></div>
+      <div class="category-card"><div class="h">🧑‍🦳 아동·치매 어르신·장애우</div><div class="d">옷이나 신발, 가방에 QR을 부착해두세요. 목소리 녹음(안심 콘텐츠)도 추천드려요.</div></div>
+      <div class="category-card"><div class="h">🐾 반려동물</div><div class="d">목걸이에 QR을 걸고, 비문 사진도 꼭 등록해두세요 (아래 ③ 참고).</div></div>
+      <div class="category-card"><div class="h">📮 부재중 연락</div><div class="d">백업 알림용 전화번호를 함께 등록해두시는 걸 특히 권해드려요.</div></div>
+      <div class="category-card"><div class="h">❓ 기타 물품·사건</div><div class="d">상황을 자유롭게 적어주세요. 음성으로 말씀하셔도 됩니다.</div></div>
+    </div>
+  </section>
+
+  <!-- ⭐⭐⭐ 비문 촬영법 — 핵심 강조 섹션 ⭐⭐⭐ -->
+  <section id="sec-noseprint">
+    <div class="sec-title"><span class="sec-num">3</span>비문(코무늬) 촬영법</div>
+
+    <div class="highlight-box">
+      <div class="tag">가장 많이 실패하는 단계</div>
+      <h3>왜 중요한가요?</h3>
+      <p>사람 지문처럼 반려동물의 코 주름도 개체마다 고유합니다. 하지만 사진이 흐리거나 각도가 비뚤면 인식률이 크게 떨어져요. 아래 방법대로 찍으시면 훨씬 정확하게 등록됩니다.</p>
+    </div>
+
+    <div class="dodont-grid">
+      <div class="dodont-col do">
+        <div class="head">✅ 이렇게 찍어주세요</div>
+        <div class="dodont-item"><span class="icon">☀️</span><span>밝고 은은한 자연광 아래에서 (창가 근처가 좋아요)</span></div>
+        <div class="dodont-item"><span class="icon">📐</span><span>코와 카메라가 수직이 되도록 정면에서</span></div>
+        <div class="dodont-item"><span class="icon">🔍</span><span>코가 화면을 가득 채울 만큼 가까이, 초점 맞춰서</span></div>
+        <div class="dodont-item"><span class="icon">💧</span><span>코가 살짝 촉촉한 상태일 때 (평소 상태면 충분해요)</span></div>
+        <div class="dodont-item"><span class="icon">🔁</span><span>여러 장 찍어서 가장 선명한 사진으로 선택</span></div>
+        <div class="dodont-item"><span class="icon">🦴</span><span>간식으로 잠깐 시선을 고정시켜 움직임 줄이기</span></div>
+      </div>
+      <div class="dodont-col dont">
+        <div class="head">❌ 이건 피해주세요</div>
+        <div class="dodont-item"><span class="icon">⚡</span><span>플래시 직접 사용 (반사광으로 무늬가 하얗게 날아가요)</span></div>
+        <div class="dodont-item"><span class="icon">↗️</span><span>비스듬한 각도 (무늬가 찌그러져 보여요)</span></div>
+        <div class="dodont-item"><span class="icon">🌫️</span><span>너무 멀리서, 흔들린 채로 촬영</span></div>
+        <div class="dodont-item"><span class="icon">🌙</span><span>어두운 곳에서 촬영 (뿌옇게 나와요)</span></div>
+        <div class="dodont-item"><span class="icon">💦</span><span>코에 물방울이 흥건히 맺힌 상태</span></div>
+        <div class="dodont-item"><span class="icon">🐕‍🦺</span><span>움직이는 채로 급하게 촬영</span></div>
+      </div>
+    </div>
+
+    <div class="step-list step-photo-list">
+      <div class="step-item"><span class="n"></span><span class="t"><b>준비</b>밝은 창가나 실외 그늘로 이동하고, 간식을 한 손에 준비하세요.</span></div>
+      <div class="step-item"><span class="n"></span><span class="t"><b>자세 잡기</b>반려동물의 얼굴을 살짝 들어올려 카메라와 코가 수직이 되게 합니다.</span></div>
+      <div class="step-item"><span class="n"></span><span class="t"><b>거리 맞추기</b>코가 화면의 절반 이상을 채울 정도로 가까이 다가가되, 초점이 흐려지지 않는 선까지만.</span></div>
+      <div class="step-item"><span class="n"></span><span class="t"><b>촬영</b>간식으로 시선을 살짝 고정시킨 뒤 플래시 없이 3~5장 연속 촬영하세요.</span></div>
+      <div class="step-item"><span class="n"></span><span class="t"><b>선택·업로드</b>그중 가장 선명하고 무늬가 또렷한 한 장을 골라 업로드합니다.</span></div>
+    </div>
+
+    <div class="tip-callout"><b>Tip.</b> 한 번에 잘 안 나와도 괜찮아요. 등록 후에도 언제든 사진을 다시 올려 갱신할 수 있습니다.</div>
+  </section>
+
+  <section id="sec-print">
+    <div class="sec-title"><span class="sec-num">4</span>QR 태그 인쇄 및 부착</div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t">등록 완료 화면에서 원하는 사이즈(3×3 / 4.5×4.5 / 5.5×5.5 / 6×6cm)를 선택하세요.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t">100P가 차감되며 A4용지 인쇄용 파일이 다운로드됩니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t">가정용 프린터로 출력 후 가위로 잘라 사용하시면 됩니다.</span></div>
+      <div class="step-item"><span class="n">4</span><span class="t">비바람에 노출되는 곳(차량 외부 등)에는 투명 보호필름을 함께 부착하시길 권해드려요.</span></div>
+    </div>
+  </section>
+
+  <section id="sec-finder">
+    <div class="sec-title"><span class="sec-num">5</span>발견자는 이렇게 연락해요</div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t">QR을 스캔하거나, aliascall.com에서 번호·이름을 문자 또는 음성으로 검색합니다.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t">일치하는 등록 정보를 찾으면 눌러서 연결 화면으로 이동합니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t">앱 설치 없이 브라우저에서 바로 음성·영상으로 연결됩니다. 실제 전화번호는 절대 보이지 않아요.</span></div>
+    </div>
+  </section>
+
+  <section id="sec-faq">
+    <div class="sec-title"><span class="sec-num">6</span>자주 묻는 질문</div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>비문 사진을 안 올리면 반려동물 등록이 안 되나요?</div>
+      <div class="faq-a">아니요, 비문 사진은 권장사항이지 필수가 아닙니다. 다만 등록해두시면 발견 시 신원 확인 정확도가 크게 올라가요.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>QR이 오염되어 스캔이 안 되면 어떻게 하나요?</div>
+      <div class="faq-a">aliascall.com의 "찾기" 화면에서 문자나 음성으로 직접 검색하시면 됩니다. 마이크 아이콘을 눌러 번호를 말씀하시는 것도 가능해요.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>발견자가 제 실제 번호를 알 수 있나요?</div>
+      <div class="faq-a">아니요. 모든 연결은 브라우저 기반 익명 연결(WebRTC)로 이루어지며, 실제 전화번호는 어떤 경우에도 노출되지 않습니다.</div>
+    </div>
+  </section>
+</main>
+</body>
+</html>
