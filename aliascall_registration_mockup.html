@@ -117,6 +117,17 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 }
 .mic-status{ font-size:12px; color:var(--coral); margin-top:6px; min-height:16px; font-weight:600; }
 
+/* ── 인라인 입력칸용 소형 마이크 버튼 (닉네임/차량번호 등 한줄 입력 전부 공용) ── */
+.mic-input-wrap{ position:relative; }
+.mic-input-wrap input{ padding-right:44px; }
+.mic-btn-sm{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%); width:30px; height:30px; border-radius:50%;
+  border:none; background:var(--teal); color:#fff; cursor:pointer; font-size:13px;
+  display:flex; align-items:center; justify-content:center; transition:background .15s;
+}
+.mic-btn-sm:hover{ background:var(--teal-deep); }
+.mic-btn-sm.listening{ background:var(--coral); animation:micPulse 1.3s ease-in-out infinite; }
+
 .pill-group{ display:flex; gap:8px; flex-wrap:wrap; }
 .pill{ border:1.5px solid var(--line); border-radius:20px; padding:9px 16px; font-size:13px; font-weight:600; cursor:pointer; background:var(--card); }
 .pill.active{ background:var(--teal); border-color:var(--teal); color:#fff; }
@@ -247,11 +258,17 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
   <!-- STEP 1: 공통 정보 -->
   <div class="panel" data-panel="1">
     <div class="panel-title">기본 정보</div>
-    <div class="panel-desc">실명은 필요 없습니다. 닉네임과 국가 정보만으로 충분해요.</div>
+    <div class="panel-desc">실명은 필요 없지만, 나중에 수정·삭제하러 오실 때 필요하니 닉네임과 비밀번호는 꼭 기억해두세요.</div>
 
     <div class="field">
-      <label>닉네임</label>
-      <input type="text" id="nickname" placeholder="예: 산책러버">
+      <label>닉네임 <span class="optional-badge">수정·삭제용 ID</span></label>
+      <div class="mic-input-wrap"><input type="text" id="nickname" placeholder="예: 산책러버" autocomplete="off"><button type="button" class="mic-btn-sm" data-target="nickname" aria-label="음성 입력">🎤</button></div>
+      <div class="mic-status" id="nicknameStatus"></div>
+    </div>
+    <div class="field">
+      <label>비밀번호</label>
+      <input type="password" id="guestPassword" placeholder="6자 이상" autocomplete="new-password">
+      <div class="hint">이 닉네임+비밀번호로 나중에 언제든 다시 로그인해서 수정·삭제할 수 있어요.</div>
     </div>
     <div class="field">
       <label>국가</label>
@@ -267,10 +284,10 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     </div>
     <div class="field">
       <label>백업 알림용 전화번호 <span class="optional-badge">선택</span></label>
-      <input type="text" id="wakeupPhone" placeholder="+82 10-0000-0000">
+      <div class="mic-input-wrap"><input type="text" id="wakeupPhone" placeholder="+82 10-0000-0000"><button type="button" class="mic-btn-sm" data-target="wakeupPhone" aria-label="음성 입력">🎤</button></div>
       <div class="hint">통화·문자를 직접 연결하는 용도가 아닙니다. 누군가 연결을 시도했는데 60초간 앱 알림에 응답이 없을 때만 "앱을 열어주세요" 문자 1통이 발송됩니다.</div>
     </div>
-    <div class="error-text" id="err1">닉네임을 입력해주세요.</div>
+    <div class="error-text" id="err1">닉네임과 비밀번호(6자 이상)를 입력해주세요.</div>
   </div>
 
   <!-- STEP 2: 카테고리별 상세 -->
@@ -279,13 +296,13 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     <div class="panel-desc" id="detailDesc"></div>
 
     <div id="detail-vehicle" class="cat-detail" style="display:none;">
-      <div class="field"><label>차량번호</label><input type="text" id="plateNumber" placeholder="12가 3456"></div>
-      <div class="field"><label>제조사 · 모델 <span class="optional-badge">선택</span></label><input type="text" id="vehicleMake" placeholder="현대 아반떼"></div>
-      <div class="field"><label>색상 <span class="optional-badge">선택</span></label><input type="text" id="vehicleColor" placeholder="흰색"></div>
+      <div class="field"><label>차량번호</label><div class="mic-input-wrap"><input type="text" id="plateNumber" placeholder="12가 3456"><button type="button" class="mic-btn-sm" data-target="plateNumber" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label>제조사 · 모델 <span class="optional-badge">선택</span></label><div class="mic-input-wrap"><input type="text" id="vehicleMake" placeholder="현대 아반떼"><button type="button" class="mic-btn-sm" data-target="vehicleMake" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label>색상 <span class="optional-badge">선택</span></label><div class="mic-input-wrap"><input type="text" id="vehicleColor" placeholder="흰색"><button type="button" class="mic-btn-sm" data-target="vehicleColor" aria-label="음성 입력">🎤</button></div></div>
     </div>
 
     <div id="detail-lost_item" class="cat-detail" style="display:none;">
-      <div class="field"><label>물품 종류</label><input type="text" id="itemType" placeholder="가방 / 노트북 / 지갑 등"></div>
+      <div class="field"><label>물품 종류</label><div class="mic-input-wrap"><input type="text" id="itemType" placeholder="가방 / 노트북 / 지갑 등"><button type="button" class="mic-btn-sm" data-target="itemType" aria-label="음성 입력">🎤</button></div></div>
     </div>
 
     <div id="detail-vulnerable_person" class="cat-detail" style="display:none;">
@@ -300,8 +317,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     </div>
 
     <div id="detail-pet" class="cat-detail" style="display:none;">
-      <div class="field"><label>종류</label><input type="text" id="petSpecies" placeholder="강아지 / 고양이 등"></div>
-      <div class="field"><label>이름</label><input type="text" id="petName" placeholder="초코"></div>
+      <div class="field"><label>종류</label><div class="mic-input-wrap"><input type="text" id="petSpecies" placeholder="강아지 / 고양이 등"><button type="button" class="mic-btn-sm" data-target="petSpecies" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label>이름</label><div class="mic-input-wrap"><input type="text" id="petName" placeholder="초코"><button type="button" class="mic-btn-sm" data-target="petName" aria-label="음성 입력">🎤</button></div></div>
       <div class="field">
         <label>비문(코 무늬) 사진 <span class="recommend-badge">권장</span></label>
         <div class="dropzone" id="noseprintDropzone"><b>코 정면 사진 업로드</b>사람 지문처럼 개체마다 고유해, 발견 시 신원 확인에 쓰입니다<input type="file" id="noseprintFile" accept="image/*" style="display:none;"></div>
@@ -310,8 +327,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     </div>
 
     <div id="detail-callback_contact" class="cat-detail" style="display:none;">
-      <div class="field"><label>사유</label><input type="text" id="callbackReason" placeholder="예: 대형폐기물 수거 안내 / 이전 거주지 연락처"></div>
-      <div class="field"><label>부착·게시 장소 <span class="optional-badge">선택</span></label><input type="text" id="callbackLocation" placeholder="예: 아파트 분리수거장 입구"></div>
+      <div class="field"><label>사유</label><div class="mic-input-wrap"><input type="text" id="callbackReason" placeholder="예: 대형폐기물 수거 안내 / 이전 거주지 연락처"><button type="button" class="mic-btn-sm" data-target="callbackReason" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label>부착·게시 장소 <span class="optional-badge">선택</span></label><div class="mic-input-wrap"><input type="text" id="callbackLocation" placeholder="예: 아파트 분리수거장 입구"><button type="button" class="mic-btn-sm" data-target="callbackLocation" aria-label="음성 입력">🎤</button></div></div>
       <div class="hint" style="margin-top:-6px; margin-bottom:18px;">이 카테고리는 실시간 응답보다 나중에 연락이 닿는 게 중요해서, 다음 화면의 백업 알림용 전화번호를 등록해두시길 특히 권해드려요.</div>
     </div>
 
@@ -516,9 +533,10 @@ function validateStep(){
     return ok;
   }
   if (currentStep === 1) {
-    const ok = document.getElementById('nickname').value.trim().length > 0;
-    showError('err1', !ok);
-    return ok;
+    const nickOk = document.getElementById('nickname').value.trim().length > 0;
+    const pwOk = document.getElementById('guestPassword').value.length >= 6;
+    showError('err1', !(nickOk && pwOk));
+    return nickOk && pwOk;
   }
   if (currentStep === 2) {
     let ok = true;
@@ -672,6 +690,49 @@ function buildSearchKey(){
 
 let createdRegistration = null;  // create_registration_full() 반환값 캐시 (QR 화면에서 사용)
 
+// 닉네임 -> 합성 이메일(내부용, 실제 수신함 없음). 소문자+영숫자만 남겨 이메일 로컬파트로 안전하게 만듦
+function nicknameToEmail(nickname){
+  const normalized = nickname.trim().toLowerCase().replace(/[^a-z0-9가-힣]/g, '');
+  return encodeURIComponent(normalized) + '@guest.aliascall.internal';
+}
+
+// STEP1(기본정보) -> STEP2 전환 시 1회 호출.
+// 신규 닉네임이면 Supabase Auth signUp으로 실제 계정 생성(포인트가 처음부터 정상 작동),
+// 이미 존재하는 닉네임이면 같은 비밀번호로 로그인 시도 -> 비밀번호 다르면 "이미 쓰는 닉네임" 안내
+async function signUpOrLoginGuestAccount(){
+  const nickname = document.getElementById('nickname').value.trim();
+  const password = document.getElementById('guestPassword').value;
+  const email = nicknameToEmail(nickname);
+
+  const { data: signUpData, error: signUpError } = await sb.auth.signUp({ email, password });
+
+  if (!signUpError) {
+    // 신규 가입 성공 -> profiles 행 생성
+    const { error: profileError } = await sb.from('profiles').insert({
+      id: signUpData.user.id,
+      nickname,
+      country_code: document.getElementById('country').value,
+      preferred_lang: 'ko',
+      is_guest: true,
+    });
+    if (profileError) console.error('[signup] profiles insert 오류', profileError);
+    return true;
+  }
+
+  // 이미 존재하는 닉네임(=이메일 중복) -> 같은 비밀번호로 로그인 재시도
+  if (String(signUpError.message || '').toLowerCase().includes('already registered') ||
+      String(signUpError.message || '').toLowerCase().includes('already exists')) {
+    const { error: loginError } = await sb.auth.signInWithPassword({ email, password });
+    if (!loginError) return true;  // 기존 계정으로 로그인 성공 -> 이어서 등록 진행
+    document.getElementById('nicknameStatus').textContent = '이미 사용 중인 닉네임이에요. 비밀번호가 다르면 다른 닉네임을 써주세요.';
+    return false;
+  }
+
+  console.error('[signup] signUp 오류', signUpError);
+  document.getElementById('nicknameStatus').textContent = '계정 생성에 실패했어요. 잠시 후 다시 시도해주세요.';
+  return false;
+}
+
 async function submitRegistration(){
   btnNext.disabled = true;
   btnNext.textContent = '등록 중…';
@@ -682,7 +743,7 @@ async function submitRegistration(){
       p_title: document.getElementById('nickname').value.trim() + ' 님의 등록',
       p_description: document.getElementById('descriptionText').value.trim() || null,
       p_search_key: buildSearchKey(),
-      p_guest_password: null,          // TODO: 비회원 등록 비밀번호 입력 UI 추가 시 여기에 연결
+      p_guest_password: null,          // 계정 비밀번호는 이제 Supabase Auth가 직접 관리 (signUpOrLoginGuestAccount 참고)
       p_detail: buildDetailPayload(),
     });
     if (error) throw error;
@@ -699,6 +760,17 @@ async function submitRegistration(){
 
 btnNext.addEventListener('click', async () => {
   if (!validateStep()) return;
+
+  // STEP1(기본정보) -> STEP2 전환 시점에 닉네임 계정 생성/로그인
+  if (currentStep === 1) {
+    document.getElementById('nicknameStatus').textContent = '';
+    btnNext.disabled = true;
+    btnNext.textContent = '확인 중…';
+    const ok = await signUpOrLoginGuestAccount();
+    btnNext.disabled = false;
+    btnNext.textContent = '다음';
+    if (!ok) return;
+  }
 
   // STEP 4(동의, index 4) -> STEP 5(완료) 전환 시점에 실제 등록 생성
   if (currentStep === 4) {
@@ -717,20 +789,16 @@ renderStep();
 // ── 음성입력 (Web Speech API) ──
 // 크롬/삼성인터넷/엣지 등에서 지원. 사파리는 제한적, 파이어폭스는 미지원 —
 // 미지원 브라우저에서는 마이크 버튼을 숨기고 텍스트 입력만 안내.
-(function setupVoiceInput(){
-  const micBtn = document.getElementById('micBtn');
-  const descText = document.getElementById('descriptionText');
-  const micStatus = document.getElementById('micStatus');
-  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+// 말로 입력 가능한 필드는 전부 이 함수 하나로 처리 (닉네임/전화번호/차량번호/설명칸 등 공용)
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  if (!SpeechRecognitionCtor) {
-    micBtn.style.display = 'none';
-    return;
-  }
+function attachVoiceInput(inputEl, btnEl, statusEl, mode){
+  // mode: 'replace'(닉네임·차량번호처럼 짧은 한줄값 — 인식결과로 덮어씀) | 'append'(설명칸처럼 길게 이어씀)
+  if (!SpeechRecognitionCtor) { btnEl.style.display = 'none'; return; }
 
   const recognition = new SpeechRecognitionCtor();
   recognition.lang = 'ko-KR';           // TODO: 국가 선택(country select)에 연동해 다국어 전환
-  recognition.continuous = true;
+  recognition.continuous = mode === 'append';
   recognition.interimResults = false;
   let listening = false;
 
@@ -739,32 +807,47 @@ renderStep();
     for (let i = e.resultIndex; i < e.results.length; i++) {
       if (e.results[i].isFinal) finalText += e.results[i][0].transcript;
     }
-    if (finalText.trim()) {
-      descText.value = (descText.value.trim() ? descText.value.trim() + ' ' : '') + finalText.trim();
+    if (!finalText.trim()) return;
+    if (mode === 'append') {
+      inputEl.value = (inputEl.value.trim() ? inputEl.value.trim() + ' ' : '') + finalText.trim();
+    } else {
+      inputEl.value = finalText.trim();
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));  // 닉네임 중복확인 등 input 리스너 트리거
     }
   };
   recognition.onend = () => {
     listening = false;
-    micBtn.classList.remove('listening');
-    micStatus.textContent = '';
+    btnEl.classList.remove('listening');
+    if (statusEl) statusEl.textContent = '';
   };
   recognition.onerror = () => {
     listening = false;
-    micBtn.classList.remove('listening');
-    micStatus.textContent = '음성을 인식하지 못했어요. 다시 시도해주세요.';
+    btnEl.classList.remove('listening');
+    if (statusEl) statusEl.textContent = '음성을 인식하지 못했어요. 다시 시도해주세요.';
   };
 
-  micBtn.addEventListener('click', () => {
-    if (listening) {
-      recognition.stop();
-    } else {
-      recognition.start();
-      listening = true;
-      micBtn.classList.add('listening');
-      micStatus.textContent = '🎙️ 듣고 있어요… 말씀해주세요';
-    }
+  btnEl.addEventListener('click', () => {
+    if (listening) { recognition.stop(); return; }
+    recognition.start();
+    listening = true;
+    btnEl.classList.add('listening');
+    if (statusEl) statusEl.textContent = '🎙️ 듣고 있어요…';
   });
-})();
+}
+
+// 설명칸 (길게 이어쓰기 모드)
+attachVoiceInput(
+  document.getElementById('descriptionText'),
+  document.getElementById('micBtn'),
+  document.getElementById('micStatus'),
+  'append'
+);
+
+// 인라인 한줄 입력칸 전부 (닉네임, 전화번호, 차량번호, 제조사·모델, 색상, 물품종류, 반려동물종류/이름, 부재중연락 사유/장소)
+document.querySelectorAll('.mic-btn-sm').forEach(btn => {
+  const input = document.getElementById(btn.dataset.target);
+  if (input) attachVoiceInput(input, btn, null, 'replace');
+});
 </script>
 </body>
 </html>
