@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aliascall — 찾기</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -99,6 +100,16 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 .connect-btn.voice{ background:var(--teal); color:#fff; }
 .connect-btn.video{ background:var(--teal-tint); color:var(--teal-deep); }
 .connect-btn.cancel{ background:transparent; color:var(--ink-soft); }
+
+/* ── QR 카메라 스캔 오버레이 ── */
+.qr-cam-overlay{ display:none; position:fixed; inset:0; background:#0a0f0e; z-index:60; flex-direction:column; }
+.qr-cam-overlay.show{ display:flex; }
+.qr-cam-top{ display:flex; align-items:center; gap:14px; padding:16px 18px; color:#fff; font-weight:600; font-size:14px; }
+.qr-cam-close{ width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,255,255,.12); color:#fff; font-size:16px; cursor:pointer; }
+.qr-cam-frame{ position:relative; flex:1; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.qr-cam-frame video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.qr-cam-box{ position:relative; width:min(70vw,280px); height:min(70vw,280px); border:3px solid var(--coral); border-radius:20px; box-shadow:0 0 0 2000px rgba(0,0,0,.45); }
+.qr-cam-status{ text-align:center; color:#fff; font-size:13px; padding:20px; }
 </style>
 </head>
 <body>
@@ -155,6 +166,20 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
       <button class="connect-btn cancel" id="closeOverlay">닫기</button>
     </div>
   </div>
+</div>
+
+<!-- QR 카메라 스캔 오버레이 -->
+<div class="qr-cam-overlay" id="qrCamOverlay">
+  <div class="qr-cam-top">
+    <button class="qr-cam-close" id="qrCamClose">✕</button>
+    <span>QR 스캔</span>
+  </div>
+  <div class="qr-cam-frame">
+    <video id="qrVideo" playsinline autoplay muted></video>
+    <div class="qr-cam-box"></div>
+  </div>
+  <div class="qr-cam-status" id="qrCamStatus">QR을 사각형 안에 맞춰주세요</div>
+  <canvas id="qrCanvas" style="display:none;"></canvas>
 </div>
 
 <script>
@@ -241,9 +266,86 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
   });
 });
 
-document.getElementById('qrScanBtn').addEventListener('click', () => {
-  alert('카메라가 열립니다. (실제 구현시 QR 스캔 라이브러리 연동)');
+// ── QR 카메라 스캔 (jsQR) ──
+let qrStream = null;
+let qrScanning = false;
+
+document.getElementById('qrScanBtn').addEventListener('click', async () => {
+  const overlay = document.getElementById('qrCamOverlay');
+  const video = document.getElementById('qrVideo');
+  const statusEl = document.getElementById('qrCamStatus');
+  overlay.classList.add('show');
+  statusEl.textContent = 'QR을 사각형 안에 맞춰주세요';
+
+  try {
+    qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = qrStream;
+    await video.play();
+    qrScanning = true;
+    requestAnimationFrame(scanQrFrame);
+  } catch (e) {
+    console.error('[qr-scan] 카메라 접근 오류', e);
+    statusEl.textContent = '카메라를 열 수 없어요. 브라우저 카메라 권한을 확인해주세요.';
+  }
 });
+
+function stopQrScan(){
+  qrScanning = false;
+  if (qrStream) { qrStream.getTracks().forEach(t => t.stop()); qrStream = null; }
+  document.getElementById('qrCamOverlay').classList.remove('show');
+}
+document.getElementById('qrCamClose').addEventListener('click', stopQrScan);
+
+function scanQrFrame(){
+  if (!qrScanning) return;
+  const video = document.getElementById('qrVideo');
+  const canvas = document.getElementById('qrCanvas');
+
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+    if (code && code.data) {
+      qrScanning = false;
+      handleQrResult(code.data);
+      return;
+    }
+  }
+  requestAnimationFrame(scanQrFrame);
+}
+
+// QR에는 registrations.qr_code_token(또는 그 토큰이 담긴 URL)이 들어있다고 가정.
+// URL 형태(.../c/<token>)든 토큰 문자열 그대로든 둘 다 처리
+async function handleQrResult(raw){
+  document.getElementById('qrCamStatus').textContent = '인식됨: 확인 중…';
+  let token = raw.trim();
+  const urlMatch = token.match(/\/c\/([a-f0-9]+)\s*$/i);
+  if (urlMatch) token = urlMatch[1];
+
+  try {
+    const { data, error } = await sb.from('registrations')
+      .select('id, category, search_key, title, description')
+      .eq('qr_code_token', token)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    stopQrScan();
+
+    if (error || !data) {
+      alert('일치하는 등록 정보를 찾지 못했어요. QR이 손상됐을 수 있어요 — 검색창에서 직접 찾아보세요.');
+      return;
+    }
+    openConnect(data.id, CATEGORY_EMOJI[data.category] || '❓');
+  } catch (e) {
+    stopQrScan();
+    console.error('[qr-scan] 조회 오류', e);
+    alert('조회 중 오류가 발생했어요.');
+  }
+}
 
 function openConnect(registrationId, emoji){
   document.getElementById('connectEmoji').textContent = emoji;

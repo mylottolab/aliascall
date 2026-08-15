@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliascall Admin — 통합 관리</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#F6F8F5; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --amber:#D9A441; --amber-tint:#FBF1DE;
+  --line:#DCE3DE; --danger:#C1483A; --danger-tint:#FBEAE6;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; padding:14px 24px; border-bottom:1px solid var(--line); background:var(--card); flex-wrap:wrap; gap:10px; }
+.brand{ display:flex; align-items:center; gap:9px; }
+.brand-mark{ width:26px; height:26px; border-radius:7px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:13px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:15px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+.hdr-right{ display:flex; align-items:center; gap:10px; font-size:12px; color:var(--ink-soft); }
+.hdr-right button{ background:transparent; border:1px solid var(--line); color:var(--ink-soft); padding:6px 12px; border-radius:7px; font-size:12px; cursor:pointer; }
+
+.nav-tabs{ display:flex; gap:4px; overflow-x:auto; padding:0 24px; background:var(--card); border-bottom:1px solid var(--line); }
+.nav-tab{ padding:12px 16px; font-size:12.5px; font-weight:600; color:var(--ink-soft); cursor:pointer; border-bottom:2.5px solid transparent; white-space:nowrap; }
+.nav-tab.active{ color:var(--teal-deep); border-bottom-color:var(--teal); }
+
+main{ max-width:1000px; margin:0 auto; padding:24px 20px 80px; }
+.tab-panel{ display:none; }
+.tab-panel.active{ display:block; }
+
+.stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:24px; }
+.stat-card{ background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:16px; }
+.stat-card .n{ font-size:22px; font-weight:700; font-family:'Space Grotesk',sans-serif; color:var(--teal-deep); }
+.stat-card .l{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+
+.toolbar{ display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+.toolbar input, .toolbar select{ padding:9px 12px; border:1.5px solid var(--line); border-radius:8px; font-size:12.5px; font-family:'Inter',sans-serif; }
+.toolbar input{ flex:1; min-width:160px; }
+.toolbar button{ padding:9px 16px; border:none; border-radius:8px; background:var(--teal); color:#fff; font-weight:600; font-size:12.5px; cursor:pointer; }
+
+table{ width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden; border:1.5px solid var(--line); font-size:12.5px; }
+th{ text-align:left; background:var(--teal-tint); color:var(--teal-deep); padding:10px 12px; font-weight:700; font-size:11px; }
+td{ padding:10px 12px; border-top:1px solid var(--line); vertical-align:top; }
+tr:hover td{ background:rgba(31,111,107,.03); }
+.chip{ font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-block; }
+.chip.active{ background:rgba(31,111,107,.12); color:var(--teal-deep); }
+.chip.suspended{ background:var(--danger-tint); color:var(--danger); }
+.chip.found{ background:var(--amber-tint); color:#8a6416; }
+.chip.pending{ background:var(--amber-tint); color:#8a6416; }
+.chip.open{ background:var(--danger-tint); color:var(--danger); }
+.chip.resolved{ background:rgba(31,111,107,.12); color:var(--teal-deep); }
+.small-btn{ border:none; border-radius:6px; padding:6px 10px; font-size:11px; font-weight:600; cursor:pointer; margin-right:4px; }
+.small-btn.del{ background:var(--danger-tint); color:var(--danger); }
+.small-btn.susp{ background:var(--amber-tint); color:#8a6416; }
+.small-btn.view{ background:var(--teal-tint); color:var(--teal-deep); }
+.empty-row td{ text-align:center; color:var(--ink-soft); padding:30px; }
+
+.login-overlay{ position:fixed; inset:0; background:var(--paper); z-index:50; display:flex; align-items:center; justify-content:center; }
+.login-box{ background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:32px; max-width:360px; width:100%; }
+.login-box h2{ font-size:18px; margin-bottom:6px; }
+.login-box p{ font-size:12.5px; color:var(--ink-soft); margin:0 0 20px; }
+.login-box input{ width:100%; padding:12px 13px; border:1.5px solid var(--line); border-radius:9px; font-size:14px; margin-bottom:10px; }
+.login-box button{ width:100%; padding:12px; border:none; border-radius:9px; background:var(--teal); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
+.login-err{ font-size:12px; color:var(--danger); margin-top:10px; display:none; }
+</style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>Aliascall Admin</h2>
+    <p>관리자 계정으로 로그인하세요.</p>
+    <input type="email" id="loginEmail" placeholder="관리자 이메일">
+    <input type="password" id="loginPassword" placeholder="비밀번호">
+    <button id="loginBtn">로그인</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">A</div>
+    <div class="brand-name">Alias<em>call</em> Admin</div>
+  </div>
+  <div class="hdr-right">
+    <span id="adminEmail"></span>
+    <a href="aliascall_admin_bank_transfers.html" style="color:var(--teal-deep); font-size:12px;">무통장입금 승인 →</a>
+    <button id="logoutBtn">로그아웃</button>
+  </div>
+</header>
+
+<div class="nav-tabs">
+  <div class="nav-tab active" data-tab="overview">대시보드</div>
+  <div class="nav-tab" data-tab="members">회원 관리</div>
+  <div class="nav-tab" data-tab="registrations">등록물 관리</div>
+  <div class="nav-tab" data-tab="reports">신고 처리</div>
+  <div class="nav-tab" data-tab="payments">결제 개요</div>
+  <div class="nav-tab" data-tab="deletions">탈퇴 현황</div>
+</div>
+
+<main>
+
+  <div class="tab-panel active" data-panel="overview">
+    <div class="stat-grid" id="statGrid">
+      <div class="stat-card"><div class="n" id="statMembers">-</div><div class="l">전체 회원</div></div>
+      <div class="stat-card"><div class="n" id="statRegistrations">-</div><div class="l">활성 등록물</div></div>
+      <div class="stat-card"><div class="n" id="statReportsOpen">-</div><div class="l">처리 대기 신고</div></div>
+      <div class="stat-card"><div class="n" id="statDeletions">-</div><div class="l">누적 탈퇴</div></div>
+    </div>
+    <p style="font-size:12.5px; color:var(--ink-soft);">각 탭에서 상세 목록과 조치를 진행하세요.</p>
+  </div>
+
+  <div class="tab-panel" data-panel="members">
+    <div class="toolbar">
+      <input type="text" id="memberSearch" placeholder="닉네임으로 검색">
+      <button id="memberSearchBtn">검색</button>
+    </div>
+    <table>
+      <thead><tr><th>닉네임</th><th>국가</th><th>보유포인트</th><th>가입일</th></tr></thead>
+      <tbody id="membersBody"><tr class="empty-row"><td colspan="4">불러오는 중…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="tab-panel" data-panel="registrations">
+    <div class="toolbar">
+      <input type="text" id="regSearch" placeholder="search_key로 검색">
+      <select id="regCategoryFilter">
+        <option value="">전체 카테고리</option>
+        <option value="vehicle">차량</option>
+        <option value="lost_item">분실·도난</option>
+        <option value="vulnerable_person">아동·노인</option>
+        <option value="pet">반려동물</option>
+        <option value="callback_contact">부재중연락</option>
+        <option value="misc_incident">기타</option>
+      </select>
+      <button id="regSearchBtn">검색</button>
+    </div>
+    <table>
+      <thead><tr><th>카테고리</th><th>제목/식별값</th><th>설명</th><th>상태</th><th>등록일</th><th>조치</th></tr></thead>
+      <tbody id="regBody"><tr class="empty-row"><td colspan="6">불러오는 중…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="tab-panel" data-panel="reports">
+    <div class="toolbar">
+      <select id="reportStatusFilter">
+        <option value="open">처리대기</option>
+        <option value="resolved">처리완료</option>
+        <option value="dismissed">반려됨</option>
+      </select>
+      <button id="reportFilterBtn">조회</button>
+    </div>
+    <table>
+      <thead><tr><th>사유</th><th>대상 등록물</th><th>신고일</th><th>상태</th><th>조치</th></tr></thead>
+      <tbody id="reportsBody"><tr class="empty-row"><td colspan="5">불러오는 중…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="tab-panel" data-panel="payments">
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">최근 결제 내역입니다. 무통장입금 승인/반려는 <a href="aliascall_admin_bank_transfers.html" style="color:var(--teal-deep); font-weight:600;">별도 페이지</a>에서 처리하세요.</p>
+    <table>
+      <thead><tr><th>수단</th><th>금액</th><th>상태</th><th>결제일</th></tr></thead>
+      <tbody id="paymentsBody"><tr class="empty-row"><td colspan="4">불러오는 중…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="tab-panel" data-panel="deletions">
+    <table>
+      <thead><tr><th>닉네임(탈퇴 시점)</th><th>사유</th><th>탈퇴일</th></tr></thead>
+      <tbody id="deletionsBody"><tr class="empty-row"><td colspan="3">불러오는 중…</td></tr></tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const CATEGORY_LABEL = { vehicle:'차량', lost_item:'분실·도난', vulnerable_person:'아동·노인', pet:'반려동물', callback_contact:'부재중연락', misc_incident:'기타' };
+const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('ko-KR') : '-';
+
+async function checkLoginState(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { document.getElementById('loginOverlay').style.display = 'flex'; return false; }
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('adminEmail').textContent = session.user.email || '';
+  return true;
+}
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) { errEl.textContent = '로그인 실패: ' + error.message; errEl.style.display = 'block'; return; }
+  const ok = await checkLoginState();
+  if (ok) loadAllTabs();
+});
+document.getElementById('logoutBtn').addEventListener('click', async () => { await sb.auth.signOut(); window.location.reload(); });
+
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelector('.tab-panel[data-panel="' + tab.dataset.tab + '"]').classList.add('active');
+  });
+});
+
+async function loadOverview(){
+  const [{ count: memberCount }, { count: regCount }, { count: reportCount }, { count: delCount }] = await Promise.all([
+    sb.from('profiles').select('id', { count: 'exact', head: true }),
+    sb.from('registrations').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+    sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+    sb.from('account_deletions').select('id', { count: 'exact', head: true }),
+  ]);
+  document.getElementById('statMembers').textContent = memberCount ?? '-';
+  document.getElementById('statRegistrations').textContent = regCount ?? '-';
+  document.getElementById('statReportsOpen').textContent = reportCount ?? '-';
+  document.getElementById('statDeletions').textContent = delCount ?? '-';
+}
+
+async function loadMembers(keyword){
+  const tbody = document.getElementById('membersBody');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="4">불러오는 중…</td></tr>';
+  let q = sb.from('profiles').select('nickname, country_code, points_balance, created_at').order('created_at', { ascending: false }).limit(100);
+  if (keyword) q = q.ilike('nickname', '%' + keyword + '%');
+  const { data, error } = await q;
+  if (error || !data || data.length === 0) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">' + (error ? '불러오기 실패: ' + error.message : '회원이 없습니다.') + '</td></tr>'; return; }
+  tbody.innerHTML = data.map(m => `
+    <tr>
+      <td>${m.nickname || '-'}</td>
+      <td>${m.country_code || '-'}</td>
+      <td class="mono">${Number(m.points_balance || 0).toLocaleString()}P</td>
+      <td>${fmtDate(m.created_at)}</td>
+    </tr>
+  `).join('');
+}
+document.getElementById('memberSearchBtn').addEventListener('click', () => loadMembers(document.getElementById('memberSearch').value.trim()));
+
+async function loadRegistrations(keyword, category){
+  const tbody = document.getElementById('regBody');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="6">불러오는 중…</td></tr>';
+  let q = sb.from('registrations').select('id, category, title, search_key, description, status, created_at').order('created_at', { ascending: false }).limit(100);
+  if (keyword) q = q.ilike('search_key', '%' + keyword + '%');
+  if (category) q = q.eq('category', category);
+  const { data, error } = await q;
+  if (error || !data || data.length === 0) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">' + (error ? '불러오기 실패: ' + error.message : '등록물이 없습니다.') + '</td></tr>'; return; }
+  tbody.innerHTML = data.map(r => `
+    <tr data-id="${r.id}">
+      <td>${CATEGORY_LABEL[r.category] || r.category}</td>
+      <td>${r.search_key || r.title || '-'}</td>
+      <td style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.description || '-'}</td>
+      <td><span class="chip ${r.status}">${r.status}</span></td>
+      <td>${fmtDate(r.created_at)}</td>
+      <td>
+        <button class="small-btn susp" data-action="suspend" data-id="${r.id}">정지</button>
+        <button class="small-btn del" data-action="delete" data-id="${r.id}">삭제</button>
+      </td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('[data-action="suspend"]').forEach(btn => btn.addEventListener('click', () => suspendRegistration(btn.dataset.id)));
+  tbody.querySelectorAll('[data-action="delete"]').forEach(btn => btn.addEventListener('click', () => deleteRegistration(btn.dataset.id)));
+}
+document.getElementById('regSearchBtn').addEventListener('click', () => loadRegistrations(document.getElementById('regSearch').value.trim(), document.getElementById('regCategoryFilter').value));
+
+async function suspendRegistration(id){
+  if (!confirm('이 등록물을 정지 상태로 전환할까요? (검색·조회에서 숨겨집니다)')) return;
+  const { error } = await sb.from('registrations').update({ status: 'suspended' }).eq('id', id);
+  if (error) { alert('정지 실패: ' + error.message); return; }
+  loadRegistrations(document.getElementById('regSearch').value.trim(), document.getElementById('regCategoryFilter').value);
+}
+async function deleteRegistration(id){
+  if (!confirm('이 등록물을 완전히 삭제할까요? 되돌릴 수 없습니다. (약관상 회사는 이유 불문 삭제 권한을 가집니다)')) return;
+  const { error } = await sb.from('registrations').delete().eq('id', id);
+  if (error) { alert('삭제 실패: ' + error.message); return; }
+  loadRegistrations(document.getElementById('regSearch').value.trim(), document.getElementById('regCategoryFilter').value);
+}
+
+async function loadReports(status){
+  const tbody = document.getElementById('reportsBody');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="5">불러오는 중…</td></tr>';
+  const { data, error } = await sb.from('reports')
+    .select('id, reason, status, created_at, registration_id, registrations ( category, search_key, title )')
+    .eq('status', status).order('created_at', { ascending: false }).limit(100);
+  if (error || !data || data.length === 0) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">' + (error ? '불러오기 실패: ' + error.message : '신고건이 없습니다.') + '</td></tr>'; return; }
+  tbody.innerHTML = data.map(r => {
+    const reg = r.registrations;
+    const regLabel = reg ? ((CATEGORY_LABEL[reg.category] || reg.category) + ' · ' + (reg.search_key || reg.title || '-')) : '(삭제된 등록물)';
+    return `
+    <tr>
+      <td>${r.reason}</td>
+      <td>${regLabel}</td>
+      <td>${fmtDate(r.created_at)}</td>
+      <td><span class="chip ${r.status}">${r.status}</span></td>
+      <td>
+        ${r.status === 'open' ? `
+          <button class="small-btn del" data-action="report-delete-reg" data-regid="${r.registration_id}" data-reportid="${r.id}">등록물 삭제</button>
+          <button class="small-btn view" data-action="report-dismiss" data-reportid="${r.id}">반려</button>
+        ` : '-'}
+      </td>
+    </tr>
+  `; }).join('');
+
+  tbody.querySelectorAll('[data-action="report-delete-reg"]').forEach(btn => btn.addEventListener('click', async () => {
+    if (!confirm('신고된 등록물을 삭제하고 이 신고를 처리완료로 표시할까요?')) return;
+    await sb.from('registrations').delete().eq('id', btn.dataset.regid);
+    await sb.from('reports').update({ status: 'resolved' }).eq('id', btn.dataset.reportid);
+    loadReports(document.getElementById('reportStatusFilter').value);
+  }));
+  tbody.querySelectorAll('[data-action="report-dismiss"]').forEach(btn => btn.addEventListener('click', async () => {
+    await sb.from('reports').update({ status: 'dismissed' }).eq('id', btn.dataset.reportid);
+    loadReports(document.getElementById('reportStatusFilter').value);
+  }));
+}
+document.getElementById('reportFilterBtn').addEventListener('click', () => loadReports(document.getElementById('reportStatusFilter').value));
+
+async function loadPayments(){
+  const tbody = document.getElementById('paymentsBody');
+  const { data, error } = await sb.from('payments').select('method, amount_minor_units, currency_code, status, created_at').order('created_at', { ascending: false }).limit(50);
+  if (error || !data || data.length === 0) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">' + (error ? '불러오기 실패: ' + error.message : '결제 내역이 없습니다.') + '</td></tr>'; return; }
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td>${p.method}</td>
+      <td class="mono">${(p.currency_code === 'KRW' ? '₩' : '$')}${Number(p.amount_minor_units).toLocaleString()}</td>
+      <td><span class="chip ${p.status === 'completed' ? 'active' : (p.status === 'pending' ? 'pending' : 'suspended')}">${p.status}</span></td>
+      <td>${fmtDate(p.created_at)}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadDeletions(){
+  const tbody = document.getElementById('deletionsBody');
+  const { data, error } = await sb.from('account_deletions').select('nickname_snapshot, reason, deleted_at').order('deleted_at', { ascending: false }).limit(100);
+  if (error || !data || data.length === 0) { tbody.innerHTML = '<tr class="empty-row"><td colspan="3">' + (error ? '불러오기 실패: ' + error.message : '탈퇴 이력이 없습니다.') + '</td></tr>'; return; }
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td>${d.nickname_snapshot || '-'}</td>
+      <td>${d.reason || '-'}</td>
+      <td>${fmtDate(d.deleted_at)}</td>
+    </tr>
+  `).join('');
+}
+
+function loadAllTabs(){
+  loadOverview();
+  loadMembers();
+  loadRegistrations();
+  loadReports('open');
+  loadPayments();
+  loadDeletions();
+}
+
+(async () => {
+  const ok = await checkLoginState();
+  if (ok) loadAllTabs();
+})();
+</script>
+</body>
+</html>

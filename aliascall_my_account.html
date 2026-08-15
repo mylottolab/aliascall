@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliascall — 내 계정</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#F6F8F5; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --line:#DCE3DE; --danger:#C1483A; --danger-tint:#FBEAE6;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:20px 24px; border-bottom:1px solid var(--line); background:var(--card); }
+.brand-row{ display:flex; align-items:center; gap:9px; }
+.brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:16px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+
+main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
+.page-title{ font-size:22px; margin-bottom:20px; }
+
+.card{ background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px 22px; margin-bottom:16px; }
+.info-row{ display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+.info-row:last-child{ border-bottom:none; }
+.info-row .label{ color:var(--ink-soft); }
+.info-row .value{ font-weight:600; font-family:'IBM Plex Mono',monospace; }
+
+.danger-card{ background:var(--danger-tint); border:1.5px solid rgba(193,72,58,.25); border-radius:14px; padding:20px 22px; }
+.danger-card h2{ font-size:15px; color:var(--danger); margin-bottom:6px; }
+.danger-card p{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin:0 0 16px; }
+.danger-btn{ width:100%; padding:13px; border:none; border-radius:10px; background:var(--danger); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
+.danger-btn:hover{ background:#a53a2e; }
+.danger-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+.modal-overlay{ display:none; position:fixed; inset:0; background:rgba(18,48,46,.6); z-index:50; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.show{ display:flex; }
+.modal-box{ background:var(--card); border-radius:18px; padding:26px 24px; max-width:380px; width:100%; }
+.modal-box h3{ font-size:17px; margin-bottom:8px; }
+.modal-box p{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin:0 0 16px; }
+.modal-box textarea{ width:100%; border:1.5px solid var(--line); border-radius:9px; padding:10px 12px; font-size:13px; font-family:'Inter',sans-serif; min-height:70px; margin-bottom:14px; }
+.modal-box input[type=text]{ width:100%; border:1.5px solid var(--line); border-radius:9px; padding:10px 12px; font-size:13px; margin-bottom:14px; }
+.modal-btns{ display:flex; gap:8px; }
+.modal-btns button{ flex:1; padding:12px; border-radius:9px; border:none; font-weight:700; font-size:13px; cursor:pointer; }
+.modal-btns .cancel-btn{ background:var(--paper); color:var(--ink-soft); border:1.5px solid var(--line); }
+.modal-btns .confirm-btn{ background:var(--danger); color:#fff; }
+.login-needed{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13.5px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div class="brand-mark">A</div>
+    <div class="brand-name">Alias<em>call</em></div>
+  </div>
+</header>
+
+<main id="mainArea">
+  <div class="login-needed" id="loginNeeded">로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.</div>
+
+  <div id="accountContent" style="display:none;">
+    <div class="page-title">내 계정</div>
+
+    <div class="card">
+      <div class="info-row"><span class="label">닉네임</span><span class="value" id="nicknameVal">-</span></div>
+      <div class="info-row"><span class="label">보유 포인트</span><span class="value" id="pointsVal">-</span></div>
+      <div class="info-row"><span class="label">가입일</span><span class="value" id="joinedVal">-</span></div>
+    </div>
+
+    <div class="danger-card">
+      <h2>회원 탈퇴</h2>
+      <p>탈퇴하시면 계정과 함께 회원님이 등록하신 모든 QR 태그·정보가 삭제되며, 되돌릴 수 없습니다. 보유 포인트도 함께 소멸됩니다.</p>
+      <button class="danger-btn" id="openDeleteModalBtn">회원 탈퇴하기</button>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <h3>정말 탈퇴하시겠어요?</h3>
+    <p>계정과 등록하신 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없어요.</p>
+    <textarea id="deleteReason" placeholder="탈퇴 사유 (선택사항)"></textarea>
+    <label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;">계속하시려면 "탈퇴합니다"를 입력해주세요</label>
+    <input type="text" id="deleteConfirmText" placeholder="탈퇴합니다">
+    <div class="modal-btns">
+      <button class="cancel-btn" id="cancelDeleteBtn">취소</button>
+      <button class="confirm-btn" id="confirmDeleteBtn">탈퇴 확정</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const DELETE_ACCOUNT_URL = SUPABASE_URL + "/functions/v1/self-delete-account";
+
+(async function init(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    document.getElementById('loginNeeded').style.display = 'block';
+    return;
+  }
+  document.getElementById('loginNeeded').style.display = 'none';
+  document.getElementById('accountContent').style.display = 'block';
+
+  const { data: profile } = await sb.from('profiles').select('nickname, points_balance, created_at').eq('id', session.user.id).maybeSingle();
+  document.getElementById('nicknameVal').textContent = profile?.nickname || '-';
+  document.getElementById('pointsVal').textContent = (profile?.points_balance ?? 0).toLocaleString() + 'P';
+  document.getElementById('joinedVal').textContent = profile?.created_at ? new Date(profile.created_at).toLocaleDateString('ko-KR') : '-';
+})();
+
+document.getElementById('openDeleteModalBtn').addEventListener('click', () => {
+  document.getElementById('deleteModal').classList.add('show');
+});
+document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+  document.getElementById('deleteModal').classList.remove('show');
+});
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+  if (document.getElementById('deleteConfirmText').value.trim() !== '탈퇴합니다') {
+    alert('"탈퇴합니다"를 정확히 입력해주세요.');
+    return;
+  }
+  const btn = document.getElementById('confirmDeleteBtn');
+  btn.disabled = true; btn.textContent = '처리 중…';
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const resp = await fetch(DELETE_ACCOUNT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ reason: document.getElementById('deleteReason').value.trim() || null }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || '탈퇴 처리에 실패했습니다.');
+
+    await sb.auth.signOut();
+    alert('탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사했습니다.');
+    window.location.href = 'aliascall_registration_mockup.html';
+  } catch (e) {
+    alert('탈퇴 처리 중 오류가 발생했어요: ' + e.message);
+    btn.disabled = false; btn.textContent = '탈퇴 확정';
+  }
+});
+</script>
+</body>
+</html>
