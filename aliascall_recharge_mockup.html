@@ -224,16 +224,31 @@ document.querySelectorAll('.method-tab').forEach(tab => {
   });
 });
 
+// 등록화면 등에서 "충전하러 가기"로 넘어온 경우, ?return=원래주소 를 실어서 옴 —
+// 결제 완료 즉시(무통장입금 제외) 그 주소로 자동 복귀시킴
+const returnUrl = new URLSearchParams(window.location.search).get('return');
+
 payBtn.addEventListener('click', () => {
   const p = packages[currentCurrency][selectedIndex];
   if (currentCurrency === 'KRW' && currentMethod === 'bank_transfer') {
     const name = document.getElementById('depositorName').value.trim();
     if (!name) { alert('입금자명을 입력해주세요.'); return; }
-    alert('입금 신청이 접수되었습니다. 입금 확인 후 ' + fmt(p.points) + 'P가 지급됩니다.');
+    // 무통장입금은 관리자 승인 전까지 포인트가 즉시 반영되지 않으므로 자동복귀시키지 않음
+    alert('입금 신청이 접수되었습니다. 입금 확인 후 ' + fmt(p.points) + 'P가 지급됩니다.' +
+      (returnUrl ? '\n입금 확인되시면 다시 원래 화면으로 돌아와 이어서 진행해주세요.' : ''));
     return;
   }
   alert((currentCurrency === 'USD' ? 'PayPal' : '이니시스') + ' 결제창으로 이동합니다. (' + p.symbol + fmt(p.amount) + ' → ' + fmt(p.points) + 'P)');
+  // TODO: 실제 결제 연동 시 이 알림은 결제 성공 콜백(웹훅/리다이렉트) 안으로 옮겨야 함.
+  // 지금은 목업이라 결제 성공을 즉시로 가정하고, return 파라미터가 있으면 원래 화면으로 자동 복귀시킴
+  if (returnUrl) {
+    window.location.href = returnUrl;
+  }
 });
+
+if (returnUrl) {
+  document.querySelector('.page-desc').textContent = 'QR 다운로드를 이어서 하시려면, 충전 완료 후 자동으로 원래 화면으로 돌아갑니다.';
+}
 
 renderPackages();
 renderSummary();
