@@ -147,11 +147,15 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 
 <header>
   <div class="brand-row">
-    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='aliascall_index.html'" aria-label="뒤로가기">←</button>
-    <a href="aliascall_index.html" class="brand-home-link">
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+    <a href="index.html" class="brand-home-link">
       <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
     </a>
+    <div class="lang-toggle" style="margin-left:auto;">
+      <button data-lang="ko" class="active">KR</button>
+      <button data-lang="en">EN</button>
+    </div>
   </div>
 </header>
 
@@ -160,21 +164,21 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 
     <div class="state-loading" id="stateLoading">
       <div class="spinner"></div>
-      <p>확인하는 중…</p>
+      <p data-i18n="checking">확인하는 중…</p>
     </div>
 
     <div class="state-error" id="stateError">
       <div class="big">🔍</div>
-      <h2>등록 정보를 찾을 수 없어요</h2>
-      <p>QR이 손상되었거나, 이미 처리된(삭제된) 등록일 수 있어요.<br>직접 검색해보시겠어요?</p>
-      <a href="aliascall_search_mockup.html">번호·이름으로 검색하기</a>
+      <h2 data-i18n="notFoundTitle">등록 정보를 찾을 수 없어요</h2>
+      <p data-i18n="notFoundDesc">QR이 손상되었거나, 이미 처리된(삭제된) 등록일 수 있어요.<br>직접 검색해보시겠어요?</p>
+      <a href="aliascall_search_mockup.html" data-i18n="searchDirectly">번호·이름으로 검색하기</a>
     </div>
 
     <div class="state-error" id="stateExpired" style="display:none;">
       <div class="big">⏳</div>
-      <h2>연결이 잠시 중단되어 있어요</h2>
-      <p>소유자의 수신서비스 기간이 만료되었습니다.<br>소유자에게 갱신을 안내해주시면 다시 연결할 수 있어요.</p>
-      <a href="aliascall_search_mockup.html">다른 등록물 찾기</a>
+      <h2 data-i18n="expiredTitle">연결이 잠시 중단되어 있어요</h2>
+      <p data-i18n="expiredDesc">소유자의 수신서비스 기간이 만료되었습니다.<br>소유자에게 갱신을 안내해주시면 다시 연결할 수 있어요.</p>
+      <a href="aliascall_search_mockup.html" data-i18n="findOther">다른 등록물 찾기</a>
     </div>
 
     <div class="state-found" id="stateFound">
@@ -189,15 +193,15 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 
         <div class="privacy-note">
           <span class="icon">🔒</span>
-          <span>실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.</span>
+          <span data-i18n="privacyNote">실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.</span>
         </div>
 
         <div class="connect-btns">
-          <button class="connect-btn voice" id="btnVoice">🎧 음성으로 연결하기</button>
-          <button class="connect-btn video" id="btnVideo">🎥 영상으로 연결하기</button>
+          <button class="connect-btn voice" id="btnVoice" data-i18n="connectVoice">🎧 음성으로 연결하기</button>
+          <button class="connect-btn video" id="btnVideo" data-i18n="connectVideo">🎥 영상으로 연결하기</button>
         </div>
       </div>
-      <a href="aliascall_search_mockup.html" class="guide-link-bottom">다른 등록물 찾기</a>
+      <a href="aliascall_search_mockup.html" class="guide-link-bottom" data-i18n="findOther">다른 등록물 찾기</a>
     </div>
 
   </div>
@@ -215,30 +219,95 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
     <video id="remoteVideo" autoplay playsinline></video>
     <video id="localVideo" autoplay playsinline muted></video>
   </div>
-  <h3 id="callingStatus">연결 중…</h3>
-  <p id="callingSub">소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.</p>
+  <h3 id="callingStatus" data-i18n="connecting">연결 중…</h3>
+  <p id="callingSub" data-i18n="notifyingOwner">소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.</p>
   <div class="call-controls" id="callControls">
     <button class="ctrl-btn" id="muteBtn">🎤</button>
     <button class="ctrl-btn hangup" id="endCallBtn">📵</button>
   </div>
   <div class="leave-msg-block" id="leaveMsgBlock">
-    <input type="text" id="leaveMsgInput" placeholder="예: 지금 못 받으시면 010-0000-0000으로 연락주세요">
-    <button id="leaveMsgSendBtn">메시지 남기기</button>
+    <input type="text" id="leaveMsgInput" data-i18n-placeholder="leaveMsgPlaceholder" placeholder="예: 지금 못 받으시면 010-0000-0000으로 연락주세요">
+    <button id="leaveMsgSendBtn" data-i18n="leaveMsgSend">메시지 남기기</button>
   </div>
-  <button class="end-btn" id="endCallBtnInitial">연결 종료</button>
+  <button class="end-btn" id="endCallBtnInitial" data-i18n="endCall">연결 종료</button>
 </div>
 
 <button class="chat-toggle-btn" id="chatToggleBtn">💬</button>
 <div class="chat-panel" id="chatPanel">
-  <div class="chat-panel-header"><b>채팅</b><button id="chatCloseBtn">✕</button></div>
+  <div class="chat-panel-header"><b data-i18n="chatTitle">채팅</b><button id="chatCloseBtn">✕</button></div>
   <div class="chat-messages" id="chatMessages"></div>
   <div class="chat-input-row">
-    <input type="text" id="chatInput" placeholder="메시지 입력…">
+    <input type="text" id="chatInput" data-i18n-placeholder="chatInputPlaceholder" placeholder="메시지 입력…">
     <button id="chatSendBtn">➤</button>
   </div>
 </div>
 
 <script>
+// ── 언어 전환 (KR/EN) ──
+const I18N = {
+  ko: {
+    checking: '확인하는 중…', notFoundTitle: '등록 정보를 찾을 수 없어요',
+    notFoundDesc: 'QR이 손상되었거나, 이미 처리된(삭제된) 등록일 수 있어요.<br>직접 검색해보시겠어요?',
+    searchDirectly: '번호·이름으로 검색하기',
+    expiredTitle: '연결이 잠시 중단되어 있어요',
+    expiredDesc: '소유자의 수신서비스 기간이 만료되었습니다.<br>소유자에게 갱신을 안내해주시면 다시 연결할 수 있어요.',
+    findOther: '다른 등록물 찾기',
+    privacyNote: '실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.',
+    connectVoice: '🎧 음성으로 연결하기', connectVideo: '🎥 영상으로 연결하기',
+    connecting: '연결 중…', notifyingOwner: '소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.',
+    leaveMsgPlaceholder: '예: 지금 못 받으시면 010-0000-0000으로 연락주세요',
+    leaveMsgSend: '메시지 남기기', endCall: '연결 종료',
+    chatTitle: '채팅', chatInputPlaceholder: '메시지 입력…',
+    voiceConnecting: '음성으로 연결 중…', videoConnecting: '영상으로 연결 중…',
+    connected: '연결됨', callFailed: '연결 요청에 실패했어요. 잠시 후 다시 시도해주세요.',
+    micPermission: '마이크(또는 카메라) 권한이 필요합니다.',
+    noAnswerTitle: '지금은 응답이 없어요', noAnswerDesc: '아래에 메시지를 남겨두시면, 소유자가 나중에 확인할 수 있어요.',
+    leaveMsgSent: '✅ 메시지를 남겼습니다. 소유자가 확인하면 답을 드릴 수 있어요.',
+    leaveMsgFailed: '메시지 전송에 실패했어요. 다시 시도해주세요.', leaveMsgSending: '전송 중…',
+  },
+  en: {
+    checking: 'Checking…', notFoundTitle: 'Registration not found',
+    notFoundDesc: "The QR may be damaged, or this registration may have been removed.<br>Would you like to search instead?",
+    searchDirectly: 'Search by number or name',
+    expiredTitle: 'Connection is temporarily unavailable',
+    expiredDesc: "The owner's subscription has expired.<br>Let the owner know to renew, and this will reconnect.",
+    findOther: 'Find something else',
+    privacyNote: 'Real phone numbers are never revealed. You will connect anonymously right in your browser.',
+    connectVoice: '🎧 Connect by voice', connectVideo: '🎥 Connect by video',
+    connecting: 'Connecting…', notifyingOwner: 'Notifying the owner. Please hold on a moment.',
+    leaveMsgPlaceholder: 'e.g. If you miss this, please call 010-0000-0000',
+    leaveMsgSend: 'Leave a message', endCall: 'End',
+    chatTitle: 'Chat', chatInputPlaceholder: 'Type a message…',
+    voiceConnecting: 'Connecting by voice…', videoConnecting: 'Connecting by video…',
+    connected: 'Connected', callFailed: 'Failed to send connection request. Please try again shortly.',
+    micPermission: 'Microphone (or camera) permission is required.',
+    noAnswerTitle: 'No answer right now', noAnswerDesc: 'Leave a message below and the owner can see it later.',
+    leaveMsgSent: '✅ Your message has been left. The owner can reply once they check it.',
+    leaveMsgFailed: 'Failed to send the message. Please try again.', leaveMsgSending: 'Sending…',
+  },
+};
+let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
+
+function applyLang(lang){
+  currentLang = lang;
+  localStorage.setItem('aliascall_lang', lang);
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.dataset.i18n;
+    if (I18N[lang][key] !== undefined) el.innerHTML = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.dataset.i18nPlaceholder;
+    if (I18N[lang][key] !== undefined) el.placeholder = I18N[lang][key];
+  });
+  document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+}
+document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+});
+
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -270,7 +339,7 @@ async function init(){
 
   try {
     const { data, error } = await sb.from('registrations')
-      .select('id, category, title, search_key, description, subscription_expires_at')
+      .select('id, category, title, search_key, description')
       .eq('qr_code_token', token)
       .eq('status', 'active')
       .maybeSingle();
@@ -282,16 +351,15 @@ async function init(){
       return;
     }
 
-    // ⚠ 아동·치매어르신·장애우, 반려동물은 구독 만료와 무관하게 항상 연결 가능 (안전 최우선)
-    const NEVER_EXPIRES = ['vulnerable_person', 'pet'];
-    if (!NEVER_EXPIRES.includes(data.category) && data.subscription_expires_at) {
-      const GRACE_DAYS = 30;
-      const expiresAt = new Date(data.subscription_expires_at);
-      const cutoffAt = new Date(expiresAt.getTime() + GRACE_DAYS * 86400000);
-      if (new Date() > cutoffAt) {
-        document.getElementById('stateExpired').style.display = 'block';
-        return;
-      }
+    // ⚠ 계정단위 구독 판정 — 개인정보(profiles.subscription_expires_at)를 클라이언트로
+    // 직접 내려주지 않고, 서버가 true/false만 반환하는 RPC로 확인 (아동·노인·반려동물은
+    // 이 함수 내부에서 이미 항상 true로 처리됨)
+    const { data: connectable, error: connErr } = await sb.rpc('check_registration_connectable', {
+      p_registration_id: data.id,
+    });
+    if (connErr || connectable === false) {
+      document.getElementById('stateExpired').style.display = 'block';
+      return;
     }
 
     document.getElementById('foundEmoji').textContent = CATEGORY_EMOJI[data.category] || '❓';
@@ -390,8 +458,8 @@ async function startCall(mode){
   currentMode = mode;
   const overlay = document.getElementById('callingOverlay');
   overlay.classList.add('show');
-  document.getElementById('callingStatus').textContent = mode === 'voice' ? '음성으로 연결 중…' : '영상으로 연결 중…';
-  document.getElementById('callingSub').textContent = '소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.';
+  document.getElementById('callingStatus').textContent = mode === 'voice' ? I18N[currentLang].voiceConnecting : I18N[currentLang].videoConnecting;
+  document.getElementById('callingSub').textContent = I18N[currentLang].notifyingOwner;
   document.getElementById('pulseRing').style.display = 'flex';
   document.getElementById('leaveMsgBlock').classList.remove('show');
 
@@ -410,7 +478,7 @@ async function startCall(mode){
   });
 
   if (error) {
-    alert('연결 요청에 실패했어요. 잠시 후 다시 시도해주세요.');
+    alert(I18N[currentLang].callFailed);
     overlay.classList.remove('show');
     return;
   }
@@ -424,7 +492,7 @@ async function startCall(mode){
     .on('broadcast', { event: 'answer' }, async ({ payload }) => {
       clearTimeout(noAnswerTimer);
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-      document.getElementById('callingStatus').textContent = '연결됨';
+      document.getElementById('callingStatus').textContent = I18N[currentLang].connected;
       document.getElementById('callingSub').textContent = '';
       document.getElementById('pulseRing').style.display = 'none';
       document.getElementById('callControls').classList.add('show');
@@ -451,8 +519,8 @@ function showLeaveMessagePrompt(){
   if (pc) { pc.close(); pc = null; }
   if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
   document.getElementById('pulseRing').style.display = 'none';
-  document.getElementById('callingStatus').textContent = '지금은 응답이 없어요';
-  document.getElementById('callingSub').textContent = '아래에 메시지를 남겨두시면, 소유자가 나중에 확인할 수 있어요.';
+  document.getElementById('callingStatus').textContent = I18N[currentLang].noAnswerTitle;
+  document.getElementById('callingSub').textContent = I18N[currentLang].noAnswerDesc;
   document.getElementById('leaveMsgBlock').classList.add('show');
 }
 
@@ -460,18 +528,18 @@ document.getElementById('leaveMsgSendBtn').addEventListener('click', async () =>
   const text = document.getElementById('leaveMsgInput').value.trim();
   if (!text) return;
   const btn = document.getElementById('leaveMsgSendBtn');
-  btn.disabled = true; btn.textContent = '전송 중…';
+  btn.disabled = true; btn.textContent = I18N[currentLang].leaveMsgSending;
   try {
     const { error } = await sb.from('webrtc_sessions').update({
       left_message: text, ended_reason: 'timeout_no_answer', ended_at: new Date().toISOString(),
     }).eq('session_token', currentSessionToken);
     if (error) throw error;
-    document.getElementById('leaveMsgBlock').innerHTML = '<p style="color:#fff; font-size:13px;">✅ 메시지를 남겼습니다. 소유자가 확인하면 답을 드릴 수 있어요.</p>';
+    document.getElementById('leaveMsgBlock').innerHTML = '<p style="color:#fff; font-size:13px;">' + I18N[currentLang].leaveMsgSent + '</p>';
     setTimeout(() => endCall(true), 1800);
   } catch (e) {
     console.error('[leave-message] 저장 오류', e);
-    alert('메시지 전송에 실패했어요. 다시 시도해주세요.');
-    btn.disabled = false; btn.textContent = '메시지 남기기';
+    alert(I18N[currentLang].leaveMsgFailed);
+    btn.disabled = false; btn.textContent = I18N[currentLang].leaveMsgSend;
   }
 });
 
@@ -488,7 +556,7 @@ async function createOfferAsCaller(mode){
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' });
   } catch (e) {
-    alert('마이크(또는 카메라) 권한이 필요합니다.');
+    alert(I18N[currentLang].micPermission);
     endCall(true);
     return;
   }
@@ -552,6 +620,7 @@ document.getElementById('endCallBtn').addEventListener('click', () => endCall(fa
 document.getElementById('endCallBtnInitial').addEventListener('click', () => endCall(false));
 
 init();
+applyLang(currentLang);
 </script>
 </div><!-- /app-shell -->
 

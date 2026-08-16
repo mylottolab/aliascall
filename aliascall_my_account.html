@@ -44,6 +44,8 @@ header{ padding:20px 24px; border-bottom:1px solid var(--line); background:var(-
 
 main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .page-title{ font-size:22px; margin-bottom:20px; }
+.logout-btn{ background:var(--paper); border:1.5px solid var(--line); color:var(--ink-soft); font-size:12px; font-weight:600; padding:8px 14px; border-radius:8px; cursor:pointer; }
+.logout-btn:hover{ border-color:var(--ink-soft); color:var(--ink); }
 
 .card{ background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px 22px; margin-bottom:16px; }
 .info-row{ display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
@@ -57,6 +59,9 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
 .section-title{ font-size:15px; font-weight:700; margin:26px 0 12px; font-family:'Space Grotesk',sans-serif; }
 .reg-card{ background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+.sub-card{ margin-bottom:20px; }
+.sub-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.sub-title{ font-size:14px; font-weight:700; }
 .reg-top{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
 .reg-emoji{ font-size:20px; }
 .reg-title{ font-size:13.5px; font-weight:600; flex:1; }
@@ -123,33 +128,50 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
 <header>
   <div class="brand-row">
-    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='aliascall_index.html'" aria-label="뒤로가기">←</button>
-    <a href="aliascall_index.html" class="brand-home-link">
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+    <a href="index.html" class="brand-home-link">
       <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
     </a>
+    <div class="lang-toggle" style="margin-left:auto;">
+      <button data-lang="ko" class="active">KR</button>
+      <button data-lang="en">EN</button>
+    </div>
   </div>
 </header>
 
 <main id="mainArea">
-  <div class="login-needed" id="loginNeeded">로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.</div>
+  <div class="login-needed" id="loginNeeded" data-i18n="loginNeeded">로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.</div>
 
   <div id="accountContent" style="display:none;">
-    <div class="page-title">내 계정</div>
-
-    <div class="card">
-      <div class="info-row"><span class="label">닉네임</span><span class="value" id="nicknameVal">-</span></div>
-      <div class="info-row"><span class="label">보유 포인트</span><span class="value" id="pointsVal">-</span></div>
-      <div class="info-row"><span class="label">가입일</span><span class="value" id="joinedVal">-</span></div>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+      <div class="page-title" data-i18n="pageTitle" style="margin-bottom:0;">내 계정</div>
+      <button id="logoutBtn" class="logout-btn" data-i18n="logoutBtn">로그아웃</button>
     </div>
 
-    <div class="section-title">내 등록물</div>
+    <div class="card">
+      <div class="info-row"><span class="label" data-i18n="nicknameLabel">닉네임</span><span class="value" id="nicknameVal">-</span></div>
+      <div class="info-row"><span class="label" data-i18n="pointsLabel">보유 포인트</span><span class="value" id="pointsVal">-</span></div>
+      <div class="info-row"><span class="label" data-i18n="joinedLabel">가입일</span><span class="value" id="joinedVal">-</span></div>
+    </div>
+
+    <div class="card sub-card">
+      <div class="sub-top">
+        <span class="sub-title" data-i18n="subscriptionTitle">수신서비스 구독</span>
+        <span class="reg-status" id="subStatusBadge">-</span>
+      </div>
+      <div class="reg-meta" id="subStatusMeta" style="margin-bottom:12px;"></div>
+      <div class="reg-meta" style="margin-bottom:12px;" data-i18n="subscriptionSub">등록물 개수와 무관하게, 이 구독 하나로 전체 등록물의 연결이 유지됩니다. (아동·치매어르신·장애우·반려동물은 구독 여부와 무관하게 항상 연결됩니다)</div>
+      <button class="reg-renew-btn" id="openSubRenewBtn" data-i18n="renewBtn">6개월/1년 갱신하기</button>
+    </div>
+
+    <div class="section-title" data-i18n="myRegistrationsTitle">내 등록물</div>
     <div id="myRegistrations"></div>
 
     <div class="danger-card">
-      <h2>회원 탈퇴</h2>
-      <p>탈퇴하시면 계정과 함께 회원님이 등록하신 모든 QR 태그·정보가 삭제되며, 되돌릴 수 없습니다. 보유 포인트도 함께 소멸됩니다.</p>
-      <button class="danger-btn" id="openDeleteModalBtn">회원 탈퇴하기</button>
+      <h2 data-i18n="withdrawTitle">회원 탈퇴</h2>
+      <p data-i18n="withdrawDesc">탈퇴하시면 계정과 함께 회원님이 등록하신 모든 QR 태그·정보가 삭제되며, 되돌릴 수 없습니다. 보유 포인트도 함께 소멸됩니다.</p>
+      <button class="danger-btn" id="openDeleteModalBtn" data-i18n="withdrawBtn">회원 탈퇴하기</button>
     </div>
   </div>
 </main>
@@ -157,22 +179,22 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 <!-- 갱신 결제 모달 -->
 <div class="modal-overlay" id="renewModal">
   <div class="modal-box">
-    <h3 id="renewTitle">구독 갱신</h3>
-    <p>선택하신 기간만큼 수신서비스가 연장됩니다.</p>
+    <h3 id="renewTitle" data-i18n="renewTitle">구독 갱신</h3>
+    <p data-i18n="renewDesc">선택하신 기간만큼 수신서비스가 연장됩니다.</p>
 
     <div class="renew-period-tabs">
-      <div class="renew-period-tab selected" data-months="6">6개월<span class="renew-price">$1 · 1,200원</span></div>
-      <div class="renew-period-tab" data-months="12">1년<span class="renew-price">$1.5 · 1,800원</span></div>
+      <div class="renew-period-tab selected" data-months="6"><span data-i18n="period6mo">6개월</span><span class="renew-price">$1 · 1,200원</span></div>
+      <div class="renew-period-tab" data-months="12"><span data-i18n="period1yr">1년</span><span class="renew-price">$1.5 · 1,800원</span></div>
     </div>
 
     <div class="renew-currency-tabs">
-      <div class="renew-currency-tab selected" data-currency="KRW">🇰🇷 KRW (카드결제)</div>
+      <div class="renew-currency-tab selected" data-currency="KRW">🇰🇷 <span data-i18n="krwLabel">KRW (카드결제)</span></div>
       <div class="renew-currency-tab" data-currency="USD">💵 USD (PayPal)</div>
     </div>
 
     <div class="modal-btns">
-      <button class="cancel-btn" id="renewCancelBtn">취소</button>
-      <button class="confirm-btn-teal" id="renewConfirmBtn">결제하기</button>
+      <button class="cancel-btn" id="renewCancelBtn" data-i18n="cancel">취소</button>
+      <button class="confirm-btn-teal" id="renewConfirmBtn" data-i18n="payNow">결제하기</button>
     </div>
   </div>
 </div>
@@ -180,77 +202,184 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 <!-- 등록물 수정 모달 -->
 <div class="modal-overlay" id="editRegModal">
   <div class="modal-box" style="max-width:420px;">
-    <h3>등록 정보 수정</h3>
-    <p>카테고리는 바꿀 수 없어요. 필요한 정보만 수정해주세요.</p>
+    <h3 data-i18n="editRegTitle">등록 정보 수정</h3>
+    <p data-i18n="editRegDesc">카테고리는 바꿀 수 없어요. 필요한 정보만 수정해주세요.</p>
 
     <div id="editFieldsVehicle" class="edit-cat-fields" style="display:none;">
-      <label class="edit-label">차량번호</label>
+      <label class="edit-label" data-i18n="plateLabel">차량번호</label>
       <input type="text" id="editPlateNumber" class="edit-input">
-      <label class="edit-label">제조사·모델 (선택)</label>
+      <label class="edit-label" data-i18n="makeLabel">제조사·모델 (선택)</label>
       <input type="text" id="editVehicleMake" class="edit-input">
-      <label class="edit-label">색상 (선택)</label>
+      <label class="edit-label" data-i18n="colorLabel">색상 (선택)</label>
       <input type="text" id="editVehicleColor" class="edit-input">
     </div>
 
     <div id="editFieldsLostItem" class="edit-cat-fields" style="display:none;">
-      <label class="edit-label">물품 종류</label>
+      <label class="edit-label" data-i18n="itemTypeLabel">물품 종류</label>
       <input type="text" id="editItemType" class="edit-input">
     </div>
 
     <div id="editFieldsVulnerable" class="edit-cat-fields" style="display:none;">
-      <label class="edit-label">출생연도</label>
+      <label class="edit-label" data-i18n="birthYearLabel">출생연도</label>
       <input type="number" id="editBirthYear" class="edit-input" style="max-width:140px;">
     </div>
 
     <div id="editFieldsPet" class="edit-cat-fields" style="display:none;">
-      <label class="edit-label">종류</label>
+      <label class="edit-label" data-i18n="speciesLabel">종류</label>
       <input type="text" id="editPetSpecies" class="edit-input">
-      <label class="edit-label">이름</label>
+      <label class="edit-label" data-i18n="petNameLabel">이름</label>
       <input type="text" id="editPetName" class="edit-input">
     </div>
 
     <div id="editFieldsCallback" class="edit-cat-fields" style="display:none;">
-      <label class="edit-label">사유</label>
+      <label class="edit-label" data-i18n="reasonLabel">사유</label>
       <input type="text" id="editCallbackReason" class="edit-input">
-      <label class="edit-label">부착·게시 장소 (선택)</label>
+      <label class="edit-label" data-i18n="locationLabel">부착·게시 장소 (선택)</label>
       <input type="text" id="editCallbackLocation" class="edit-input">
     </div>
 
-    <label class="edit-label">사진·동영상·음성</label>
+    <label class="edit-label" data-i18n="mediaLabel">사진·동영상·음성</label>
     <div class="edit-media-tabs">
-      <div class="edit-media-tab selected" data-media="photo">사진</div>
-      <div class="edit-media-tab" data-media="video">동영상</div>
-      <div class="edit-media-tab" data-media="audio">음성</div>
+      <div class="edit-media-tab selected" data-media="photo" data-i18n="mediaPhoto">사진</div>
+      <div class="edit-media-tab" data-media="video" data-i18n="mediaVideo">동영상</div>
+      <div class="edit-media-tab" data-media="audio" data-i18n="mediaAudio">음성</div>
     </div>
     <div class="edit-media-grid" id="editMediaGrid"></div>
-    <div class="edit-media-add" id="editMediaAddBtn">+ 추가하기</div>
+    <div class="edit-media-add" id="editMediaAddBtn" data-i18n="addMedia">+ 추가하기</div>
     <input type="file" id="editMediaFileInput" accept="image/*" style="display:none;">
 
-    <label class="edit-label">설명</label>
+    <label class="edit-label" data-i18n="descLabel">설명</label>
     <textarea id="editDescription" class="edit-input" style="min-height:80px;"></textarea>
 
     <div class="modal-btns">
-      <button class="cancel-btn" id="editRegCancelBtn">취소</button>
-      <button class="confirm-btn-teal" id="editRegSaveBtn">저장</button>
+      <button class="cancel-btn" id="editRegCancelBtn" data-i18n="cancel">취소</button>
+      <button class="confirm-btn-teal" id="editRegSaveBtn" data-i18n="save">저장</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-box">
-    <h3>정말 탈퇴하시겠어요?</h3>
-    <p>계정과 등록하신 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없어요.</p>
-    <textarea id="deleteReason" placeholder="탈퇴 사유 (선택사항)"></textarea>
-    <label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;">계속하시려면 "탈퇴합니다"를 입력해주세요</label>
-    <input type="text" id="deleteConfirmText" placeholder="탈퇴합니다">
+    <h3 data-i18n="deleteConfirmTitle">정말 탈퇴하시겠어요?</h3>
+    <p data-i18n="deleteConfirmDesc">계정과 등록하신 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없어요.</p>
+    <textarea id="deleteReason" data-i18n-placeholder="deleteReasonPlaceholder" placeholder="탈퇴 사유 (선택사항)"></textarea>
+    <label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;" data-i18n="deleteConfirmLabel">계속하시려면 "탈퇴합니다"를 입력해주세요</label>
+    <input type="text" id="deleteConfirmText" data-i18n-placeholder="deleteConfirmWord" placeholder="탈퇴합니다">
     <div class="modal-btns">
-      <button class="cancel-btn" id="cancelDeleteBtn">취소</button>
-      <button class="confirm-btn" id="confirmDeleteBtn">탈퇴 확정</button>
+      <button class="cancel-btn" id="cancelDeleteBtn" data-i18n="cancel">취소</button>
+      <button class="confirm-btn" id="confirmDeleteBtn" data-i18n="confirmWithdraw">탈퇴 확정</button>
     </div>
   </div>
 </div>
 
 <script>
+// ── 언어 전환 (KR/EN) ──
+const I18N = {
+  ko: {
+    loginNeeded: '로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.',
+    pageTitle: '내 계정', nicknameLabel: '닉네임', pointsLabel: '보유 포인트', joinedLabel: '가입일',
+    logoutBtn: '로그아웃', logoutConfirm: '로그아웃 하시겠어요?',
+    myRegistrationsTitle: '내 등록물',
+    withdrawTitle: '회원 탈퇴', withdrawDesc: '탈퇴하시면 계정과 함께 회원님이 등록하신 모든 QR 태그·정보가 삭제되며, 되돌릴 수 없습니다. 보유 포인트도 함께 소멸됩니다.',
+    withdrawBtn: '회원 탈퇴하기',
+    renewTitle: '구독 갱신', renewDesc: '선택하신 기간만큼 수신서비스가 연장됩니다.',
+    period6mo: '6개월', period1yr: '1년', krwLabel: 'KRW (카드결제)',
+    cancel: '취소', payNow: '결제하기',
+    editRegTitle: '등록 정보 수정', editRegDesc: '카테고리는 바꿀 수 없어요. 필요한 정보만 수정해주세요.',
+    plateLabel: '차량번호', makeLabel: '제조사·모델 (선택)', colorLabel: '색상 (선택)', itemTypeLabel: '물품 종류',
+    birthYearLabel: '출생연도', speciesLabel: '종류', petNameLabel: '이름', reasonLabel: '사유', locationLabel: '부착·게시 장소 (선택)',
+    mediaLabel: '사진·동영상·음성', mediaPhoto: '사진', mediaVideo: '동영상', mediaAudio: '음성', addMedia: '+ 추가하기',
+    descLabel: '설명', save: '저장',
+    deleteConfirmTitle: '정말 탈퇴하시겠어요?', deleteConfirmDesc: '계정과 등록하신 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없어요.',
+    deleteReasonPlaceholder: '탈퇴 사유 (선택사항)', deleteConfirmLabel: '계속하시려면 "탈퇴합니다"를 입력해주세요',
+    deleteConfirmWord: '탈퇴합니다', confirmWithdraw: '탈퇴 확정',
+    catVehicle: '차량', catLostItem: '분실·도난 우려 물품', catVulnerable: '아동·치매 어르신·장애우', catPet: '반려동물', catCallback: '부재중 연락', catMisc: '기타 물품·사건',
+    statusForever: '♾️ 영구', statusForeverDesc: '안전 카테고리라 구독 만료와 무관하게 연결이 항상 유지됩니다.',
+    statusNoSub: '❓ 구독정보 없음', statusNoSubDesc: '구독 정보를 확인할 수 없어요.',
+    statusOk: '✅ 활성', statusExpireLabel: '만료일: ',
+    statusSoon: '⚠️ 곧 만료', statusSoonDesc: (d, date) => 'D-' + d + ' · ' + date + ' 만료 예정',
+    statusGrace: '🔶 유예기간', statusGraceDesc: (date) => '만료됐지만 ' + date + '까지는 연결이 유지됩니다. 서둘러 갱신해주세요.',
+    statusDead: '❌ 연결 중단됨', statusDeadDesc: '유예기간이 지나 연결이 끊겼습니다. 지금 갱신하면 바로 복구됩니다.',
+    renewBtn: '6개월/1년 갱신하기', noRegistrations: '아직 등록한 물건·정보가 없어요.',
+    editModalTitle: (name) => '"' + name + '" 수정 중',
+    deleteConfirmAsk: '이 등록물을 삭제할까요? QR도 함께 무효화되며, 되돌릴 수 없습니다.',
+    deleteFailed: (msg) => '삭제 실패: ' + msg,
+    saveFailed: (msg) => '저장 실패: ' + msg,
+    nameAndUrlRequired: '상품명과 판매 링크(URL)는 필수입니다.',
+    renewSuccess: (period) => period + ' 연장됐습니다. 감사합니다!',
+    renewFailed: (msg) => '갱신에 실패했어요: ' + msg,
+    deleteFileConfirm: '이 파일을 삭제할까요?',
+    uploadFailed: (msg) => '업로드 실패: ' + msg,
+    noFiles: '등록된 파일이 없어요.',
+    exactMatch: '"탈퇴합니다"를 정확히 입력해주세요.',
+    withdrawing: '처리 중…', withdrawComplete: '탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사했습니다.',
+    withdrawFailed: (msg) => '탈퇴 처리 중 오류가 발생했어요: ' + msg,
+    processing: '처리 중…', savingBtn: '저장 중…', uploading: '업로드 중…',
+  },
+  en: {
+    loginNeeded: 'Please log in. Log in with your nickname + password on the registration screen first.',
+    pageTitle: 'My Account', nicknameLabel: 'Nickname', pointsLabel: 'Points balance', joinedLabel: 'Joined',
+    logoutBtn: 'Log out', logoutConfirm: 'Are you sure you want to log out?',
+    myRegistrationsTitle: 'My Registrations',
+    withdrawTitle: 'Delete Account', withdrawDesc: 'Deleting your account removes all your QR tags and data — this cannot be undone. Your points balance will also be lost.',
+    withdrawBtn: 'Delete my account',
+    renewTitle: 'Renew Subscription', renewDesc: 'Your receiving service will be extended by the period you choose.',
+    period6mo: '6 months', period1yr: '1 year', krwLabel: 'KRW (Card)',
+    cancel: 'Cancel', payNow: 'Pay now',
+    editRegTitle: 'Edit Registration', editRegDesc: "You can't change the category — just edit the details you need.",
+    plateLabel: 'License plate', makeLabel: 'Make · model (optional)', colorLabel: 'Color (optional)', itemTypeLabel: 'Item type',
+    birthYearLabel: 'Birth year', speciesLabel: 'Species', petNameLabel: 'Name', reasonLabel: 'Reason', locationLabel: 'Posted location (optional)',
+    mediaLabel: 'Photos · videos · audio', mediaPhoto: 'Photo', mediaVideo: 'Video', mediaAudio: 'Audio', addMedia: '+ Add',
+    descLabel: 'Description', save: 'Save',
+    deleteConfirmTitle: 'Are you sure you want to delete your account?', deleteConfirmDesc: 'All account and registration data will be permanently deleted. This cannot be undone.',
+    deleteReasonPlaceholder: 'Reason for leaving (optional)', deleteConfirmLabel: 'Type "DELETE" to continue',
+    deleteConfirmWord: '탈퇴합니다', confirmWithdraw: 'Confirm deletion',
+    catVehicle: 'Vehicle', catLostItem: 'Lost / at risk of theft', catVulnerable: 'Child · Dementia · Disability', catPet: 'Pet', catCallback: 'Callback contact', catMisc: 'Other item / incident',
+    statusForever: '♾️ Permanent', statusForeverDesc: 'This is a safety category, so the connection stays active regardless of subscription status.',
+    statusNoSub: '❓ No subscription info', statusNoSubDesc: 'Could not check subscription info.',
+    statusOk: '✅ Active', statusExpireLabel: 'Expires: ',
+    statusSoon: '⚠️ Expiring soon', statusSoonDesc: (d, date) => 'D-' + d + ' · expires ' + date,
+    statusGrace: '🔶 Grace period', statusGraceDesc: (date) => 'Expired, but the connection stays active until ' + date + '. Please renew soon.',
+    statusDead: '❌ Connection stopped', statusDeadDesc: 'The grace period has ended and the connection is off. Renewing now will restore it immediately.',
+    renewBtn: 'Renew (6mo / 1yr)', noRegistrations: "You haven't registered anything yet.",
+    editModalTitle: (name) => 'Editing "' + name + '"',
+    deleteConfirmAsk: 'Delete this registration? Its QR will also stop working — this cannot be undone.',
+    deleteFailed: (msg) => 'Delete failed: ' + msg,
+    saveFailed: (msg) => 'Save failed: ' + msg,
+    nameAndUrlRequired: 'Product name and sales link (URL) are required.',
+    renewSuccess: (period) => 'Extended by ' + period + '. Thank you!',
+    renewFailed: (msg) => 'Renewal failed: ' + msg,
+    deleteFileConfirm: 'Delete this file?',
+    uploadFailed: (msg) => 'Upload failed: ' + msg,
+    noFiles: 'No files yet.',
+    exactMatch: 'Please type "DELETE" exactly.',
+    withdrawing: 'Processing…', withdrawComplete: "Your account has been deleted. Thank you for using Aliascall.",
+    withdrawFailed: (msg) => 'An error occurred while deleting your account: ' + msg,
+    processing: 'Processing…', savingBtn: 'Saving…', uploading: 'Uploading…',
+  },
+};
+let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
+
+function applyLang(lang){
+  currentLang = lang;
+  localStorage.setItem('aliascall_lang', lang);
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.dataset.i18n;
+    if (I18N[lang][key] !== undefined) el.textContent = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.dataset.i18nPlaceholder;
+    if (I18N[lang][key] !== undefined) el.placeholder = I18N[lang][key];
+  });
+  document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+}
+document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+});
+
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -270,76 +399,86 @@ const DELETE_ACCOUNT_URL = SUPABASE_URL + "/functions/v1/self-delete-account";
   document.getElementById('pointsVal').textContent = (profile?.points_balance ?? 0).toLocaleString() + 'P';
   document.getElementById('joinedVal').textContent = profile?.created_at ? new Date(profile.created_at).toLocaleDateString('ko-KR') : '-';
 
+  await loadSubscriptionStatus(session.user.id);
   await loadMyRegistrations(session.user.id);
 })();
 
-// ── 내 등록물 목록 + 구독 상태 표시 ──
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if (!confirm(I18N[currentLang].logoutConfirm)) return;
+  await sb.auth.signOut();
+  window.location.href = 'index.html';
+});
+
+// ── 내 등록물 목록 (구독은 이제 계정단위 — loadSubscriptionStatus() 참고) ──
 const CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
 const CATEGORY_LABEL = { vehicle:'차량', lost_item:'분실·도난 우려 물품', vulnerable_person:'아동·치매 어르신·장애우', pet:'반려동물', callback_contact:'부재중 연락', misc_incident:'기타 물품·사건' };
 const NEVER_EXPIRES = ['vulnerable_person', 'pet'];
-const GRACE_DAYS = 30;
-let renewTargetRegId = null;
+
 let renewMonths = 6;
 let renewCurrency = 'KRW';
+
+// ── 계정단위 구독 상태 (등록물 개수와 무관, 계정 하나당 하나) ──
+async function loadSubscriptionStatus(userId){
+  const { data: profile } = await sb.from('profiles').select('subscription_expires_at').eq('id', userId).maybeSingle();
+  const badge = document.getElementById('subStatusBadge');
+  const meta = document.getElementById('subStatusMeta');
+  const t = I18N[currentLang];
+  const GRACE_DAYS = 30;
+
+  const expiresAt = profile?.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
+  if (!expiresAt) {
+    badge.textContent = t.statusNoSub; badge.className = 'reg-status dead';
+    meta.textContent = t.statusNoSubDesc;
+    return;
+  }
+
+  const now = new Date();
+  const daysLeft = Math.floor((expiresAt - now) / 86400000);
+  const cutoff = new Date(expiresAt.getTime() + GRACE_DAYS * 86400000);
+
+  if (daysLeft > 30) {
+    badge.textContent = t.statusOk; badge.className = 'reg-status ok';
+    meta.textContent = t.statusExpireLabel + expiresAt.toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US');
+  } else if (daysLeft > 0) {
+    badge.textContent = t.statusSoon; badge.className = 'reg-status soon';
+    meta.textContent = t.statusSoonDesc(daysLeft, expiresAt.toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US'));
+  } else if (now < cutoff) {
+    badge.textContent = t.statusGrace; badge.className = 'reg-status grace';
+    meta.textContent = t.statusGraceDesc(cutoff.toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US'));
+  } else {
+    badge.textContent = t.statusDead; badge.className = 'reg-status dead';
+    meta.textContent = t.statusDeadDesc;
+  }
+}
 
 async function loadMyRegistrations(userId){
   const container = document.getElementById('myRegistrations');
   const { data, error } = await sb.from('registrations')
-    .select('id, category, title, search_key, subscription_expires_at')
+    .select('id, category, title, search_key')
     .eq('user_id', userId)
     .eq('status', 'active')
     .order('created_at', { ascending: false });
 
   if (error || !data || data.length === 0) {
-    container.innerHTML = '<div class="empty-regs">아직 등록한 물건·정보가 없어요.</div>';
+    container.innerHTML = '<div class="empty-regs">' + I18N[currentLang].noRegistrations + '</div>';
     return;
   }
 
   container.innerHTML = data.map((r) => {
     const label = r.search_key || r.title || CATEGORY_LABEL[r.category] || '등록물';
-    let statusHtml, metaHtml, showRenew = true;
-
-    if (NEVER_EXPIRES.includes(r.category)) {
-      statusHtml = '<span class="reg-status forever">♾️ 영구</span>';
-      metaHtml = '안전 카테고리라 구독 만료와 무관하게 연결이 항상 유지됩니다.';
-      showRenew = false;
-    } else {
-      const expiresAt = r.subscription_expires_at ? new Date(r.subscription_expires_at) : null;
-      const now = new Date();
-      if (!expiresAt) {
-        statusHtml = '<span class="reg-status dead">❓ 구독정보 없음</span>';
-        metaHtml = '구독 정보를 확인할 수 없어요.';
-      } else {
-        const daysLeft = Math.floor((expiresAt - now) / 86400000);
-        const cutoff = new Date(expiresAt.getTime() + GRACE_DAYS * 86400000);
-        if (daysLeft > 30) {
-          statusHtml = '<span class="reg-status ok">✅ 활성</span>';
-          metaHtml = '만료일: ' + expiresAt.toLocaleDateString('ko-KR');
-        } else if (daysLeft > 0) {
-          statusHtml = '<span class="reg-status soon">⚠️ 곧 만료</span>';
-          metaHtml = 'D-' + daysLeft + ' · ' + expiresAt.toLocaleDateString('ko-KR') + ' 만료 예정';
-        } else if (now < cutoff) {
-          statusHtml = '<span class="reg-status grace">🔶 유예기간</span>';
-          metaHtml = '만료됐지만 ' + cutoff.toLocaleDateString('ko-KR') + '까지는 연결이 유지됩니다. 서둘러 갱신해주세요.';
-        } else {
-          statusHtml = '<span class="reg-status dead">❌ 연결 중단됨</span>';
-          metaHtml = '유예기간이 지나 연결이 끊겼습니다. 지금 갱신하면 바로 복구됩니다.';
-        }
-      }
-    }
+    const foreverBadge = NEVER_EXPIRES.includes(r.category)
+      ? '<span class="reg-status forever">' + I18N[currentLang].statusForever + '</span>' : '';
 
     return `
       <div class="reg-card" data-id="${r.id}">
         <div class="reg-top">
           <span class="reg-emoji">${CATEGORY_EMOJI[r.category] || '❓'}</span>
           <span class="reg-title">${label}</span>
-          ${statusHtml}
+          ${foreverBadge}
         </div>
-        <div class="reg-meta">${metaHtml}</div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
-          <button class="reg-edit-btn" data-id="${r.id}" data-category="${r.category}">수정</button>
-          <button class="reg-delete-btn" data-id="${r.id}">삭제</button>
-          ${showRenew ? `<button class="reg-renew-btn" data-id="${r.id}">6개월/1년 갱신하기</button>` : ''}
+          <button class="reg-edit-btn" data-id="${r.id}" data-category="${r.category}">${I18N[currentLang].editBtn || '수정'}</button>
+          <button class="reg-delete-btn" data-id="${r.id}">${I18N[currentLang].deleteBtn || '삭제'}</button>
         </div>
       </div>
     `;
@@ -559,8 +698,7 @@ document.getElementById('editRegSaveBtn').addEventListener('click', async () => 
   }
 });
 
-function openRenewModal(regId){
-  renewTargetRegId = regId;
+function openRenewModal(){
   renewMonths = 6;
   renewCurrency = 'KRW';
   document.querySelectorAll('.renew-period-tab').forEach((t) => t.classList.remove('selected'));
@@ -569,6 +707,7 @@ function openRenewModal(regId){
   document.querySelector('.renew-currency-tab[data-currency="KRW"]').classList.add('selected');
   document.getElementById('renewModal').classList.add('show');
 }
+document.getElementById('openSubRenewBtn').addEventListener('click', openRenewModal);
 document.getElementById('renewCancelBtn').addEventListener('click', () => {
   document.getElementById('renewModal').classList.remove('show');
 });
@@ -595,14 +734,15 @@ function renewPriceMinorUnits(){
 
 document.getElementById('renewConfirmBtn').addEventListener('click', async () => {
   const btn = document.getElementById('renewConfirmBtn');
-  btn.disabled = true; btn.textContent = '처리 중…';
+  btn.disabled = true; btn.textContent = I18N[currentLang].processing;
   try {
     const { data: { session } } = await sb.auth.getSession();
     const amount = renewPriceMinorUnits();
     const method = renewCurrency === 'USD' ? 'paypal' : 'inicis_card';
 
     // 구독 갱신은 PayPal/이니시스 즉시결제만 지원 — 무통장입금은 여기 넣지 않기로 결정함.
-    // (승인 대기 중 유예기간·중복결제 등 확인할 게 많아지고, 소액 구독料 특성상 즉시결제만으로 충분하다고 판단)
+    // (승인 대기 중 유예기간·중복결제 등 확인할 게 많아지고, 소액 구독료 특성상 즉시결제만으로 충분하다고 판단)
+    // ⚠ 계정단위 구독으로 바뀌면서, registration_id 없이(=계정 전체 대상) 결제 기록됨
     await sb.from('payments').insert({
       user_id: session.user.id,
       method,
@@ -610,21 +750,20 @@ document.getElementById('renewConfirmBtn').addEventListener('click', async () =>
       currency_code: renewCurrency,
       status: 'completed',
       purpose: 'subscription',
-      registration_id: renewTargetRegId,
       completed_at: new Date().toISOString(),
     });
 
-    const { error } = await sb.rpc('extend_subscription', { p_registration_id: renewTargetRegId, p_months: renewMonths });
+    const { error } = await sb.rpc('extend_subscription', { p_months: renewMonths });
     if (error) throw error;
 
     document.getElementById('renewModal').classList.remove('show');
-    alert((renewMonths === 6 ? '6개월' : '1년') + ' 연장됐습니다. 감사합니다!');
-    await loadMyRegistrations(session.user.id);
+    alert(I18N[currentLang].renewSuccess(renewMonths === 6 ? I18N[currentLang].period6mo : I18N[currentLang].period1yr));
+    await loadSubscriptionStatus(session.user.id);
   } catch (e) {
     console.error('[renew] 오류', e);
-    alert('갱신에 실패했어요: ' + e.message);
+    alert(I18N[currentLang].renewFailed(e.message));
   } finally {
-    btn.disabled = false; btn.textContent = '결제하기';
+    btn.disabled = false; btn.textContent = I18N[currentLang].payNow;
   }
 });
 
