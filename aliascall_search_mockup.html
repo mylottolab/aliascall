@@ -18,6 +18,23 @@
 }
 *{box-sizing:border-box;}
 body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+
+/* ── PC(넓은 화면) 대응: 콘텐츠는 폰 폭 그대로 유지하되, 가운데 정렬 + 카드 느낌으로 ── */
+@media (min-width:760px){
+  body{
+    background:
+      radial-gradient(circle at 15% 20%, rgba(31,111,107,.06), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(232,115,74,.06), transparent 40%),
+      var(--paper);
+    display:flex; justify-content:center;
+  }
+  .app-shell{
+    max-width:520px; width:100%; min-height:100vh;
+    background:var(--paper); box-shadow:0 0 60px rgba(18,48,46,.08);
+    border-left:1px solid var(--line); border-right:1px solid var(--line);
+  }
+}
+
 h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .mono{ font-family:'IBM Plex Mono',monospace; }
 
@@ -113,6 +130,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 </style>
 </head>
 <body>
+
+<div class="app-shell">
 
 <header>
   <div class="brand-row">
@@ -318,13 +337,23 @@ function scanQrFrame(){
   requestAnimationFrame(scanQrFrame);
 }
 
-// QR에는 registrations.qr_code_token(또는 그 토큰이 담긴 URL)이 들어있다고 가정.
-// URL 형태(.../c/<token>)든 토큰 문자열 그대로든 둘 다 처리
+// QR에는 registrations.qr_code_token, 또는 그 토큰이 담긴 URL(aliascall_connect.html?t=...)이
+// 들어있다고 가정. URL이든 순수 토큰 문자열이든 둘 다 처리
 async function handleQrResult(raw){
   document.getElementById('qrCamStatus').textContent = '인식됨: 확인 중…';
   let token = raw.trim();
-  const urlMatch = token.match(/\/c\/([a-f0-9]+)\s*$/i);
-  if (urlMatch) token = urlMatch[1];
+  try {
+    const url = new URL(token);
+    const tParam = url.searchParams.get('t');
+    if (tParam) {
+      token = tParam;
+    } else {
+      const pathMatch = url.pathname.match(/\/c\/([a-f0-9]+)\s*$/i);
+      if (pathMatch) token = pathMatch[1];
+    }
+  } catch (e) {
+    // raw가 URL 형식이 아니면(순수 토큰 문자열) 그대로 사용
+  }
 
   try {
     const { data, error } = await sb.from('registrations')
@@ -398,5 +427,7 @@ renderResults('');
   });
 })();
 </script>
+</div><!-- /app-shell -->
+
 </body>
 </html>

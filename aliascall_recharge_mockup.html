@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aliascall — 포인트 충전</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -16,6 +17,23 @@
 }
 *{box-sizing:border-box;}
 body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+
+/* ── PC(넓은 화면) 대응: 콘텐츠는 폰 폭 그대로 유지하되, 가운데 정렬 + 카드 느낌으로 ── */
+@media (min-width:760px){
+  body{
+    background:
+      radial-gradient(circle at 15% 20%, rgba(31,111,107,.06), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(232,115,74,.06), transparent 40%),
+      var(--paper);
+    display:flex; justify-content:center;
+  }
+  .app-shell{
+    max-width:520px; width:100%; min-height:100vh;
+    background:var(--paper); box-shadow:0 0 60px rgba(18,48,46,.08);
+    border-left:1px solid var(--line); border-right:1px solid var(--line);
+  }
+}
+
 h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .mono{ font-family:'IBM Plex Mono',monospace; }
 
@@ -75,6 +93,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 </head>
 <body>
 
+<div class="app-shell">
+
 <header>
   <div class="brand-row">
     <div class="brand-mark">A</div>
@@ -109,9 +129,9 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
   </div>
 
   <div class="bank-info" id="bankInfo">
-    <div class="row"><span>입금은행</span><b>국민은행</b></div>
-    <div class="row"><span>계좌번호</span><b>123456-04-123456</b></div>
-    <div class="row"><span>예금주</span><b>㈜위브앱솔루션</b></div>
+    <div class="row"><span>입금은행</span><b id="bankNameDisplay">-</b></div>
+    <div class="row"><span>계좌번호</span><b id="accountNumberDisplay">-</b></div>
+    <div class="row"><span>예금주</span><b id="accountHolderDisplay">-</b></div>
     <div class="field">
       <label style="font-weight:600; display:block; margin-bottom:6px;">입금자명</label>
       <input type="text" id="depositorName" placeholder="실제 입금하실 분 성함">
@@ -129,6 +149,10 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 </main>
 
 <script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const packages = {
   USD: [
     { amount: 1,   points: 1000,   symbol:'$' },
@@ -160,6 +184,16 @@ const methodBlock = document.getElementById('methodBlock');
 const bankInfo = document.getElementById('bankInfo');
 
 function fmt(n){ return n.toLocaleString(); }
+
+// 관리자 화면(aliascall_admin_bank_transfers.html)에서 설정한 실제 계좌정보를 그대로 표시
+(async function loadBankAccountInfo(){
+  const { data } = await sb.from('bank_account_config').select('*').eq('country_code', 'KR').maybeSingle();
+  if (data) {
+    document.getElementById('bankNameDisplay').textContent = data.bank_name || '-';
+    document.getElementById('accountNumberDisplay').textContent = data.account_number || '-';
+    document.getElementById('accountHolderDisplay').textContent = data.account_holder || '-';
+  }
+})();
 
 function renderPackages(){
   grid.innerHTML = packages[currentCurrency].map((p, i) => `
@@ -228,16 +262,55 @@ document.querySelectorAll('.method-tab').forEach(tab => {
 // 결제 완료 즉시(무통장입금 제외) 그 주소로 자동 복귀시킴
 const returnUrl = new URLSearchParams(window.location.search).get('return');
 
-payBtn.addEventListener('click', () => {
+payBtn.addEventListener('click', async () => {
   const p = packages[currentCurrency][selectedIndex];
+
   if (currentCurrency === 'KRW' && currentMethod === 'bank_transfer') {
     const name = document.getElementById('depositorName').value.trim();
     if (!name) { alert('입금자명을 입력해주세요.'); return; }
-    // 무통장입금은 관리자 승인 전까지 포인트가 즉시 반영되지 않으므로 자동복귀시키지 않음
-    alert('입금 신청이 접수되었습니다. 입금 확인 후 ' + fmt(p.points) + 'P가 지급됩니다.' +
-      (returnUrl ? '\n입금 확인되시면 다시 원래 화면으로 돌아와 이어서 진행해주세요.' : ''));
+
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      alert('충전하려면 먼저 로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 계정을 먼저 만들어주세요.');
+      return;
+    }
+
+    payBtn.disabled = true; payBtn.textContent = '신청 중…';
+    try {
+      // 패키지 금액에 맞는 point_packages 행 찾기 (KRW는 소수점 없어 amount 그대로가 최소단위)
+      const { data: pkg, error: pkgErr } = await sb.from('point_packages')
+        .select('id, points_granted')
+        .eq('currency_code', 'KRW').eq('amount_minor_units', p.amount).maybeSingle();
+      if (pkgErr || !pkg) throw new Error('패키지 정보를 찾을 수 없습니다.');
+
+      const { data: payment, error: payErr } = await sb.from('payments').insert({
+        user_id: session.user.id,
+        point_package_id: pkg.id,
+        method: 'bank_transfer',
+        amount_minor_units: p.amount,
+        currency_code: 'KRW',
+        status: 'pending',
+      }).select().single();
+      if (payErr) throw payErr;
+
+      const { error: reqErr } = await sb.from('bank_transfer_requests').insert({
+        payment_id: payment.id,
+        depositor_name: name,
+      });
+      if (reqErr) throw reqErr;
+
+      alert('입금 신청이 접수되었습니다. 입금 확인 후 ' + fmt(pkg.points_granted) + 'P가 지급됩니다.' +
+        (returnUrl ? '\n입금 확인되시면 다시 원래 화면으로 돌아와 이어서 진행해주세요.' : ''));
+      document.getElementById('depositorName').value = '';
+    } catch (e) {
+      console.error('[recharge] 무통장입금 신청 오류', e);
+      alert('신청에 실패했어요. 잠시 후 다시 시도해주세요.\n(' + (e.message || '알 수 없는 오류') + ')');
+    } finally {
+      payBtn.disabled = false; payBtn.textContent = '입금 신청하기';
+    }
     return;
   }
+
   alert((currentCurrency === 'USD' ? 'PayPal' : '이니시스') + ' 결제창으로 이동합니다. (' + p.symbol + fmt(p.amount) + ' → ' + fmt(p.points) + 'P)');
   // TODO: 실제 결제 연동 시 이 알림은 결제 성공 콜백(웹훅/리다이렉트) 안으로 옮겨야 함.
   // 지금은 목업이라 결제 성공을 즉시로 가정하고, return 파라미터가 있으면 원래 화면으로 자동 복귀시킴
@@ -253,5 +326,7 @@ if (returnUrl) {
 renderPackages();
 renderSummary();
 </script>
+</div><!-- /app-shell -->
+
 </body>
 </html>

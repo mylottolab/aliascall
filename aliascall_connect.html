@@ -16,6 +16,23 @@
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{ height:100%; }
+
+/* ── PC(넓은 화면) 대응: 콘텐츠는 폰 폭 그대로 유지하되, 가운데 정렬 + 카드 느낌으로 ── */
+@media (min-width:760px){
+  body{
+    background:
+      radial-gradient(circle at 15% 20%, rgba(31,111,107,.06), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(232,115,74,.06), transparent 40%),
+      var(--paper);
+    display:flex; justify-content:center;
+  }
+  .app-shell{
+    max-width:520px; width:100%; min-height:100vh;
+    background:var(--paper); box-shadow:0 0 60px rgba(18,48,46,.08);
+    border-left:1px solid var(--line); border-right:1px solid var(--line);
+  }
+}
+
 body{
   margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif;
   min-height:100vh; word-break:keep-all; display:flex; flex-direction:column;
@@ -109,6 +126,8 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 </style>
 </head>
 <body>
+
+<div class="app-shell">
 
 <header>
   <div class="brand-row">
@@ -431,5 +450,7 @@ document.getElementById('endCallBtnInitial').addEventListener('click', () => end
 
 init();
 </script>
+</div><!-- /app-shell -->
+
 </body>
 </html>
