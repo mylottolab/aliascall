@@ -386,7 +386,10 @@ document.getElementById('closeOverlay').addEventListener('click', () => {
   document.getElementById('connectOverlay').classList.remove('show');
 });
 
-renderResults('');
+// 홈화면(aliascall_index.html)의 빠른검색에서 ?q=검색어 로 넘어온 경우 바로 반영
+const initialQuery = new URLSearchParams(window.location.search).get('q') || '';
+if (initialQuery) document.getElementById('searchInput').value = initialQuery;
+renderResults(initialQuery);
 </script>
 
 <script>

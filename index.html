@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliascall — 안전한 연결</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#F6F8F5; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --line:#DCE3DE;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{
+  margin:0; background:var(--teal-deep); color:#fff; font-family:'Inter',sans-serif;
+  min-height:100vh; word-break:keep-all;
+}
+h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
+
+@media (min-width:760px){
+  body{ display:flex; justify-content:center; background:
+    radial-gradient(circle at 20% 20%, rgba(232,115,74,.18), transparent 45%),
+    radial-gradient(circle at 80% 80%, rgba(31,111,107,.35), transparent 45%),
+    var(--teal-deep); }
+  .app-shell{ max-width:480px; width:100%; min-height:100vh; }
+}
+
+.hero{ padding:36px 24px 14px; text-align:center; }
+.brand-mark{ width:52px; height:52px; border-radius:14px; background:var(--coral); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:26px; font-family:'Space Grotesk',sans-serif; margin:0 auto 14px; }
+.brand-name{ font-size:22px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+.tagline{ font-size:12.5px; color:rgba(255,255,255,.6); margin-top:6px; }
+
+.grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; padding:26px 24px; max-width:360px; margin:0 auto; }
+.icon-btn{ display:flex; flex-direction:column; align-items:center; gap:10px; text-decoration:none; color:#fff; }
+.icon-circle{
+  width:74px; height:74px; border-radius:50%;
+  background:linear-gradient(135deg, var(--coral), #d65f38);
+  display:flex; align-items:center; justify-content:center; font-size:28px;
+  box-shadow:0 8px 20px rgba(0,0,0,.25); transition:transform .15s;
+}
+.icon-btn:active .icon-circle{ transform:scale(0.94); }
+.icon-btn.secondary .icon-circle{ background:linear-gradient(135deg, #4a8f8b, var(--teal)); }
+.icon-label{ font-size:12.5px; font-weight:600; text-align:center; }
+
+.quick-search{ padding:0 24px 8px; max-width:360px; margin:0 auto; }
+.quick-search-box{ position:relative; }
+.quick-search-box input{
+  width:100%; border:none; border-radius:14px; padding:15px 52px 15px 16px;
+  font-size:14px; background:rgba(255,255,255,.1); color:#fff;
+}
+.quick-search-box input::placeholder{ color:rgba(255,255,255,.45); }
+.quick-search-box button{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  width:38px; height:38px; border-radius:50%; border:none; background:var(--coral); color:#fff; font-size:15px; cursor:pointer;
+}
+
+.login-status{ text-align:center; padding:6px 24px 0; font-size:11.5px; color:rgba(255,255,255,.55); }
+.login-status a{ color:var(--coral); text-decoration:underline; }
+
+footer{ text-align:center; padding:26px 24px 40px; font-size:11px; color:rgba(255,255,255,.4); line-height:1.7; }
+footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+<div class="hero">
+  <div class="brand-mark">A</div>
+  <div class="brand-name">Alias<em>call</em></div>
+  <div class="tagline">실제 번호 노출 없이, QR 하나로 바로 연결</div>
+</div>
+
+<div class="quick-search">
+  <div class="quick-search-box">
+    <input type="text" id="quickSearchInput" placeholder="차량번호·이름·코드로 바로 찾기">
+    <button id="quickSearchBtn">🔍</button>
+  </div>
+</div>
+
+<div class="grid">
+  <a class="icon-btn" href="aliascall_search_mockup.html">
+    <div class="icon-circle">🔍</div>
+    <div class="icon-label">찾기 · QR스캔</div>
+  </a>
+  <a class="icon-btn secondary" href="aliascall_registration_mockup.html">
+    <div class="icon-circle">🏷️</div>
+    <div class="icon-label">등록하기</div>
+  </a>
+  <a class="icon-btn secondary" href="aliascall_my_account.html">
+    <div class="icon-circle">👤</div>
+    <div class="icon-label">내 계정</div>
+  </a>
+  <a class="icon-btn secondary" href="aliascall_incoming_calls.html">
+    <div class="icon-circle">🔔</div>
+    <div class="icon-label">수신 대기</div>
+  </a>
+  <a class="icon-btn" href="aliascall_recharge_mockup.html">
+    <div class="icon-circle">🎁</div>
+    <div class="icon-label">포인트 충전</div>
+  </a>
+  <a class="icon-btn" href="aliascall_public_board_mockup.html">
+    <div class="icon-circle">📋</div>
+    <div class="icon-label">찾습니다 게시판</div>
+  </a>
+</div>
+
+<div class="login-status" id="loginStatus"></div>
+
+<footer>
+  <a href="aliascall_guide.html">ℹ️ 사용설명서</a><br><br>
+  Aliascall은 실제 번호를 노출하지 않는 안전한 연결 서비스입니다.<br>
+  실시간 위치추적 기능은 없습니다.
+</footer>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function goSearch(){
+  const q = document.getElementById('quickSearchInput').value.trim();
+  const url = q ? ('aliascall_search_mockup.html?q=' + encodeURIComponent(q)) : 'aliascall_search_mockup.html';
+  window.location.href = url;
+}
+document.getElementById('quickSearchBtn').addEventListener('click', goSearch);
+document.getElementById('quickSearchInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(); });
+
+(async function checkLogin(){
+  const { data: { session } } = await sb.auth.getSession();
+  const el = document.getElementById('loginStatus');
+  if (session) {
+    const { data: profile } = await sb.from('profiles').select('nickname').eq('id', session.user.id).maybeSingle();
+    el.innerHTML = (profile?.nickname || '회원') + '님 로그인됨';
+  } else {
+    el.innerHTML = '아직 로그인하지 않으셨어요 — <a href="aliascall_registration_mockup.html">등록하며 계정 만들기</a>';
+  }
+})();
+</script>
+</body>
+</html>
