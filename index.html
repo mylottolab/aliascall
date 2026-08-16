@@ -148,7 +148,7 @@ const I18N = {
     footerNote2: '실시간 위치추적 기능은 없습니다.',
     loginPrompt: '아직 로그인하지 않으셨어요 — ',
     loginPromptLink: '등록하며 계정 만들기',
-    loggedInSuffix: '님 로그인됨',
+    loggedInSuffix: '님 로그인됨', logoutLink: '로그아웃', logoutConfirm: '로그아웃 하시겠어요?',
   },
   en: {
     tagline: 'Connect instantly via QR — your phone number stays private',
@@ -164,7 +164,7 @@ const I18N = {
     footerNote2: 'There is no real-time location tracking.',
     loginPrompt: "You're not logged in yet — ",
     loginPromptLink: 'create an account by registering',
-    loggedInSuffix: ' is logged in',
+    loggedInSuffix: ' is logged in', logoutLink: 'Log out', logoutConfirm: 'Are you sure you want to log out?',
   },
 };
 
@@ -210,7 +210,16 @@ function renderLoginStatus(){
   const el = document.getElementById('loginStatus');
   const t = I18N[currentLang];
   if (cachedSession) {
-    el.innerHTML = (cachedNickname || '') + t.loggedInSuffix;
+    el.innerHTML = (cachedNickname || '') + t.loggedInSuffix + ' · <a href="#" id="homeLogoutLink" style="text-decoration:underline;">' + t.logoutLink + '</a>';
+    const logoutLink = document.getElementById('homeLogoutLink');
+    if (logoutLink) {
+      logoutLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (!confirm(t.logoutConfirm)) return;
+        await sb.auth.signOut();
+        window.location.reload();
+      });
+    }
   } else {
     el.innerHTML = t.loginPrompt + '<a href="aliascall_registration_mockup.html">' + t.loginPromptLink + '</a>';
   }
