@@ -78,6 +78,24 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .renew-currency-tabs{ display:flex; gap:8px; margin-bottom:16px; }
 .renew-currency-tab{ flex:1; border:1.5px solid var(--line); border-radius:10px; padding:10px 8px; text-align:center; cursor:pointer; font-size:12px; font-weight:600; }
 .renew-currency-tab.selected{ border-color:var(--coral); background:var(--coral-tint); color:var(--coral); }
+
+.edit-label{ display:block; font-size:11.5px; font-weight:600; color:var(--ink-soft); margin:10px 0 5px; }
+.edit-input{ width:100%; border:1.5px solid var(--line); border-radius:9px; padding:10px 12px; font-size:13px; font-family:'Inter',sans-serif; }
+.reg-edit-btn{ background:var(--paper); color:var(--ink-soft); border:1.5px solid var(--line); border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; margin-right:6px; }
+.reg-delete-btn{ background:var(--danger-tint); color:var(--danger); border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; }
+
+.edit-media-tabs{ display:flex; gap:6px; margin-bottom:8px; }
+.edit-media-tab{ flex:1; text-align:center; padding:7px; border-radius:8px; border:1.5px solid var(--line); font-size:11px; font-weight:600; cursor:pointer; color:var(--ink-soft); }
+.edit-media-tab.selected{ border-color:var(--teal); background:var(--teal-tint); color:var(--teal-deep); }
+.edit-media-grid{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+.edit-media-thumb{ position:relative; width:64px; height:64px; border-radius:8px; overflow:hidden; background:var(--paper); border:1.5px solid var(--line); }
+.edit-media-thumb img, .edit-media-thumb video{ width:100%; height:100%; object-fit:cover; }
+.edit-media-thumb .edit-media-del{ position:absolute; top:2px; right:2px; width:18px; height:18px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; border:none; font-size:10px; cursor:pointer; line-height:1; padding:0; }
+.edit-media-audio-item{ display:flex; align-items:center; gap:6px; background:var(--paper); border-radius:8px; padding:6px 10px; margin-bottom:6px; font-size:11px; }
+.edit-media-audio-item audio{ flex:1; height:28px; }
+.edit-media-audio-item .edit-media-del{ width:20px; height:20px; border-radius:50%; background:var(--danger-tint); color:var(--danger); border:none; font-size:10px; cursor:pointer; flex-shrink:0; }
+.edit-media-add{ text-align:center; border:1.5px dashed var(--line); border-radius:8px; padding:10px; font-size:11.5px; color:var(--ink-soft); cursor:pointer; margin-bottom:10px; }
+.edit-media-empty{ font-size:11px; color:var(--ink-soft); margin-bottom:8px; }
 .danger-btn{ width:100%; padding:13px; border:none; border-radius:10px; background:var(--danger); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
 .danger-btn:hover{ background:#a53a2e; }
 .danger-btn:disabled{ opacity:.5; cursor:not-allowed; }
@@ -155,6 +173,65 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     <div class="modal-btns">
       <button class="cancel-btn" id="renewCancelBtn">취소</button>
       <button class="confirm-btn-teal" id="renewConfirmBtn">결제하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 등록물 수정 모달 -->
+<div class="modal-overlay" id="editRegModal">
+  <div class="modal-box" style="max-width:420px;">
+    <h3>등록 정보 수정</h3>
+    <p>카테고리는 바꿀 수 없어요. 필요한 정보만 수정해주세요.</p>
+
+    <div id="editFieldsVehicle" class="edit-cat-fields" style="display:none;">
+      <label class="edit-label">차량번호</label>
+      <input type="text" id="editPlateNumber" class="edit-input">
+      <label class="edit-label">제조사·모델 (선택)</label>
+      <input type="text" id="editVehicleMake" class="edit-input">
+      <label class="edit-label">색상 (선택)</label>
+      <input type="text" id="editVehicleColor" class="edit-input">
+    </div>
+
+    <div id="editFieldsLostItem" class="edit-cat-fields" style="display:none;">
+      <label class="edit-label">물품 종류</label>
+      <input type="text" id="editItemType" class="edit-input">
+    </div>
+
+    <div id="editFieldsVulnerable" class="edit-cat-fields" style="display:none;">
+      <label class="edit-label">출생연도</label>
+      <input type="number" id="editBirthYear" class="edit-input" style="max-width:140px;">
+    </div>
+
+    <div id="editFieldsPet" class="edit-cat-fields" style="display:none;">
+      <label class="edit-label">종류</label>
+      <input type="text" id="editPetSpecies" class="edit-input">
+      <label class="edit-label">이름</label>
+      <input type="text" id="editPetName" class="edit-input">
+    </div>
+
+    <div id="editFieldsCallback" class="edit-cat-fields" style="display:none;">
+      <label class="edit-label">사유</label>
+      <input type="text" id="editCallbackReason" class="edit-input">
+      <label class="edit-label">부착·게시 장소 (선택)</label>
+      <input type="text" id="editCallbackLocation" class="edit-input">
+    </div>
+
+    <label class="edit-label">사진·동영상·음성</label>
+    <div class="edit-media-tabs">
+      <div class="edit-media-tab selected" data-media="photo">사진</div>
+      <div class="edit-media-tab" data-media="video">동영상</div>
+      <div class="edit-media-tab" data-media="audio">음성</div>
+    </div>
+    <div class="edit-media-grid" id="editMediaGrid"></div>
+    <div class="edit-media-add" id="editMediaAddBtn">+ 추가하기</div>
+    <input type="file" id="editMediaFileInput" accept="image/*" style="display:none;">
+
+    <label class="edit-label">설명</label>
+    <textarea id="editDescription" class="edit-input" style="min-height:80px;"></textarea>
+
+    <div class="modal-btns">
+      <button class="cancel-btn" id="editRegCancelBtn">취소</button>
+      <button class="confirm-btn-teal" id="editRegSaveBtn">저장</button>
     </div>
   </div>
 </div>
@@ -259,15 +336,228 @@ async function loadMyRegistrations(userId){
           ${statusHtml}
         </div>
         <div class="reg-meta">${metaHtml}</div>
-        ${showRenew ? `<button class="reg-renew-btn" data-id="${r.id}">6개월/1년 갱신하기</button>` : ''}
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+          <button class="reg-edit-btn" data-id="${r.id}" data-category="${r.category}">수정</button>
+          <button class="reg-delete-btn" data-id="${r.id}">삭제</button>
+          ${showRenew ? `<button class="reg-renew-btn" data-id="${r.id}">6개월/1년 갱신하기</button>` : ''}
+        </div>
       </div>
     `;
   }).join('');
 
+  container.querySelectorAll('.reg-edit-btn').forEach((btn) => {
+    btn.addEventListener('click', () => openEditModal(btn.dataset.id, btn.dataset.category));
+  });
+  container.querySelectorAll('.reg-delete-btn').forEach((btn) => {
+    btn.addEventListener('click', () => deleteRegistration(btn.dataset.id, userId));
+  });
   container.querySelectorAll('.reg-renew-btn').forEach((btn) => {
     btn.addEventListener('click', () => openRenewModal(btn.dataset.id));
   });
 }
+
+// ── 등록물 삭제 ──
+async function deleteRegistration(regId, userId){
+  if (!confirm('이 등록물을 삭제할까요? QR도 함께 무효화되며, 되돌릴 수 없습니다.')) return;
+  const { error } = await sb.from('registrations').delete().eq('id', regId);
+  if (error) { alert('삭제 실패: ' + error.message); return; }
+  await loadMyRegistrations(userId);
+}
+
+// ── 등록물 수정 ──
+const CATEGORY_DETAIL_TABLE = {
+  vehicle: 'registration_vehicles', lost_item: 'registration_lost_items',
+  vulnerable_person: 'registration_vulnerable_persons', pet: 'registration_pets',
+  callback_contact: 'registration_callback_contacts',
+};
+let editTargetRegId = null;
+let editTargetCategory = null;
+
+async function openEditModal(regId, category){
+  editTargetRegId = regId;
+  editTargetCategory = category;
+
+  document.querySelectorAll('.edit-cat-fields').forEach((el) => (el.style.display = 'none'));
+
+  const { data: reg } = await sb.from('registrations').select('description').eq('id', regId).maybeSingle();
+  document.getElementById('editDescription').value = reg?.description || '';
+
+  const detailTable = CATEGORY_DETAIL_TABLE[category];
+  if (detailTable) {
+    const { data: detail } = await sb.from(detailTable).select('*').eq('registration_id', regId).maybeSingle();
+    if (category === 'vehicle') {
+      document.getElementById('editFieldsVehicle').style.display = 'block';
+      document.getElementById('editPlateNumber').value = detail?.plate_number || '';
+      document.getElementById('editVehicleMake').value = detail?.make || '';
+      document.getElementById('editVehicleColor').value = detail?.color || '';
+    } else if (category === 'lost_item') {
+      document.getElementById('editFieldsLostItem').style.display = 'block';
+      document.getElementById('editItemType').value = detail?.item_type || '';
+    } else if (category === 'vulnerable_person') {
+      document.getElementById('editFieldsVulnerable').style.display = 'block';
+      document.getElementById('editBirthYear').value = detail?.birth_year || '';
+    } else if (category === 'pet') {
+      document.getElementById('editFieldsPet').style.display = 'block';
+      document.getElementById('editPetSpecies').value = detail?.species || '';
+      document.getElementById('editPetName').value = detail?.pet_name || '';
+    } else if (category === 'callback_contact') {
+      document.getElementById('editFieldsCallback').style.display = 'block';
+      document.getElementById('editCallbackReason').value = detail?.reason || '';
+      document.getElementById('editCallbackLocation').value = detail?.location_note || '';
+    }
+  }
+
+  editMediaType = 'photo';
+  document.querySelectorAll('.edit-media-tab').forEach((t) => t.classList.remove('selected'));
+  document.querySelector('.edit-media-tab[data-media="photo"]').classList.add('selected');
+  await loadEditMedia(regId);
+
+  document.getElementById('editRegModal').classList.add('show');
+}
+document.getElementById('editRegCancelBtn').addEventListener('click', () => {
+  document.getElementById('editRegModal').classList.remove('show');
+});
+
+// ── 사진·동영상·음성 관리 (수정모달 안) ──
+// 등록화면과 달리 여기선 registration_id가 이미 있어서, 파일 선택 즉시 업로드/삭제함
+let editMediaType = 'photo';
+let currentEditMedia = [];
+
+async function loadEditMedia(regId){
+  const { data } = await sb.from('media_files').select('id, media_type, storage_path').eq('registration_id', regId).order('created_at', { ascending: true });
+  currentEditMedia = data || [];
+  renderEditMediaGrid();
+}
+
+function mediaPublicUrl(path){
+  return sb.storage.from('aliascall-media').getPublicUrl(path).data.publicUrl;
+}
+
+function renderEditMediaGrid(){
+  const grid = document.getElementById('editMediaGrid');
+  const filtered = currentEditMedia.filter((m) => m.media_type === editMediaType);
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="edit-media-empty">등록된 파일이 없어요.</div>';
+    return;
+  }
+
+  if (editMediaType === 'audio') {
+    grid.innerHTML = filtered.map((m) => `
+      <div class="edit-media-audio-item">
+        🔊 <audio src="${mediaPublicUrl(m.storage_path)}" controls></audio>
+        <button class="edit-media-del" data-id="${m.id}">✕</button>
+      </div>
+    `).join('');
+  } else {
+    grid.innerHTML = filtered.map((m) => `
+      <div class="edit-media-thumb">
+        ${m.media_type === 'video' ? '<video src="' + mediaPublicUrl(m.storage_path) + '" muted></video>' : '<img src="' + mediaPublicUrl(m.storage_path) + '">'}
+        <button class="edit-media-del" data-id="${m.id}">✕</button>
+      </div>
+    `).join('');
+  }
+
+  grid.querySelectorAll('.edit-media-del').forEach((btn) => btn.addEventListener('click', () => deleteEditMedia(btn.dataset.id)));
+}
+
+async function deleteEditMedia(mediaId){
+  if (!confirm('이 파일을 삭제할까요?')) return;
+  const m = currentEditMedia.find((x) => x.id === mediaId);
+  try {
+    if (m) await sb.storage.from('aliascall-media').remove([m.storage_path]);
+    await sb.from('media_files').delete().eq('id', mediaId);
+    currentEditMedia = currentEditMedia.filter((x) => x.id !== mediaId);
+    renderEditMediaGrid();
+  } catch (e) {
+    alert('삭제 실패: ' + e.message);
+  }
+}
+
+document.querySelectorAll('.edit-media-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.edit-media-tab').forEach((t) => t.classList.remove('selected'));
+    tab.classList.add('selected');
+    editMediaType = tab.dataset.media;
+    const acceptMap = { photo: 'image/*', video: 'video/*', audio: 'audio/*' };
+    document.getElementById('editMediaFileInput').accept = acceptMap[editMediaType];
+    renderEditMediaGrid();
+  });
+});
+
+document.getElementById('editMediaAddBtn').addEventListener('click', () => {
+  document.getElementById('editMediaFileInput').click();
+});
+
+document.getElementById('editMediaFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file || !editTargetRegId) return;
+
+  const addBtn = document.getElementById('editMediaAddBtn');
+  addBtn.textContent = '업로드 중…';
+  try {
+    const path = editTargetRegId + '/' + Date.now() + '-' + file.name;
+    const { error: upErr } = await sb.storage.from('aliascall-media').upload(path, file);
+    if (upErr) throw upErr;
+
+    const { data: inserted, error: insErr } = await sb.from('media_files')
+      .insert({ registration_id: editTargetRegId, media_type: editMediaType, storage_path: path, is_public: true })
+      .select().single();
+    if (insErr) throw insErr;
+
+    currentEditMedia.push(inserted);
+    renderEditMediaGrid();
+  } catch (err) {
+    alert('업로드 실패: ' + err.message);
+  } finally {
+    addBtn.textContent = '+ 추가하기';
+    e.target.value = '';
+  }
+});
+
+document.getElementById('editRegSaveBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('editRegSaveBtn');
+  btn.disabled = true; btn.textContent = '저장 중…';
+  try {
+    const description = document.getElementById('editDescription').value.trim();
+    let searchKey = description.slice(0, 40);
+    const detailTable = CATEGORY_DETAIL_TABLE[editTargetCategory];
+    let detailUpdate = null;
+
+    if (editTargetCategory === 'vehicle') {
+      const plate = document.getElementById('editPlateNumber').value.trim();
+      searchKey = plate || searchKey;
+      detailUpdate = { plate_number: plate, make: document.getElementById('editVehicleMake').value.trim() || null, color: document.getElementById('editVehicleColor').value.trim() || null };
+    } else if (editTargetCategory === 'lost_item') {
+      detailUpdate = { item_type: document.getElementById('editItemType').value.trim() };
+    } else if (editTargetCategory === 'vulnerable_person') {
+      const y = document.getElementById('editBirthYear').value;
+      detailUpdate = { birth_year: y ? Number(y) : null };
+    } else if (editTargetCategory === 'pet') {
+      const petName = document.getElementById('editPetName').value.trim();
+      searchKey = petName || searchKey;
+      detailUpdate = { species: document.getElementById('editPetSpecies').value.trim(), pet_name: petName || null };
+    } else if (editTargetCategory === 'callback_contact') {
+      detailUpdate = { reason: document.getElementById('editCallbackReason').value.trim(), location_note: document.getElementById('editCallbackLocation').value.trim() || null };
+    }
+
+    const { error: regErr } = await sb.from('registrations').update({ description: description || null, search_key: searchKey, updated_at: new Date().toISOString() }).eq('id', editTargetRegId);
+    if (regErr) throw regErr;
+
+    if (detailTable && detailUpdate) {
+      const { error: detailErr } = await sb.from(detailTable).update(detailUpdate).eq('registration_id', editTargetRegId);
+      if (detailErr) throw detailErr;
+    }
+
+    document.getElementById('editRegModal').classList.remove('show');
+    const { data: { session } } = await sb.auth.getSession();
+    await loadMyRegistrations(session.user.id);
+  } catch (e) {
+    alert('저장 실패: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '저장';
+  }
+});
 
 function openRenewModal(regId){
   renewTargetRegId = regId;
