@@ -76,14 +76,20 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
 .faq-q{ font-size:13.5px; font-weight:700; margin-bottom:6px; display:flex; gap:8px; }
 .faq-q span{ color:var(--coral); }
 .faq-a{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; padding-left:22px; }
+
+.back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
+.brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand-row">
-    <div class="brand-mark">A</div>
-    <div class="brand-name">Alias<em>call</em></div>
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='aliascall_index.html'" aria-label="뒤로가기">←</button>
+    <a href="aliascall_index.html" class="brand-home-link">
+      <div class="brand-mark">A</div>
+      <div class="brand-name">Alias<em>call</em></div>
+    </a>
   </div>
 </header>
 

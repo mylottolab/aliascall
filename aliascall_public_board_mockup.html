@@ -23,6 +23,8 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 header{ padding:20px 24px; border-bottom:1px solid var(--line); background:var(--card); }
 .brand-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .brand-left{ display:flex; align-items:center; gap:9px; }
+.back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
+.brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
 .brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
 .brand-name{ font-size:16px; font-weight:600; }
 .brand-name em{ font-style:normal; color:var(--coral); }
@@ -86,8 +88,11 @@ main{ max-width:600px; margin:0 auto; padding:24px 20px 60px; }
 <header>
   <div class="brand-row">
     <div class="brand-left">
-      <div class="brand-mark">A</div>
+      <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='aliascall_index.html'" aria-label="뒤로가기">←</button>
+      <a href="aliascall_index.html" class="brand-home-link">
+        <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
+      </a>
     </div>
     <div class="public-badge">로그인 없이 열람 가능</div>
     <a href="aliascall_guide.html" class="guide-nav-link" target="_blank">📖 사용설명서</a>

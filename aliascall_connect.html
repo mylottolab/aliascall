@@ -136,6 +136,9 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); }
 .chat-input-row input{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
 .chat-input-row button{ background:var(--teal); color:#fff; border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; }
+
+.back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
+.brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
 </style>
 </head>
 <body>
@@ -144,8 +147,11 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 
 <header>
   <div class="brand-row">
-    <div class="brand-mark">A</div>
-    <div class="brand-name">Alias<em>call</em></div>
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='aliascall_index.html'" aria-label="뒤로가기">←</button>
+    <a href="aliascall_index.html" class="brand-home-link">
+      <div class="brand-mark">A</div>
+      <div class="brand-name">Alias<em>call</em></div>
+    </a>
   </div>
 </header>
 

@@ -218,6 +218,9 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 .size-card{ text-align:center; padding:12px 4px; border-radius:10px; border:1.5px solid var(--line); background:var(--card); cursor:pointer; font-size:12px; font-weight:600; }
 .size-card.selected{ border-color:var(--teal); background:var(--teal-tint); color:var(--teal-deep); }
 .download-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:16px 18px; margin-top:6px; }
+
+.back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
+.brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
 </style>
 </head>
 <body>
@@ -225,8 +228,11 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 <div class="app-shell">
 <header>
   <div class="brand-row">
-    <div class="brand-mark">A</div>
-    <div class="brand-name">Alias<em>call</em></div>
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='aliascall_index.html'" aria-label="뒤로가기">←</button>
+    <a href="aliascall_index.html" class="brand-home-link">
+      <div class="brand-mark">A</div>
+      <div class="brand-name">Alias<em>call</em></div>
+    </a>
     <a href="aliascall_guide.html" class="guide-nav-link" target="_blank">📖 사용설명서</a>
   </div>
   <div class="steps">

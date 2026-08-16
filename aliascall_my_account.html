@@ -94,6 +94,9 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .modal-btns .cancel-btn{ background:var(--paper); color:var(--ink-soft); border:1.5px solid var(--line); }
 .modal-btns .confirm-btn{ background:var(--danger); color:#fff; }
 .login-needed{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13.5px; }
+
+.back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
+.brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
 </style>
 </head>
 <body>
@@ -102,8 +105,11 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
 <header>
   <div class="brand-row">
-    <div class="brand-mark">A</div>
-    <div class="brand-name">Alias<em>call</em></div>
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='aliascall_index.html'" aria-label="뒤로가기">←</button>
+    <a href="aliascall_index.html" class="brand-home-link">
+      <div class="brand-mark">A</div>
+      <div class="brand-name">Alias<em>call</em></div>
+    </a>
   </div>
 </header>
 
