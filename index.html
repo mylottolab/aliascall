@@ -29,7 +29,10 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
   .app-shell{ max-width:480px; width:100%; min-height:100vh; }
 }
 
-.hero{ padding:36px 24px 14px; text-align:center; }
+.hero{ padding:36px 24px 14px; text-align:center; position:relative; }
+.lang-toggle{ position:absolute; top:16px; right:16px; display:flex; gap:4px; background:rgba(255,255,255,.1); border-radius:20px; padding:3px; }
+.lang-toggle button{ border:none; background:none; color:rgba(255,255,255,.6); font-size:11px; font-weight:700; padding:5px 10px; border-radius:16px; cursor:pointer; }
+.lang-toggle button.active{ background:var(--coral); color:#fff; }
 .brand-mark{ width:52px; height:52px; border-radius:14px; background:var(--coral); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:26px; font-family:'Space Grotesk',sans-serif; margin:0 auto 14px; }
 .brand-name{ font-size:22px; font-weight:600; }
 .brand-name em{ font-style:normal; color:var(--coral); }
@@ -71,14 +74,18 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 <div class="app-shell">
 
 <div class="hero">
+  <div class="lang-toggle">
+    <button data-lang="ko" class="active">KR</button>
+    <button data-lang="en">EN</button>
+  </div>
   <div class="brand-mark">A</div>
   <div class="brand-name">Alias<em>call</em></div>
-  <div class="tagline">실제 번호 노출 없이, QR 하나로 바로 연결</div>
+  <div class="tagline" data-i18n="tagline">실제 번호 노출 없이, QR 하나로 바로 연결</div>
 </div>
 
 <div class="quick-search">
   <div class="quick-search-box">
-    <input type="text" id="quickSearchInput" placeholder="차량번호·이름·코드로 바로 찾기">
+    <input type="text" id="quickSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="차량번호·이름·코드로 바로 찾기">
     <button id="quickSearchBtn">🔍</button>
   </div>
 </div>
@@ -86,36 +93,36 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 <div class="grid">
   <a class="icon-btn" href="aliascall_search_mockup.html">
     <div class="icon-circle">🔍</div>
-    <div class="icon-label">찾기 · QR스캔</div>
+    <div class="icon-label" data-i18n="search">찾기 · QR스캔</div>
   </a>
   <a class="icon-btn secondary" href="aliascall_registration_mockup.html">
     <div class="icon-circle">🏷️</div>
-    <div class="icon-label">등록하기</div>
+    <div class="icon-label" data-i18n="register">등록하기</div>
   </a>
   <a class="icon-btn secondary" href="aliascall_my_account.html">
     <div class="icon-circle">👤</div>
-    <div class="icon-label">내 계정</div>
+    <div class="icon-label" data-i18n="myAccount">내 계정</div>
   </a>
   <a class="icon-btn secondary" href="aliascall_incoming_calls.html">
     <div class="icon-circle">🔔</div>
-    <div class="icon-label">수신 대기</div>
+    <div class="icon-label" data-i18n="incomingCalls">수신 대기</div>
   </a>
   <a class="icon-btn" href="aliascall_recharge_mockup.html">
     <div class="icon-circle">🎁</div>
-    <div class="icon-label">충전소</div>
+    <div class="icon-label" data-i18n="charge">충전소</div>
   </a>
   <a class="icon-btn" href="aliascall_public_board_mockup.html">
     <div class="icon-circle">📋</div>
-    <div class="icon-label">찾습니다 게시판</div>
+    <div class="icon-label" data-i18n="board">찾습니다 게시판</div>
   </a>
 </div>
 
 <div class="login-status" id="loginStatus"></div>
 
 <footer>
-  <a href="aliascall_guide.html">ℹ️ 사용설명서</a><br><br>
-  Aliascall은 실제 번호를 노출하지 않는 안전한 연결 서비스입니다.<br>
-  실시간 위치추적 기능은 없습니다.
+  <a href="aliascall_guide.html" data-i18n="guide">ℹ️ 사용설명서</a><br><br>
+  <span data-i18n="footerNote1">Aliascall은 실제 번호를 노출하지 않는 안전한 연결 서비스입니다.</span><br>
+  <span data-i18n="footerNote2">실시간 위치추적 기능은 없습니다.</span>
 </footer>
 
 </div>
@@ -125,6 +132,69 @@ const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ── 언어 전환 (KR/EN) — data-i18n 속성이 붙은 요소의 텍스트를 그대로 교체 ──
+const I18N = {
+  ko: {
+    tagline: '실제 번호 노출 없이, QR 하나로 바로 연결',
+    searchPlaceholder: '차량번호·이름·코드로 바로 찾기',
+    search: '찾기 · QR스캔',
+    register: '등록하기',
+    myAccount: '내 계정',
+    incomingCalls: '수신 대기',
+    charge: '충전소',
+    board: '찾습니다 게시판',
+    guide: 'ℹ️ 사용설명서',
+    footerNote1: 'Aliascall은 실제 번호를 노출하지 않는 안전한 연결 서비스입니다.',
+    footerNote2: '실시간 위치추적 기능은 없습니다.',
+    loginPrompt: '아직 로그인하지 않으셨어요 — ',
+    loginPromptLink: '등록하며 계정 만들기',
+    loggedInSuffix: '님 로그인됨',
+  },
+  en: {
+    tagline: 'Connect instantly via QR — your phone number stays private',
+    searchPlaceholder: 'Search by plate number, name, or code',
+    search: 'Search · Scan QR',
+    register: 'Register',
+    myAccount: 'My Account',
+    incomingCalls: 'Incoming Calls',
+    charge: 'Top Up',
+    board: 'Lost & Found Board',
+    guide: 'ℹ️ User Guide',
+    footerNote1: 'Aliascall is a safe connection service that never exposes real phone numbers.',
+    footerNote2: 'There is no real-time location tracking.',
+    loginPrompt: "You're not logged in yet — ",
+    loginPromptLink: 'create an account by registering',
+    loggedInSuffix: ' is logged in',
+  },
+};
+
+let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
+
+function applyLang(lang){
+  currentLang = lang;
+  localStorage.setItem('aliascall_lang', lang);
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.dataset.i18n;
+    if (I18N[lang][key] !== undefined) el.textContent = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.dataset.i18nPlaceholder;
+    if (I18N[lang][key] !== undefined) el.placeholder = I18N[lang][key];
+  });
+
+  document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+
+  renderLoginStatus();
+}
+
+document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+});
+
 function goSearch(){
   const q = document.getElementById('quickSearchInput').value.trim();
   const url = q ? ('aliascall_search_mockup.html?q=' + encodeURIComponent(q)) : 'aliascall_search_mockup.html';
@@ -133,15 +203,27 @@ function goSearch(){
 document.getElementById('quickSearchBtn').addEventListener('click', goSearch);
 document.getElementById('quickSearchInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(); });
 
+let cachedSession = null;
+let cachedNickname = null;
+
+function renderLoginStatus(){
+  const el = document.getElementById('loginStatus');
+  const t = I18N[currentLang];
+  if (cachedSession) {
+    el.innerHTML = (cachedNickname || '') + t.loggedInSuffix;
+  } else {
+    el.innerHTML = t.loginPrompt + '<a href="aliascall_registration_mockup.html">' + t.loginPromptLink + '</a>';
+  }
+}
+
 (async function checkLogin(){
   const { data: { session } } = await sb.auth.getSession();
-  const el = document.getElementById('loginStatus');
+  cachedSession = session;
   if (session) {
     const { data: profile } = await sb.from('profiles').select('nickname').eq('id', session.user.id).maybeSingle();
-    el.innerHTML = (profile?.nickname || '회원') + '님 로그인됨';
-  } else {
-    el.innerHTML = '아직 로그인하지 않으셨어요 — <a href="aliascall_registration_mockup.html">등록하며 계정 만들기</a>';
+    cachedNickname = profile?.nickname || '';
   }
+  applyLang(currentLang);
 })();
 </script>
 </body>
