@@ -164,6 +164,13 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
       <a href="aliascall_search_mockup.html">번호·이름으로 검색하기</a>
     </div>
 
+    <div class="state-error" id="stateExpired" style="display:none;">
+      <div class="big">⏳</div>
+      <h2>연결이 잠시 중단되어 있어요</h2>
+      <p>소유자의 수신서비스 기간이 만료되었습니다.<br>소유자에게 갱신을 안내해주시면 다시 연결할 수 있어요.</p>
+      <a href="aliascall_search_mockup.html">다른 등록물 찾기</a>
+    </div>
+
     <div class="state-found" id="stateFound">
       <div class="found-card">
         <div class="found-emoji" id="foundEmoji">🚗</div>
@@ -257,7 +264,7 @@ async function init(){
 
   try {
     const { data, error } = await sb.from('registrations')
-      .select('id, category, title, search_key, description')
+      .select('id, category, title, search_key, description, subscription_expires_at')
       .eq('qr_code_token', token)
       .eq('status', 'active')
       .maybeSingle();
@@ -267,6 +274,18 @@ async function init(){
     if (error || !data) {
       errorEl.style.display = 'block';
       return;
+    }
+
+    // ⚠ 아동·치매어르신·장애우, 반려동물은 구독 만료와 무관하게 항상 연결 가능 (안전 최우선)
+    const NEVER_EXPIRES = ['vulnerable_person', 'pet'];
+    if (!NEVER_EXPIRES.includes(data.category) && data.subscription_expires_at) {
+      const GRACE_DAYS = 30;
+      const expiresAt = new Date(data.subscription_expires_at);
+      const cutoffAt = new Date(expiresAt.getTime() + GRACE_DAYS * 86400000);
+      if (new Date() > cutoffAt) {
+        document.getElementById('stateExpired').style.display = 'block';
+        return;
+      }
     }
 
     document.getElementById('foundEmoji').textContent = CATEGORY_EMOJI[data.category] || '❓';

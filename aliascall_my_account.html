@@ -54,6 +54,30 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .danger-card{ background:var(--danger-tint); border:1.5px solid rgba(193,72,58,.25); border-radius:14px; padding:20px 22px; }
 .danger-card h2{ font-size:15px; color:var(--danger); margin-bottom:6px; }
 .danger-card p{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin:0 0 16px; }
+
+.section-title{ font-size:15px; font-weight:700; margin:26px 0 12px; font-family:'Space Grotesk',sans-serif; }
+.reg-card{ background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+.reg-top{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.reg-emoji{ font-size:20px; }
+.reg-title{ font-size:13.5px; font-weight:600; flex:1; }
+.reg-status{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; }
+.reg-status.ok{ background:rgba(31,111,107,.12); color:var(--teal-deep); }
+.reg-status.soon{ background:#FBF1DE; color:#8a6416; }
+.reg-status.grace{ background:var(--coral-tint); color:var(--coral); }
+.reg-status.dead{ background:var(--danger-tint); color:var(--danger); }
+.reg-status.forever{ background:rgba(31,111,107,.12); color:var(--teal-deep); }
+.reg-meta{ font-size:11.5px; color:var(--ink-soft); margin-bottom:8px; }
+.reg-renew-btn{ background:var(--teal); color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; }
+.empty-regs{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:24px; }
+
+.confirm-btn-teal{ background:var(--teal); }
+.renew-period-tabs{ display:flex; gap:8px; margin-bottom:14px; }
+.renew-period-tab{ flex:1; border:1.5px solid var(--line); border-radius:10px; padding:12px 8px; text-align:center; cursor:pointer; font-size:13px; font-weight:700; }
+.renew-period-tab.selected{ border-color:var(--teal); background:var(--teal-tint); color:var(--teal-deep); }
+.renew-price{ display:block; font-size:11px; font-weight:500; color:var(--ink-soft); margin-top:4px; }
+.renew-currency-tabs{ display:flex; gap:8px; margin-bottom:16px; }
+.renew-currency-tab{ flex:1; border:1.5px solid var(--line); border-radius:10px; padding:10px 8px; text-align:center; cursor:pointer; font-size:12px; font-weight:600; }
+.renew-currency-tab.selected{ border-color:var(--coral); background:var(--coral-tint); color:var(--coral); }
 .danger-btn{ width:100%; padding:13px; border:none; border-radius:10px; background:var(--danger); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
 .danger-btn:hover{ background:#a53a2e; }
 .danger-btn:disabled{ opacity:.5; cursor:not-allowed; }
@@ -95,6 +119,9 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
       <div class="info-row"><span class="label">가입일</span><span class="value" id="joinedVal">-</span></div>
     </div>
 
+    <div class="section-title">내 등록물</div>
+    <div id="myRegistrations"></div>
+
     <div class="danger-card">
       <h2>회원 탈퇴</h2>
       <p>탈퇴하시면 계정과 함께 회원님이 등록하신 모든 QR 태그·정보가 삭제되며, 되돌릴 수 없습니다. 보유 포인트도 함께 소멸됩니다.</p>
@@ -102,6 +129,29 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     </div>
   </div>
 </main>
+
+<!-- 갱신 결제 모달 -->
+<div class="modal-overlay" id="renewModal">
+  <div class="modal-box">
+    <h3 id="renewTitle">구독 갱신</h3>
+    <p>선택하신 기간만큼 수신서비스가 연장됩니다.</p>
+
+    <div class="renew-period-tabs">
+      <div class="renew-period-tab selected" data-months="6">6개월<span class="renew-price">$1 · 1,200원</span></div>
+      <div class="renew-period-tab" data-months="12">1년<span class="renew-price">$1.5 · 1,800원</span></div>
+    </div>
+
+    <div class="renew-currency-tabs">
+      <div class="renew-currency-tab selected" data-currency="KRW">🇰🇷 KRW (카드결제)</div>
+      <div class="renew-currency-tab" data-currency="USD">💵 USD (PayPal)</div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="cancel-btn" id="renewCancelBtn">취소</button>
+      <button class="confirm-btn-teal" id="renewConfirmBtn">결제하기</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-box">
@@ -136,7 +186,151 @@ const DELETE_ACCOUNT_URL = SUPABASE_URL + "/functions/v1/self-delete-account";
   document.getElementById('nicknameVal').textContent = profile?.nickname || '-';
   document.getElementById('pointsVal').textContent = (profile?.points_balance ?? 0).toLocaleString() + 'P';
   document.getElementById('joinedVal').textContent = profile?.created_at ? new Date(profile.created_at).toLocaleDateString('ko-KR') : '-';
+
+  await loadMyRegistrations(session.user.id);
 })();
+
+// ── 내 등록물 목록 + 구독 상태 표시 ──
+const CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
+const CATEGORY_LABEL = { vehicle:'차량', lost_item:'분실·도난 우려 물품', vulnerable_person:'아동·치매 어르신·장애우', pet:'반려동물', callback_contact:'부재중 연락', misc_incident:'기타 물품·사건' };
+const NEVER_EXPIRES = ['vulnerable_person', 'pet'];
+const GRACE_DAYS = 30;
+let renewTargetRegId = null;
+let renewMonths = 6;
+let renewCurrency = 'KRW';
+
+async function loadMyRegistrations(userId){
+  const container = document.getElementById('myRegistrations');
+  const { data, error } = await sb.from('registrations')
+    .select('id, category, title, search_key, subscription_expires_at')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    container.innerHTML = '<div class="empty-regs">아직 등록한 물건·정보가 없어요.</div>';
+    return;
+  }
+
+  container.innerHTML = data.map((r) => {
+    const label = r.search_key || r.title || CATEGORY_LABEL[r.category] || '등록물';
+    let statusHtml, metaHtml, showRenew = true;
+
+    if (NEVER_EXPIRES.includes(r.category)) {
+      statusHtml = '<span class="reg-status forever">♾️ 영구</span>';
+      metaHtml = '안전 카테고리라 구독 만료와 무관하게 연결이 항상 유지됩니다.';
+      showRenew = false;
+    } else {
+      const expiresAt = r.subscription_expires_at ? new Date(r.subscription_expires_at) : null;
+      const now = new Date();
+      if (!expiresAt) {
+        statusHtml = '<span class="reg-status dead">❓ 구독정보 없음</span>';
+        metaHtml = '구독 정보를 확인할 수 없어요.';
+      } else {
+        const daysLeft = Math.floor((expiresAt - now) / 86400000);
+        const cutoff = new Date(expiresAt.getTime() + GRACE_DAYS * 86400000);
+        if (daysLeft > 30) {
+          statusHtml = '<span class="reg-status ok">✅ 활성</span>';
+          metaHtml = '만료일: ' + expiresAt.toLocaleDateString('ko-KR');
+        } else if (daysLeft > 0) {
+          statusHtml = '<span class="reg-status soon">⚠️ 곧 만료</span>';
+          metaHtml = 'D-' + daysLeft + ' · ' + expiresAt.toLocaleDateString('ko-KR') + ' 만료 예정';
+        } else if (now < cutoff) {
+          statusHtml = '<span class="reg-status grace">🔶 유예기간</span>';
+          metaHtml = '만료됐지만 ' + cutoff.toLocaleDateString('ko-KR') + '까지는 연결이 유지됩니다. 서둘러 갱신해주세요.';
+        } else {
+          statusHtml = '<span class="reg-status dead">❌ 연결 중단됨</span>';
+          metaHtml = '유예기간이 지나 연결이 끊겼습니다. 지금 갱신하면 바로 복구됩니다.';
+        }
+      }
+    }
+
+    return `
+      <div class="reg-card" data-id="${r.id}">
+        <div class="reg-top">
+          <span class="reg-emoji">${CATEGORY_EMOJI[r.category] || '❓'}</span>
+          <span class="reg-title">${label}</span>
+          ${statusHtml}
+        </div>
+        <div class="reg-meta">${metaHtml}</div>
+        ${showRenew ? `<button class="reg-renew-btn" data-id="${r.id}">6개월/1년 갱신하기</button>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.reg-renew-btn').forEach((btn) => {
+    btn.addEventListener('click', () => openRenewModal(btn.dataset.id));
+  });
+}
+
+function openRenewModal(regId){
+  renewTargetRegId = regId;
+  renewMonths = 6;
+  renewCurrency = 'KRW';
+  document.querySelectorAll('.renew-period-tab').forEach((t) => t.classList.remove('selected'));
+  document.querySelector('.renew-period-tab[data-months="6"]').classList.add('selected');
+  document.querySelectorAll('.renew-currency-tab').forEach((t) => t.classList.remove('selected'));
+  document.querySelector('.renew-currency-tab[data-currency="KRW"]').classList.add('selected');
+  document.getElementById('renewModal').classList.add('show');
+}
+document.getElementById('renewCancelBtn').addEventListener('click', () => {
+  document.getElementById('renewModal').classList.remove('show');
+});
+document.querySelectorAll('.renew-period-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.renew-period-tab').forEach((t) => t.classList.remove('selected'));
+    tab.classList.add('selected');
+    renewMonths = Number(tab.dataset.months);
+  });
+});
+document.querySelectorAll('.renew-currency-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.renew-currency-tab').forEach((t) => t.classList.remove('selected'));
+    tab.classList.add('selected');
+    renewCurrency = tab.dataset.currency;
+  });
+});
+
+// 6개월=$1/1200원, 1년=$1.5/1800원 (최소단위: USD는 센트, KRW는 그대로)
+function renewPriceMinorUnits(){
+  if (renewCurrency === 'USD') return renewMonths === 6 ? 100 : 150;
+  return renewMonths === 6 ? 1200 : 1800;
+}
+
+document.getElementById('renewConfirmBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('renewConfirmBtn');
+  btn.disabled = true; btn.textContent = '처리 중…';
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const amount = renewPriceMinorUnits();
+    const method = renewCurrency === 'USD' ? 'paypal' : 'inicis_card';
+
+    // 구독 갱신은 PayPal/이니시스 즉시결제만 지원 — 무통장입금은 여기 넣지 않기로 결정함.
+    // (승인 대기 중 유예기간·중복결제 등 확인할 게 많아지고, 소액 구독料 특성상 즉시결제만으로 충분하다고 판단)
+    await sb.from('payments').insert({
+      user_id: session.user.id,
+      method,
+      amount_minor_units: amount,
+      currency_code: renewCurrency,
+      status: 'completed',
+      purpose: 'subscription',
+      registration_id: renewTargetRegId,
+      completed_at: new Date().toISOString(),
+    });
+
+    const { error } = await sb.rpc('extend_subscription', { p_registration_id: renewTargetRegId, p_months: renewMonths });
+    if (error) throw error;
+
+    document.getElementById('renewModal').classList.remove('show');
+    alert((renewMonths === 6 ? '6개월' : '1년') + ' 연장됐습니다. 감사합니다!');
+    await loadMyRegistrations(session.user.id);
+  } catch (e) {
+    console.error('[renew] 오류', e);
+    alert('갱신에 실패했어요: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '결제하기';
+  }
+});
 
 document.getElementById('openDeleteModalBtn').addEventListener('click', () => {
   document.getElementById('deleteModal').classList.add('show');

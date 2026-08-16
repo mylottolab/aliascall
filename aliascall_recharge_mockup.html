@@ -67,16 +67,6 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 .package-card .badge-best{ position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:var(--coral); color:#fff; font-size:9.5px; font-weight:700; padding:2px 8px; border-radius:8px; white-space:nowrap; }
 
 .section-label{ font-size:13px; font-weight:600; margin-bottom:10px; }
-.method-tabs{ display:flex; gap:8px; margin-bottom:20px; }
-.method-tab{ flex:1; text-align:center; padding:11px 8px; border-radius:10px; border:1.5px solid var(--line); background:var(--card); cursor:pointer; font-size:12.5px; font-weight:600; }
-.method-tab.active{ border-color:var(--coral); color:var(--coral); background:var(--coral-tint); }
-
-.bank-info{ background:var(--amber-tint); border-radius:12px; padding:16px 18px; margin-bottom:20px; font-size:12.5px; line-height:1.8; display:none; }
-.bank-info.show{ display:block; }
-.bank-info .row{ display:flex; justify-content:space-between; }
-.bank-info .row b{ font-family:'IBM Plex Mono',monospace; }
-.bank-info .field{ margin-top:10px; }
-.bank-info input{ width:100%; border:1.5px solid var(--line); border-radius:8px; padding:9px 11px; font-size:13px; font-family:'Inter',sans-serif; }
 
 .summary-row{ display:flex; justify-content:space-between; align-items:baseline; padding:16px 0; border-top:1.5px solid var(--line); margin-top:6px; }
 .summary-row .label{ font-size:13px; color:var(--ink-soft); }
@@ -120,25 +110,6 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
   <div class="section-label">패키지 선택</div>
   <div class="package-grid" id="packageGrid"></div>
 
-  <div id="methodBlock" style="display:none;">
-    <div class="section-label">결제 수단</div>
-    <div class="method-tabs">
-      <div class="method-tab active" data-method="inicis_card">💳 카드결제 (이니시스)</div>
-      <div class="method-tab" data-method="bank_transfer">🏦 계좌이체(무통장)</div>
-    </div>
-  </div>
-
-  <div class="bank-info" id="bankInfo">
-    <div class="row"><span>입금은행</span><b id="bankNameDisplay">-</b></div>
-    <div class="row"><span>계좌번호</span><b id="accountNumberDisplay">-</b></div>
-    <div class="row"><span>예금주</span><b id="accountHolderDisplay">-</b></div>
-    <div class="field">
-      <label style="font-weight:600; display:block; margin-bottom:6px;">입금자명</label>
-      <input type="text" id="depositorName" placeholder="실제 입금하실 분 성함">
-    </div>
-    <div style="margin-top:8px; color:var(--ink-soft);">입금 확인 후 포인트가 지급되며, 영업일 기준 최대 1일이 소요될 수 있어요.</div>
-  </div>
-
   <div class="summary-row">
     <span class="label">결제 금액</span>
     <span class="value mono" id="payAmount">$1.00</span>
@@ -174,26 +145,13 @@ const packages = {
 
 let currentCurrency = 'USD';
 let selectedIndex = 3;
-let currentMethod = 'inicis_card';
 
 const grid = document.getElementById('packageGrid');
 const payAmount = document.getElementById('payAmount');
 const payBtn = document.getElementById('payBtn');
 const payNote = document.getElementById('payNote');
-const methodBlock = document.getElementById('methodBlock');
-const bankInfo = document.getElementById('bankInfo');
 
 function fmt(n){ return n.toLocaleString(); }
-
-// 관리자 화면(aliascall_admin_bank_transfers.html)에서 설정한 실제 계좌정보를 그대로 표시
-(async function loadBankAccountInfo(){
-  const { data } = await sb.from('bank_account_config').select('*').eq('country_code', 'KR').maybeSingle();
-  if (data) {
-    document.getElementById('bankNameDisplay').textContent = data.bank_name || '-';
-    document.getElementById('accountNumberDisplay').textContent = data.account_number || '-';
-    document.getElementById('accountHolderDisplay').textContent = data.account_holder || '-';
-  }
-})();
 
 function renderPackages(){
   grid.innerHTML = packages[currentCurrency].map((p, i) => `
@@ -217,24 +175,13 @@ function renderSummary(){
   payAmount.textContent = p.symbol + fmt(p.amount) + (currentCurrency === 'KRW' ? '원' : '');
 
   if (currentCurrency === 'USD') {
-    methodBlock.style.display = 'none';
-    bankInfo.classList.remove('show');
     payBtn.className = 'pay-btn paypal';
     payBtn.textContent = 'PayPal로 결제하기';
     payNote.textContent = '외화 결제는 PayPal을 통해 안전하게 처리됩니다.';
   } else {
-    methodBlock.style.display = 'block';
-    if (currentMethod === 'inicis_card') {
-      bankInfo.classList.remove('show');
-      payBtn.className = 'pay-btn inicis';
-      payBtn.textContent = '카드로 결제하기 (이니시스)';
-      payNote.textContent = '국내 카드결제는 이니시스를 통해 안전하게 처리됩니다.';
-    } else {
-      bankInfo.classList.add('show');
-      payBtn.className = 'pay-btn bank';
-      payBtn.textContent = '입금 신청하기';
-      payNote.textContent = '입금자명을 정확히 입력해주셔야 확인이 빨라집니다.';
-    }
+    payBtn.className = 'pay-btn inicis';
+    payBtn.textContent = '카드로 결제하기 (이니시스)';
+    payNote.textContent = '국내 카드결제는 이니시스를 통해 안전하게 처리됩니다.';
   }
 }
 
@@ -249,67 +196,12 @@ document.querySelectorAll('.currency-tab').forEach(tab => {
   });
 });
 
-document.querySelectorAll('.method-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    currentMethod = tab.dataset.method;
-    renderSummary();
-  });
-});
-
 // 등록화면 등에서 "충전하러 가기"로 넘어온 경우, ?return=원래주소 를 실어서 옴 —
-// 결제 완료 즉시(무통장입금 제외) 그 주소로 자동 복귀시킴
+// 결제 완료 즉시 그 주소로 자동 복귀시킴
 const returnUrl = new URLSearchParams(window.location.search).get('return');
 
 payBtn.addEventListener('click', async () => {
   const p = packages[currentCurrency][selectedIndex];
-
-  if (currentCurrency === 'KRW' && currentMethod === 'bank_transfer') {
-    const name = document.getElementById('depositorName').value.trim();
-    if (!name) { alert('입금자명을 입력해주세요.'); return; }
-
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) {
-      alert('충전하려면 먼저 로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 계정을 먼저 만들어주세요.');
-      return;
-    }
-
-    payBtn.disabled = true; payBtn.textContent = '신청 중…';
-    try {
-      // 패키지 금액에 맞는 point_packages 행 찾기 (KRW는 소수점 없어 amount 그대로가 최소단위)
-      const { data: pkg, error: pkgErr } = await sb.from('point_packages')
-        .select('id, points_granted')
-        .eq('currency_code', 'KRW').eq('amount_minor_units', p.amount).maybeSingle();
-      if (pkgErr || !pkg) throw new Error('패키지 정보를 찾을 수 없습니다.');
-
-      const { data: payment, error: payErr } = await sb.from('payments').insert({
-        user_id: session.user.id,
-        point_package_id: pkg.id,
-        method: 'bank_transfer',
-        amount_minor_units: p.amount,
-        currency_code: 'KRW',
-        status: 'pending',
-      }).select().single();
-      if (payErr) throw payErr;
-
-      const { error: reqErr } = await sb.from('bank_transfer_requests').insert({
-        payment_id: payment.id,
-        depositor_name: name,
-      });
-      if (reqErr) throw reqErr;
-
-      alert('입금 신청이 접수되었습니다. 입금 확인 후 ' + fmt(pkg.points_granted) + 'P가 지급됩니다.' +
-        (returnUrl ? '\n입금 확인되시면 다시 원래 화면으로 돌아와 이어서 진행해주세요.' : ''));
-      document.getElementById('depositorName').value = '';
-    } catch (e) {
-      console.error('[recharge] 무통장입금 신청 오류', e);
-      alert('신청에 실패했어요. 잠시 후 다시 시도해주세요.\n(' + (e.message || '알 수 없는 오류') + ')');
-    } finally {
-      payBtn.disabled = false; payBtn.textContent = '입금 신청하기';
-    }
-    return;
-  }
 
   alert((currentCurrency === 'USD' ? 'PayPal' : '이니시스') + ' 결제창으로 이동합니다. (' + p.symbol + fmt(p.amount) + ' → ' + fmt(p.points) + 'P)');
   // TODO: 실제 결제 연동 시 이 알림은 결제 성공 콜백(웹훅/리다이렉트) 안으로 옮겨야 함.
