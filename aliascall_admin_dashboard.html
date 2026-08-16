@@ -104,6 +104,7 @@ tr:hover td{ background:rgba(31,111,107,.03); }
   <div class="nav-tab" data-tab="reports">신고 처리</div>
   <div class="nav-tab" data-tab="payments">결제 개요</div>
   <div class="nav-tab" data-tab="deletions">탈퇴 현황</div>
+  <div class="nav-tab" data-tab="products">상품 관리</div>
 </div>
 
 <main>
@@ -176,6 +177,31 @@ tr:hover td{ background:rgba(31,111,107,.03); }
     <table>
       <thead><tr><th>닉네임(탈퇴 시점)</th><th>사유</th><th>탈퇴일</th></tr></thead>
       <tbody id="deletionsBody"><tr class="empty-row"><td colspan="3">불러오는 중…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="tab-panel" data-panel="products">
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">충전소 화면 하단에 이미지·설명이 노출되고, "상품보기" 클릭시 아래 링크로 새 탭이 열립니다. Aliascall이 직접 판매하지 않습니다.</p>
+
+    <div class="card" style="background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:18px; margin-bottom:20px;">
+      <div style="font-size:13px; font-weight:700; margin-bottom:12px;">새 상품 추가</div>
+      <div class="toolbar" style="flex-wrap:wrap;">
+        <input type="text" id="prodName" placeholder="상품명" style="flex:1 1 200px;">
+        <input type="text" id="prodImageUrl" placeholder="이미지 URL" style="flex:1 1 200px;">
+      </div>
+      <div class="toolbar" style="flex-wrap:wrap;">
+        <input type="text" id="prodDesc" placeholder="짧은 설명" style="flex:2 1 260px;">
+        <input type="number" id="prodOrder" placeholder="표시순서(작을수록 위)" style="flex:0 0 160px;">
+      </div>
+      <div class="toolbar" style="flex-wrap:wrap;">
+        <input type="text" id="prodExternalUrl" placeholder="https://판매사이트.com/상품페이지" style="flex:1;">
+      </div>
+      <button id="prodAddBtn" style="padding:10px 20px; border:none; border-radius:8px; background:var(--teal); color:#fff; font-weight:700; font-size:12.5px; cursor:pointer;">상품 추가</button>
+    </div>
+
+    <table>
+      <thead><tr><th>이미지</th><th>상품명</th><th>설명</th><th>순서</th><th>노출</th><th>조치</th></tr></thead>
+      <tbody id="productsBody"><tr class="empty-row"><td colspan="6">불러오는 중…</td></tr></tbody>
     </table>
   </div>
 
@@ -354,6 +380,61 @@ async function loadDeletions(){
   `).join('');
 }
 
+// ── 상품 관리 (충전소 하단 노출, 외부링크 카탈로그) ──
+async function loadProducts(){
+  const tbody = document.getElementById('productsBody');
+  const { data, error } = await sb.from('featured_products').select('*').order('display_order', { ascending: true });
+  if (error || !data || data.length === 0) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">' + (error ? '불러오기 실패: ' + error.message : '등록된 상품이 없습니다.') + '</td></tr>'; return; }
+
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td>${p.image_url ? '<img src="' + p.image_url + '" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">' : '-'}</td>
+      <td>${p.name}</td>
+      <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.description || '-'}</td>
+      <td>${p.display_order}</td>
+      <td><span class="chip ${p.is_active ? 'active' : 'suspended'}">${p.is_active ? '노출중' : '숨김'}</span></td>
+      <td>
+        <button class="small-btn view" data-action="toggle" data-id="${p.id}" data-active="${p.is_active}">${p.is_active ? '숨기기' : '노출하기'}</button>
+        <button class="small-btn del" data-action="delete-product" data-id="${p.id}">삭제</button>
+      </td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('[data-action="toggle"]').forEach(btn => btn.addEventListener('click', async () => {
+    await sb.from('featured_products').update({ is_active: btn.dataset.active !== 'true' }).eq('id', btn.dataset.id);
+    loadProducts();
+  }));
+  tbody.querySelectorAll('[data-action="delete-product"]').forEach(btn => btn.addEventListener('click', async () => {
+    if (!confirm('이 상품을 삭제할까요?')) return;
+    await sb.from('featured_products').delete().eq('id', btn.dataset.id);
+    loadProducts();
+  }));
+}
+
+document.getElementById('prodAddBtn').addEventListener('click', async () => {
+  const name = document.getElementById('prodName').value.trim();
+  const description = document.getElementById('prodDesc').value.trim();
+  const image_url = document.getElementById('prodImageUrl').value.trim();
+  const external_url = document.getElementById('prodExternalUrl').value.trim();
+  const display_order = Number(document.getElementById('prodOrder').value) || 0;
+
+  if (!name || !external_url) { alert('상품명과 판매 링크(URL)는 필수입니다.'); return; }
+
+  const { data: { session } } = await sb.auth.getSession();
+  const { error } = await sb.from('featured_products').insert({
+    name, description: description || null, image_url: image_url || null, external_url,
+    display_order, created_by: session.user.id,
+  });
+  if (error) { alert('추가 실패: ' + error.message); return; }
+
+  document.getElementById('prodName').value = '';
+  document.getElementById('prodDesc').value = '';
+  document.getElementById('prodImageUrl').value = '';
+  document.getElementById('prodExternalUrl').value = '';
+  document.getElementById('prodOrder').value = '';
+  loadProducts();
+});
+
 function loadAllTabs(){
   loadOverview();
   loadMembers();
@@ -361,6 +442,7 @@ function loadAllTabs(){
   loadReports('open');
   loadPayments();
   loadDeletions();
+  loadProducts();
 }
 
 (async () => {
