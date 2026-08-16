@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliascall — 수신 대기</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#F6F8F5; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{ height:100%; }
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:18px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); background:var(--card); }
+.brand-row{ display:flex; align-items:center; gap:8px; }
+.brand-mark{ width:26px; height:26px; border-radius:7px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:13px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:15px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+.listen-badge{ font-size:11px; font-weight:700; color:var(--found); background:rgba(46,125,79,.1); border-radius:20px; padding:5px 11px; display:flex; align-items:center; gap:5px; }
+.listen-badge::before{ content:''; width:6px; height:6px; border-radius:50%; background:var(--found); }
+
+main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
+.page-title{ font-size:20px; margin-bottom:4px; }
+.page-desc{ font-size:12.5px; color:var(--ink-soft); margin-bottom:22px; line-height:1.6; }
+.login-needed{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13.5px; }
+
+.empty-wait{ text-align:center; padding:70px 20px; color:var(--ink-soft); }
+.empty-wait .big{ font-size:40px; margin-bottom:14px; }
+.empty-wait p{ font-size:13px; line-height:1.6; }
+.missed-card{ background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:12px; }
+.missed-card .m-top{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); margin-bottom:8px; }
+.missed-card .m-text{ font-size:13.5px; line-height:1.6; background:var(--paper); border-radius:10px; padding:11px 13px; }
+
+.ring-overlay{ display:none; position:fixed; inset:0; background:var(--teal-deep); z-index:60; flex-direction:column; align-items:center; justify-content:center; color:#fff; padding:28px; text-align:center; }
+.ring-overlay.show{ display:flex; }
+.ring-avatar{ width:96px; height:96px; border-radius:50%; background:rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; font-size:40px; margin-bottom:18px; animation:ringPulse 1.2s ease-in-out infinite; }
+@keyframes ringPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,255,255,.3); } 50%{ box-shadow:0 0 0 18px rgba(255,255,255,0); } }
+.ring-overlay h3{ font-size:19px; margin-bottom:6px; }
+.ring-overlay p{ font-size:13px; color:rgba(255,255,255,.75); margin:0 0 30px; }
+.ring-btns{ display:flex; gap:16px; }
+.ring-btn{ width:64px; height:64px; border-radius:50%; border:none; font-size:24px; cursor:pointer; }
+.ring-btn.accept{ background:var(--found); color:#fff; }
+.ring-btn.decline{ background:var(--danger); color:#fff; }
+
+.call-video-area{ display:none; position:relative; width:100%; max-width:340px; aspect-ratio:3/4; background:#000; border-radius:16px; overflow:hidden; margin-bottom:18px; }
+.call-video-area.show{ display:block; }
+.call-video-area video{ width:100%; height:100%; object-fit:cover; }
+#remoteVideo{ position:absolute; inset:0; }
+#localVideo{ position:absolute; width:84px; height:112px; right:10px; bottom:10px; border-radius:10px; border:2px solid rgba(255,255,255,.6); object-fit:cover; }
+.voice-avatar{ display:none; width:84px; height:84px; border-radius:50%; background:rgba(255,255,255,.14); align-items:center; justify-content:center; font-size:34px; margin-bottom:18px; }
+.voice-avatar.show{ display:flex; }
+.call-controls{ display:none; gap:14px; margin-top:6px; }
+.call-controls.show{ display:flex; }
+.ctrl-btn{ width:52px; height:52px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(255,255,255,.14); color:#fff; }
+.ctrl-btn.active-off{ background:var(--coral); }
+.ctrl-btn.hangup{ background:var(--danger); }
+
+.chat-toggle-btn{ position:fixed; right:18px; bottom:18px; width:52px; height:52px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:20px; cursor:pointer; z-index:65; display:none; align-items:center; justify-content:center; }
+.chat-toggle-btn.show{ display:flex; }
+.chat-panel{ display:none; position:fixed; inset:0; z-index:70; background:var(--paper); flex-direction:column; }
+.chat-panel.show{ display:flex; }
+.chat-panel-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line); background:var(--card); }
+.chat-panel-header b{ font-size:14px; }
+.chat-panel-header button{ background:none; border:none; font-size:18px; cursor:pointer; color:var(--ink-soft); }
+.chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
+.chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
+.chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
+.chat-bubble.them{ align-self:flex-start; background:var(--card); border:1px solid var(--line); border-bottom-left-radius:4px; }
+.chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); }
+.chat-input-row input{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
+.chat-input-row button{ background:var(--teal); color:#fff; border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div class="brand-mark">A</div>
+    <div class="brand-name">Alias<em>call</em></div>
+  </div>
+  <div class="listen-badge" id="listenBadge" style="display:none;">수신 대기중</div>
+</header>
+
+<main>
+  <div class="page-title">수신 대기</div>
+  <div class="page-desc">이 화면을 열어두시면, 회원님의 등록물로 누군가 연결을 시도할 때 여기로 바로 알림이 뜹니다.</div>
+
+  <div class="login-needed" id="loginNeeded">로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.</div>
+
+  <div id="waitContent" style="display:none;">
+    <div id="missedMessages"></div>
+    <div class="empty-wait" id="emptyWait">
+      <div class="big">📞</div>
+      <p>지금은 대기중입니다.<br>연결 요청이 오면 이 화면에 바로 알림이 뜹니다.</p>
+    </div>
+  </div>
+</main>
+
+<div class="ring-overlay" id="ringOverlay">
+  <div class="ring-avatar" id="ringAvatar">📞</div>
+  <h3 id="ringTitle">연결 요청이 왔어요</h3>
+  <p id="ringSub">음성으로 연결 요청</p>
+  <div class="ring-btns">
+    <button class="ring-btn decline" id="declineBtn">✕</button>
+    <button class="ring-btn accept" id="acceptBtn">✓</button>
+  </div>
+</div>
+
+<div class="ring-overlay" id="inCallOverlay">
+  <div class="voice-avatar" id="voiceAvatar">🎧</div>
+  <div class="call-video-area" id="callVideoArea">
+    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="localVideo" autoplay playsinline muted></video>
+  </div>
+  <h3>연결됨</h3>
+  <p id="inCallSub"></p>
+  <div class="call-controls show" id="callControls">
+    <button class="ctrl-btn" id="muteBtn">🎤</button>
+    <button class="ctrl-btn hangup" id="hangupBtn">📵</button>
+  </div>
+</div>
+
+<button class="chat-toggle-btn" id="chatToggleBtn">💬</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-panel-header"><b>채팅</b><button id="chatCloseBtn">✕</button></div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="메시지 입력…">
+    <button id="chatSendBtn">➤</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+let myRegistrationIds = [];
+let pendingSession = null;
+let pc = null, localStream = null, rtChannel = null;
+
+async function init(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { document.getElementById('loginNeeded').style.display = 'block'; return; }
+
+  document.getElementById('loginNeeded').style.display = 'none';
+  document.getElementById('waitContent').style.display = 'block';
+  document.getElementById('listenBadge').style.display = 'flex';
+
+  const { data: regs } = await sb.from('registrations').select('id').eq('user_id', session.user.id);
+  myRegistrationIds = (regs || []).map((r) => r.id);
+  if (myRegistrationIds.length === 0) return;
+
+  loadMissedMessages();
+
+  sb.channel('incoming-calls')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
+      const row = payload.new;
+      if (myRegistrationIds.includes(row.registration_id)) showIncomingCall(row);
+    })
+    .subscribe();
+}
+
+async function loadMissedMessages(){
+  const { data, error } = await sb.from('webrtc_sessions')
+    .select('id, left_message, call_type, created_at, registration_id')
+    .in('registration_id', myRegistrationIds)
+    .not('left_message', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error || !data || data.length === 0) return;
+
+  const container = document.getElementById('missedMessages');
+  document.getElementById('emptyWait').style.display = 'none';
+  container.innerHTML = '<div class="page-title" style="font-size:15px; margin-bottom:12px;">📩 부재중 메시지</div>' +
+    data.map((m) => `
+      <div class="missed-card">
+        <div class="m-top">${new Date(m.created_at).toLocaleString('ko-KR')} · ${m.call_type === 'video' ? '영상' : '음성'} 통화 미응답</div>
+        <div class="m-text">${m.left_message}</div>
+      </div>
+    `).join('');
+}
+
+const CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
+
+async function showIncomingCall(row){
+  pendingSession = row;
+  document.getElementById('ringSub').textContent = row.call_type === 'video' ? '영상으로 연결 요청' : '음성으로 연결 요청';
+  document.getElementById('ringOverlay').classList.add('show');
+
+  // webrtc_sessions엔 카테고리 정보가 없어서, 알림에 표시할 아이콘은 registrations를 별도 조회
+  try {
+    const { data: reg } = await sb.from('registrations').select('category').eq('id', row.registration_id).maybeSingle();
+    document.getElementById('ringAvatar').textContent = CATEGORY_EMOJI[reg?.category] || '📞';
+  } catch (e) {
+    document.getElementById('ringAvatar').textContent = '📞';
+  }
+}
+
+document.getElementById('declineBtn').addEventListener('click', async () => {
+  document.getElementById('ringOverlay').classList.remove('show');
+  if (pendingSession) {
+    // 거절 신호를 발견자에게 즉시 보내서, 25초 타임아웃까지 안 기다리고 바로 "메시지 남기기"로 넘어가게 함
+    const declineChannel = sb.channel('webrtc-' + pendingSession.session_token, { config: { broadcast: { self: false } } });
+    declineChannel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        declineChannel.send({ type: 'broadcast', event: 'declined', payload: {} });
+        setTimeout(() => sb.removeChannel(declineChannel), 600);
+      }
+    });
+  }
+  pendingSession = null;
+});
+
+document.getElementById('acceptBtn').addEventListener('click', async () => {
+  document.getElementById('ringOverlay').classList.remove('show');
+  await answerCall(pendingSession);
+});
+
+async function answerCall(session){
+  const mode = session.call_type;
+  document.getElementById('inCallSub').textContent = '';
+  document.getElementById('inCallOverlay').classList.add('show');
+  document.getElementById('chatToggleBtn').classList.add('show');
+  if (mode === 'video') document.getElementById('callVideoArea').classList.add('show');
+  else document.getElementById('voiceAvatar').classList.add('show');
+
+  await sb.from('webrtc_sessions').update({ owner_joined_at: new Date().toISOString() }).eq('id', session.id);
+
+  rtChannel = sb.channel('webrtc-' + session.session_token, { config: { broadcast: { self: false } } });
+  rtChannel
+    .on('broadcast', { event: 'offer' }, async ({ payload }) => {
+      pc = new RTCPeerConnection(RTC_CONFIG);
+      pc.onicecandidate = (e) => { if (e.candidate) rtChannel.send({ type:'broadcast', event:'ice-candidate', payload:{ candidate: e.candidate } }); };
+      pc.ontrack = (e) => { document.getElementById('remoteVideo').srcObject = e.streams[0]; };
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' });
+      } catch (e) {
+        alert('마이크(또는 카메라) 권한이 필요합니다.');
+        hangup(true);
+        return;
+      }
+      localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+      if (mode === 'video') document.getElementById('localVideo').srcObject = localStream;
+
+      await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      rtChannel.send({ type:'broadcast', event:'answer', payload:{ sdp: answer } });
+    })
+    .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
+      try { await pc.addIceCandidate(payload.candidate); } catch (e) { console.error('[webrtc] ICE 추가 오류', e); }
+    })
+    .on('broadcast', { event: 'chat' }, ({ payload }) => appendChatMessage(payload.text, 'them'))
+    .on('broadcast', { event: 'hangup' }, () => hangup(true))
+    .subscribe();
+}
+
+function hangup(silent){
+  if (rtChannel && !silent) rtChannel.send({ type:'broadcast', event:'hangup', payload:{} });
+  if (pc) { pc.close(); pc = null; }
+  if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
+  if (rtChannel) { sb.removeChannel(rtChannel); rtChannel = null; }
+  document.getElementById('inCallOverlay').classList.remove('show');
+  document.getElementById('callVideoArea').classList.remove('show');
+  document.getElementById('voiceAvatar').classList.remove('show');
+  document.getElementById('chatToggleBtn').classList.remove('show');
+  document.getElementById('chatPanel').classList.remove('show');
+  document.getElementById('chatMessages').innerHTML = '';
+  pendingSession = null;
+}
+document.getElementById('hangupBtn').addEventListener('click', () => hangup(false));
+
+let isMuted = false;
+document.getElementById('muteBtn').addEventListener('click', () => {
+  if (!localStream) return;
+  isMuted = !isMuted;
+  localStream.getAudioTracks().forEach((t) => (t.enabled = !isMuted));
+  const btn = document.getElementById('muteBtn');
+  btn.textContent = isMuted ? '🔇' : '🎤';
+  btn.classList.toggle('active-off', isMuted);
+});
+
+function appendChatMessage(text, who){
+  const el = document.createElement('div');
+  el.className = 'chat-bubble ' + who;
+  el.textContent = text;
+  const list = document.getElementById('chatMessages');
+  list.appendChild(el);
+  list.scrollTop = list.scrollHeight;
+}
+document.getElementById('chatToggleBtn').addEventListener('click', () => document.getElementById('chatPanel').classList.add('show'));
+document.getElementById('chatCloseBtn').addEventListener('click', () => document.getElementById('chatPanel').classList.remove('show'));
+function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !rtChannel) return;
+  rtChannel.send({ type:'broadcast', event:'chat', payload:{ text } });
+  appendChatMessage(text, 'me');
+  input.value = '';
+}
+document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+
+init();
+</script>
+</body>
+</html>

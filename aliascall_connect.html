@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Aliascall — 연결하기</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#F6F8F5; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --line:#DCE3DE; --danger:#C1483A;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{ height:100%; }
+body{
+  margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif;
+  min-height:100vh; word-break:keep-all; display:flex; flex-direction:column;
+}
+h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:18px 20px; text-align:center; }
+.brand-row{ display:inline-flex; align-items:center; gap:8px; }
+.brand-mark{ width:26px; height:26px; border-radius:7px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:13px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:15px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+
+main{ flex:1; display:flex; align-items:center; justify-content:center; padding:20px; }
+.wrap{ max-width:420px; width:100%; }
+
+.state-loading{ text-align:center; padding:60px 20px; }
+.spinner{ width:36px; height:36px; border:3px solid var(--line); border-top-color:var(--teal); border-radius:50%; margin:0 auto 16px; animation:spin 0.8s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+.state-loading p{ font-size:13px; color:var(--ink-soft); }
+
+.state-error{ display:none; text-align:center; padding:50px 24px; }
+.state-error .big{ font-size:44px; margin-bottom:14px; }
+.state-error h2{ font-size:18px; margin-bottom:8px; }
+.state-error p{ font-size:13px; color:var(--ink-soft); line-height:1.6; margin:0 0 20px; }
+.state-error a{ display:inline-block; background:var(--teal); color:#fff; padding:12px 22px; border-radius:10px; font-weight:700; font-size:13.5px; text-decoration:none; }
+
+.state-found{ display:none; }
+.found-card{ background:var(--card); border:1.5px solid var(--line); border-radius:20px; padding:28px 24px; text-align:center; }
+.found-emoji{ font-size:44px; margin-bottom:10px; }
+.found-title{ font-size:19px; font-weight:700; margin-bottom:4px; }
+.found-sub{ font-size:12.5px; color:var(--ink-soft); margin-bottom:18px; }
+.found-desc{ font-size:13px; color:var(--ink); background:var(--paper); border-radius:12px; padding:12px 14px; text-align:left; line-height:1.6; margin-bottom:20px; }
+.privacy-note{ display:flex; align-items:flex-start; gap:8px; background:var(--teal-tint); border-radius:12px; padding:12px 14px; text-align:left; font-size:12px; color:var(--teal-deep); line-height:1.55; margin-bottom:22px; }
+.privacy-note .icon{ font-size:16px; flex-shrink:0; }
+
+.connect-btns{ display:flex; flex-direction:column; gap:10px; }
+.connect-btn{
+  border:none; border-radius:13px; padding:16px; font-size:15px; font-weight:700; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:9px;
+}
+.connect-btn.voice{ background:var(--teal); color:#fff; }
+.connect-btn.video{ background:var(--teal-tint); color:var(--teal-deep); }
+.connect-btn:active{ transform:scale(0.98); }
+
+.guide-link-bottom{ display:block; text-align:center; margin-top:18px; font-size:12px; color:var(--ink-soft); text-decoration:underline; }
+
+.calling-overlay{ display:none; position:fixed; inset:0; background:var(--teal-deep); z-index:50; flex-direction:column; align-items:center; justify-content:center; color:#fff; text-align:center; padding:24px; }
+.calling-overlay.show{ display:flex; }
+.calling-overlay .pulse-ring{ width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; margin-bottom:20px; animation:pulseRing 1.6s ease-in-out infinite; }
+.calling-overlay .pulse-ring .dot{ width:44px; height:44px; border-radius:50%; background:#fff; }
+@keyframes pulseRing{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,255,255,.25); } 50%{ box-shadow:0 0 0 16px rgba(255,255,255,0); } }
+.calling-overlay h3{ font-size:17px; margin-bottom:6px; }
+.calling-overlay p{ font-size:12.5px; color:rgba(255,255,255,.75); margin:0 0 24px; }
+.calling-overlay .end-btn{ background:var(--coral); color:#fff; border:none; border-radius:12px; padding:13px 28px; font-weight:700; font-size:14px; cursor:pointer; }
+.leave-msg-block{ display:none; flex-direction:column; gap:10px; width:100%; max-width:340px; margin-top:6px; }
+.leave-msg-block.show{ display:flex; }
+.leave-msg-block input{ border:1.5px solid rgba(255,255,255,.3); background:rgba(255,255,255,.08); color:#fff; border-radius:10px; padding:12px 14px; font-size:13.5px; }
+.leave-msg-block input::placeholder{ color:rgba(255,255,255,.5); }
+.leave-msg-block button{ background:var(--coral); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:13.5px; cursor:pointer; }
+
+/* ── 통화중 화면 (비디오/컨트롤/채팅) ── */
+.call-video-area{ display:none; position:relative; width:100%; max-width:360px; aspect-ratio:3/4; background:#000; border-radius:16px; overflow:hidden; margin-bottom:18px; }
+.call-video-area.show{ display:block; }
+.call-video-area video{ width:100%; height:100%; object-fit:cover; }
+#remoteVideo{ position:absolute; inset:0; }
+#localVideo{ position:absolute; width:88px; height:118px; right:10px; bottom:10px; border-radius:10px; border:2px solid rgba(255,255,255,.6); object-fit:cover; }
+.voice-avatar{ display:none; width:88px; height:88px; border-radius:50%; background:rgba(255,255,255,.14); align-items:center; justify-content:center; font-size:36px; margin-bottom:20px; }
+.voice-avatar.show{ display:flex; }
+
+.call-controls{ display:none; gap:14px; margin-top:6px; }
+.call-controls.show{ display:flex; }
+.ctrl-btn{ width:52px; height:52px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(255,255,255,.14); color:#fff; }
+.ctrl-btn.active-off{ background:var(--coral); }
+.ctrl-btn.hangup{ background:var(--danger); }
+
+.chat-toggle-btn{ position:fixed; right:18px; bottom:18px; width:52px; height:52px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:20px; cursor:pointer; z-index:55; display:none; align-items:center; justify-content:center; }
+.chat-toggle-btn.show{ display:flex; }
+.chat-panel{ display:none; position:fixed; inset:0; z-index:60; background:var(--paper); flex-direction:column; }
+.chat-panel.show{ display:flex; }
+.chat-panel-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line); background:var(--card); }
+.chat-panel-header b{ font-size:14px; }
+.chat-panel-header button{ background:none; border:none; font-size:18px; cursor:pointer; color:var(--ink-soft); }
+.chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
+.chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
+.chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
+.chat-bubble.them{ align-self:flex-start; background:var(--card); border:1px solid var(--line); border-bottom-left-radius:4px; }
+.chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); }
+.chat-input-row input{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
+.chat-input-row button{ background:var(--teal); color:#fff; border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div class="brand-mark">A</div>
+    <div class="brand-name">Alias<em>call</em></div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <div class="state-loading" id="stateLoading">
+      <div class="spinner"></div>
+      <p>확인하는 중…</p>
+    </div>
+
+    <div class="state-error" id="stateError">
+      <div class="big">🔍</div>
+      <h2>등록 정보를 찾을 수 없어요</h2>
+      <p>QR이 손상되었거나, 이미 처리된(삭제된) 등록일 수 있어요.<br>직접 검색해보시겠어요?</p>
+      <a href="aliascall_search_mockup.html">번호·이름으로 검색하기</a>
+    </div>
+
+    <div class="state-found" id="stateFound">
+      <div class="found-card">
+        <div class="found-emoji" id="foundEmoji">🚗</div>
+        <div class="found-title" id="foundTitle">-</div>
+        <div class="found-sub" id="foundSub">-</div>
+        <div class="found-desc" id="foundDesc" style="display:none;"></div>
+
+        <div class="privacy-note">
+          <span class="icon">🔒</span>
+          <span>실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.</span>
+        </div>
+
+        <div class="connect-btns">
+          <button class="connect-btn voice" id="btnVoice">🎧 음성으로 연결하기</button>
+          <button class="connect-btn video" id="btnVideo">🎥 영상으로 연결하기</button>
+        </div>
+      </div>
+      <a href="aliascall_search_mockup.html" class="guide-link-bottom">다른 등록물 찾기</a>
+    </div>
+
+  </div>
+</main>
+
+<div class="calling-overlay" id="callingOverlay">
+  <div class="pulse-ring" id="pulseRing"><div class="dot"></div></div>
+  <div class="voice-avatar" id="voiceAvatar">🎧</div>
+  <div class="call-video-area" id="callVideoArea">
+    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="localVideo" autoplay playsinline muted></video>
+  </div>
+  <h3 id="callingStatus">연결 중…</h3>
+  <p id="callingSub">소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.</p>
+  <div class="call-controls" id="callControls">
+    <button class="ctrl-btn" id="muteBtn">🎤</button>
+    <button class="ctrl-btn hangup" id="endCallBtn">📵</button>
+  </div>
+  <div class="leave-msg-block" id="leaveMsgBlock">
+    <input type="text" id="leaveMsgInput" placeholder="예: 지금 못 받으시면 010-0000-0000으로 연락주세요">
+    <button id="leaveMsgSendBtn">메시지 남기기</button>
+  </div>
+  <button class="end-btn" id="endCallBtnInitial">연결 종료</button>
+</div>
+
+<button class="chat-toggle-btn" id="chatToggleBtn">💬</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-panel-header"><b>채팅</b><button id="chatCloseBtn">✕</button></div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="메시지 입력…">
+    <button id="chatSendBtn">➤</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const CATEGORY_EMOJI = {
+  vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓',
+};
+const CATEGORY_LABEL = {
+  vehicle:'차량', lost_item:'분실·도난 우려 물품', vulnerable_person:'아동·치매 어르신·장애우',
+  pet:'반려동물', callback_contact:'부재중 연락', misc_incident:'기타 물품·사건',
+};
+
+function getTokenFromUrl(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get('t');
+}
+
+async function init(){
+  const token = getTokenFromUrl();
+  const loadingEl = document.getElementById('stateLoading');
+  const errorEl = document.getElementById('stateError');
+  const foundEl = document.getElementById('stateFound');
+
+  if (!token) {
+    loadingEl.style.display = 'none';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const { data, error } = await sb.from('registrations')
+      .select('id, category, title, search_key, description')
+      .eq('qr_code_token', token)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    loadingEl.style.display = 'none';
+
+    if (error || !data) {
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    document.getElementById('foundEmoji').textContent = CATEGORY_EMOJI[data.category] || '❓';
+    document.getElementById('foundTitle').textContent = data.search_key || data.title || CATEGORY_LABEL[data.category] || '등록물';
+    document.getElementById('foundSub').textContent = CATEGORY_LABEL[data.category] || data.category;
+    if (data.description) {
+      document.getElementById('foundDesc').textContent = data.description;
+      document.getElementById('foundDesc').style.display = 'block';
+    }
+
+    foundEl.style.display = 'block';
+    foundEl.dataset.registrationId = data.id;
+  } catch (e) {
+    console.error('[connect] 조회 오류', e);
+    loadingEl.style.display = 'none';
+    errorEl.style.display = 'block';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WebRTC 통화 + 통화중 채팅 (발견자=caller 쪽)
+// 시그널링은 Supabase Realtime Broadcast 채널로 주고받음 (webrtc-{session_token}).
+// 채팅은 DB에 저장하지 않는 일회성 메시지 — 발견자가 로그인 계정이 없어서
+// 계속 남는 대화이력을 만들 방법 자체가 없기 때문에 이 통화 세션 동안만 유효함.
+// ═══════════════════════════════════════════════════════════════
+const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+const myClientId = 'caller-' + Math.random().toString(36).slice(2);
+
+let pc = null, localStream = null, rtChannel = null, currentSessionToken = null, currentMode = 'voice';
+let noAnswerTimer = null;
+
+function makeSessionToken(){
+  // crypto.randomUUID 지원 브라우저 기준, 하이픈 제거해서 hex 유사 형태로
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g, '');
+  return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+}
+
+async function startCall(mode){
+  currentMode = mode;
+  const overlay = document.getElementById('callingOverlay');
+  overlay.classList.add('show');
+  document.getElementById('callingStatus').textContent = mode === 'voice' ? '음성으로 연결 중…' : '영상으로 연결 중…';
+  document.getElementById('callingSub').textContent = '소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.';
+  document.getElementById('pulseRing').style.display = 'flex';
+  document.getElementById('leaveMsgBlock').classList.remove('show');
+
+  const registrationId = document.getElementById('stateFound').dataset.registrationId;
+
+  // 세션토큰은 클라이언트에서 직접 생성 (서버 default에 의존하면, 발견자는 비로그인이라
+  // insert 직후 .select()로 되읽어올 권한이 없어서 실패할 수 있음)
+  currentSessionToken = makeSessionToken();
+
+  // 1) webrtc_sessions에 통화요청 기록 -> 소유자 화면이 이걸 실시간으로 감지해서 알림을 띄움
+  const { error } = await sb.from('webrtc_sessions').insert({
+    registration_id: registrationId,
+    call_type: mode,
+    session_token: currentSessionToken,
+    owner_notified_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    alert('연결 요청에 실패했어요. 잠시 후 다시 시도해주세요.');
+    overlay.classList.remove('show');
+    return;
+  }
+
+  // 25초 안에 응답이 없으면 "메시지 남기기" 화면으로 전환
+  noAnswerTimer = setTimeout(() => showLeaveMessagePrompt(), 25000);
+
+  // 2) 시그널링 채널 구독
+  rtChannel = sb.channel('webrtc-' + currentSessionToken, { config: { broadcast: { self: false } } });
+  rtChannel
+    .on('broadcast', { event: 'answer' }, async ({ payload }) => {
+      clearTimeout(noAnswerTimer);
+      await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+      document.getElementById('callingStatus').textContent = '연결됨';
+      document.getElementById('callingSub').textContent = '';
+      document.getElementById('pulseRing').style.display = 'none';
+      document.getElementById('callControls').classList.add('show');
+      document.getElementById('chatToggleBtn').classList.add('show');
+      if (mode === 'video') document.getElementById('callVideoArea').classList.add('show');
+      else document.getElementById('voiceAvatar').classList.add('show');
+    })
+    .on('broadcast', { event: 'declined' }, () => {
+      clearTimeout(noAnswerTimer);
+      showLeaveMessagePrompt();
+    })
+    .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
+      try { await pc.addIceCandidate(payload.candidate); } catch (e) { console.error('[webrtc] ICE 추가 오류', e); }
+    })
+    .on('broadcast', { event: 'chat' }, ({ payload }) => appendChatMessage(payload.text, 'them'))
+    .on('broadcast', { event: 'hangup' }, () => endCall(false))
+    .subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') await createOfferAsCaller(mode);
+    });
+}
+
+// ── 응답이 없거나 거절됐을 때: 그 자리에서 메시지 남기기 ──
+function showLeaveMessagePrompt(){
+  if (pc) { pc.close(); pc = null; }
+  if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
+  document.getElementById('pulseRing').style.display = 'none';
+  document.getElementById('callingStatus').textContent = '지금은 응답이 없어요';
+  document.getElementById('callingSub').textContent = '아래에 메시지를 남겨두시면, 소유자가 나중에 확인할 수 있어요.';
+  document.getElementById('leaveMsgBlock').classList.add('show');
+}
+
+document.getElementById('leaveMsgSendBtn').addEventListener('click', async () => {
+  const text = document.getElementById('leaveMsgInput').value.trim();
+  if (!text) return;
+  const btn = document.getElementById('leaveMsgSendBtn');
+  btn.disabled = true; btn.textContent = '전송 중…';
+  try {
+    const { error } = await sb.from('webrtc_sessions').update({
+      left_message: text, ended_reason: 'timeout_no_answer', ended_at: new Date().toISOString(),
+    }).eq('session_token', currentSessionToken);
+    if (error) throw error;
+    document.getElementById('leaveMsgBlock').innerHTML = '<p style="color:#fff; font-size:13px;">✅ 메시지를 남겼습니다. 소유자가 확인하면 답을 드릴 수 있어요.</p>';
+    setTimeout(() => endCall(true), 1800);
+  } catch (e) {
+    console.error('[leave-message] 저장 오류', e);
+    alert('메시지 전송에 실패했어요. 다시 시도해주세요.');
+    btn.disabled = false; btn.textContent = '메시지 남기기';
+  }
+});
+
+async function createOfferAsCaller(mode){
+  pc = new RTCPeerConnection(RTC_CONFIG);
+  pc.onicecandidate = (e) => {
+    if (e.candidate) rtChannel.send({ type: 'broadcast', event: 'ice-candidate', payload: { candidate: e.candidate } });
+  };
+  pc.ontrack = (e) => {
+    const remoteEl = document.getElementById('remoteVideo');
+    remoteEl.srcObject = e.streams[0];
+  };
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' });
+  } catch (e) {
+    alert('마이크(또는 카메라) 권한이 필요합니다.');
+    endCall(true);
+    return;
+  }
+  localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+  if (mode === 'video') document.getElementById('localVideo').srcObject = localStream;
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  rtChannel.send({ type: 'broadcast', event: 'offer', payload: { sdp: offer, registrationTitle: document.getElementById('foundTitle').textContent } });
+}
+
+function endCall(silent){
+  if (rtChannel && !silent) rtChannel.send({ type: 'broadcast', event: 'hangup', payload: {} });
+  if (pc) { pc.close(); pc = null; }
+  if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
+  if (rtChannel) { sb.removeChannel(rtChannel); rtChannel = null; }
+  document.getElementById('callingOverlay').classList.remove('show');
+  document.getElementById('callControls').classList.remove('show');
+  document.getElementById('callVideoArea').classList.remove('show');
+  document.getElementById('voiceAvatar').classList.remove('show');
+  document.getElementById('chatToggleBtn').classList.remove('show');
+  document.getElementById('chatPanel').classList.remove('show');
+  document.getElementById('chatMessages').innerHTML = '';
+}
+
+let isMuted = false;
+document.getElementById('muteBtn').addEventListener('click', () => {
+  if (!localStream) return;
+  isMuted = !isMuted;
+  localStream.getAudioTracks().forEach((t) => (t.enabled = !isMuted));
+  const btn = document.getElementById('muteBtn');
+  btn.textContent = isMuted ? '🔇' : '🎤';
+  btn.classList.toggle('active-off', isMuted);
+});
+
+// ── 채팅 (일회성, DB 미저장) ──
+function appendChatMessage(text, who){
+  const el = document.createElement('div');
+  el.className = 'chat-bubble ' + who;
+  el.textContent = text;
+  const list = document.getElementById('chatMessages');
+  list.appendChild(el);
+  list.scrollTop = list.scrollHeight;
+}
+document.getElementById('chatToggleBtn').addEventListener('click', () => document.getElementById('chatPanel').classList.add('show'));
+document.getElementById('chatCloseBtn').addEventListener('click', () => document.getElementById('chatPanel').classList.remove('show'));
+function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !rtChannel) return;
+  rtChannel.send({ type: 'broadcast', event: 'chat', payload: { text } });
+  appendChatMessage(text, 'me');
+  input.value = '';
+}
+document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+
+document.getElementById('btnVoice').addEventListener('click', () => startCall('voice'));
+document.getElementById('btnVideo').addEventListener('click', () => startCall('video'));
+document.getElementById('endCallBtn').addEventListener('click', () => endCall(false));
+document.getElementById('endCallBtnInitial').addEventListener('click', () => endCall(false));
+
+init();
+</script>
+</body>
+</html>
