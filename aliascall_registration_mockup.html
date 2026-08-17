@@ -457,7 +457,7 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
   <!-- STEP 3: 미디어 첨부 -->
   <div class="panel" data-panel="3">
     <div class="panel-title" data-i18n="step3Title">사진과 자료</div>
-    <div class="panel-desc" data-i18n="step3Desc">정지화면 외에 짧은 동영상 · 음성 · 문서도 첨부할 수 있어요.</div>
+    <div class="panel-desc" data-i18n="step3Desc">정지화면 외에 짧은 동영상 · 음성 · 문서도 첨부할 수 있어요. 이 4가지를 합쳐서 최대 5개까지 등록됩니다.</div>
 
     <div class="media-tabs">
       <div class="media-tab active" data-media="photo" data-i18n="mediaPhoto">사진</div>
@@ -465,7 +465,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
       <div class="media-tab" data-media="audio" data-i18n="mediaAudio">음성</div>
       <div class="media-tab" data-media="document" data-i18n="mediaDocument">문서</div>
     </div>
-    <div class="dropzone" id="mediaDropzone"><b data-i18n="mediaDropTitlePhoto">사진을 끌어다 놓거나 탭하세요</b><span data-i18n="mediaDropSubPhoto">최대 5장, 장당 10MB</span><input type="file" id="mediaFileInput" accept="image/*" style="display:none;" multiple></div>
+    <div class="media-quota" id="mediaQuotaCounter" style="font-size:11.5px; color:var(--ink-soft); margin-bottom:8px;"></div>
+    <div class="dropzone" id="mediaDropzone"><b data-i18n="mediaDropTitlePhoto">사진을 끌어다 놓거나 탭하세요</b><span data-i18n="mediaDropSubPhoto">사진·동영상·음성·문서 합쳐 최대 5개까지 (장당 10MB)</span><input type="file" id="mediaFileInput" accept="image/*" style="display:none;" multiple></div>
     <div class="staged-files" id="stagedMediaList"></div>
 
     <div id="reassurance-block" style="display:none; margin-top:26px;">
@@ -584,9 +585,14 @@ const I18N = {
     callbackHint: '이 카테고리는 실시간 응답보다 나중에 연락이 닿는 게 중요해서, 다음 화면의 백업 알림용 전화번호를 등록해두시길 특히 권해드려요.',
     descSensitiveHint: '의료정보처럼 민감한 내용을 적으시면, 다음 단계에서 별도 동의를 한 번 더 받습니다.',
     err2: '필수 항목을 입력해주세요.',
-    step3Title: '사진과 자료', step3Desc: '정지화면 외에 짧은 동영상 · 음성 · 문서도 첨부할 수 있어요.',
+    step3Title: '사진과 자료', step3Desc: '정지화면 외에 짧은 동영상 · 음성 · 문서도 첨부할 수 있어요. 이 4가지를 합쳐서 최대 5개까지 등록됩니다.',
     mediaPhoto: '사진', mediaVideo: '동영상', mediaAudio: '음성', mediaDocument: '문서',
-    mediaDropTitlePhoto: '사진을 끌어다 놓거나 탭하세요', mediaDropSubPhoto: '최대 5장, 장당 10MB',
+    mediaDropTitlePhoto: '사진을 끌어다 놓거나 탭하세요', mediaDropSubPhoto: '사진·동영상·음성·문서 합쳐 최대 5개까지 (장당 10MB)',
+    mediaDropTitleVideo: '동영상을 업로드하세요', mediaDropSubVideo: '사진·동영상·음성·문서 합쳐 최대 5개까지 (최대 15초, 30MB)',
+    mediaDropTitleAudio: '음성을 업로드하거나 녹음하세요', mediaDropSubAudio: '사진·동영상·음성·문서 합쳐 최대 5개까지 (최대 10초)',
+    mediaDropTitleDocument: '문서를 업로드하세요', mediaDropSubDocument: '사진·동영상·음성·문서 합쳐 최대 5개까지 (PDF, 최대 5MB)',
+    mediaQuotaCounter: (n) => n + ' / 5개 사용 중 · 사진+동영상+음성+문서 합산',
+    mediaQuotaFullAlert: '최대 5개까지만 첨부할 수 있어요. 사진·동영상·음성·문서를 모두 합친 개수예요. 기존 파일을 지우면 새로 추가할 수 있습니다.',
     reassuranceTitle: '안심 콘텐츠', reassuranceDesc: '발견 직후 대상을 진정시키는 용도예요. 소유자 목소리나 익숙한 사진을 들려주고 보여줄 수 있습니다.',
     reassuranceVoiceLabel: '보호자 목소리 녹음', reassuranceUpload: '탭해서 파일 선택하기', reassuranceDesc2: '10초 이내 짧은 인사말이면 충분해요',
     step4Title: '마지막으로 확인할게요', step4Desc: '필요한 항목에만 동의를 받습니다.',
@@ -670,9 +676,14 @@ const I18N = {
     callbackHint: "For this category, being reachable later matters more than an instant answer — we especially recommend adding a backup alert phone number on the next screen.",
     descSensitiveHint: 'If you write sensitive details like medical info, we will ask for a separate consent on the next step.',
     err2: 'Please fill in the required field.',
-    step3Title: 'Photos & files', step3Desc: 'You can also attach a short video, audio, or document, not just photos.',
+    step3Title: 'Photos & files', step3Desc: 'You can also attach a short video, audio, or document, not just photos. All four types share one combined limit of 5 items total.',
     mediaPhoto: 'Photo', mediaVideo: 'Video', mediaAudio: 'Audio', mediaDocument: 'Document',
-    mediaDropTitlePhoto: 'Drag a photo here or tap to upload', mediaDropSubPhoto: 'Up to 5 photos, 10MB each',
+    mediaDropTitlePhoto: 'Drag a photo here or tap to upload', mediaDropSubPhoto: 'Shares a combined limit of 5 with video/audio/documents (10MB each)',
+    mediaDropTitleVideo: 'Upload a video', mediaDropSubVideo: 'Shares a combined limit of 5 with photos/audio/documents (max 15s, 30MB)',
+    mediaDropTitleAudio: 'Upload or record audio', mediaDropSubAudio: 'Shares a combined limit of 5 with photos/video/documents (max 10s)',
+    mediaDropTitleDocument: 'Upload a document', mediaDropSubDocument: 'Shares a combined limit of 5 with photos/video/audio (PDF, max 5MB)',
+    mediaQuotaCounter: (n) => n + ' / 5 used · photos + video + audio + documents combined',
+    mediaQuotaFullAlert: "You can attach up to 5 items total — photos, video, audio, and documents all count together. Remove an existing file to add a new one.",
     reassuranceTitle: 'Reassurance content', reassuranceDesc: "Helps calm them down right after they're found — play the owner's voice or show a familiar photo.",
     reassuranceVoiceLabel: "Owner's voice recording", reassuranceUpload: 'Tap to choose a file', reassuranceDesc2: 'A short greeting under 10 seconds is enough',
     step4Title: 'One last check', step4Desc: 'We only ask for consent where it applies.',
@@ -749,6 +760,8 @@ function applyLang(lang){
   categoryLabels = I18N[lang].categoryLabels;
   descriptionConfig = I18N[lang].descriptionConfig;
   if (typeof updateSubModalPrice === 'function') updateSubModalPrice();
+  if (typeof updateDropzoneText === 'function') updateDropzoneText();
+  if (typeof updateMediaQuotaCounter === 'function') updateMediaQuotaCounter();
   if (typeof renderStep === 'function' && panels && panels.length) renderStep();  // 카테고리별 동적 라벨(detailTitle 등)도 다시 그림
 }
 document.querySelectorAll('.lang-toggle button').forEach((btn) => {
@@ -963,22 +976,28 @@ document.getElementById('downloadBtn').addEventListener('click', () => attemptDo
 })();
 
 let currentMediaType = 'photo';
-const mediaLabels = {
-  photo:['사진을 끌어다 놓거나 탭하세요','최대 5장, 장당 10MB', 'image/*'],
-  video:['동영상을 업로드하세요','최대 15초, 30MB', 'video/*'],
-  audio:['음성을 업로드하거나 녹음하세요','최대 10초', 'audio/*'],
-  document:['문서를 업로드하세요','PDF, 최대 5MB', 'application/pdf'],
-};
+const MEDIA_ACCEPT = { photo:'image/*', video:'video/*', audio:'audio/*', document:'application/pdf' };
+const MEDIA_KEY_SUFFIX = { photo:'Photo', video:'Video', audio:'Audio', document:'Document' };
+const MEDIA_QUOTA_MAX = 5; // 사진+동영상+음성+문서 통합 최대 개수
+
+function updateDropzoneText(){
+  const t = I18N[currentLang];
+  const suffix = MEDIA_KEY_SUFFIX[currentMediaType];
+  document.querySelector('#mediaDropzone b').textContent = t['mediaDropTitle' + suffix];
+  document.querySelector('#mediaDropzone').childNodes[1].textContent = t['mediaDropSub' + suffix];
+  document.getElementById('mediaFileInput').accept = MEDIA_ACCEPT[currentMediaType];
+}
+
+function updateMediaQuotaCounter(){
+  document.getElementById('mediaQuotaCounter').textContent = I18N[currentLang].mediaQuotaCounter(stagedMedia.length);
+}
 
 document.querySelectorAll('.media-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.media-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     currentMediaType = tab.dataset.media;
-    const [b, sub, accept] = mediaLabels[currentMediaType];
-    document.querySelector('#mediaDropzone b').textContent = b;
-    document.querySelector('#mediaDropzone').childNodes[1].textContent = sub;
-    document.getElementById('mediaFileInput').accept = accept;
+    updateDropzoneText();
   });
 });
 
@@ -1002,17 +1021,20 @@ function renderStagedList(containerId, items, onRemove){
   });
 }
 
+function renderStagedMediaList(){
+  renderStagedList('stagedMediaList', stagedMedia, (idx) => { stagedMedia.splice(idx, 1); renderStagedMediaList(); });
+  updateMediaQuotaCounter();
+}
 document.getElementById('mediaDropzone').addEventListener('click', () => {
   document.getElementById('mediaFileInput').click();
 });
-function renderStagedMediaList(){
-  renderStagedList('stagedMediaList', stagedMedia, (idx) => { stagedMedia.splice(idx, 1); renderStagedMediaList(); });
-}
 document.getElementById('mediaFileInput').addEventListener('change', (e) => {
+  let blocked = false;
   Array.from(e.target.files).forEach(file => {
-    if (stagedMedia.length >= 5) return;
+    if (stagedMedia.length >= MEDIA_QUOTA_MAX) { blocked = true; return; }
     stagedMedia.push({ file, mediaType: currentMediaType });
   });
+  if (blocked) alert(I18N[currentLang].mediaQuotaFullAlert);
   renderStagedMediaList();
   e.target.value = '';
 });
