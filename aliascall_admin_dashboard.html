@@ -225,6 +225,19 @@ const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('ko-KR') : '-';
 async function checkLoginState(){
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { document.getElementById('loginOverlay').style.display = 'flex'; return false; }
+
+  // ⚠ 세션이 있다고 바로 통과시키지 않음 — 실제 admin_roles(global_admin) 등록 여부를
+  // is_global_admin() RPC로 서버에서 재확인. 일반 회원이 로그인해도 여기서 걸러짐.
+  const { data: isAdmin, error: adminCheckErr } = await sb.rpc('is_global_admin');
+  if (adminCheckErr || isAdmin !== true) {
+    await sb.auth.signOut();
+    document.getElementById('loginOverlay').style.display = 'flex';
+    const errEl = document.getElementById('loginErr');
+    errEl.textContent = '관리자 권한이 없는 계정입니다.';
+    errEl.style.display = 'block';
+    return false;
+  }
+
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('adminEmail').textContent = session.user.email || '';
   return true;
