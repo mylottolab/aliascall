@@ -130,6 +130,9 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
+.lang-toggle{ display:flex; gap:3px; background:var(--paper); border-radius:16px; padding:3px; margin-left:auto; }
+.lang-toggle button{ border:none; background:none; color:var(--ink-soft); font-size:11px; font-weight:700; padding:5px 9px; border-radius:14px; cursor:pointer; }
+.lang-toggle button.active{ background:var(--teal); color:#fff; }
 </style>
 </head>
 <body>
@@ -138,21 +141,25 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 
 <header>
   <div class="brand-row">
-    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='aliascall_index.html'" aria-label="뒤로가기">←</button>
-    <a href="aliascall_index.html" class="brand-home-link">
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+    <a href="index.html" class="brand-home-link">
       <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
     </a>
-    <a href="aliascall_guide.html" class="guide-nav-link" target="_blank">📖 사용설명서</a>
+    <div class="lang-toggle">
+      <button data-lang="ko" class="active">KR</button>
+      <button data-lang="en">EN</button>
+    </div>
+    <a href="aliascall_guide.html" class="guide-nav-link" target="_blank" data-i18n="guideLink">📖 사용설명서</a>
   </div>
 </header>
 
 <main>
-  <div class="page-title">무엇을 찾으시나요?</div>
-  <div class="page-desc">QR이 오염되었거나 스캔이 안 되면, 문자나 음성으로 직접 검색해보세요.</div>
+  <div class="page-title" data-i18n="pageTitle">무엇을 찾으시나요?</div>
+  <div class="page-desc" data-i18n="pageDesc">QR이 오염되었거나 스캔이 안 되면, 문자나 음성으로 직접 검색해보세요.</div>
 
   <div class="search-wrap">
-    <input type="text" id="searchInput" placeholder="예: 151노8409" autocomplete="off">
+    <input type="text" id="searchInput" data-i18n-placeholder="searchInputPlaceholder" placeholder="예: 151노8409" autocomplete="off">
     <div class="search-btn-group">
       <button class="circle-btn mic-btn" id="micBtn" aria-label="음성으로 검색">
         <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="1.8"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -163,18 +170,18 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 
   <button class="qr-scan-btn" id="qrScanBtn">
     <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><path d="M14 14h3v3h-3zM19 14h2M14 19h2M19 19h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-    QR 다시 스캔하기
+    <span data-i18n="qrScanBtn">QR 다시 스캔하기</span>
   </button>
 
-  <div class="divider">카테고리로 좁혀보기</div>
+  <div class="divider" data-i18n="filterDivider">카테고리로 좁혀보기</div>
   <div class="filter-row" id="filterRow">
-    <div class="filter-chip active" data-cat="all">전체</div>
-    <div class="filter-chip" data-cat="vehicle">🚗 차량</div>
-    <div class="filter-chip" data-cat="lost_item">🎒 분실물</div>
-    <div class="filter-chip" data-cat="vulnerable_person">🧑‍🦳 아동·노인</div>
-    <div class="filter-chip" data-cat="pet">🐾 반려동물</div>
-    <div class="filter-chip" data-cat="callback_contact">📮 부재중연락</div>
-    <div class="filter-chip" data-cat="misc_incident">❓ 기타</div>
+    <div class="filter-chip active" data-cat="all" data-i18n="catAll">전체</div>
+    <div class="filter-chip" data-cat="vehicle" data-i18n="catVehicle">🚗 차량</div>
+    <div class="filter-chip" data-cat="lost_item" data-i18n="catLostItem">🎒 분실물</div>
+    <div class="filter-chip" data-cat="vulnerable_person" data-i18n="catVulnerable">🧑‍🦳 아동·노인</div>
+    <div class="filter-chip" data-cat="pet" data-i18n="catPet">🐾 반려동물</div>
+    <div class="filter-chip" data-cat="callback_contact" data-i18n="catCallback">📮 부재중연락</div>
+    <div class="filter-chip" data-cat="misc_incident" data-i18n="catMisc">❓ 기타</div>
   </div>
 
   <div id="resultsArea"></div>
@@ -184,11 +191,11 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
   <div class="connect-sheet">
     <div class="big-emoji" id="connectEmoji">🚗</div>
     <h3 id="connectTitle">151노8409</h3>
-    <p>실제 연락처는 노출되지 않습니다. 브라우저에서 바로 연결됩니다.</p>
+    <p data-i18n="connectPrivacyNote">실제 연락처는 노출되지 않습니다. 브라우저에서 바로 연결됩니다.</p>
     <div class="connect-btns">
-      <button class="connect-btn voice">🎧 음성으로 연결하기</button>
-      <button class="connect-btn video">🎥 영상으로 연결하기</button>
-      <button class="connect-btn cancel" id="closeOverlay">닫기</button>
+      <button class="connect-btn voice" data-i18n="connectVoice">🎧 음성으로 연결하기</button>
+      <button class="connect-btn video" data-i18n="connectVideo">🎥 영상으로 연결하기</button>
+      <button class="connect-btn cancel" id="closeOverlay" data-i18n="close">닫기</button>
     </div>
   </div>
 </div>
@@ -197,17 +204,80 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 <div class="qr-cam-overlay" id="qrCamOverlay">
   <div class="qr-cam-top">
     <button class="qr-cam-close" id="qrCamClose">✕</button>
-    <span>QR 스캔</span>
+    <span data-i18n="qrScanTitle">QR 스캔</span>
   </div>
   <div class="qr-cam-frame">
     <video id="qrVideo" playsinline autoplay muted></video>
     <div class="qr-cam-box"></div>
   </div>
-  <div class="qr-cam-status" id="qrCamStatus">QR을 사각형 안에 맞춰주세요</div>
+  <div class="qr-cam-status" id="qrCamStatus" data-i18n="qrCamStatusDefault">QR을 사각형 안에 맞춰주세요</div>
   <canvas id="qrCanvas" style="display:none;"></canvas>
 </div>
 
 <script>
+// ── 언어 전환 (KR/EN) ──
+const I18N = {
+  ko: {
+    guideLink: '📖 사용설명서', pageTitle: '무엇을 찾으시나요?',
+    pageDesc: 'QR이 오염되었거나 스캔이 안 되면, 문자나 음성으로 직접 검색해보세요.',
+    searchInputPlaceholder: '예: 151노8409', qrScanBtn: 'QR 다시 스캔하기',
+    filterDivider: '카테고리로 좁혀보기',
+    catAll: '전체', catVehicle: '🚗 차량', catLostItem: '🎒 분실물', catVulnerable: '🧑‍🦳 아동·노인',
+    catPet: '🐾 반려동물', catCallback: '📮 부재중연락', catMisc: '❓ 기타',
+    connectPrivacyNote: '실제 연락처는 노출되지 않습니다. 브라우저에서 바로 연결됩니다.',
+    connectVoice: '🎧 음성으로 연결하기', connectVideo: '🎥 영상으로 연결하기', close: '닫기',
+    qrScanTitle: 'QR 스캔', qrCamStatusDefault: 'QR을 사각형 안에 맞춰주세요',
+    emptyStart: '검색어를 입력하거나<br>마이크·QR스캔을 이용해보세요',
+    emptyNoResult: '일치하는 등록 정보를 찾지 못했어요',
+    searching: '검색 중…', searchFailed: '검색에 실패했어요. 잠시 후 다시 시도해주세요.',
+    cameraOpening: '카메라가 열립니다. (실제 구현시 QR 스캔 라이브러리 연동)',
+    cameraError: '카메라를 열 수 없어요. 브라우저 카메라 권한을 확인해주세요.',
+    qrRecognizing: '인식됨: 확인 중…', qrNoMatch: '일치하는 등록 정보를 찾지 못했어요. QR이 손상됐을 수 있어요 — 검색창에서 직접 찾아보세요.',
+    qrLookupError: '조회 중 오류가 발생했어요.',
+    micListening: '🎙️ 듣고 있어요… 번호를 말씀해주세요', micRetry: '다시 시도해주세요.',
+  },
+  en: {
+    guideLink: '📖 User Guide', pageTitle: 'What are you looking for?',
+    pageDesc: "If the QR is damaged or won't scan, search by text or voice instead.",
+    searchInputPlaceholder: 'e.g. 151NO8409', qrScanBtn: 'Scan QR Again',
+    filterDivider: 'Narrow by category',
+    catAll: 'All', catVehicle: '🚗 Vehicle', catLostItem: '🎒 Lost item', catVulnerable: '🧑‍🦳 Child · Elderly',
+    catPet: '🐾 Pet', catCallback: '📮 Callback', catMisc: '❓ Other',
+    connectPrivacyNote: 'Your real contact info is never shown. You will connect anonymously right in your browser.',
+    connectVoice: '🎧 Connect by voice', connectVideo: '🎥 Connect by video', close: 'Close',
+    qrScanTitle: 'Scan QR', qrCamStatusDefault: 'Line up the QR code inside the frame',
+    emptyStart: 'Type a search term, or<br>use the mic or QR scan',
+    emptyNoResult: 'No matching registration found',
+    searching: 'Searching…', searchFailed: 'Search failed. Please try again shortly.',
+    cameraOpening: 'Opening camera. (QR scan library to be integrated in production)',
+    cameraError: 'Could not open the camera. Please check your browser camera permission.',
+    qrRecognizing: 'Recognized: checking…', qrNoMatch: 'No matching registration found. The QR may be damaged — try searching directly instead.',
+    qrLookupError: 'An error occurred while looking it up.',
+    micListening: '🎙️ Listening… please say the number', micRetry: 'Please try again.',
+  },
+};
+let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
+
+function applyLang(lang){
+  currentLang = lang;
+  localStorage.setItem('aliascall_lang', lang);
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.dataset.i18n;
+    if (I18N[lang][key] !== undefined) el.innerHTML = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.dataset.i18nPlaceholder;
+    if (I18N[lang][key] !== undefined) el.placeholder = I18N[lang][key];
+  });
+  document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+}
+document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+});
+
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -242,21 +312,22 @@ async function fetchResults(query){
 
 async function renderResults(query){
   const area = document.getElementById('resultsArea');
+  const t = I18N[currentLang];
 
   if (!query && currentFilter === 'all') {
-    area.innerHTML = '<div class="empty-state"><div class="big">🔍</div>검색어를 입력하거나<br>마이크·QR스캔을 이용해보세요</div>';
+    area.innerHTML = '<div class="empty-state"><div class="big">🔍</div>' + t.emptyStart + '</div>';
     return;
   }
 
-  area.innerHTML = '<div class="empty-state"><div class="big">⏳</div>검색 중…</div>';
+  area.innerHTML = '<div class="empty-state"><div class="big">⏳</div>' + t.searching + '</div>';
   const { data, error } = await fetchResults(query);
 
   if (error) {
-    area.innerHTML = '<div class="empty-state"><div class="big">⚠️</div>검색에 실패했어요. 잠시 후 다시 시도해주세요.</div>';
+    area.innerHTML = '<div class="empty-state"><div class="big">⚠️</div>' + t.searchFailed + '</div>';
     return;
   }
   if (!data || data.length === 0) {
-    area.innerHTML = '<div class="empty-state"><div class="big">🙁</div>일치하는 등록 정보를 찾지 못했어요</div>';
+    area.innerHTML = '<div class="empty-state"><div class="big">🙁</div>' + t.emptyNoResult + '</div>';
     return;
   }
 
@@ -300,7 +371,7 @@ document.getElementById('qrScanBtn').addEventListener('click', async () => {
   const video = document.getElementById('qrVideo');
   const statusEl = document.getElementById('qrCamStatus');
   overlay.classList.add('show');
-  statusEl.textContent = 'QR을 사각형 안에 맞춰주세요';
+  statusEl.textContent = I18N[currentLang].qrCamStatusDefault;
 
   try {
     qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -310,7 +381,7 @@ document.getElementById('qrScanBtn').addEventListener('click', async () => {
     requestAnimationFrame(scanQrFrame);
   } catch (e) {
     console.error('[qr-scan] 카메라 접근 오류', e);
-    statusEl.textContent = '카메라를 열 수 없어요. 브라우저 카메라 권한을 확인해주세요.';
+    statusEl.textContent = I18N[currentLang].cameraError;
   }
 });
 
@@ -346,7 +417,7 @@ function scanQrFrame(){
 // QR에는 registrations.qr_code_token, 또는 그 토큰이 담긴 URL(aliascall_connect.html?t=...)이
 // 들어있다고 가정. URL이든 순수 토큰 문자열이든 둘 다 처리
 async function handleQrResult(raw){
-  document.getElementById('qrCamStatus').textContent = '인식됨: 확인 중…';
+  document.getElementById('qrCamStatus').textContent = I18N[currentLang].qrRecognizing;
   let token = raw.trim();
   try {
     const url = new URL(token);
@@ -371,14 +442,14 @@ async function handleQrResult(raw){
     stopQrScan();
 
     if (error || !data) {
-      alert('일치하는 등록 정보를 찾지 못했어요. QR이 손상됐을 수 있어요 — 검색창에서 직접 찾아보세요.');
+      alert(I18N[currentLang].qrNoMatch);
       return;
     }
     openConnect(data.id, CATEGORY_EMOJI[data.category] || '❓');
   } catch (e) {
     stopQrScan();
     console.error('[qr-scan] 조회 오류', e);
-    alert('조회 중 오류가 발생했어요.');
+    alert(I18N[currentLang].qrLookupError);
   }
 }
 
@@ -392,7 +463,7 @@ document.getElementById('closeOverlay').addEventListener('click', () => {
   document.getElementById('connectOverlay').classList.remove('show');
 });
 
-// 홈화면(aliascall_index.html)의 빠른검색에서 ?q=검색어 로 넘어온 경우 바로 반영
+// 홈화면(index.html)의 빠른검색에서 ?q=검색어 로 넘어온 경우 바로 반영
 const initialQuery = new URLSearchParams(window.location.search).get('q') || '';
 if (initialQuery) document.getElementById('searchInput').value = initialQuery;
 renderResults(initialQuery);
@@ -425,16 +496,18 @@ renderResults(initialQuery);
     }
   };
   recognition.onend = () => { listening = false; micBtn.classList.remove('listening'); micStatus.textContent = ''; };
-  recognition.onerror = () => { listening = false; micBtn.classList.remove('listening'); micStatus.textContent = '다시 시도해주세요.'; };
+  recognition.onerror = () => { listening = false; micBtn.classList.remove('listening'); micStatus.textContent = I18N[currentLang].micRetry; };
 
   micBtn.addEventListener('click', () => {
     if (listening) { recognition.stop(); return; }
     recognition.start();
     listening = true;
     micBtn.classList.add('listening');
-    micStatus.textContent = '🎙️ 듣고 있어요… 번호를 말씀해주세요';
+    micStatus.textContent = I18N[currentLang].micListening;
   });
 })();
+
+applyLang(currentLang);
 </script>
 </div><!-- /app-shell -->
 
