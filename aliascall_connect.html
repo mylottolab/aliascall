@@ -277,6 +277,7 @@ const I18N = {
     leaveMsgSent: '✅ 메시지를 남겼습니다. 소유자가 확인하면 답을 드릴 수 있어요.',
     leaveMsgFailed: '메시지 전송에 실패했어요. 다시 시도해주세요.', leaveMsgSending: '전송 중…',
     unmuteBtn: '🔊 소리가 안 들리면 여기를 탭하세요',
+    lateAnswerNote: '소유자가 응답했지만 시간이 초과됐어요. 다시 연결해주세요.',
     itemTypeLabel: '물품 종류', makeLabel: '제조사·모델', colorLabel: '색상',
     speciesLabel: '종류', petNameLabel: '이름', birthYearLabel: '출생연도',
     reasonLabel: '사유', locationLabel: '장소',
@@ -301,6 +302,7 @@ const I18N = {
     leaveMsgSent: '✅ Your message has been left. The owner can reply once they check it.',
     leaveMsgFailed: 'Failed to send the message. Please try again.', leaveMsgSending: 'Sending…',
     unmuteBtn: '🔊 Tap here if you can\u2019t hear anything',
+    lateAnswerNote: 'The owner answered, but it took too long. Please try connecting again.',
     itemTypeLabel: 'Item type', makeLabel: 'Make · model', colorLabel: 'Color',
     speciesLabel: 'Species', petNameLabel: 'Name', birthYearLabel: 'Birth year',
     reasonLabel: 'Reason', locationLabel: 'Location',
@@ -557,14 +559,24 @@ async function startCall(mode){
     return;
   }
 
-  // 25초 안에 응답이 없으면 "메시지 남기기" 화면으로 전환
-  noAnswerTimer = setTimeout(() => showLeaveMessagePrompt(), 25000);
+  // ⚠ 25초는 실제 테스트에서 너무 짧아서(폰 두 대 오가며 수락 누르는 시간 감안), 40초로 늘림.
+  // 그리고 25초가 지나 "메시지 남기기" 화면으로 넘어간 뒤에도 소유자가 뒤늦게 수락하는 경우가
+  // 있었는데, 그때 pc가 이미 정리(close)된 상태라 answer를 조용히 무시해버리던 버그가 있었음
+  // (소유자 쪽은 연결된 것처럼 보이는데 발견자 쪽은 소리도 안 들리고 아무 반응도 없던 원인).
+  // 이제는 그 상황이 감지되면 최소한 안내 문구라도 보여줌.
+  noAnswerTimer = setTimeout(() => showLeaveMessagePrompt(), 40000);
 
   // 2) 시그널링 채널 구독
   rtChannel = sb.channel('webrtc-' + currentSessionToken, { config: { broadcast: { self: false } } });
   rtChannel
     .on('broadcast', { event: 'answer' }, async ({ payload }) => {
       clearTimeout(noAnswerTimer);
+      if (!pc) {
+        // 이미 "메시지 남기기" 화면으로 전환된 뒤 뒤늦게 응답이 온 경우 — 연결을 재사용할 수 없어 재시도 안내
+        console.warn('[webrtc] 응답이 너무 늦게 도착해 연결을 재사용할 수 없음 (이미 메시지 남기기 화면으로 전환됨)');
+        document.getElementById('callingSub').textContent = I18N[currentLang].lateAnswerNote;
+        return;
+      }
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
       document.getElementById('callingStatus').textContent = I18N[currentLang].connected;
       document.getElementById('callingSub').textContent = '';
