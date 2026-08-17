@@ -164,8 +164,19 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 .dropzone b{ display:block; color:var(--ink); font-size:14px; margin-bottom:4px; }
 .staged-files{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
 .staged-file-row{ display:flex; align-items:center; gap:10px; background:var(--teal-tint); border-radius:8px; padding:9px 12px; font-size:12.5px; }
-.staged-file-row .fname{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.staged-file-row .fthumb{ flex:0 0 auto; width:38px; height:38px; border-radius:7px; object-fit:cover; background:var(--card); cursor:pointer; }
+.staged-file-row .ficon{ flex:0 0 auto; width:38px; height:38px; border-radius:7px; background:var(--card); display:flex; align-items:center; justify-content:center; font-size:17px; cursor:pointer; }
+.staged-file-row .fname{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
 .staged-file-row .fremove{ border:none; background:none; color:var(--coral); font-weight:700; cursor:pointer; font-size:14px; flex-shrink:0; }
+
+/* ── 첨부파일 확대보기 라이트박스 ── */
+.lightbox-overlay{ display:none; position:fixed; inset:0; background:rgba(18,48,46,.85); z-index:70; align-items:center; justify-content:center; padding:20px; }
+.lightbox-overlay.show{ display:flex; }
+.lightbox-box{ background:var(--card); border-radius:16px; padding:16px; max-width:420px; width:100%; max-height:80vh; overflow:auto; text-align:center; }
+.lightbox-box img{ max-width:100%; max-height:60vh; border-radius:10px; display:block; margin:0 auto; }
+.lightbox-box video{ max-width:100%; max-height:60vh; border-radius:10px; }
+.lightbox-fname{ font-size:12px; color:var(--ink-soft); margin-top:10px; word-break:break-all; }
+.lightbox-close{ display:block; margin:14px auto 0; background:var(--teal); color:#fff; border:none; border-radius:20px; padding:9px 20px; font-size:13px; font-weight:700; cursor:pointer; }
 
 /* ── 동의 항목 ── */
 .consent-row{ display:flex; gap:12px; align-items:flex-start; padding:14px 0; border-bottom:1px solid var(--line); }
@@ -366,17 +377,17 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
       <div class="sub-period-tabs">
         <div class="sub-period-tab selected" data-months="12">
           <span data-i18n="period1yr">1년</span>
-          <span class="sub-price" data-price-usd="$1" data-price-krw="1,000원">$1 · 1,000원</span>
+          <span class="sub-price" data-price-usd="$1" data-price-krw="1,200원">$1 · 1,200원</span>
           <span class="sub-bonus" data-i18n="bonus100">+100P 보너스</span>
         </div>
         <div class="sub-period-tab" data-months="24">
           <span data-i18n="period2yr">2년</span>
-          <span class="sub-price" data-price-usd="$1.5" data-price-krw="1,500원">$1.5 · 1,500원</span>
+          <span class="sub-price" data-price-usd="$1.5" data-price-krw="1,800원">$1.5 · 1,800원</span>
           <span class="sub-bonus" data-i18n="bonus200">+200P 보너스</span>
         </div>
         <div class="sub-period-tab" data-months="36">
           <span data-i18n="period3yr">3년</span>
-          <span class="sub-price" data-price-usd="$2" data-price-krw="2,000원">$2 · 2,000원</span>
+          <span class="sub-price" data-price-usd="$2" data-price-krw="2,400원">$2 · 2,400원</span>
           <span class="sub-bonus" data-i18n="bonus300">+300P 보너스</span>
         </div>
       </div>
@@ -387,10 +398,19 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
       </div>
 
       <div class="sub-summary" data-i18n="subSummaryLabel">결제 금액</div>
-      <div class="sub-summary-price" id="subModalPrice">1,000원</div>
+      <div class="sub-summary-price" id="subModalPrice">1,200원</div>
 
       <button class="sub-pay-btn" id="subModalPayBtn" data-i18n="subPayBtn">결제하고 계속하기</button>
       <div class="hint" style="text-align:center; margin-top:10px;" data-i18n="subModalNote">구독은 계정 하나에 적용되며, 등록하시는 모든 물건에 함께 적용됩니다.</div>
+    </div>
+  </div>
+
+  <!-- 첨부파일(사진·동영상·음성·문서) 확대보기 라이트박스 -->
+  <div class="lightbox-overlay" id="lightboxOverlay">
+    <div class="lightbox-box">
+      <div id="lightboxContent"></div>
+      <div class="lightbox-fname" id="lightboxFname"></div>
+      <button type="button" class="lightbox-close" id="lightboxCloseBtn" data-i18n="lightboxClose">닫기</button>
     </div>
   </div>
 
@@ -574,6 +594,7 @@ const I18N = {
     wakeupLabel: '백업 알림용 전화번호', optionalBadge: '선택',
     wakeupHint: '통화·문자를 직접 연결하는 용도가 아닙니다. 누군가 연결을 시도했는데 60초간 앱 알림에 응답이 없을 때만 "앱을 열어주세요" 문자 1통이 발송됩니다.',
     err1: '닉네임과 비밀번호(6자 이상)를 입력해주세요.',
+    lightboxClose: '닫기', lightboxOpenDoc: '새 탭에서 문서 열기',
     plateLabel: '차량번호', makeLabel: '제조사 · 모델', colorLabel: '색상',
     itemTypeLabel: '물품 종류',
     targetLabel: '대상', pillChild: '아동', pillDementia: '치매 어르신', birthYearLabel: '출생연도',
@@ -665,6 +686,7 @@ const I18N = {
     wakeupLabel: 'Backup alert phone number', optionalBadge: 'Optional',
     wakeupHint: "This isn't used to connect calls or texts directly. A single \"open the app\" text is only sent if you don't respond to an in-app notification within 60 seconds.",
     err1: 'Please enter a nickname and a password (6+ characters).',
+    lightboxClose: 'Close', lightboxOpenDoc: 'Open document in new tab',
     plateLabel: 'License plate', makeLabel: 'Make · model', colorLabel: 'Color',
     itemTypeLabel: 'Item type',
     targetLabel: 'Who is this for', pillChild: 'Child', pillDementia: 'Dementia / elderly', birthYearLabel: 'Birth year',
@@ -1007,19 +1029,64 @@ const stagedMedia = [];   // { file, mediaType }
 let stagedNoseprint = null;
 let stagedReassurance = null;
 
+// 파일 종류별 아이콘 (사진 외에는 실제 축소판을 만들기 어려워 아이콘으로 대체)
+function fileKind(file, mediaType){
+  const type = mediaType || (file.type.startsWith('image/') ? 'photo' : file.type.startsWith('video/') ? 'video' : file.type.startsWith('audio/') ? 'audio' : 'document');
+  return type;
+}
+const FILE_KIND_ICON = { video:'🎬', audio:'🎵', document:'📄' };
+
 function renderStagedList(containerId, items, onRemove){
   const el = document.getElementById(containerId);
   if (items.length === 0) { el.innerHTML = ''; return; }
-  el.innerHTML = items.map((it, i) => `
+  el.innerHTML = items.map((it, i) => {
+    const kind = fileKind(it.file, it.mediaType);
+    const thumb = kind === 'photo'
+      ? '<img class="fthumb" data-idx="' + i + '" src="' + URL.createObjectURL(it.file) + '" alt="">'
+      : '<div class="ficon" data-idx="' + i + '">' + (FILE_KIND_ICON[kind] || '📎') + '</div>';
+    return `
     <div class="staged-file-row">
-      <span class="fname">📎 ${it.file.name}</span>
+      ${thumb}
+      <span class="fname" data-idx="${i}">${it.file.name}</span>
       <button type="button" class="fremove" data-idx="${i}">✕</button>
     </div>
-  `).join('');
+  `;
+  }).join('');
+  el.querySelectorAll('.fthumb, .ficon, .fname').forEach(node => {
+    node.addEventListener('click', () => openLightbox(items[Number(node.dataset.idx)]));
+  });
   el.querySelectorAll('.fremove').forEach(btn => {
     btn.addEventListener('click', () => onRemove(Number(btn.dataset.idx)));
   });
 }
+
+// ── 첨부파일 확대보기 라이트박스 ──
+function openLightbox(item){
+  const kind = fileKind(item.file, item.mediaType);
+  const url = URL.createObjectURL(item.file);
+  const content = document.getElementById('lightboxContent');
+  if (kind === 'photo') {
+    content.innerHTML = '<img src="' + url + '" alt="">';
+  } else if (kind === 'video') {
+    content.innerHTML = '<video src="' + url + '" controls autoplay></video>';
+  } else if (kind === 'audio') {
+    content.innerHTML = '<audio src="' + url + '" controls autoplay style="width:100%;"></audio>';
+  } else {
+    content.innerHTML = '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="font-size:13px; color:var(--teal-deep); font-weight:700;">📄 ' + I18N[currentLang].lightboxOpenDoc + '</a>';
+  }
+  document.getElementById('lightboxFname').textContent = item.file.name;
+  document.getElementById('lightboxOverlay').classList.add('show');
+}
+document.getElementById('lightboxCloseBtn').addEventListener('click', () => {
+  document.getElementById('lightboxOverlay').classList.remove('show');
+  document.getElementById('lightboxContent').innerHTML = '';
+});
+document.getElementById('lightboxOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'lightboxOverlay') {
+    document.getElementById('lightboxOverlay').classList.remove('show');
+    document.getElementById('lightboxContent').innerHTML = '';
+  }
+});
 
 function renderStagedMediaList(){
   renderStagedList('stagedMediaList', stagedMedia, (idx) => { stagedMedia.splice(idx, 1); renderStagedMediaList(); });
@@ -1266,9 +1333,9 @@ async function uploadStagedFiles(registrationId){
 let subSelectedMonths = 12;
 let subSelectedCurrency = 'KRW';
 const SUB_PRICES = {
-  12: { usd: 100, krw: 1000 },
-  24: { usd: 150, krw: 1500 },
-  36: { usd: 200, krw: 2000 },
+  12: { usd: 100, krw: 1200 },
+  24: { usd: 150, krw: 1800 },
+  36: { usd: 200, krw: 2400 },
 };
 
 function updateSubModalPrice(){

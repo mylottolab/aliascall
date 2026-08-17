@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aliascall — 내 계정</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -73,6 +74,25 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .reg-status.forever{ background:rgba(31,111,107,.12); color:var(--teal-deep); }
 .reg-meta{ font-size:11.5px; color:var(--ink-soft); margin-bottom:8px; }
 .reg-renew-btn{ background:var(--teal); color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; }
+.renew-quick-row{ display:flex; gap:8px; }
+.renew-quick-row .reg-renew-btn{ flex:1; }
+
+/* ── 등록물 카드: QR + 미디어 썸네일 ── */
+.reg-body-row{ display:flex; gap:12px; margin-top:10px; }
+.reg-qr-wrap{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.reg-qr-box{ width:64px; height:64px; background:#fff; border-radius:8px; border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.reg-qr-download{ font-size:10px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border:none; border-radius:12px; padding:4px 9px; cursor:pointer; white-space:nowrap; }
+.reg-media-thumbs{ flex:1; display:flex; flex-wrap:wrap; gap:6px; align-content:flex-start; }
+.reg-media-thumb{ width:44px; height:44px; border-radius:8px; object-fit:cover; cursor:pointer; border:1.5px solid var(--line); }
+.reg-media-thumb-icon{ width:44px; height:44px; border-radius:8px; background:var(--paper); border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; }
+
+/* ── 라이트박스(확대보기/재생) — 등록화면과 동일한 패턴 ── */
+.lightbox-overlay{ display:none; position:fixed; inset:0; background:rgba(18,48,46,.85); z-index:70; align-items:center; justify-content:center; padding:20px; }
+.lightbox-overlay.show{ display:flex; }
+.lightbox-box{ background:var(--card); border-radius:16px; padding:16px; max-width:420px; width:100%; max-height:80vh; overflow:auto; text-align:center; }
+.lightbox-box img{ max-width:100%; max-height:60vh; border-radius:10px; display:block; margin:0 auto; }
+.lightbox-box video{ max-width:100%; max-height:60vh; border-radius:10px; }
+.lightbox-close{ display:block; margin:14px auto 0; background:var(--teal); color:#fff; border:none; border-radius:20px; padding:9px 20px; font-size:13px; font-weight:700; cursor:pointer; }
 .empty-regs{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:24px; }
 
 .confirm-btn-teal{ background:var(--teal); }
@@ -174,17 +194,17 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     <div class="sub-period-tabs" style="margin-bottom:14px;">
       <div class="sub-period-tab selected" data-months="12">
         <span data-i18n="period1yr">1년</span>
-        <span class="sub-price">$1 · 1,000원</span>
+        <span class="sub-price">$1 · 1,200원</span>
         <span class="sub-bonus" data-i18n="bonus100">+100P 보너스</span>
       </div>
       <div class="sub-period-tab" data-months="24">
         <span data-i18n="period2yr">2년</span>
-        <span class="sub-price">$1.5 · 1,500원</span>
+        <span class="sub-price">$1.5 · 1,800원</span>
         <span class="sub-bonus" data-i18n="bonus200">+200P 보너스</span>
       </div>
       <div class="sub-period-tab" data-months="36">
         <span data-i18n="period3yr">3년</span>
-        <span class="sub-price">$2 · 2,000원</span>
+        <span class="sub-price">$2 · 2,400원</span>
         <span class="sub-bonus" data-i18n="bonus300">+300P 보너스</span>
       </div>
     </div>
@@ -193,7 +213,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
       <div class="sub-currency-tab" data-currency="USD">💵 USD (PayPal)</div>
     </div>
     <div class="sub-summary" data-i18n="subSummaryLabel">결제 금액</div>
-    <div class="sub-summary-price" id="newSubPrice">1,000원</div>
+    <div class="sub-summary-price" id="newSubPrice">1,200원</div>
     <button class="reg-renew-btn" id="newSubPayBtn" style="width:100%;" data-i18n="subPayBtn">결제하고 계속하기</button>
   </div>
 
@@ -225,7 +245,11 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
       <div class="reg-meta" id="subStatusMeta" style="margin-bottom:12px;"></div>
       <div class="reg-meta" id="subUrgentNote" style="display:none; margin-bottom:12px; color:var(--danger); font-weight:600;" data-i18n="subUrgentNote">⏰ 구독 기간이 1개월도 안 남았어요. 지금 갱신해두세요.</div>
       <div class="reg-meta" style="margin-bottom:12px;" data-i18n="subscriptionSub">등록물 개수와 무관하게, 이 구독 하나로 전체 등록물의 연결이 유지됩니다. (아동·치매어르신·장애우·반려동물은 구독 여부와 무관하게 항상 연결됩니다)</div>
-      <button class="reg-renew-btn" id="openSubRenewBtn" data-i18n="renewBtn">6개월/1년 갱신하기</button>
+      <div class="renew-quick-row">
+        <button class="reg-renew-btn" data-months="12" data-i18n="renewBtn1yr">1년연장</button>
+        <button class="reg-renew-btn" data-months="24" data-i18n="renewBtn2yr">2년연장</button>
+        <button class="reg-renew-btn" data-months="36" data-i18n="renewBtn3yr">3년연장</button>
+      </div>
     </div>
 
     <div class="section-title" data-i18n="myRegistrationsTitle">내 등록물</div>
@@ -246,8 +270,9 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     <p data-i18n="renewDesc">선택하신 기간만큼 수신서비스가 연장됩니다.</p>
 
     <div class="renew-period-tabs">
-      <div class="renew-period-tab selected" data-months="6"><span data-i18n="period6mo">6개월</span><span class="renew-price">$1 · 1,200원</span></div>
-      <div class="renew-period-tab" data-months="12"><span data-i18n="period1yr">1년</span><span class="renew-price">$1.5 · 1,800원</span></div>
+      <div class="renew-period-tab selected" data-months="12"><span data-i18n="period1yr">1년</span><span class="renew-price">$1 · 1,200원</span></div>
+      <div class="renew-period-tab" data-months="24"><span data-i18n="period2yr">2년</span><span class="renew-price">$1.5 · 1,800원</span></div>
+      <div class="renew-period-tab" data-months="36"><span data-i18n="period3yr">3년</span><span class="renew-price">$2 · 2,400원</span></div>
     </div>
 
     <div class="renew-currency-tabs">
@@ -321,6 +346,14 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
   </div>
 </div>
 
+<!-- 등록물 미디어(사진/동영상/음성) 확대보기·재생 라이트박스 -->
+<div class="lightbox-overlay" id="mediaLightboxOverlay">
+  <div class="lightbox-box">
+    <div id="mediaLightboxContent"></div>
+    <button type="button" class="lightbox-close" id="mediaLightboxCloseBtn" data-i18n="mediaLightboxClose">닫기</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-box">
     <h3 data-i18n="deleteConfirmTitle">정말 탈퇴하시겠어요?</h3>
@@ -349,8 +382,11 @@ const I18N = {
     withdrawTitle: '회원 탈퇴', withdrawDesc: '탈퇴하시면 계정과 함께 회원님이 등록하신 모든 QR 태그·정보가 삭제되며, 되돌릴 수 없습니다. 보유 포인트도 함께 소멸됩니다.',
     withdrawBtn: '회원 탈퇴하기',
     renewTitle: '구독 갱신', renewDesc: '선택하신 기간만큼 수신서비스가 연장됩니다.',
-    period6mo: '6개월', period1yr: '1년', krwLabel: 'KRW (카드결제)',
+    renewBtn1yr: '1년연장', renewBtn2yr: '2년연장', renewBtn3yr: '3년연장',
+    period6mo: '6개월', period1yr: '1년', period2yr: '2년', period3yr: '3년', krwLabel: 'KRW (카드결제)',
     cancel: '취소', payNow: '결제하기',
+    qrDownloadBtn: 'QR 다운로드', mediaLightboxOpenDoc: '새 탭에서 문서 열기', mediaLightboxClose: '닫기',
+    mediaMoreCount: (n) => '+' + n,
     editRegTitle: '등록 정보 수정', editRegDesc: '카테고리는 바꿀 수 없어요. 필요한 정보만 수정해주세요.',
     plateLabel: '차량번호', makeLabel: '제조사·모델 (선택)', colorLabel: '색상 (선택)', itemTypeLabel: '물품 종류',
     birthYearLabel: '출생연도', speciesLabel: '종류', petNameLabel: '이름', reasonLabel: '사유', locationLabel: '부착·게시 장소 (선택)',
@@ -405,8 +441,11 @@ const I18N = {
     withdrawTitle: 'Delete Account', withdrawDesc: 'Deleting your account removes all your QR tags and data — this cannot be undone. Your points balance will also be lost.',
     withdrawBtn: 'Delete my account',
     renewTitle: 'Renew Subscription', renewDesc: 'Your receiving service will be extended by the period you choose.',
-    period6mo: '6 months', period1yr: '1 year', krwLabel: 'KRW (Card)',
+    renewBtn1yr: 'Extend 1yr', renewBtn2yr: 'Extend 2yr', renewBtn3yr: 'Extend 3yr',
+    period6mo: '6 months', period1yr: '1 year', period2yr: '2 years', period3yr: '3 years', krwLabel: 'KRW (Card)',
     cancel: 'Cancel', payNow: 'Pay now',
+    qrDownloadBtn: 'Download QR', mediaLightboxOpenDoc: 'Open document in new tab', mediaLightboxClose: 'Close',
+    mediaMoreCount: (n) => '+' + n,
     editRegTitle: 'Edit Registration', editRegDesc: "You can't change the category — just edit the details you need.",
     plateLabel: 'License plate', makeLabel: 'Make · model (optional)', colorLabel: 'Color (optional)', itemTypeLabel: 'Item type',
     birthYearLabel: 'Birth year', speciesLabel: 'Species', petNameLabel: 'Name', reasonLabel: 'Reason', locationLabel: 'Posted location (optional)',
@@ -595,10 +634,11 @@ document.getElementById('loginSubmitBtn').addEventListener('click', async () => 
 // ── 신규가입자 구독결제 (registration_mockup.html의 구독모달과 동일 로직) ──
 let newSubMonths = 12;
 let newSubCurrency = 'KRW';
-const NEW_SUB_PRICES = { 12: { usd: 100, krw: 1000 }, 24: { usd: 150, krw: 1500 }, 36: { usd: 200, krw: 2000 } };
+// 신규가입·구독갱신 공통 가격표 (aliascall_registration_mockup.html의 SUB_PRICES와 반드시 동일하게 유지)
+const SUB_PRICES = { 12: { usd: 100, krw: 1200 }, 24: { usd: 150, krw: 1800 }, 36: { usd: 200, krw: 2400 } };
 
 function updateNewSubPrice(){
-  const p = NEW_SUB_PRICES[newSubMonths];
+  const p = SUB_PRICES[newSubMonths];
   const priceEl = document.getElementById('newSubPrice');
   if (newSubCurrency === 'USD') {
     const dollars = p.usd / 100;
@@ -628,7 +668,7 @@ document.getElementById('newSubPayBtn').addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = I18N[currentLang].processing;
   try {
     const { data: { session } } = await sb.auth.getSession();
-    const p = NEW_SUB_PRICES[newSubMonths];
+    const p = SUB_PRICES[newSubMonths];
     const amount = newSubCurrency === 'USD' ? p.usd : p.krw;
     const method = newSubCurrency === 'USD' ? 'paypal' : 'inicis_card';
 
@@ -660,7 +700,7 @@ const CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'�
 const CATEGORY_LABEL = { vehicle:'차량', lost_item:'분실·도난 우려 물품', vulnerable_person:'아동·치매 어르신·장애우', pet:'반려동물', callback_contact:'부재중 연락', misc_incident:'기타 물품·사건' };
 const NEVER_EXPIRES = ['vulnerable_person', 'pet'];
 
-let renewMonths = 6;
+let renewMonths = 12;
 let renewCurrency = 'KRW';
 
 // ── 계정단위 구독 상태 (등록물 개수와 무관, 계정 하나당 하나) ──
@@ -703,10 +743,14 @@ async function loadSubscriptionStatus(userId){
   }
 }
 
+// aliascall.com 커스텀 도메인 기준 연결 URL (aliascall_registration_mockup.html과 동일한 규칙)
+const CONNECT_BASE_URL = 'https://aliascall.com/aliascall_connect.html?t=';
+const MEDIA_TYPE_ICON = { video:'🎬', audio:'🎵', document:'📄' };
+
 async function loadMyRegistrations(userId){
   const container = document.getElementById('myRegistrations');
   const { data, error } = await sb.from('registrations')
-    .select('id, category, title, search_key')
+    .select('id, category, title, search_key, qr_code_token')
     .eq('user_id', userId)
     .eq('status', 'active')
     .order('created_at', { ascending: false });
@@ -728,7 +772,14 @@ async function loadMyRegistrations(userId){
           <span class="reg-title">${label}</span>
           ${foreverBadge}
         </div>
-        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+        <div class="reg-body-row">
+          <div class="reg-qr-wrap">
+            <div class="reg-qr-box" id="qr-${r.id}"></div>
+            <button type="button" class="reg-qr-download" data-id="${r.id}" data-name="${label}">${I18N[currentLang].qrDownloadBtn}</button>
+          </div>
+          <div class="reg-media-thumbs" id="media-${r.id}"></div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
           <button class="reg-edit-btn" data-id="${r.id}" data-category="${r.category}">${I18N[currentLang].editBtn || '수정'}</button>
           <button class="reg-delete-btn" data-id="${r.id}">${I18N[currentLang].deleteBtn || '삭제'}</button>
         </div>
@@ -742,10 +793,88 @@ async function loadMyRegistrations(userId){
   container.querySelectorAll('.reg-delete-btn').forEach((btn) => {
     btn.addEventListener('click', () => deleteRegistration(btn.dataset.id, userId));
   });
-  container.querySelectorAll('.reg-renew-btn').forEach((btn) => {
-    btn.addEventListener('click', () => openRenewModal(btn.dataset.id));
+  container.querySelectorAll('.reg-qr-download').forEach((btn) => {
+    btn.addEventListener('click', () => downloadQr(btn.dataset.id, btn.dataset.name));
+  });
+
+  // QR 코드 생성 (등록물마다)
+  data.forEach((r) => {
+    const box = document.getElementById('qr-' + r.id);
+    if (!box || !r.qr_code_token) return;
+    try {
+      new QRCode(box, {
+        text: CONNECT_BASE_URL + r.qr_code_token,
+        width: 64, height: 64,
+        colorDark: '#12302E', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M,
+      });
+    } catch (e) { console.error('[qr] 생성 실패', e); }
+  });
+
+  // 등록물별 미디어(사진·동영상·음성·문서) 썸네일 — 한 번에 불러와서 등록물별로 묶음
+  const regIds = data.map((r) => r.id);
+  const { data: mediaRows } = await sb.from('media_files')
+    .select('registration_id, media_type, storage_path')
+    .in('registration_id', regIds);
+
+  (mediaRows || []).forEach((m) => {
+    const wrap = document.getElementById('media-' + m.registration_id);
+    if (!wrap) return;
+    const { data: pub } = sb.storage.from('aliascall-media').getPublicUrl(m.storage_path);
+    const url = pub?.publicUrl;
+    if (!url) return;
+    const node = document.createElement(m.media_type === 'photo' ? 'img' : 'div');
+    if (m.media_type === 'photo') {
+      node.className = 'reg-media-thumb';
+      node.src = url;
+    } else {
+      node.className = 'reg-media-thumb-icon';
+      node.textContent = MEDIA_TYPE_ICON[m.media_type] || '📎';
+    }
+    node.dataset.url = url;
+    node.dataset.type = m.media_type;
+    node.addEventListener('click', () => openMediaLightbox(url, m.media_type));
+    wrap.appendChild(node);
   });
 }
+
+function downloadQr(regId, name){
+  const box = document.getElementById('qr-' + regId);
+  const canvas = box?.querySelector('canvas');
+  const img = box?.querySelector('img');
+  const dataUrl = canvas ? canvas.toDataURL('image/png') : img?.src;
+  if (!dataUrl) return;
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = 'aliascall-qr-' + name.replace(/[^\w가-힣-]/g, '') + '.png';
+  a.click();
+}
+
+// ── 등록물 미디어(사진/동영상/음성/문서) 확대보기·재생·열기 ──
+function openMediaLightbox(url, mediaType){
+  const content = document.getElementById('mediaLightboxContent');
+  if (mediaType === 'photo') {
+    content.innerHTML = '<img src="' + url + '" alt="">';
+  } else if (mediaType === 'video') {
+    content.innerHTML = '<video src="' + url + '" controls autoplay></video>';
+  } else if (mediaType === 'audio') {
+    content.innerHTML = '<audio src="' + url + '" controls autoplay style="width:100%;"></audio>';
+  } else {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    return; // 문서는 새 탭으로 바로 열고 라이트박스는 띄우지 않음
+  }
+  document.getElementById('mediaLightboxOverlay').classList.add('show');
+}
+document.getElementById('mediaLightboxCloseBtn').addEventListener('click', () => {
+  document.getElementById('mediaLightboxOverlay').classList.remove('show');
+  document.getElementById('mediaLightboxContent').innerHTML = '';
+});
+document.getElementById('mediaLightboxOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'mediaLightboxOverlay') {
+    document.getElementById('mediaLightboxOverlay').classList.remove('show');
+    document.getElementById('mediaLightboxContent').innerHTML = '';
+  }
+});
 
 // ── 등록물 삭제 ──
 async function deleteRegistration(regId, userId){
@@ -950,16 +1079,18 @@ document.getElementById('editRegSaveBtn').addEventListener('click', async () => 
   }
 });
 
-function openRenewModal(){
-  renewMonths = 6;
+function openRenewModal(preselectMonths){
+  renewMonths = preselectMonths || 12;
   renewCurrency = 'KRW';
   document.querySelectorAll('.renew-period-tab').forEach((t) => t.classList.remove('selected'));
-  document.querySelector('.renew-period-tab[data-months="6"]').classList.add('selected');
+  document.querySelector('.renew-period-tab[data-months="' + renewMonths + '"]').classList.add('selected');
   document.querySelectorAll('.renew-currency-tab').forEach((t) => t.classList.remove('selected'));
   document.querySelector('.renew-currency-tab[data-currency="KRW"]').classList.add('selected');
   document.getElementById('renewModal').classList.add('show');
 }
-document.getElementById('openSubRenewBtn').addEventListener('click', openRenewModal);
+document.querySelectorAll('.renew-quick-row .reg-renew-btn').forEach((btn) => {
+  btn.addEventListener('click', () => openRenewModal(Number(btn.dataset.months)));
+});
 document.getElementById('renewCancelBtn').addEventListener('click', () => {
   document.getElementById('renewModal').classList.remove('show');
 });
@@ -978,10 +1109,10 @@ document.querySelectorAll('.renew-currency-tab').forEach((tab) => {
   });
 });
 
-// 6개월=$1/1200원, 1년=$1.5/1800원 (최소단위: USD는 센트, KRW는 그대로)
+// 1년/2년/3년 공통 가격표(SUB_PRICES) 사용 — 신규가입과 반드시 동일해야 함
 function renewPriceMinorUnits(){
-  if (renewCurrency === 'USD') return renewMonths === 6 ? 100 : 150;
-  return renewMonths === 6 ? 1200 : 1800;
+  const p = SUB_PRICES[renewMonths];
+  return renewCurrency === 'USD' ? p.usd : p.krw;
 }
 
 document.getElementById('renewConfirmBtn').addEventListener('click', async () => {
@@ -1009,7 +1140,8 @@ document.getElementById('renewConfirmBtn').addEventListener('click', async () =>
     if (error) throw error;
 
     document.getElementById('renewModal').classList.remove('show');
-    alert(I18N[currentLang].renewSuccess(renewMonths === 6 ? I18N[currentLang].period6mo : I18N[currentLang].period1yr));
+    const periodLabel = { 12: I18N[currentLang].period1yr, 24: I18N[currentLang].period2yr, 36: I18N[currentLang].period3yr }[renewMonths];
+    alert(I18N[currentLang].renewSuccess(periodLabel));
     await loadSubscriptionStatus(session.user.id);
   } catch (e) {
     console.error('[renew] 오류', e);
