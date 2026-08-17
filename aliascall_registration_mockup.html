@@ -105,6 +105,7 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 
 /* ── 폼 요소 ── */
 .field{ margin-bottom:18px; }
+.logged-in-notice{ background:var(--teal-tint); color:var(--teal-deep); border-radius:10px; padding:12px 14px; font-size:13px; margin-bottom:18px; }
 .field label{ display:block; font-size:13px; font-weight:600; margin-bottom:7px; }
 .field .hint{ font-size:11.5px; color:var(--ink-soft); margin-top:5px; line-height:1.5; }
 .field input[type=text], .field input[type=number], .field select, .field textarea{
@@ -319,15 +320,21 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     <div class="panel-title" data-i18n="step1Title">기본 정보</div>
     <div class="panel-desc" data-i18n="step1Desc">실명은 필요 없지만, 나중에 수정·삭제하러 오실 때 필요하니 닉네임과 비밀번호는 꼭 기억해두세요.</div>
 
-    <div class="field">
-      <label><span data-i18n="nicknameLabel">닉네임</span> <span class="optional-badge" data-i18n="nicknameBadge">수정·삭제용 ID</span></label>
-      <div class="mic-input-wrap"><input type="text" id="nickname" data-i18n-placeholder="nicknamePlaceholder" placeholder="예: 산책러버" autocomplete="off"><button type="button" class="mic-btn-sm" data-target="nickname" aria-label="음성 입력">🎤</button></div>
-      <div class="mic-status" id="nicknameStatus"></div>
+    <div class="logged-in-notice" id="loggedInNotice" style="display:none;">
+      <span data-i18n="loggedInAs">현재 로그인됨: </span><b id="loggedInNickname"></b>
     </div>
-    <div class="field">
-      <label data-i18n="passwordLabel">비밀번호</label>
-      <input type="password" id="guestPassword" data-i18n-placeholder="passwordPlaceholder" placeholder="6자 이상" autocomplete="new-password">
-      <div class="hint" data-i18n="passwordHint">이 닉네임+비밀번호로 나중에 언제든 다시 로그인해서 수정·삭제할 수 있어요.</div>
+
+    <div id="loggedOutFields">
+      <div class="field">
+        <label><span data-i18n="nicknameLabel">닉네임</span> <span class="optional-badge" data-i18n="nicknameBadge">수정·삭제용 ID</span></label>
+        <div class="mic-input-wrap"><input type="text" id="nickname" data-i18n-placeholder="nicknamePlaceholder" placeholder="예: 산책러버" autocomplete="off"><button type="button" class="mic-btn-sm" data-target="nickname" aria-label="음성 입력">🎤</button></div>
+        <div class="mic-status" id="nicknameStatus"></div>
+      </div>
+      <div class="field">
+        <label data-i18n="passwordLabel">비밀번호</label>
+        <input type="password" id="guestPassword" data-i18n-placeholder="passwordPlaceholder" placeholder="6자 이상" autocomplete="new-password">
+        <div class="hint" data-i18n="passwordHint">이 닉네임+비밀번호로 나중에 언제든 다시 로그인해서 수정·삭제할 수 있어요.</div>
+      </div>
     </div>
     <div class="field">
       <label data-i18n="countryLabel">국가</label>
@@ -560,6 +567,7 @@ const I18N = {
     err0: '등록할 대상을 하나 선택해주세요.',
     step1Title: '기본 정보', step1Desc: '실명은 필요 없지만, 나중에 수정·삭제하러 오실 때 필요하니 닉네임과 비밀번호는 꼭 기억해두세요.',
     nicknameLabel: '닉네임', nicknameBadge: '수정·삭제용 ID', nicknamePlaceholder: '예: 산책러버',
+    loggedInAs: '현재 로그인됨: ',
     passwordLabel: '비밀번호', passwordPlaceholder: '6자 이상', passwordHint: '이 닉네임+비밀번호로 나중에 언제든 다시 로그인해서 수정·삭제할 수 있어요.',
     countryLabel: '국가',
     wakeupLabel: '백업 알림용 전화번호', optionalBadge: '선택',
@@ -645,6 +653,7 @@ const I18N = {
     err0: 'Please select one item to register.',
     step1Title: 'Basic info', step1Desc: "You don't need your real name, but remember your nickname and password — you'll need them to edit or delete later.",
     nicknameLabel: 'Nickname', nicknameBadge: 'ID for edit/delete', nicknamePlaceholder: 'e.g. dogwalker',
+    loggedInAs: 'Logged in as: ',
     passwordLabel: 'Password', passwordPlaceholder: 'At least 6 characters', passwordHint: 'Use this nickname + password to log back in anytime to edit or delete.',
     countryLabel: 'Country',
     wakeupLabel: 'Backup alert phone number', optionalBadge: 'Optional',
@@ -815,6 +824,7 @@ function validateStep(){
     return ok;
   }
   if (currentStep === 1) {
+    if (isAlreadyLoggedIn) return true;
     const nickOk = document.getElementById('nickname').value.trim().length > 0;
     const pwOk = document.getElementById('guestPassword').value.length >= 6;
     showError('err1', !(nickOk && pwOk));
@@ -1304,15 +1314,17 @@ document.getElementById('subModalPayBtn').addEventListener('click', async () => 
 btnNext.addEventListener('click', async () => {
   if (!validateStep()) return;
 
-  // STEP1(기본정보) -> STEP2 전환 시점에 닉네임 계정 생성/로그인
+  // STEP1(기본정보) -> STEP2 전환 시점에 닉네임 계정 생성/로그인 (이미 로그인된 상태면 생략)
   if (currentStep === 1) {
-    document.getElementById('nicknameStatus').textContent = '';
-    btnNext.disabled = true;
-    btnNext.textContent = I18N[currentLang].checking;
-    const ok = await signUpOrLoginGuestAccount();
-    btnNext.disabled = false;
-    btnNext.textContent = I18N[currentLang].next;
-    if (!ok) return;
+    if (!isAlreadyLoggedIn) {
+      document.getElementById('nicknameStatus').textContent = '';
+      btnNext.disabled = true;
+      btnNext.textContent = I18N[currentLang].checking;
+      const ok = await signUpOrLoginGuestAccount();
+      btnNext.disabled = false;
+      btnNext.textContent = I18N[currentLang].next;
+      if (!ok) return;
+    }
 
     // 계정에 유효한 구독이 있는지 확인 -> 없으면 결제 모달을 띄우고 여기서 멈춤
     // (모달의 결제버튼이 성공 시 직접 STEP2로 넘겨줌)
@@ -1340,6 +1352,18 @@ btnBack.addEventListener('click', () => {
 
 renderStep();
 applyLang(currentLang);
+
+// ── 이미 로그인된 상태로 등록화면에 온 경우: 닉네임/비번 입력칸을 감추고 안내만 표시 ──
+let isAlreadyLoggedIn = false;
+(async function checkExistingSession(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const { data: profile } = await sb.from('profiles').select('nickname').eq('id', session.user.id).maybeSingle();
+  isAlreadyLoggedIn = true;
+  document.getElementById('loggedOutFields').style.display = 'none';
+  document.getElementById('loggedInNotice').style.display = 'block';
+  document.getElementById('loggedInNickname').textContent = profile?.nickname || '-';
+})();
 
 // ── 음성입력 (Web Speech API) ──
 // 크롬/삼성인터넷/엣지 등에서 지원. 사파리는 제한적, 파이어폭스는 미지원 —

@@ -86,6 +86,20 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
 .edit-label{ display:block; font-size:11.5px; font-weight:600; color:var(--ink-soft); margin:10px 0 5px; }
 .edit-input{ width:100%; border:1.5px solid var(--line); border-radius:9px; padding:10px 12px; font-size:13px; font-family:'Inter',sans-serif; }
+.error-text-mypage{ font-size:12px; color:var(--danger); margin-top:8px; display:none; }
+.error-text-mypage.show{ display:block; }
+
+.sub-period-tabs{ display:flex; flex-direction:column; gap:8px; }
+.sub-period-tab{ display:flex; align-items:center; justify-content:space-between; border:1.5px solid var(--line); border-radius:12px; padding:12px 16px; cursor:pointer; background:var(--card); }
+.sub-period-tab.selected{ border-color:var(--teal); background:var(--teal-tint); }
+.sub-period-tab > span:first-child{ font-weight:700; font-size:14px; flex:0 0 40px; }
+.sub-price{ font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; flex:1; text-align:center; }
+.sub-bonus{ font-size:11px; font-weight:700; color:var(--coral); flex:0 0 auto; }
+.sub-currency-tabs{ display:flex; gap:8px; }
+.sub-currency-tab{ flex:1; text-align:center; padding:9px; border-radius:9px; border:1.5px solid var(--line); font-size:12px; font-weight:600; cursor:pointer; color:var(--ink-soft); background:var(--card); }
+.sub-currency-tab.selected{ border-color:var(--coral); background:var(--coral-tint); color:var(--coral); }
+.sub-summary{ font-size:12px; color:var(--ink-soft); margin-bottom:2px; text-align:center; }
+.sub-summary-price{ font-size:24px; font-weight:700; font-family:'Space Grotesk',sans-serif; margin-bottom:18px; text-align:center; }
 .reg-edit-btn{ background:var(--paper); color:var(--ink-soft); border:1.5px solid var(--line); border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; margin-right:6px; }
 .reg-delete-btn{ background:var(--danger-tint); color:var(--danger); border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; }
 
@@ -141,7 +155,55 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 </header>
 
 <main id="mainArea">
-  <div class="login-needed" id="loginNeeded" data-i18n="loginNeeded">로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.</div>
+  <div id="loginGate">
+    <div class="page-title" data-i18n="loginGateTitle">로그인 · 마이페이지</div>
+    <div class="page-desc" data-i18n="loginGateDesc">이미 등록하신 적이 있으면 그 닉네임+비밀번호를 입력하세요. 처음이시면 같은 방식으로 새로 시작할 수 있습니다.</div>
+    <div class="card">
+      <input type="text" id="loginNickname" class="edit-input" style="margin-bottom:10px;" data-i18n-placeholder="nicknamePlaceholder" placeholder="닉네임">
+      <input type="password" id="loginPassword" class="edit-input" style="margin-bottom:14px;" data-i18n-placeholder="passwordPlaceholder" placeholder="비밀번호 (6자 이상)">
+      <button class="reg-renew-btn" id="loginSubmitBtn" style="width:100%;" data-i18n="loginSubmitBtn">로그인 · 시작하기</button>
+      <div class="error-text-mypage" id="loginErrorText"></div>
+    </div>
+  </div>
+
+  <!-- 처음 가입하는 사람만 보는 구독안내 (기존 구독자는 마이페이지로 바로 감) -->
+  <div id="newSubscriberGate" style="display:none;">
+    <div class="page-title" data-i18n="welcomeTitle">환영합니다!</div>
+    <div class="page-desc" data-i18n="welcomeDesc">등록물을 발견자와 연결하려면 구독이 필요해요. 아동·치매어르신·장애우·반려동물 등록은 구독과 무관하게 항상 무료로 연결됩니다.</div>
+
+    <div class="sub-period-tabs" style="margin-bottom:14px;">
+      <div class="sub-period-tab selected" data-months="12">
+        <span data-i18n="period1yr">1년</span>
+        <span class="sub-price">$1 · 1,000원</span>
+        <span class="sub-bonus" data-i18n="bonus100">+100P 보너스</span>
+      </div>
+      <div class="sub-period-tab" data-months="24">
+        <span data-i18n="period2yr">2년</span>
+        <span class="sub-price">$1.5 · 1,500원</span>
+        <span class="sub-bonus" data-i18n="bonus200">+200P 보너스</span>
+      </div>
+      <div class="sub-period-tab" data-months="36">
+        <span data-i18n="period3yr">3년</span>
+        <span class="sub-price">$2 · 2,000원</span>
+        <span class="sub-bonus" data-i18n="bonus300">+300P 보너스</span>
+      </div>
+    </div>
+    <div class="sub-currency-tabs" style="margin-bottom:18px;">
+      <div class="sub-currency-tab selected" data-currency="KRW">🇰🇷 KRW</div>
+      <div class="sub-currency-tab" data-currency="USD">💵 USD (PayPal)</div>
+    </div>
+    <div class="sub-summary" data-i18n="subSummaryLabel">결제 금액</div>
+    <div class="sub-summary-price" id="newSubPrice">1,000원</div>
+    <button class="reg-renew-btn" id="newSubPayBtn" style="width:100%;" data-i18n="subPayBtn">결제하고 계속하기</button>
+  </div>
+
+  <!-- 구독까지 마친 신규가입자 -> 등록화면으로 안내 -->
+  <div id="goRegisterGate" style="display:none; text-align:center; padding:40px 10px;">
+    <div style="font-size:40px; margin-bottom:14px;">🎉</div>
+    <div class="page-title" data-i18n="subDoneTitle">구독 완료!</div>
+    <div class="page-desc" data-i18n="subDoneDesc">이제 물건이나 사람·반려동물을 등록해보세요.</div>
+    <a href="aliascall_registration_mockup.html" class="reg-renew-btn" style="display:inline-block; text-decoration:none; padding:14px 28px;" data-i18n="goRegisterBtn">등록하러 가기</a>
+  </div>
 
   <div id="accountContent" style="display:none;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
@@ -161,6 +223,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
         <span class="reg-status" id="subStatusBadge">-</span>
       </div>
       <div class="reg-meta" id="subStatusMeta" style="margin-bottom:12px;"></div>
+      <div class="reg-meta" id="subUrgentNote" style="display:none; margin-bottom:12px; color:var(--danger); font-weight:600;" data-i18n="subUrgentNote">⏰ 구독 기간이 1개월도 안 남았어요. 지금 갱신해두세요.</div>
       <div class="reg-meta" style="margin-bottom:12px;" data-i18n="subscriptionSub">등록물 개수와 무관하게, 이 구독 하나로 전체 등록물의 연결이 유지됩니다. (아동·치매어르신·장애우·반려동물은 구독 여부와 무관하게 항상 연결됩니다)</div>
       <button class="reg-renew-btn" id="openSubRenewBtn" data-i18n="renewBtn">6개월/1년 갱신하기</button>
     </div>
@@ -318,6 +381,18 @@ const I18N = {
     withdrawing: '처리 중…', withdrawComplete: '탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사했습니다.',
     withdrawFailed: (msg) => '탈퇴 처리 중 오류가 발생했어요: ' + msg,
     processing: '처리 중…', savingBtn: '저장 중…', uploading: '업로드 중…',
+    loginGateTitle: '로그인 · 마이페이지',
+    loginGateDesc: '이미 등록하신 적이 있으면 그 닉네임+비밀번호를 입력하세요. 처음이시면 같은 방식으로 새로 시작할 수 있습니다.',
+    nicknamePlaceholder: '닉네임', passwordPlaceholder: '비밀번호 (6자 이상)',
+    loginSubmitBtn: '로그인 · 시작하기',
+    welcomeTitle: '환영합니다!',
+    welcomeDesc: '등록물을 발견자와 연결하려면 구독이 필요해요. 아동·치매어르신·장애우·반려동물 등록은 구독과 무관하게 항상 무료로 연결됩니다.',
+    subDoneTitle: '구독 완료!', subDoneDesc: '이제 물건이나 사람·반려동물을 등록해보세요.',
+    goRegisterBtn: '등록하러 가기',
+    subUrgentNote: '⏰ 구독 기간이 1개월도 안 남았어요. 지금 갱신해두세요.',
+    loginFieldsRequired: '닉네임과 비밀번호(6자 이상)를 입력해주세요.',
+    wrongPassword: '비밀번호가 틀렸어요. 다시 확인해주세요.',
+    loginFailed: (msg) => '처리에 실패했어요: ' + msg,
   },
   en: {
     loginNeeded: 'Please log in. Log in with your nickname + password on the registration screen first.',
@@ -362,6 +437,18 @@ const I18N = {
     withdrawing: 'Processing…', withdrawComplete: "Your account has been deleted. Thank you for using Aliascall.",
     withdrawFailed: (msg) => 'An error occurred while deleting your account: ' + msg,
     processing: 'Processing…', savingBtn: 'Saving…', uploading: 'Uploading…',
+    loginGateTitle: 'Log in · My Page',
+    loginGateDesc: 'If you already registered, enter that nickname + password. First time? Use the same fields to get started.',
+    nicknamePlaceholder: 'Nickname', passwordPlaceholder: 'Password (6+ characters)',
+    loginSubmitBtn: 'Log in · Get started',
+    welcomeTitle: 'Welcome!',
+    welcomeDesc: "A subscription is required so finders can reach you. Registrations for children, dementia/elderly, disabled persons, and pets always connect for free.",
+    subDoneTitle: 'Subscribed!', subDoneDesc: 'Now go ahead and register an item, person, or pet.',
+    goRegisterBtn: 'Go register',
+    subUrgentNote: '⏰ Less than a month left on your subscription. Renew now.',
+    loginFieldsRequired: 'Please enter a nickname and password (6+ characters).',
+    wrongPassword: "That password doesn't look right. Please check and try again.",
+    loginFailed: (msg) => 'Something went wrong: ' + msg,
   },
 };
 let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
@@ -391,23 +478,176 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const DELETE_ACCOUNT_URL = SUPABASE_URL + "/functions/v1/self-delete-account";
 
-(async function init(){
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) {
-    document.getElementById('loginNeeded').style.display = 'block';
-    return;
-  }
-  document.getElementById('loginNeeded').style.display = 'none';
+function nicknameToEmail(nickname){
+  const normalized = nickname.trim().toLowerCase().replace(/[^a-z0-9가-힣]/g, '');
+  return encodeURIComponent(normalized) + '@guest.aliascall.internal';
+}
+
+function hideAllGates(){
+  document.getElementById('loginGate').style.display = 'none';
+  document.getElementById('newSubscriberGate').style.display = 'none';
+  document.getElementById('goRegisterGate').style.display = 'none';
+  document.getElementById('accountContent').style.display = 'none';
+}
+
+async function showMyPage(session){
+  hideAllGates();
   document.getElementById('accountContent').style.display = 'block';
 
   const { data: profile } = await sb.from('profiles').select('nickname, points_balance, created_at').eq('id', session.user.id).maybeSingle();
   document.getElementById('nicknameVal').textContent = profile?.nickname || '-';
   document.getElementById('pointsVal').textContent = (profile?.points_balance ?? 0).toLocaleString() + 'P';
-  document.getElementById('joinedVal').textContent = profile?.created_at ? new Date(profile.created_at).toLocaleDateString('ko-KR') : '-';
+  document.getElementById('joinedVal').textContent = profile?.created_at ? new Date(profile.created_at).toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US') : '-';
 
   await loadSubscriptionStatus(session.user.id);
   await loadMyRegistrations(session.user.id);
+}
+
+(async function init(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    hideAllGates();
+    document.getElementById('loginGate').style.display = 'block';
+    return;
+  }
+
+  // 이미 로그인된 상태로 이 화면에 들어온 경우 -> 구독 여부만 보고 바로 분기
+  const { data: profile } = await sb.from('profiles').select('subscription_expires_at').eq('id', session.user.id).maybeSingle();
+  if (!profile?.subscription_expires_at) {
+    hideAllGates();
+    document.getElementById('newSubscriberGate').style.display = 'block';
+    updateNewSubPrice();
+  } else {
+    await showMyPage(session);
+  }
 })();
+
+applyLang(currentLang);
+
+// ── 로그인/가입 (registration_mockup.html의 signUpOrLoginGuestAccount()와 동일한 원리) ──
+document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
+  const nickname = document.getElementById('loginNickname').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginErrorText');
+  errEl.classList.remove('show');
+
+  if (!nickname || password.length < 6) {
+    errEl.textContent = I18N[currentLang].loginFieldsRequired;
+    errEl.classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('loginSubmitBtn');
+  btn.disabled = true; btn.textContent = I18N[currentLang].processing;
+
+  try {
+    const email = nicknameToEmail(nickname);
+    const { data: signUpData, error: signUpError } = await sb.auth.signUp({ email, password });
+
+    let session = null;
+    let isNewAccount = false;
+
+    if (!signUpError) {
+      // 완전 신규 계정 생성 성공
+      isNewAccount = true;
+      await sb.from('profiles').insert({ id: signUpData.user.id, nickname, country_code: 'KR', preferred_lang: currentLang, is_guest: true });
+      const { data: { session: newSession } } = await sb.auth.getSession();
+      session = newSession;
+    } else if (String(signUpError.message || '').toLowerCase().includes('already registered') ||
+               String(signUpError.message || '').toLowerCase().includes('already exists')) {
+      // 이미 있는 닉네임 -> 같은 비밀번호로 로그인 시도
+      const { error: loginError } = await sb.auth.signInWithPassword({ email, password });
+      if (loginError) {
+        errEl.textContent = I18N[currentLang].wrongPassword;
+        errEl.classList.add('show');
+        btn.disabled = false; btn.textContent = I18N[currentLang].loginSubmitBtn;
+        return;
+      }
+      const { data: { session: existingSession } } = await sb.auth.getSession();
+      session = existingSession;
+    } else {
+      throw signUpError;
+    }
+
+    if (isNewAccount) {
+      hideAllGates();
+      document.getElementById('newSubscriberGate').style.display = 'block';
+      updateNewSubPrice();
+    } else {
+      const { data: profile } = await sb.from('profiles').select('subscription_expires_at').eq('id', session.user.id).maybeSingle();
+      if (!profile?.subscription_expires_at) {
+        hideAllGates();
+        document.getElementById('newSubscriberGate').style.display = 'block';
+        updateNewSubPrice();
+      } else {
+        await showMyPage(session);
+      }
+    }
+  } catch (e) {
+    console.error('[login] 오류', e);
+    errEl.textContent = I18N[currentLang].loginFailed(e.message);
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = I18N[currentLang].loginSubmitBtn;
+  }
+});
+
+// ── 신규가입자 구독결제 (registration_mockup.html의 구독모달과 동일 로직) ──
+let newSubMonths = 12;
+let newSubCurrency = 'KRW';
+const NEW_SUB_PRICES = { 12: { usd: 100, krw: 1000 }, 24: { usd: 150, krw: 1500 }, 36: { usd: 200, krw: 2000 } };
+
+function updateNewSubPrice(){
+  const p = NEW_SUB_PRICES[newSubMonths];
+  const priceEl = document.getElementById('newSubPrice');
+  if (newSubCurrency === 'USD') {
+    const dollars = p.usd / 100;
+    priceEl.textContent = '$' + (Number.isInteger(dollars) ? dollars : dollars.toFixed(1));
+  } else {
+    priceEl.textContent = p.krw.toLocaleString() + (currentLang === 'ko' ? '원' : '');
+  }
+}
+document.querySelectorAll('#newSubscriberGate .sub-period-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('#newSubscriberGate .sub-period-tab').forEach((t) => t.classList.remove('selected'));
+    tab.classList.add('selected');
+    newSubMonths = Number(tab.dataset.months);
+    updateNewSubPrice();
+  });
+});
+document.querySelectorAll('#newSubscriberGate .sub-currency-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('#newSubscriberGate .sub-currency-tab').forEach((t) => t.classList.remove('selected'));
+    tab.classList.add('selected');
+    newSubCurrency = tab.dataset.currency;
+    updateNewSubPrice();
+  });
+});
+document.getElementById('newSubPayBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('newSubPayBtn');
+  btn.disabled = true; btn.textContent = I18N[currentLang].processing;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const p = NEW_SUB_PRICES[newSubMonths];
+    const amount = newSubCurrency === 'USD' ? p.usd : p.krw;
+    const method = newSubCurrency === 'USD' ? 'paypal' : 'inicis_card';
+
+    await sb.from('payments').insert({
+      user_id: session.user.id, method, amount_minor_units: amount, currency_code: newSubCurrency,
+      status: 'completed', purpose: 'subscription', completed_at: new Date().toISOString(),
+    });
+
+    const { error } = await sb.rpc('extend_subscription', { p_months: newSubMonths });
+    if (error) throw error;
+
+    hideAllGates();
+    document.getElementById('goRegisterGate').style.display = 'block';
+  } catch (e) {
+    alert(I18N[currentLang].loginFailed(e.message));
+  } finally {
+    btn.disabled = false; btn.textContent = I18N[currentLang].subPayBtn;
+  }
+});
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   if (!confirm(I18N[currentLang].logoutConfirm)) return;
@@ -428,8 +668,11 @@ async function loadSubscriptionStatus(userId){
   const { data: profile } = await sb.from('profiles').select('subscription_expires_at').eq('id', userId).maybeSingle();
   const badge = document.getElementById('subStatusBadge');
   const meta = document.getElementById('subStatusMeta');
+  const urgentEl = document.getElementById('subUrgentNote');
   const t = I18N[currentLang];
   const GRACE_DAYS = 30;
+
+  urgentEl.style.display = 'none';
 
   const expiresAt = profile?.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
   if (!expiresAt) {
@@ -448,12 +691,15 @@ async function loadSubscriptionStatus(userId){
   } else if (daysLeft > 0) {
     badge.textContent = t.statusSoon; badge.className = 'reg-status soon';
     meta.textContent = t.statusSoonDesc(daysLeft, expiresAt.toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US'));
+    urgentEl.style.display = 'block';  // 1개월 미만 남음 -> 갱신 권고
   } else if (now < cutoff) {
     badge.textContent = t.statusGrace; badge.className = 'reg-status grace';
     meta.textContent = t.statusGraceDesc(cutoff.toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US'));
+    urgentEl.style.display = 'block';
   } else {
     badge.textContent = t.statusDead; badge.className = 'reg-status dead';
     meta.textContent = t.statusDeadDesc;
+    urgentEl.style.display = 'block';
   }
 }
 
