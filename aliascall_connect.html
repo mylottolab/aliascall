@@ -66,6 +66,10 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .found-title{ font-size:19px; font-weight:700; margin-bottom:4px; }
 .found-sub{ font-size:12.5px; color:var(--ink-soft); margin-bottom:18px; }
 .found-desc{ font-size:13px; color:var(--ink); background:var(--paper); border-radius:12px; padding:12px 14px; text-align:left; line-height:1.6; margin-bottom:20px; }
+.found-detail{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.found-detail-row{ display:flex; align-items:center; gap:6px; background:var(--teal-tint); border-radius:10px; padding:6px 11px; font-size:12px; }
+.found-detail-row .fd-label{ font-weight:700; color:var(--teal-deep); }
+.found-detail-row .fd-value{ color:var(--ink); }
 
 /* ── 등록된 사진/영상/음성 갤러리 — 발견자가 "이게 맞다" 확인용 ── */
 .media-gallery{ display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px; -webkit-overflow-scrolling:touch; }
@@ -186,6 +190,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
         <div class="found-emoji" id="foundEmoji">🚗</div>
         <div class="found-title" id="foundTitle">-</div>
         <div class="found-sub" id="foundSub">-</div>
+        <div class="found-detail" id="foundDetail" style="display:none;"></div>
         <div class="found-desc" id="foundDesc" style="display:none;"></div>
 
         <div class="media-gallery" id="mediaGallery" style="display:none;"></div>
@@ -264,6 +269,9 @@ const I18N = {
     noAnswerTitle: '지금은 응답이 없어요', noAnswerDesc: '아래에 메시지를 남겨두시면, 소유자가 나중에 확인할 수 있어요.',
     leaveMsgSent: '✅ 메시지를 남겼습니다. 소유자가 확인하면 답을 드릴 수 있어요.',
     leaveMsgFailed: '메시지 전송에 실패했어요. 다시 시도해주세요.', leaveMsgSending: '전송 중…',
+    itemTypeLabel: '물품 종류', makeLabel: '제조사·모델', colorLabel: '색상',
+    speciesLabel: '종류', petNameLabel: '이름', birthYearLabel: '출생연도',
+    reasonLabel: '사유', locationLabel: '장소',
   },
   en: {
     checking: 'Checking…', notFoundTitle: 'Registration not found',
@@ -284,6 +292,9 @@ const I18N = {
     noAnswerTitle: 'No answer right now', noAnswerDesc: 'Leave a message below and the owner can see it later.',
     leaveMsgSent: '✅ Your message has been left. The owner can reply once they check it.',
     leaveMsgFailed: 'Failed to send the message. Please try again.', leaveMsgSending: 'Sending…',
+    itemTypeLabel: 'Item type', makeLabel: 'Make · model', colorLabel: 'Color',
+    speciesLabel: 'Species', petNameLabel: 'Name', birthYearLabel: 'Birth year',
+    reasonLabel: 'Reason', locationLabel: 'Location',
   },
 };
 let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
@@ -373,11 +384,55 @@ async function init(){
     foundEl.style.display = 'block';
     foundEl.dataset.registrationId = data.id;
 
+    await loadCategoryDetail(data.id, data.category);
     await loadMedia(data.id);
   } catch (e) {
     console.error('[connect] 조회 오류', e);
     loadingEl.style.display = 'none';
     errorEl.style.display = 'block';
+  }
+}
+
+// 등록자가 카테고리별로 입력한 상세정보(물품 종류, 제조사·색상, 종류 등) — 발견자가 진위를 확인할 수 있도록 표시
+// misc_incident(기타)는 별도 상세 테이블이 없어 description만으로 충분하다고 판단해 제외
+const CATEGORY_DETAIL_TABLE = {
+  vehicle: 'registration_vehicles', lost_item: 'registration_lost_items',
+  vulnerable_person: 'registration_vulnerable_persons', pet: 'registration_pets',
+  callback_contact: 'registration_callback_contacts',
+};
+
+async function loadCategoryDetail(registrationId, category){
+  const table = CATEGORY_DETAIL_TABLE[category];
+  if (!table) return;
+  try {
+    const { data, error } = await sb.from(table).select('*').eq('registration_id', registrationId).maybeSingle();
+    if (error || !data) return;
+
+    const t = I18N[currentLang];
+    const rows = [];
+    if (category === 'vehicle') {
+      if (data.make) rows.push([t.makeLabel, data.make]);
+      if (data.color) rows.push([t.colorLabel, data.color]);
+    } else if (category === 'lost_item') {
+      if (data.item_type) rows.push([t.itemTypeLabel, data.item_type]);
+    } else if (category === 'vulnerable_person') {
+      if (data.birth_year) rows.push([t.birthYearLabel, String(data.birth_year)]);
+    } else if (category === 'pet') {
+      if (data.species) rows.push([t.speciesLabel, data.species]);
+      if (data.pet_name) rows.push([t.petNameLabel, data.pet_name]);
+    } else if (category === 'callback_contact') {
+      if (data.reason) rows.push([t.reasonLabel, data.reason]);
+      if (data.location_note) rows.push([t.locationLabel, data.location_note]);
+    }
+    if (rows.length === 0) return;
+
+    const el = document.getElementById('foundDetail');
+    el.innerHTML = rows.map(([label, value]) =>
+      '<div class="found-detail-row"><span class="fd-label">' + label + '</span><span class="fd-value">' + value + '</span></div>'
+    ).join('');
+    el.style.display = 'flex';
+  } catch (e) {
+    console.error('[connect] 상세정보 조회 오류', e);
   }
 }
 
