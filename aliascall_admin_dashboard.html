@@ -181,18 +181,23 @@ tr:hover td{ background:rgba(31,111,107,.03); }
   </div>
 
   <div class="tab-panel" data-panel="products">
-    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">충전소 화면 하단에 이미지·설명이 노출되고, "상품보기" 클릭시 아래 링크로 새 탭이 열립니다. Aliascall이 직접 판매하지 않습니다.</p>
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">충전소 화면 하단에 이미지(최대 3장, 캐러셀)·설명이 노출되고, "상품보기" 클릭시 아래 링크로 새 탭이 열립니다. Aliascall이 직접 판매하지 않습니다.</p>
 
     <div class="card" style="background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:18px; margin-bottom:20px;">
       <div style="font-size:13px; font-weight:700; margin-bottom:12px;" id="prodFormTitle">새 상품 추가</div>
       <div class="toolbar" style="flex-wrap:wrap;">
         <input type="text" id="prodName" placeholder="상품명" style="flex:1 1 200px;">
-        <input type="text" id="prodImageUrl" placeholder="이미지 URL" style="flex:1 1 200px;">
-      </div>
-      <div class="toolbar" style="flex-wrap:wrap;">
-        <input type="text" id="prodDesc" placeholder="짧은 설명" style="flex:2 1 200px;">
         <input type="text" id="prodPrice" placeholder="가격 표시 (예: 약 15,000원)" style="flex:1 1 160px;">
         <input type="number" id="prodOrder" placeholder="표시순서(작을수록 위)" style="flex:0 0 160px;">
+      </div>
+      <div class="toolbar" style="flex-wrap:wrap;">
+        <input type="text" id="prodDesc" placeholder="짧은 설명 (충전소 화면에 노출됨)" style="flex:1;">
+      </div>
+      <div style="font-size:11px; color:var(--ink-soft); margin:2px 0 4px;">이미지 URL (최대 3장, 1번이 대표이미지 · 2장 이상 입력시 충전소 화면에서 캐러셀로 넘겨볼 수 있음)</div>
+      <div class="toolbar" style="flex-wrap:wrap;">
+        <input type="text" id="prodImageUrl1" placeholder="이미지 URL 1 (대표)" style="flex:1 1 160px;">
+        <input type="text" id="prodImageUrl2" placeholder="이미지 URL 2 (선택)" style="flex:1 1 160px;">
+        <input type="text" id="prodImageUrl3" placeholder="이미지 URL 3 (선택)" style="flex:1 1 160px;">
       </div>
       <div class="toolbar" style="flex-wrap:wrap;">
         <input type="text" id="prodExternalUrl" placeholder="https://판매사이트.com/상품페이지" style="flex:1;">
@@ -390,7 +395,7 @@ async function loadProducts(){
 
   tbody.innerHTML = data.map(p => `
     <tr>
-      <td>${p.image_url ? '<img src="' + p.image_url + '" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">' : '-'}</td>
+      <td>${(() => { const thumb = (p.image_urls && p.image_urls[0]) || p.image_url; return thumb ? '<img src="' + thumb + '" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">' + (p.image_urls && p.image_urls.length > 1 ? ' <span style="font-size:10px;color:var(--ink-soft);">+' + (p.image_urls.length - 1) + '</span>' : '') : '-'; })()}</td>
       <td>${p.name}${p.price_display ? '<br><span style="color:var(--ink-soft); font-size:11px;">' + p.price_display + '</span>' : ''}</td>
       <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.description || '-'}</td>
       <td>${p.display_order}</td>
@@ -424,10 +429,13 @@ let editingProductId = null;
 
 function startEditProduct(p){
   editingProductId = p.id;
+  const images = (p.image_urls && p.image_urls.length) ? p.image_urls : (p.image_url ? [p.image_url] : []);
   document.getElementById('prodFormTitle').textContent = '"' + p.name + '" 수정 중';
   document.getElementById('prodName').value = p.name || '';
   document.getElementById('prodDesc').value = p.description || '';
-  document.getElementById('prodImageUrl').value = p.image_url || '';
+  document.getElementById('prodImageUrl1').value = images[0] || '';
+  document.getElementById('prodImageUrl2').value = images[1] || '';
+  document.getElementById('prodImageUrl3').value = images[2] || '';
   document.getElementById('prodPrice').value = p.price_display || '';
   document.getElementById('prodOrder').value = p.display_order ?? '';
   document.getElementById('prodExternalUrl').value = p.external_url || '';
@@ -441,7 +449,9 @@ function resetProductForm(){
   document.getElementById('prodFormTitle').textContent = '새 상품 추가';
   document.getElementById('prodName').value = '';
   document.getElementById('prodDesc').value = '';
-  document.getElementById('prodImageUrl').value = '';
+  document.getElementById('prodImageUrl1').value = '';
+  document.getElementById('prodImageUrl2').value = '';
+  document.getElementById('prodImageUrl3').value = '';
   document.getElementById('prodPrice').value = '';
   document.getElementById('prodOrder').value = '';
   document.getElementById('prodExternalUrl').value = '';
@@ -453,7 +463,12 @@ document.getElementById('prodCancelEditBtn').addEventListener('click', resetProd
 document.getElementById('prodAddBtn').addEventListener('click', async () => {
   const name = document.getElementById('prodName').value.trim();
   const description = document.getElementById('prodDesc').value.trim();
-  const image_url = document.getElementById('prodImageUrl').value.trim();
+  const image_urls = [
+    document.getElementById('prodImageUrl1').value.trim(),
+    document.getElementById('prodImageUrl2').value.trim(),
+    document.getElementById('prodImageUrl3').value.trim(),
+  ].filter(Boolean); // 빈 칸은 제외, 입력칸이 3개뿐이라 자동으로 최대 3장 제한됨
+  const image_url = image_urls[0] || null; // 대표이미지는 기존 image_url 컬럼에도 동기화 (하위호환)
   const price_display = document.getElementById('prodPrice').value.trim();
   const external_url = document.getElementById('prodExternalUrl').value.trim();
   const display_order = Number(document.getElementById('prodOrder').value) || 0;
@@ -462,7 +477,7 @@ document.getElementById('prodAddBtn').addEventListener('click', async () => {
 
   if (editingProductId) {
     const { error } = await sb.from('featured_products').update({
-      name, description: description || null, image_url: image_url || null,
+      name, description: description || null, image_url, image_urls,
       price_display: price_display || null, external_url, display_order,
       updated_at: new Date().toISOString(),
     }).eq('id', editingProductId);
@@ -470,7 +485,7 @@ document.getElementById('prodAddBtn').addEventListener('click', async () => {
   } else {
     const { data: { session } } = await sb.auth.getSession();
     const { error } = await sb.from('featured_products').insert({
-      name, description: description || null, image_url: image_url || null,
+      name, description: description || null, image_url, image_urls,
       price_display: price_display || null, external_url, display_order,
       created_by: session.user.id,
     });

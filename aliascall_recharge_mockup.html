@@ -39,7 +39,10 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 
 header{ padding:20px 24px 16px; border-bottom:1px solid var(--line); background:var(--card); }
 .brand-row{ display:flex; align-items:center; gap:9px; }
-.guide-nav-link{ margin-left:auto; font-size:12px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:20px; padding:7px 13px; text-decoration:none; }
+.lang-toggle{ display:flex; gap:4px; background:var(--teal-tint); border-radius:20px; padding:3px; margin-left:auto; }
+.lang-toggle button{ border:none; background:none; color:var(--ink-soft); font-size:11px; font-weight:700; padding:5px 10px; border-radius:16px; cursor:pointer; }
+.lang-toggle button.active{ background:var(--teal); color:#fff; }
+.guide-nav-link{ font-size:12px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:20px; padding:7px 13px; text-decoration:none; }
 .guide-nav-link:hover{ background:var(--teal); color:#fff; }
 .brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
 .brand-name{ font-size:16px; font-weight:600; }
@@ -87,8 +90,16 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 .products-list{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
 .product-card{ display:flex; flex-direction:column; background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:8px; text-decoration:none; color:var(--ink); }
 .product-card:hover{ border-color:var(--teal); }
-.product-card img{ width:100%; aspect-ratio:1/1; border-radius:8px; object-fit:cover; background:var(--paper); margin-bottom:6px; }
+.product-card .p-img-wrap{ position:relative; margin-bottom:6px; }
+.product-card .p-img-wrap img{ width:100%; aspect-ratio:1/1; border-radius:8px; object-fit:cover; background:var(--paper); display:block; }
+.product-card .p-img-nav{ position:absolute; top:50%; transform:translateY(-50%); width:18px; height:18px; border-radius:50%; background:rgba(18,48,46,.55); color:#fff; font-size:11px; line-height:1; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer; padding:0; }
+.product-card .p-img-nav.prev{ left:3px; }
+.product-card .p-img-nav.next{ right:3px; }
+.product-card .p-img-dots{ display:flex; gap:3px; justify-content:center; margin-bottom:5px; }
+.product-card .p-img-dots span{ width:4px; height:4px; border-radius:50%; background:var(--line); }
+.product-card .p-img-dots span.active{ background:var(--teal); }
 .product-card .p-name{ font-size:11.5px; font-weight:700; line-height:1.3; margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.product-card .p-desc{ font-size:10px; color:var(--ink-soft); line-height:1.4; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 .product-card .p-price{ font-size:11px; font-weight:700; color:var(--teal-deep); font-family:'IBM Plex Mono',monospace; }
 .product-card .p-link{ font-size:10px; font-weight:700; color:var(--coral); margin-top:4px; }
 
@@ -107,29 +118,33 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
       <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
     </a>
-    <a href="aliascall_guide.html" class="guide-nav-link" target="_blank">📖 사용설명서</a>
+    <div class="lang-toggle">
+      <button data-lang="ko" class="active">KR</button>
+      <button data-lang="en">EN</button>
+    </div>
+    <a href="aliascall_guide.html" class="guide-nav-link" target="_blank" data-i18n="guideLink">📖 사용설명서</a>
   </div>
 </header>
 
 <main>
-  <div class="page-title">포인트 충전</div>
-  <div class="page-desc">QR 태그를 인쇄하거나 부가기능을 이용할 때 포인트가 사용됩니다.</div>
+  <div class="page-title" data-i18n="pageTitle">포인트 충전</div>
+  <div class="page-desc" id="pageDesc" data-i18n="pageDesc">QR 태그를 인쇄하거나 부가기능을 이용할 때 포인트가 사용됩니다.</div>
 
   <div class="balance-card">
-    <div class="label">현재 보유 포인트</div>
+    <div class="label" data-i18n="currentBalanceLabel">현재 보유 포인트</div>
     <div class="amount mono" id="currentBalance">3,200P</div>
   </div>
 
   <div class="currency-tabs">
     <div class="currency-tab active" data-currency="USD"><span class="flag">💵</span>USD (PayPal)</div>
-    <div class="currency-tab" data-currency="KRW"><span class="flag">🇰🇷</span>KRW (카드결제)</div>
+    <div class="currency-tab" data-currency="KRW"><span class="flag">🇰🇷</span><span data-i18n="tabKRW">KRW (카드결제)</span></div>
   </div>
 
-  <div class="section-label">패키지 선택</div>
+  <div class="section-label" data-i18n="selectPackage">패키지 선택</div>
   <div class="package-grid" id="packageGrid"></div>
 
   <div class="summary-row">
-    <span class="label">결제 금액</span>
+    <span class="label" data-i18n="paymentAmount">결제 금액</span>
     <span class="value mono" id="payAmount">$1.00</span>
   </div>
 
@@ -137,8 +152,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
   <div class="note" id="payNote">외화 결제는 PayPal을 통해 안전하게 처리됩니다.</div>
 
   <div class="products-section" id="productsSection" style="display:none;">
-    <div class="products-title">관련 상품 안내</div>
-    <div class="products-disclaimer">Aliascall이 직접 판매하지 않으며, 표시된 가격은 참고용으로 실제 판매가격과 다를 수 있어요. 클릭하면 판매처 사이트로 이동합니다.</div>
+    <div class="products-title" data-i18n="productsTitle">유용한 관련상품</div>
+    <div class="products-disclaimer" data-i18n="productsDisclaimer">Aliascall이 직접 판매하지 않으며, 표시된 가격은 참고용으로 실제 판매가격과 다를 수 있어요. 클릭하면 판매처 사이트로 이동합니다.</div>
     <div class="products-list" id="productsList"></div>
   </div>
 </main>
@@ -147,6 +162,52 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── 언어 전환 (KR/EN) — index.html과 동일한 data-i18n 패턴 ──
+const I18N = {
+  ko: {
+    guideLink: '📖 사용설명서',
+    pageTitle: '포인트 충전',
+    pageDesc: 'QR 태그를 인쇄하거나 부가기능을 이용할 때 포인트가 사용됩니다.',
+    pageDescReturn: 'QR 다운로드를 이어서 하시려면, 충전 완료 후 자동으로 원래 화면으로 돌아갑니다.',
+    currentBalanceLabel: '현재 보유 포인트',
+    tabKRW: 'KRW (카드결제)',
+    selectPackage: '패키지 선택',
+    best: '인기',
+    paymentAmount: '결제 금액',
+    krwSuffix: '원',
+    payBtnPaypal: 'PayPal로 결제하기',
+    payBtnInicis: '카드로 결제하기 (이니시스)',
+    noteUSD: '외화 결제는 PayPal을 통해 안전하게 처리됩니다.',
+    noteKRW: '국내 카드결제는 이니시스를 통해 안전하게 처리됩니다.',
+    productsTitle: '유용한 관련상품',
+    productsDisclaimer: 'Aliascall이 직접 판매하지 않으며, 표시된 가격은 참고용으로 실제 판매가격과 다를 수 있어요. 클릭하면 판매처 사이트로 이동합니다.',
+    viewProduct: '상품보기 →',
+    payConfirm: (method, symbol, amount, points) => method + ' 결제창으로 이동합니다. (' + symbol + amount + ' → ' + points + 'P)',
+  },
+  en: {
+    guideLink: '📖 User Guide',
+    pageTitle: 'Top Up Points',
+    pageDesc: 'Points are used to print QR tags or access add-on features.',
+    pageDescReturn: "To continue your QR download, you'll be sent back automatically once the top-up is complete.",
+    currentBalanceLabel: 'Current Balance',
+    tabKRW: 'KRW (Card)',
+    selectPackage: 'Select Package',
+    best: 'Best',
+    paymentAmount: 'Payment Amount',
+    krwSuffix: '',
+    payBtnPaypal: 'Pay with PayPal',
+    payBtnInicis: 'Pay by Card (Inicis)',
+    noteUSD: 'Foreign currency payments are securely processed via PayPal.',
+    noteKRW: 'Domestic card payments are securely processed via Inicis.',
+    productsTitle: 'Useful Related Products',
+    productsDisclaimer: 'Aliascall does not sell these products directly. Prices shown are for reference only and may differ from the actual sale price. Clicking takes you to the seller\u2019s site.',
+    viewProduct: 'View Product →',
+    payConfirm: (method, symbol, amount, points) => 'Redirecting to ' + method + ' checkout. (' + symbol + amount + ' → ' + points + 'P)',
+  },
+};
+
+let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
 
 const packages = {
   USD: [
@@ -178,9 +239,10 @@ const payNote = document.getElementById('payNote');
 function fmt(n){ return n.toLocaleString(); }
 
 function renderPackages(){
+  const t = I18N[currentLang];
   grid.innerHTML = packages[currentCurrency].map((p, i) => `
     <div class="package-card ${i === selectedIndex ? 'selected' : ''}" data-index="${i}">
-      ${p.best ? '<div class="badge-best">인기</div>' : ''}
+      ${p.best ? '<div class="badge-best">' + t.best + '</div>' : ''}
       <div class="pay-amt">${p.symbol}${fmt(p.amount)}</div>
       <div class="pts">${fmt(p.points)}P</div>
     </div>
@@ -195,17 +257,18 @@ function renderPackages(){
 }
 
 function renderSummary(){
+  const t = I18N[currentLang];
   const p = packages[currentCurrency][selectedIndex];
-  payAmount.textContent = p.symbol + fmt(p.amount) + (currentCurrency === 'KRW' ? '원' : '');
+  payAmount.textContent = p.symbol + fmt(p.amount) + (currentCurrency === 'KRW' ? t.krwSuffix : '');
 
   if (currentCurrency === 'USD') {
     payBtn.className = 'pay-btn paypal';
-    payBtn.textContent = 'PayPal로 결제하기';
-    payNote.textContent = '외화 결제는 PayPal을 통해 안전하게 처리됩니다.';
+    payBtn.textContent = t.payBtnPaypal;
+    payNote.textContent = t.noteUSD;
   } else {
     payBtn.className = 'pay-btn inicis';
-    payBtn.textContent = '카드로 결제하기 (이니시스)';
-    payNote.textContent = '국내 카드결제는 이니시스를 통해 안전하게 처리됩니다.';
+    payBtn.textContent = t.payBtnInicis;
+    payNote.textContent = t.noteKRW;
   }
 }
 
@@ -220,14 +283,41 @@ document.querySelectorAll('.currency-tab').forEach(tab => {
   });
 });
 
+function applyLang(lang){
+  currentLang = lang;
+  localStorage.setItem('aliascall_lang', lang);
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.dataset.i18n;
+    if (I18N[lang][key] !== undefined) el.textContent = I18N[lang][key];
+  });
+
+  document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+
+  document.getElementById('pageDesc').textContent = returnUrl ? I18N[lang].pageDescReturn : I18N[lang].pageDesc;
+
+  renderPackages();
+  renderSummary();
+  renderProducts();
+}
+
+document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+});
+
 // 등록화면 등에서 "충전하러 가기"로 넘어온 경우, ?return=원래주소 를 실어서 옴 —
 // 결제 완료 즉시 그 주소로 자동 복귀시킴
 const returnUrl = new URLSearchParams(window.location.search).get('return');
 
 payBtn.addEventListener('click', async () => {
+  const t = I18N[currentLang];
   const p = packages[currentCurrency][selectedIndex];
+  const method = currentCurrency === 'USD' ? 'PayPal' : (currentLang === 'ko' ? '이니시스' : 'Inicis');
 
-  alert((currentCurrency === 'USD' ? 'PayPal' : '이니시스') + ' 결제창으로 이동합니다. (' + p.symbol + fmt(p.amount) + ' → ' + fmt(p.points) + 'P)');
+  alert(t.payConfirm(method, p.symbol, fmt(p.amount), fmt(p.points)));
   // TODO: 실제 결제 연동 시 이 알림은 결제 성공 콜백(웹훅/리다이렉트) 안으로 옮겨야 함.
   // 지금은 목업이라 결제 성공을 즉시로 가정하고, return 파라미터가 있으면 원래 화면으로 자동 복귀시킴
   if (returnUrl) {
@@ -235,32 +325,71 @@ payBtn.addEventListener('click', async () => {
   }
 });
 
-if (returnUrl) {
-  document.querySelector('.page-desc').textContent = 'QR 다운로드를 이어서 하시려면, 충전 완료 후 자동으로 원래 화면으로 돌아갑니다.';
+// ── 관련 상품 (외부링크 카탈로그) — Aliascall이 직접 판매하지 않음, 클릭시 새 탭으로 판매처 이동 ──
+// 이미지는 image_urls(최대 3장, 캐러셀)를 우선 쓰고, 없으면 image_url 하나짜리로 대체
+let cachedProducts = null;
+let productImgIndex = {}; // 카드별 현재 보고있는 이미지 인덱스
+
+function getProductImages(p){
+  if (p.image_urls && p.image_urls.length) return p.image_urls;
+  if (p.image_url) return [p.image_url];
+  return [];
 }
 
-renderPackages();
-renderSummary();
-
-// ── 관련 상품 (외부링크 카탈로그) — Aliascall이 직접 판매하지 않음, 클릭시 새 탭으로 판매처 이동 ──
-(async function loadProducts(){
+async function loadProducts(){
   const { data, error } = await sb.from('featured_products')
-    .select('name, image_url, external_url, price_display')
+    .select('name, description, image_url, image_urls, external_url, price_display')
     .eq('is_active', true)
     .order('display_order', { ascending: true });
 
   if (error || !data || data.length === 0) return;
-
+  cachedProducts = data;
   document.getElementById('productsSection').style.display = 'block';
-  document.getElementById('productsList').innerHTML = data.map(p => `
-    <a class="product-card" href="${p.external_url}" target="_blank" rel="noopener noreferrer">
-      ${p.image_url ? '<img src="' + p.image_url + '" alt="' + p.name + '">' : ''}
-      <div class="p-name">${p.name}</div>
-      ${p.price_display ? '<div class="p-price">' + p.price_display + '</div>' : ''}
-      <div class="p-link">상품보기 →</div>
-    </a>
-  `).join('');
-})();
+  renderProducts();
+}
+
+function renderProducts(){
+  if (!cachedProducts) return;
+  const t = I18N[currentLang];
+
+  document.getElementById('productsList').innerHTML = cachedProducts.map((p, idx) => {
+    const images = getProductImages(p);
+    const curIdx = productImgIndex[idx] || 0;
+    const imgUrl = images[curIdx];
+
+    return `
+      <a class="product-card" href="${p.external_url}" target="_blank" rel="noopener noreferrer">
+        <div class="p-img-wrap">
+          ${imgUrl ? '<img src="' + imgUrl + '" alt="' + p.name + '">' : ''}
+          ${images.length > 1 ? `
+            <button class="p-img-nav prev" data-pidx="${idx}" data-dir="-1" aria-label="prev">‹</button>
+            <button class="p-img-nav next" data-pidx="${idx}" data-dir="1" aria-label="next">›</button>
+          ` : ''}
+        </div>
+        ${images.length > 1 ? '<div class="p-img-dots">' + images.map((_, i) => '<span class="' + (i === curIdx ? 'active' : '') + '"></span>').join('') + '</div>' : ''}
+        <div class="p-name">${p.name}</div>
+        ${p.description ? '<div class="p-desc">' + p.description + '</div>' : ''}
+        ${p.price_display ? '<div class="p-price">' + p.price_display + '</div>' : ''}
+        <div class="p-link">${t.viewProduct}</div>
+      </a>
+    `;
+  }).join('');
+
+  document.querySelectorAll('.p-img-nav').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation(); // 카드(<a>) 클릭으로 새 탭 열리는 것 방지
+      const idx = Number(btn.dataset.pidx);
+      const dir = Number(btn.dataset.dir);
+      const images = getProductImages(cachedProducts[idx]);
+      const cur = productImgIndex[idx] || 0;
+      productImgIndex[idx] = (cur + dir + images.length) % images.length;
+      renderProducts();
+    });
+  });
+}
+
+applyLang(currentLang);
+loadProducts();
 </script>
 </div><!-- /app-shell -->
 
