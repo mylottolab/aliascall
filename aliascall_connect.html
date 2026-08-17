@@ -111,9 +111,13 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .leave-msg-block input::placeholder{ color:rgba(255,255,255,.5); }
 .leave-msg-block button{ background:var(--coral); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:13.5px; cursor:pointer; }
 
-/* ── 통화중 화면 (비디오/컨트롤/채팅) ── */
-.call-video-area{ display:none; position:relative; width:100%; max-width:360px; aspect-ratio:3/4; background:#000; border-radius:16px; overflow:hidden; margin-bottom:18px; }
-.call-video-area.show{ display:block; }
+/* ── 통화중 화면 (비디오/컨트롤/채팅) ──
+   ⚠ 예전엔 display:none으로 숨겼는데, 음성통화 모드에서는 이 안에 있는 #remoteVideo가
+   상대방 오디오까지 재생하는 요소라서, display:none인 조상 안에 있으면 모바일 브라우저에서
+   오디오 재생이 막히거나 불안정해지는 문제가 있었음(음성연결은 되는데 소리가 안 들리는 버그의
+   원인). visibility:hidden + height:0 방식으로 바꿔서 화면엔 안 보이되 오디오는 계속 흐르게 함. */
+.call-video-area{ visibility:hidden; height:0; overflow:hidden; position:relative; width:100%; max-width:360px; aspect-ratio:3/4; background:#000; border-radius:16px; margin-bottom:0; }
+.call-video-area.show{ visibility:visible; height:auto; margin-bottom:18px; }
 .call-video-area video{ width:100%; height:100%; object-fit:cover; }
 #remoteVideo{ position:absolute; inset:0; }
 #localVideo{ position:absolute; width:88px; height:118px; right:10px; bottom:10px; border-radius:10px; border:2px solid rgba(255,255,255,.6); object-fit:cover; }
@@ -497,7 +501,13 @@ document.getElementById('lightboxClose').addEventListener('click', () => {
 // 채팅은 DB에 저장하지 않는 일회성 메시지 — 발견자가 로그인 계정이 없어서
 // 계속 남는 대화이력을 만들 방법 자체가 없기 때문에 이 통화 세션 동안만 유효함.
 // ═══════════════════════════════════════════════════════════════
-const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+// ⚠ STUN만으로는 이동통신사(특히 셀룰러 데이터) 환경의 NAT를 못 뚫는 경우가 많음.
+// 아래는 STUN을 여러 개로 늘려 성공률을 약간 높인 임시 완화책일 뿐, 근본 해결책은 TURN 서버 추가임.
+const RTC_CONFIG = { iceServers: [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun.cloudflare.com:3478' },
+] };
 const myClientId = 'caller-' + Math.random().toString(36).slice(2);
 
 let pc = null, localStream = null, rtChannel = null, currentSessionToken = null, currentMode = 'voice';
