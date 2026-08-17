@@ -88,6 +88,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 .products-title{ font-size:22px; font-weight:600; font-family:'Space Grotesk',sans-serif; margin-bottom:6px; }
 .products-disclaimer{ font-size:11px; color:var(--ink-soft); margin-bottom:16px; line-height:1.5; }
 .products-list{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.products-empty{ display:none; text-align:center; padding:28px 16px; font-size:12.5px; color:var(--ink-soft); background:var(--card); border:1.5px dashed var(--line); border-radius:12px; }
+.products-empty.show{ display:block; }
 .product-card{ display:flex; flex-direction:column; background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:8px; text-decoration:none; color:var(--ink); }
 .product-card:hover{ border-color:var(--teal); }
 .product-card .p-img-wrap{ position:relative; margin-bottom:6px; }
@@ -151,10 +153,11 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
   <button class="pay-btn paypal" id="payBtn">PayPal로 결제하기</button>
   <div class="note" id="payNote">외화 결제는 PayPal을 통해 안전하게 처리됩니다.</div>
 
-  <div class="products-section" id="productsSection" style="display:none;">
+  <div class="products-section" id="productsSection">
     <div class="products-title" data-i18n="productsTitle">유용한 관련상품</div>
     <div class="products-disclaimer" data-i18n="productsDisclaimer">Aliascall이 직접 판매하지 않으며, 표시된 가격은 참고용으로 실제 판매가격과 다를 수 있어요. 클릭하면 판매처 사이트로 이동합니다.</div>
     <div class="products-list" id="productsList"></div>
+    <div class="products-empty" id="productsEmpty" data-i18n="productsEmpty">아직 등록된 상품이 없어요. 곧 채워질 예정이에요.</div>
   </div>
 </main>
 
@@ -182,6 +185,7 @@ const I18N = {
     noteKRW: '국내 카드결제는 이니시스를 통해 안전하게 처리됩니다.',
     productsTitle: '유용한 관련상품',
     productsDisclaimer: 'Aliascall이 직접 판매하지 않으며, 표시된 가격은 참고용으로 실제 판매가격과 다를 수 있어요. 클릭하면 판매처 사이트로 이동합니다.',
+    productsEmpty: '아직 등록된 상품이 없어요. 곧 채워질 예정이에요.',
     viewProduct: '상품보기 →',
     payConfirm: (method, symbol, amount, points) => method + ' 결제창으로 이동합니다. (' + symbol + amount + ' → ' + points + 'P)',
   },
@@ -202,6 +206,7 @@ const I18N = {
     noteKRW: 'Domestic card payments are securely processed via Inicis.',
     productsTitle: 'Useful Related Products',
     productsDisclaimer: 'Aliascall does not sell these products directly. Prices shown are for reference only and may differ from the actual sale price. Clicking takes you to the seller\u2019s site.',
+    productsEmpty: 'No products yet — check back soon.',
     viewProduct: 'View Product →',
     payConfirm: (method, symbol, amount, points) => 'Redirecting to ' + method + ' checkout. (' + symbol + amount + ' → ' + points + 'P)',
   },
@@ -342,9 +347,10 @@ async function loadProducts(){
     .eq('is_active', true)
     .order('display_order', { ascending: true });
 
-  if (error || !data || data.length === 0) return;
-  cachedProducts = data;
-  document.getElementById('productsSection').style.display = 'block';
+  if (error) { console.error('[products] 조회 오류', error); }
+
+  cachedProducts = (!error && data) ? data : [];
+  document.getElementById('productsEmpty').classList.toggle('show', cachedProducts.length === 0);
   renderProducts();
 }
 
