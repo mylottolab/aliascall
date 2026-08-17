@@ -13,7 +13,7 @@
   --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
   --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
   --coral:#E8734A; --coral-tint:#FDEAE1;
-  --line:#DCE3DE; --danger:#C1483A; --danger-tint:#FBEAE6;
+  --line:#DCE3DE; --danger:#C1483A; --danger-tint:#FBEAE6; --found:#2E7D4F;
 }
 *{box-sizing:border-box;}
 body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
@@ -93,6 +93,53 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .lightbox-box img{ max-width:100%; max-height:60vh; border-radius:10px; display:block; margin:0 auto; }
 .lightbox-box video{ max-width:100%; max-height:60vh; border-radius:10px; }
 .lightbox-close{ display:block; margin:14px auto 0; background:var(--teal); color:#fff; border:none; border-radius:20px; padding:9px 20px; font-size:13px; font-weight:700; cursor:pointer; }
+
+/* ── 부재중 메시지 배지 + 수신대기 안내 배너 (2026-08-17 신규, index.html과 동일) ── */
+.missed-badge-link{ display:none; margin-bottom:14px; }
+.missed-badge-link a{ display:flex; align-items:center; gap:8px; text-decoration:none; color:#fff; background:var(--coral); border-radius:12px; padding:12px 16px; font-size:13px; font-weight:700; }
+.missed-badge-link .n{ background:rgba(255,255,255,.28); border-radius:20px; padding:2px 9px; font-size:12px; }
+.listen-reminder{ margin-bottom:18px; background:var(--teal-tint); border-radius:12px; padding:11px 15px; font-size:11.5px; color:var(--teal-deep); line-height:1.6; }
+.listen-reminder a{ color:var(--coral); font-weight:700; text-decoration:underline; }
+
+/* ── 전화벨 팝업 / 통화중 오버레이 / 채팅 — 홈 화면과 동일 로직 이식 ── */
+.ring-overlay{ display:none; position:fixed; inset:0; background:var(--teal-deep); z-index:80; flex-direction:column; align-items:center; justify-content:center; color:#fff; padding:28px; text-align:center; }
+.ring-overlay.show{ display:flex; }
+.ring-avatar{ width:96px; height:96px; border-radius:50%; background:rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; font-size:40px; margin-bottom:18px; animation:ringPulse 1.2s ease-in-out infinite; }
+@keyframes ringPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,255,255,.3); } 50%{ box-shadow:0 0 0 18px rgba(255,255,255,0); } }
+.ring-overlay h3{ font-size:19px; margin-bottom:6px; font-family:'Space Grotesk',sans-serif; }
+.ring-overlay p{ font-size:13px; color:rgba(255,255,255,.75); margin:0 0 30px; }
+.ring-btns{ display:flex; gap:16px; }
+.ring-btn{ width:64px; height:64px; border-radius:50%; border:none; font-size:24px; cursor:pointer; }
+.ring-btn.accept{ background:var(--found); color:#fff; }
+.ring-btn.decline{ background:var(--danger); color:#fff; }
+
+.call-video-area{ visibility:hidden; height:0; overflow:hidden; position:relative; width:100%; max-width:340px; aspect-ratio:3/4; background:#000; border-radius:16px; margin-bottom:0; }
+.call-video-area.show{ visibility:visible; height:auto; margin-bottom:18px; }
+.call-video-area video{ width:100%; height:100%; object-fit:cover; }
+#remoteVideo{ position:absolute; inset:0; }
+#localVideo{ position:absolute; width:84px; height:112px; right:10px; bottom:10px; border-radius:10px; border:2px solid rgba(255,255,255,.6); object-fit:cover; }
+.voice-avatar{ display:none; width:84px; height:84px; border-radius:50%; background:rgba(255,255,255,.14); align-items:center; justify-content:center; font-size:34px; margin-bottom:18px; }
+.voice-avatar.show{ display:flex; }
+.call-controls{ display:none; gap:14px; margin-top:6px; }
+.call-controls.show{ display:flex; }
+.ctrl-btn{ width:52px; height:52px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(255,255,255,.14); color:#fff; }
+.ctrl-btn.active-off{ background:var(--coral); }
+.ctrl-btn.hangup{ background:var(--danger); }
+
+.chat-toggle-btn{ position:fixed; right:18px; bottom:18px; width:52px; height:52px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:20px; cursor:pointer; z-index:85; display:none; align-items:center; justify-content:center; }
+.chat-toggle-btn.show{ display:flex; }
+.chat-panel{ display:none; position:fixed; inset:0; z-index:90; background:var(--paper); flex-direction:column; }
+.chat-panel.show{ display:flex; }
+.chat-panel-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line); background:var(--card); }
+.chat-panel-header b{ font-size:14px; }
+.chat-panel-header button{ background:none; border:none; font-size:18px; cursor:pointer; color:var(--ink-soft); }
+.chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
+.chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
+.chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
+.chat-bubble.them{ align-self:flex-start; background:var(--card); border:1px solid var(--line); border-bottom-left-radius:4px; }
+.chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); }
+.chat-input-row input{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
+.chat-input-row button{ background:var(--teal); color:#fff; border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; }
 .empty-regs{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:24px; }
 
 .confirm-btn-teal{ background:var(--teal); }
@@ -226,6 +273,12 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
   </div>
 
   <div id="accountContent" style="display:none;">
+    <div class="missed-badge-link" id="missedBadgeLink">
+      <a href="aliascall_incoming_calls.html">📩 <span data-i18n="missedBadgeText">부재중 메시지</span> <span class="n" id="missedBadgeCount">0</span></a>
+    </div>
+    <div class="listen-reminder" id="listenReminder" data-i18n-html="listenReminderText">
+      💡 연결 요청을 놓치지 않으려면 <a href="aliascall_incoming_calls.html">수신 대기 화면</a>을 자주 확인해주세요. 이 화면(마이페이지)을 열어두셔도 연결 요청이 오면 바로 알림이 뜹니다.
+    </div>
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
       <div class="page-title" data-i18n="pageTitle" style="margin-bottom:0;">내 계정</div>
       <button id="logoutBtn" class="logout-btn" data-i18n="logoutBtn">로그아웃</button>
@@ -354,6 +407,41 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
   </div>
 </div>
 
+<!-- 전화벨 팝업 / 통화중 오버레이 / 채팅 (2026-08-17 신규 — index.html과 동일 로직) -->
+<div class="ring-overlay" id="ringOverlay">
+  <div class="ring-avatar" id="ringAvatar">📞</div>
+  <h3 id="ringTitle">연결 요청이 왔어요</h3>
+  <p id="ringSub">음성으로 연결 요청</p>
+  <div class="ring-btns">
+    <button class="ring-btn decline" id="declineBtn">✕</button>
+    <button class="ring-btn accept" id="acceptBtn">✓</button>
+  </div>
+</div>
+
+<div class="ring-overlay" id="inCallOverlay">
+  <div class="voice-avatar" id="voiceAvatar">🎧</div>
+  <div class="call-video-area" id="callVideoArea">
+    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="localVideo" autoplay playsinline muted></video>
+  </div>
+  <h3>연결됨</h3>
+  <p id="inCallSub"></p>
+  <div class="call-controls show" id="callControls">
+    <button class="ctrl-btn" id="muteBtn">🎤</button>
+    <button class="ctrl-btn hangup" id="hangupBtn">📵</button>
+  </div>
+</div>
+
+<button class="chat-toggle-btn" id="chatToggleBtn">💬</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-panel-header"><b>채팅</b><button id="chatCloseBtn">✕</button></div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="메시지 입력…">
+    <button id="chatSendBtn">➤</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-box">
     <h3 data-i18n="deleteConfirmTitle">정말 탈퇴하시겠어요?</h3>
@@ -386,6 +474,10 @@ const I18N = {
     period6mo: '6개월', period1yr: '1년', period2yr: '2년', period3yr: '3년', krwLabel: 'KRW (카드결제)',
     cancel: '취소', payNow: '결제하기',
     qrDownloadBtn: 'QR 다운로드', mediaLightboxOpenDoc: '새 탭에서 문서 열기', mediaLightboxClose: '닫기',
+    missedBadgeText: '부재중 메시지',
+    listenReminderText: '💡 연결 요청을 놓치지 않으려면 <a href="aliascall_incoming_calls.html">수신 대기 화면</a>을 자주 확인해주세요. 이 화면(마이페이지)을 열어두셔도 연결 요청이 오면 바로 알림이 뜹니다.',
+    ringSubVoice: '음성으로 연결 요청', ringSubVideo: '영상으로 연결 요청',
+    micPermission: '마이크(또는 카메라) 권한이 필요합니다.',
     mediaMoreCount: (n) => '+' + n,
     editRegTitle: '등록 정보 수정', editRegDesc: '카테고리는 바꿀 수 없어요. 필요한 정보만 수정해주세요.',
     plateLabel: '차량번호', makeLabel: '제조사·모델 (선택)', colorLabel: '색상 (선택)', itemTypeLabel: '물품 종류',
@@ -445,6 +537,10 @@ const I18N = {
     period6mo: '6 months', period1yr: '1 year', period2yr: '2 years', period3yr: '3 years', krwLabel: 'KRW (Card)',
     cancel: 'Cancel', payNow: 'Pay now',
     qrDownloadBtn: 'Download QR', mediaLightboxOpenDoc: 'Open document in new tab', mediaLightboxClose: 'Close',
+    missedBadgeText: 'Missed messages',
+    listenReminderText: '💡 To avoid missing a connection request, check the <a href="aliascall_incoming_calls.html">Incoming Calls screen</a> often. Keeping this page open also works — a popup will appear here the moment a request comes in.',
+    ringSubVoice: 'Voice connection request', ringSubVideo: 'Video connection request',
+    micPermission: 'Microphone (or camera) permission is required.',
     mediaMoreCount: (n) => '+' + n,
     editRegTitle: 'Edit Registration', editRegDesc: "You can't change the category — just edit the details you need.",
     plateLabel: 'License plate', makeLabel: 'Make · model (optional)', colorLabel: 'Color (optional)', itemTypeLabel: 'Item type',
@@ -500,6 +596,10 @@ function applyLang(lang){
     const key = el.dataset.i18n;
     if (I18N[lang][key] !== undefined) el.textContent = I18N[lang][key];
   });
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => {
+    const key = el.dataset.i18nHtml;
+    if (I18N[lang][key] !== undefined) el.innerHTML = I18N[lang][key];
+  });
   document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
     const key = el.dataset.i18nPlaceholder;
     if (I18N[lang][key] !== undefined) el.placeholder = I18N[lang][key];
@@ -515,6 +615,166 @@ document.querySelectorAll('.lang-toggle button').forEach((btn) => {
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── 실시간 수신 감지 + 전화벨 팝업 (index.html / aliascall_incoming_calls.html과 동일 로직) ──
+const RTC_CONFIG = { iceServers: [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun.cloudflare.com:3478' },
+] };
+const CALL_CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
+
+let myWatchedRegIds = [];
+let pendingSession = null;
+let pc = null, localStream = null, rtChannel = null;
+
+async function initIncomingWatcher(userId){
+  const { data: regs } = await sb.from('registrations').select('id').eq('user_id', userId);
+  myWatchedRegIds = (regs || []).map((r) => r.id);
+  if (myWatchedRegIds.length === 0) return;
+
+  loadMissedBadge();
+
+  sb.channel('incoming-calls-myaccount')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
+      const row = payload.new;
+      if (myWatchedRegIds.includes(row.registration_id)) showIncomingCall(row);
+    })
+    .subscribe();
+}
+
+async function loadMissedBadge(){
+  const { count } = await sb.from('webrtc_sessions')
+    .select('id', { count: 'exact', head: true })
+    .in('registration_id', myWatchedRegIds)
+    .not('left_message', 'is', null)
+    .is('owner_read_at', null);
+
+  const el = document.getElementById('missedBadgeLink');
+  if (count && count > 0) {
+    document.getElementById('missedBadgeCount').textContent = count;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+async function showIncomingCall(row){
+  pendingSession = row;
+  document.getElementById('ringSub').textContent = row.call_type === 'video' ? I18N[currentLang].ringSubVideo : I18N[currentLang].ringSubVoice;
+  document.getElementById('ringOverlay').classList.add('show');
+  try {
+    const { data: reg } = await sb.from('registrations').select('category').eq('id', row.registration_id).maybeSingle();
+    document.getElementById('ringAvatar').textContent = CALL_CATEGORY_EMOJI[reg?.category] || '📞';
+  } catch (e) {
+    document.getElementById('ringAvatar').textContent = '📞';
+  }
+}
+
+document.getElementById('declineBtn').addEventListener('click', () => {
+  document.getElementById('ringOverlay').classList.remove('show');
+  if (pendingSession) {
+    const declineChannel = sb.channel('webrtc-' + pendingSession.session_token, { config: { broadcast: { self: false } } });
+    declineChannel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        declineChannel.send({ type: 'broadcast', event: 'declined', payload: {} });
+        setTimeout(() => sb.removeChannel(declineChannel), 600);
+      }
+    });
+  }
+  pendingSession = null;
+});
+
+document.getElementById('acceptBtn').addEventListener('click', async () => {
+  document.getElementById('ringOverlay').classList.remove('show');
+  await answerCall(pendingSession);
+});
+
+async function answerCall(session){
+  const mode = session.call_type;
+  document.getElementById('inCallSub').textContent = '';
+  document.getElementById('inCallOverlay').classList.add('show');
+  document.getElementById('chatToggleBtn').classList.add('show');
+  if (mode === 'video') document.getElementById('callVideoArea').classList.add('show');
+  else document.getElementById('voiceAvatar').classList.add('show');
+
+  await sb.from('webrtc_sessions').update({ owner_joined_at: new Date().toISOString() }).eq('id', session.id);
+
+  rtChannel = sb.channel('webrtc-' + session.session_token, { config: { broadcast: { self: false } } });
+  rtChannel
+    .on('broadcast', { event: 'offer' }, async ({ payload }) => {
+      pc = new RTCPeerConnection(RTC_CONFIG);
+      pc.onicecandidate = (e) => { if (e.candidate) rtChannel.send({ type:'broadcast', event:'ice-candidate', payload:{ candidate: e.candidate } }); };
+      pc.ontrack = (e) => { document.getElementById('remoteVideo').srcObject = e.streams[0]; };
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' });
+      } catch (e) {
+        alert(I18N[currentLang].micPermission);
+        hangupCall(true);
+        return;
+      }
+      localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+      if (mode === 'video') document.getElementById('localVideo').srcObject = localStream;
+
+      await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      rtChannel.send({ type:'broadcast', event:'answer', payload:{ sdp: answer } });
+    })
+    .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
+      try { await pc.addIceCandidate(payload.candidate); } catch (e) { console.error('[webrtc] ICE 추가 오류', e); }
+    })
+    .on('broadcast', { event: 'chat' }, ({ payload }) => appendChatMessage(payload.text, 'them'))
+    .on('broadcast', { event: 'hangup' }, () => hangupCall(true))
+    .subscribe();
+}
+
+function hangupCall(silent){
+  if (rtChannel && !silent) rtChannel.send({ type:'broadcast', event:'hangup', payload:{} });
+  if (pc) { pc.close(); pc = null; }
+  if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
+  if (rtChannel) { sb.removeChannel(rtChannel); rtChannel = null; }
+  document.getElementById('inCallOverlay').classList.remove('show');
+  document.getElementById('callVideoArea').classList.remove('show');
+  document.getElementById('voiceAvatar').classList.remove('show');
+  document.getElementById('chatToggleBtn').classList.remove('show');
+  document.getElementById('chatPanel').classList.remove('show');
+  document.getElementById('chatMessages').innerHTML = '';
+  pendingSession = null;
+}
+document.getElementById('hangupBtn').addEventListener('click', () => hangupCall(false));
+
+let isCallMuted = false;
+document.getElementById('muteBtn').addEventListener('click', () => {
+  if (!localStream) return;
+  isCallMuted = !isCallMuted;
+  localStream.getAudioTracks().forEach((t) => (t.enabled = !isCallMuted));
+  const btn = document.getElementById('muteBtn');
+  btn.textContent = isCallMuted ? '🔇' : '🎤';
+  btn.classList.toggle('active-off', isCallMuted);
+});
+
+function appendChatMessage(text, who){
+  const el = document.createElement('div');
+  el.className = 'chat-bubble ' + who;
+  el.textContent = text;
+  const list = document.getElementById('chatMessages');
+  list.appendChild(el);
+  list.scrollTop = list.scrollHeight;
+}
+document.getElementById('chatToggleBtn').addEventListener('click', () => document.getElementById('chatPanel').classList.add('show'));
+document.getElementById('chatCloseBtn').addEventListener('click', () => document.getElementById('chatPanel').classList.remove('show'));
+function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !rtChannel) return;
+  rtChannel.send({ type:'broadcast', event:'chat', payload:{ text } });
+  appendChatMessage(text, 'me');
+  input.value = '';
+}
+document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 const DELETE_ACCOUNT_URL = SUPABASE_URL + "/functions/v1/self-delete-account";
 
 function nicknameToEmail(nickname){
@@ -540,6 +800,7 @@ async function showMyPage(session){
 
   await loadSubscriptionStatus(session.user.id);
   await loadMyRegistrations(session.user.id);
+  initIncomingWatcher(session.user.id);
 }
 
 (async function init(){
