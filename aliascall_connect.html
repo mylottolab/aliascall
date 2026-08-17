@@ -129,6 +129,8 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .ctrl-btn{ width:52px; height:52px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(255,255,255,.14); color:#fff; }
 .ctrl-btn.active-off{ background:var(--coral); }
 .ctrl-btn.hangup{ background:var(--danger); }
+.unmute-btn{ display:none; margin-top:16px; background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.4); border-radius:20px; padding:10px 18px; font-size:12.5px; font-weight:700; cursor:pointer; }
+.unmute-btn.show{ display:inline-block; }
 
 .chat-toggle-btn{ position:fixed; right:18px; bottom:18px; width:52px; height:52px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:20px; cursor:pointer; z-index:55; display:none; align-items:center; justify-content:center; }
 .chat-toggle-btn.show{ display:flex; }
@@ -234,6 +236,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
     <button class="ctrl-btn" id="muteBtn">🎤</button>
     <button class="ctrl-btn hangup" id="endCallBtn">📵</button>
   </div>
+  <button class="unmute-btn" id="unmuteBtn" data-i18n="unmuteBtn">🔊 소리가 안 들리면 여기를 탭하세요</button>
   <div class="leave-msg-block" id="leaveMsgBlock">
     <input type="text" id="leaveMsgInput" data-i18n-placeholder="leaveMsgPlaceholder" placeholder="예: 지금 못 받으시면 010-0000-0000으로 연락주세요">
     <button id="leaveMsgSendBtn" data-i18n="leaveMsgSend">메시지 남기기</button>
@@ -273,6 +276,7 @@ const I18N = {
     noAnswerTitle: '지금은 응답이 없어요', noAnswerDesc: '아래에 메시지를 남겨두시면, 소유자가 나중에 확인할 수 있어요.',
     leaveMsgSent: '✅ 메시지를 남겼습니다. 소유자가 확인하면 답을 드릴 수 있어요.',
     leaveMsgFailed: '메시지 전송에 실패했어요. 다시 시도해주세요.', leaveMsgSending: '전송 중…',
+    unmuteBtn: '🔊 소리가 안 들리면 여기를 탭하세요',
     itemTypeLabel: '물품 종류', makeLabel: '제조사·모델', colorLabel: '색상',
     speciesLabel: '종류', petNameLabel: '이름', birthYearLabel: '출생연도',
     reasonLabel: '사유', locationLabel: '장소',
@@ -296,6 +300,7 @@ const I18N = {
     noAnswerTitle: 'No answer right now', noAnswerDesc: 'Leave a message below and the owner can see it later.',
     leaveMsgSent: '✅ Your message has been left. The owner can reply once they check it.',
     leaveMsgFailed: 'Failed to send the message. Please try again.', leaveMsgSending: 'Sending…',
+    unmuteBtn: '🔊 Tap here if you can\u2019t hear anything',
     itemTypeLabel: 'Item type', makeLabel: 'Make · model', colorLabel: 'Color',
     speciesLabel: 'Species', petNameLabel: 'Name', birthYearLabel: 'Birth year',
     reasonLabel: 'Reason', locationLabel: 'Location',
@@ -612,6 +617,25 @@ document.getElementById('leaveMsgSendBtn').addEventListener('click', async () =>
   }
 });
 
+// ⚠ 일부 모바일 브라우저는 srcObject를 늦게(비동기 콜백 안에서) 할당하면 autoplay 속성만으로는
+// 오디오 재생을 막아버림(에러도 없이 조용히 무음). 그래서 명시적으로 .play()를 한번 더 시도하고,
+// 그마저 브라우저 정책으로 막히면(NotAllowedError) "탭하여 소리 켜기" 버튼을 노출시켜
+// 실제 클릭(사용자 제스처)으로 재생을 강제함.
+function tryPlayRemote(remoteEl){
+  const playPromise = remoteEl.play();
+  if (playPromise && playPromise.catch) {
+    playPromise.catch((err) => {
+      console.warn('[webrtc] 원격 오디오 자동재생 실패, 수동 재생 버튼 노출', err);
+      document.getElementById('unmuteBtn').classList.add('show');
+    });
+  }
+}
+document.getElementById('unmuteBtn').addEventListener('click', () => {
+  const remoteEl = document.getElementById('remoteVideo');
+  remoteEl.play().catch((err) => console.error('[webrtc] 수동 재생도 실패', err));
+  document.getElementById('unmuteBtn').classList.remove('show');
+});
+
 async function createOfferAsCaller(mode){
   pc = new RTCPeerConnection(RTC_CONFIG);
   pc.onicecandidate = (e) => {
@@ -620,6 +644,7 @@ async function createOfferAsCaller(mode){
   pc.ontrack = (e) => {
     const remoteEl = document.getElementById('remoteVideo');
     remoteEl.srcObject = e.streams[0];
+    tryPlayRemote(remoteEl);
   };
 
   try {

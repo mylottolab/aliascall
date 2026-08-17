@@ -125,6 +125,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .ctrl-btn{ width:52px; height:52px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(255,255,255,.14); color:#fff; }
 .ctrl-btn.active-off{ background:var(--coral); }
 .ctrl-btn.hangup{ background:var(--danger); }
+.unmute-btn{ display:none; margin-top:16px; background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.4); border-radius:20px; padding:10px 18px; font-size:12.5px; font-weight:700; cursor:pointer; }
+.unmute-btn.show{ display:inline-block; }
 
 .chat-toggle-btn{ position:fixed; right:18px; bottom:18px; width:52px; height:52px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:20px; cursor:pointer; z-index:85; display:none; align-items:center; justify-content:center; }
 .chat-toggle-btn.show{ display:flex; }
@@ -430,6 +432,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     <button class="ctrl-btn" id="muteBtn">🎤</button>
     <button class="ctrl-btn hangup" id="hangupBtn">📵</button>
   </div>
+  <button class="unmute-btn" id="unmuteBtn" data-i18n="unmuteBtn">🔊 소리가 안 들리면 여기를 탭하세요</button>
 </div>
 
 <button class="chat-toggle-btn" id="chatToggleBtn">💬</button>
@@ -478,6 +481,7 @@ const I18N = {
     listenReminderText: '💡 연결 요청을 놓치지 않으려면 <a href="aliascall_incoming_calls.html">수신 대기 화면</a>을 자주 확인해주세요. 이 화면(마이페이지)을 열어두셔도 연결 요청이 오면 바로 알림이 뜹니다.',
     ringSubVoice: '음성으로 연결 요청', ringSubVideo: '영상으로 연결 요청',
     micPermission: '마이크(또는 카메라) 권한이 필요합니다.',
+    unmuteBtn: '🔊 소리가 안 들리면 여기를 탭하세요',
     mediaMoreCount: (n) => '+' + n,
     editRegTitle: '등록 정보 수정', editRegDesc: '카테고리는 바꿀 수 없어요. 필요한 정보만 수정해주세요.',
     plateLabel: '차량번호', makeLabel: '제조사·모델 (선택)', colorLabel: '색상 (선택)', itemTypeLabel: '물품 종류',
@@ -541,6 +545,7 @@ const I18N = {
     listenReminderText: '💡 To avoid missing a connection request, check the <a href="aliascall_incoming_calls.html">Incoming Calls screen</a> often. Keeping this page open also works — a popup will appear here the moment a request comes in.',
     ringSubVoice: 'Voice connection request', ringSubVideo: 'Video connection request',
     micPermission: 'Microphone (or camera) permission is required.',
+    unmuteBtn: '🔊 Tap here if you can\u2019t hear anything',
     mediaMoreCount: (n) => '+' + n,
     editRegTitle: 'Edit Registration', editRegDesc: "You can't change the category — just edit the details you need.",
     plateLabel: 'License plate', makeLabel: 'Make · model (optional)', colorLabel: 'Color (optional)', itemTypeLabel: 'Item type',
@@ -694,6 +699,24 @@ document.getElementById('acceptBtn').addEventListener('click', async () => {
   await answerCall(pendingSession);
 });
 
+// ⚠ 일부 모바일 브라우저는 srcObject를 비동기 콜백 안에서 늦게 할당하면 autoplay 속성만으로는
+// 오디오 재생을 조용히 막아버림. 명시적으로 .play()를 시도하고, 그마저 막히면(NotAllowedError)
+// "탭하여 소리 켜기" 버튼을 노출시켜 실제 클릭(사용자 제스처)으로 재생을 강제함.
+function tryPlayRemote(remoteEl){
+  const playPromise = remoteEl.play();
+  if (playPromise && playPromise.catch) {
+    playPromise.catch((err) => {
+      console.warn('[webrtc] 원격 오디오 자동재생 실패, 수동 재생 버튼 노출', err);
+      document.getElementById('unmuteBtn').classList.add('show');
+    });
+  }
+}
+document.getElementById('unmuteBtn').addEventListener('click', () => {
+  const remoteEl = document.getElementById('remoteVideo');
+  remoteEl.play().catch((err) => console.error('[webrtc] 수동 재생도 실패', err));
+  document.getElementById('unmuteBtn').classList.remove('show');
+});
+
 async function answerCall(session){
   const mode = session.call_type;
   document.getElementById('inCallSub').textContent = '';
@@ -709,7 +732,7 @@ async function answerCall(session){
     .on('broadcast', { event: 'offer' }, async ({ payload }) => {
       pc = new RTCPeerConnection(RTC_CONFIG);
       pc.onicecandidate = (e) => { if (e.candidate) rtChannel.send({ type:'broadcast', event:'ice-candidate', payload:{ candidate: e.candidate } }); };
-      pc.ontrack = (e) => { document.getElementById('remoteVideo').srcObject = e.streams[0]; };
+      pc.ontrack = (e) => { const remoteEl = document.getElementById('remoteVideo'); remoteEl.srcObject = e.streams[0]; tryPlayRemote(remoteEl); };
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' });
