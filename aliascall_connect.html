@@ -503,10 +503,14 @@ document.getElementById('lightboxClose').addEventListener('click', () => {
 // ═══════════════════════════════════════════════════════════════
 // ⚠ STUN만으로는 이동통신사(특히 셀룰러 데이터) 환경의 NAT를 못 뚫는 경우가 많음.
 // 아래는 STUN을 여러 개로 늘려 성공률을 약간 높인 임시 완화책일 뿐, 근본 해결책은 TURN 서버 추가임.
+// Metered.ca TURN 서버 연동 (2026-08-17, Free 500MB 플랜, Global 리전) —
+// STUN만으로 연결 안 되는 이동통신사 데이터망 등에서 이 TURN 서버가 중계를 맡아줌
 const RTC_CONFIG = { iceServers: [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun.cloudflare.com:3478' },
+  { urls: 'stun:stun.relay.metered.ca:80' },
+  { urls: 'turn:global.relay.metered.ca:80', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turn:global.relay.metered.ca:443', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
 ] };
 const myClientId = 'caller-' + Math.random().toString(36).slice(2);
 

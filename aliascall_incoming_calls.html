@@ -168,10 +168,14 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Metered.ca TURN 서버 연동 (2026-08-17, Free 500MB 플랜, Global 리전) —
+// STUN만으로 연결 안 되는 이동통신사 데이터망 등에서 이 TURN 서버가 중계를 맡아줌
 const RTC_CONFIG = { iceServers: [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun.cloudflare.com:3478' },
+  { urls: 'stun:stun.relay.metered.ca:80' },
+  { urls: 'turn:global.relay.metered.ca:80', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turn:global.relay.metered.ca:443', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
 ] };
 
 let myRegistrationIds = [];

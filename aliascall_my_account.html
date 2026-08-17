@@ -617,10 +617,14 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── 실시간 수신 감지 + 전화벨 팝업 (index.html / aliascall_incoming_calls.html과 동일 로직) ──
+// Metered.ca TURN 서버 연동 (2026-08-17, Free 500MB 플랜, Global 리전) —
+// STUN만으로 연결 안 되는 이동통신사 데이터망 등에서 이 TURN 서버가 중계를 맡아줌
 const RTC_CONFIG = { iceServers: [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun.cloudflare.com:3478' },
+  { urls: 'stun:stun.relay.metered.ca:80' },
+  { urls: 'turn:global.relay.metered.ca:80', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turn:global.relay.metered.ca:443', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
 ] };
 const CALL_CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
 
