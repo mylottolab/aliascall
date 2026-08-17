@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>무통장입금 관리 — Aliascall Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --amber:#D9A441; --amber-tint:#FBF1DE;
+  --line:#DCE3DE; --danger:#C1483A;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{
+  position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between;
+  padding:16px 28px; border-bottom:1px solid var(--line); flex-wrap:wrap; gap:10px; background:var(--card);
+}
+.brand{ display:flex; align-items:center; gap:9px; }
+.brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:16px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+.hdr-right{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--ink-soft); }
+.hdr-right button{ background:transparent; border:1px solid var(--line); color:var(--ink-soft); padding:6px 12px; border-radius:7px; font-size:12px; cursor:pointer; }
+.hdr-right button:hover{ border-color:var(--teal); color:var(--teal-deep); }
+
+main{ max-width:900px; margin:0 auto; padding:28px 20px 90px; }
+section{ margin-bottom:36px; }
+.section-title{ font-size:18px; margin-bottom:4px; }
+.section-desc{ font-size:12.5px; color:var(--ink-soft); margin:6px 0 16px; }
+
+.card{ background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:22px 24px; margin-bottom:14px; }
+.form-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.field label{ display:block; font-size:11px; font-weight:600; color:var(--ink-soft); margin-bottom:4px; }
+.field input{ width:100%; padding:10px 11px; border:1.5px solid var(--line); border-radius:7px; font-size:13.5px; font-family:'IBM Plex Mono',monospace; }
+.save-btn{ margin-top:8px; background:var(--teal); color:#fff; border:none; padding:11px 20px; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; }
+.save-btn:hover{ background:var(--teal-deep); }
+.save-btn:disabled{ opacity:0.55; cursor:not-allowed; }
+.updated-note{ font-size:11px; color:var(--ink-soft); margin-top:10px; }
+.save-msg{ font-size:12px; margin-top:10px; display:none; padding:8px 10px; border-radius:7px; }
+.save-msg.ok{ display:block; background:rgba(31,111,107,0.12); color:var(--teal-deep); }
+.save-msg.err{ display:block; background:var(--coral-tint); color:var(--danger); }
+
+.tabs{ display:flex; gap:6px; margin-bottom:16px; }
+.tab{ padding:8px 16px; border-radius:20px; font-size:12.5px; font-weight:600; cursor:pointer; border:1.5px solid var(--line); color:var(--ink-soft); background:var(--card); }
+.tab.active{ background:var(--teal); color:#fff; border-color:var(--teal); }
+
+.req-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+.req-title{ font-size:15px; font-weight:700; }
+.badge{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; }
+.badge.pending{ background:var(--amber-tint); color:#8a6416; }
+.badge.confirmed{ background:rgba(31,111,107,0.14); color:var(--teal-deep); }
+.badge.rejected{ background:var(--coral-tint); color:var(--danger); }
+.req-meta{ font-size:11.5px; color:var(--ink-soft); margin-bottom:4px; }
+.req-amount{ font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:700; margin:8px 0; }
+.est-points{ font-size:12px; color:#8a6416; }
+.action-row{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center; }
+.btn{ padding:10px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; border:none; }
+.btn-approve{ background:var(--teal); color:#fff; }
+.btn-approve:hover{ background:var(--teal-deep); }
+.btn-reject{ background:var(--danger); color:#fff; }
+.btn-reject:hover{ background:#a53a2e; }
+.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+.override-field{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft); }
+.override-field input{ width:100px; padding:6px 8px; border:1.5px solid var(--line); border-radius:6px; font-size:12.5px; font-family:'IBM Plex Mono',monospace; }
+.note-field{ margin-top:10px; }
+.note-field input{ width:100%; padding:8px 10px; border:1.5px solid var(--line); border-radius:6px; font-size:12.5px; }
+
+.empty-state{ text-align:center; color:var(--ink-soft); font-size:13.5px; padding:50px 0; }
+
+/* ── 로그인 오버레이 ── */
+.login-overlay{ position:fixed; inset:0; background:var(--paper); z-index:50; display:flex; align-items:center; justify-content:center; }
+.login-box{ background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:32px; max-width:360px; width:100%; }
+.login-box h2{ font-size:18px; margin-bottom:6px; }
+.login-box p{ font-size:12.5px; color:var(--ink-soft); margin:0 0 20px; }
+.login-box input{ width:100%; padding:12px 13px; border:1.5px solid var(--line); border-radius:9px; font-size:14px; margin-bottom:10px; }
+.login-box button{ width:100%; padding:12px; border:none; border-radius:9px; background:var(--teal); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
+.login-err{ font-size:12px; color:var(--danger); margin-top:10px; display:none; }
+</style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>Aliascall Admin</h2>
+    <p>관리자 계정으로 로그인하세요.</p>
+    <input type="email" id="loginEmail" placeholder="관리자 이메일">
+    <input type="password" id="loginPassword" placeholder="비밀번호">
+    <button id="loginBtn">로그인</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">A</div>
+    <div class="brand-name">Alias<em>call</em> Admin</div>
+  </div>
+  <div class="hdr-right">
+    <span id="adminEmail"></span>
+    <button id="logoutBtn">로그아웃</button>
+  </div>
+</header>
+
+<main>
+  <section>
+    <h1 class="section-title">입금계좌 정보</h1>
+    <p class="section-desc">이용자 충전 화면(무통장입금)에 그대로 표시됩니다. 계좌를 바꾸면 저장 즉시 반영됩니다.</p>
+    <div class="card">
+      <div class="form-row">
+        <div class="field"><label>은행명</label><input type="text" id="bankName" placeholder="예: 국민은행"></div>
+        <div class="field"><label>예금주</label><input type="text" id="accountHolder" placeholder="예: 위브앱솔루션"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>계좌번호</label><input type="text" id="accountNumber" placeholder="예: 123456-78-901234"></div>
+        <div class="field"><label>국가</label><input type="text" id="countryCode" value="KR" readonly style="background:var(--paper);"></div>
+      </div>
+      <button class="save-btn" id="saveBankBtn">저장</button>
+      <div class="save-msg" id="saveBankMsg"></div>
+      <div class="updated-note" id="bankUpdatedNote"></div>
+    </div>
+  </section>
+
+  <section>
+    <h1 class="section-title">무통장입금 승인</h1>
+    <p class="section-desc">이용자가 신청한 입금 내역입니다. 실제 입금을 확인하신 후 승인해주세요. 승인하면 포인트가 즉시 적립됩니다.</p>
+    <div class="tabs">
+      <button class="tab active" data-status="pending">대기중</button>
+      <button class="tab" data-status="confirmed">승인됨</button>
+      <button class="tab" data-status="rejected">반려됨</button>
+    </div>
+    <div id="reqList"></div>
+  </section>
+</main>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const BANK_CONFIG_URL = SUPABASE_URL + "/functions/v1/admin-bank-account-config";
+const LIST_URL = SUPABASE_URL + "/functions/v1/admin-list-bank-transfer-requests";
+const REVIEW_URL = SUPABASE_URL + "/functions/v1/admin-review-bank-transfer";
+
+// ── 로그인 (Supabase Auth 이메일+비밀번호. admin_roles에 등록된 계정만 실제 기능 사용 가능) ──
+async function getAccessToken(){
+  const { data: { session } } = await sb.auth.getSession();
+  return session ? session.access_token : null;
+}
+
+async function checkLoginState(){
+  const token = await getAccessToken();
+  if (!token) { document.getElementById('loginOverlay').style.display = 'flex'; return false; }
+  document.getElementById('loginOverlay').style.display = 'none';
+  const { data: { session } } = await sb.auth.getSession();
+  document.getElementById('adminEmail').textContent = session.user.email || '';
+  return true;
+}
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) {
+    errEl.textContent = '로그인 실패: ' + error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+  const ok = await checkLoginState();
+  if (ok) { loadBankConfig(); loadRequests(); }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await sb.auth.signOut();
+  window.location.reload();
+});
+
+// ── 계좌정보 ──
+async function loadBankConfig() {
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) return null;
+    const resp = await fetch(BANK_CONFIG_URL + '?country_code=KR', { headers: { 'Authorization': 'Bearer ' + accessToken } });
+    const data = await resp.json();
+    if (resp.status === 401 || resp.status === 403) {
+      alert(data.error || '권한이 없습니다.');
+      return null;
+    }
+    if (!resp.ok) return null;
+    document.getElementById('bankName').value = data.bank_name || '';
+    document.getElementById('accountNumber').value = data.account_number || '';
+    document.getElementById('accountHolder').value = data.account_holder || '';
+    if (data.updated_at) {
+      document.getElementById('bankUpdatedNote').textContent = '최근 수정: ' + new Date(data.updated_at).toLocaleString('ko-KR');
+    }
+    return data;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+document.getElementById('saveBankBtn').addEventListener('click', async () => {
+  const bank_name = document.getElementById('bankName').value.trim();
+  const account_number = document.getElementById('accountNumber').value.trim();
+  const account_holder = document.getElementById('accountHolder').value.trim();
+  const msgEl = document.getElementById('saveBankMsg');
+  msgEl.className = 'save-msg';
+
+  if (!bank_name || !account_number || !account_holder) {
+    msgEl.textContent = '은행명, 계좌번호, 예금주는 필수입니다.';
+    msgEl.className = 'save-msg err';
+    return;
+  }
+
+  const btn = document.getElementById('saveBankBtn');
+  btn.disabled = true; btn.textContent = '저장 중…';
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) { btn.disabled = false; btn.textContent = '저장'; return; }
+    const resp = await fetch(BANK_CONFIG_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
+      body: JSON.stringify({ country_code: 'KR', bank_name, account_number, account_holder }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      msgEl.textContent = '저장 실패: ' + (data.error || '알 수 없는 오류');
+      msgEl.className = 'save-msg err';
+      return;
+    }
+    msgEl.textContent = '✅ 저장되었습니다.';
+    msgEl.className = 'save-msg ok';
+    loadBankConfig();
+  } catch (e) {
+    msgEl.textContent = '오류가 발생했습니다: ' + e.message;
+    msgEl.className = 'save-msg err';
+  } finally {
+    btn.disabled = false; btn.textContent = '저장';
+  }
+});
+
+// ── 입금신청 목록 ──
+let currentStatus = 'pending';
+
+async function loadRequests() {
+  const list = document.getElementById('reqList');
+  list.innerHTML = '<div class="empty-state">불러오는 중…</div>';
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) return;
+    const resp = await fetch(LIST_URL + '?status=' + currentStatus + '&limit=200', {
+      headers: { 'Authorization': 'Bearer ' + accessToken },
+    });
+    const data = await resp.json();
+    if (resp.status === 401 || resp.status === 403) {
+      alert(data.error || '권한이 없습니다.');
+      return;
+    }
+    if (!resp.ok) {
+      list.innerHTML = '<div class="empty-state">불러오지 못했습니다: ' + (data.error || '') + '</div>';
+      return;
+    }
+    renderRequests(data.items || []);
+  } catch (e) {
+    list.innerHTML = '<div class="empty-state">오류가 발생했습니다.</div>';
+  }
+}
+
+function renderRequests(items) {
+  const list = document.getElementById('reqList');
+  if (items.length === 0) {
+    list.innerHTML = '<div class="empty-state">해당하는 신청건이 없습니다.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  items.forEach(item => list.appendChild(renderCard(item)));
+}
+
+function fmtAmount(item){
+  const symbol = item.currency_code === 'KRW' ? '₩' : (item.currency_code || '');
+  return symbol + Number(item.amount_minor_units || 0).toLocaleString();
+}
+
+function renderCard(item) {
+  const div = document.createElement('div');
+  div.className = 'card';
+  const badgeMap = { pending: ['대기중', 'pending'], confirmed: ['승인됨', 'confirmed'], rejected: ['반려됨', 'rejected'] };
+  const badgeInfo = badgeMap[item.status] || ['-', 'pending'];
+
+  let inner = '<div class="req-top">' +
+    '<div class="req-title">' + (item.requester_nickname || '-') + '</div>' +
+    '<span class="badge ' + badgeInfo[1] + '">' + badgeInfo[0] + '</span>' +
+  '</div>' +
+  '<div class="req-meta">신청 시각: ' + new Date(item.requested_at).toLocaleString('ko-KR') + '</div>' +
+  '<div class="req-meta">입금자명: ' + item.depositor_name + '</div>' +
+  '<div class="req-amount">' + fmtAmount(item) + '</div>';
+
+  if (item.status === 'pending') {
+    inner += '<div class="est-points">패키지 기준 적립 포인트: ' + Number(item.points_granted || 0).toLocaleString() + 'P</div>';
+    div.innerHTML = inner;
+  } else {
+    inner += '<div class="req-meta">' + (item.status === 'confirmed' ? '적립된 포인트: ' + Number(item.points_granted || 0).toLocaleString() + 'P' : '반려 사유: ' + (item.admin_note || '-')) + '</div>';
+    inner += '<div class="req-meta">처리 시각: ' + (item.confirmed_at ? new Date(item.confirmed_at).toLocaleString('ko-KR') : '-') + '</div>';
+    div.innerHTML = inner;
+    return div;
+  }
+
+  const idPrefix = 'req_' + item.id;
+  const actionRow = document.createElement('div');
+  actionRow.className = 'action-row';
+  actionRow.innerHTML =
+    '<div class="override-field">직접 지정(선택) <input type="number" id="' + idPrefix + '_override" placeholder="' + (item.points_granted || 0) + '"></div>';
+
+  const approveBtn = document.createElement('button');
+  approveBtn.className = 'btn btn-approve';
+  approveBtn.textContent = '✓ 승인 (포인트 적립)';
+  approveBtn.onclick = () => reviewRequest(item.id, 'approve', idPrefix, approveBtn);
+
+  const rejectBtn = document.createElement('button');
+  rejectBtn.className = 'btn btn-reject';
+  rejectBtn.textContent = '✕ 반려';
+  rejectBtn.onclick = () => reviewRequest(item.id, 'reject', idPrefix, rejectBtn);
+
+  actionRow.appendChild(approveBtn);
+  actionRow.appendChild(rejectBtn);
+  div.appendChild(actionRow);
+
+  const noteWrap = document.createElement('div');
+  noteWrap.className = 'note-field';
+  noteWrap.innerHTML = '<input type="text" id="' + idPrefix + '_note" placeholder="메모(반려 사유 등, 선택)">';
+  div.appendChild(noteWrap);
+
+  return div;
+}
+
+async function reviewRequest(requestId, action, idPrefix, btnEl) {
+  const overrideVal = document.getElementById(idPrefix + '_override').value;
+  const note = document.getElementById(idPrefix + '_note').value.trim();
+
+  const confirmMsg = action === 'approve'
+    ? '이 신청을 승인하고 포인트를 적립하시겠습니까?'
+    : '이 신청을 반려하시겠습니까? (포인트는 적립되지 않습니다)';
+  if (!confirm(confirmMsg)) return;
+
+  btnEl.disabled = true;
+  const originalText = btnEl.textContent;
+  btnEl.textContent = '처리 중…';
+
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) { btnEl.disabled = false; btnEl.textContent = originalText; return; }
+    const resp = await fetch(REVIEW_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
+      body: JSON.stringify({
+        requestId,
+        action,
+        adminNote: note || null,
+        overridePoints: (action === 'approve' && overrideVal) ? Number(overrideVal) : undefined,
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      alert('처리 실패: ' + (data.error || '알 수 없는 오류'));
+      btnEl.disabled = false;
+      btnEl.textContent = originalText;
+      return;
+    }
+    alert(action === 'approve' ? ('승인 완료. 적립 포인트: ' + (data.pointsCredited ?? '-') + 'P') : '반려 처리되었습니다.');
+    loadRequests();
+  } catch (e) {
+    alert('오류가 발생했습니다: ' + e.message);
+    btnEl.disabled = false;
+    btnEl.textContent = originalText;
+  }
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentStatus = tab.dataset.status;
+    loadRequests();
+  });
+});
+
+// ── 초기화 ──
+(async () => {
+  const ok = await checkLoginState();
+  if (ok) { await loadBankConfig(); await loadRequests(); }
+})();
+</script>
+</body>
+</html>
