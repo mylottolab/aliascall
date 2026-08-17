@@ -46,7 +46,10 @@ header{
   position:sticky; top:0; z-index:10;
 }
 .brand-row{ display:flex; align-items:center; gap:9px; margin-bottom:16px; }
-.guide-nav-link{ margin-left:auto; font-size:12px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:20px; padding:7px 13px; text-decoration:none; }
+.guide-nav-link{ font-size:12px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:20px; padding:7px 13px; text-decoration:none; }
+.lang-toggle{ display:flex; gap:3px; background:var(--paper); border-radius:16px; padding:3px; }
+.lang-toggle button{ border:none; background:none; color:var(--ink-soft); font-size:11px; font-weight:700; padding:5px 9px; border-radius:14px; cursor:pointer; }
+.lang-toggle button.active{ background:var(--teal); color:#fff; }
 .guide-nav-link:hover{ background:var(--teal); color:#fff; }
 .brand-mark{
   width:28px; height:28px; border-radius:8px; background:var(--teal);
@@ -207,6 +210,27 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 .btn:disabled{ opacity:.45; cursor:not-allowed; }
 
 .error-text{ font-size:12px; color:var(--danger); margin-top:6px; display:none; }
+
+/* ── 구독 결제 모달 ── */
+.sub-modal-overlay{ display:none; position:fixed; inset:0; background:rgba(18,48,46,.75); z-index:60; align-items:center; justify-content:center; padding:20px; }
+.sub-modal-overlay.show{ display:flex; }
+.sub-modal-box{ background:var(--card); border-radius:22px; padding:28px 24px; max-width:380px; width:100%; text-align:center; }
+.sub-modal-icon{ font-size:38px; margin-bottom:8px; }
+.sub-modal-box h3{ font-size:18px; margin-bottom:8px; }
+.sub-modal-box p{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin:0 0 20px; }
+.sub-period-tabs{ display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.sub-period-tab{ display:flex; align-items:center; justify-content:space-between; border:1.5px solid var(--line); border-radius:12px; padding:12px 16px; cursor:pointer; text-align:left; }
+.sub-period-tab.selected{ border-color:var(--teal); background:var(--teal-tint); }
+.sub-period-tab > span:first-child{ font-weight:700; font-size:14px; flex:0 0 40px; }
+.sub-price{ font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; flex:1; text-align:center; }
+.sub-bonus{ font-size:11px; font-weight:700; color:var(--coral); flex:0 0 auto; }
+.sub-currency-tabs{ display:flex; gap:8px; margin-bottom:18px; }
+.sub-currency-tab{ flex:1; text-align:center; padding:9px; border-radius:9px; border:1.5px solid var(--line); font-size:12px; font-weight:600; cursor:pointer; color:var(--ink-soft); }
+.sub-currency-tab.selected{ border-color:var(--coral); background:var(--coral-tint); color:var(--coral); }
+.sub-summary{ font-size:12px; color:var(--ink-soft); margin-bottom:2px; }
+.sub-summary-price{ font-size:24px; font-weight:700; font-family:'Space Grotesk',sans-serif; margin-bottom:18px; }
+.sub-pay-btn{ width:100%; border:none; border-radius:12px; padding:15px; background:var(--teal); color:#fff; font-weight:700; font-size:14.5px; cursor:pointer; }
+.sub-pay-btn:disabled{ opacity:.5; cursor:not-allowed; }
 .error-text.show{ display:block; }
 
 /* ── 완료화면: 사이즈선택 + 포인트차감 다운로드 ── */
@@ -228,12 +252,16 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 <div class="app-shell">
 <header>
   <div class="brand-row">
-    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='aliascall_index.html'" aria-label="뒤로가기">←</button>
-    <a href="aliascall_index.html" class="brand-home-link">
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+    <a href="index.html" class="brand-home-link">
       <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
     </a>
-    <a href="aliascall_guide.html" class="guide-nav-link" target="_blank">📖 사용설명서</a>
+    <div class="lang-toggle" style="margin-left:auto; margin-right:8px;">
+      <button data-lang="ko" class="active">KR</button>
+      <button data-lang="en">EN</button>
+    </div>
+    <a href="aliascall_guide.html" class="guide-nav-link" target="_blank" data-i18n="guideLink">📖 사용설명서</a>
   </div>
   <div class="steps">
     <div class="step-dot" data-step="0"></div>
@@ -250,59 +278,59 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 
   <!-- STEP 0: 카테고리 선택 -->
   <div class="panel active" data-panel="0">
-    <div class="panel-title">무엇을 등록할까요?</div>
-    <div class="panel-desc">등록 대상에 따라 다음 화면에서 필요한 정보만 물어봅니다.</div>
+    <div class="panel-title" data-i18n="step0Title">무엇을 등록할까요?</div>
+    <div class="panel-desc" data-i18n="step0Desc">등록 대상에 따라 다음 화면에서 필요한 정보만 물어봅니다.</div>
 
     <div class="tag-card" data-category="vehicle">
       <span class="tag-emoji">🚗</span>
-      <span class="tag-titles"><div class="tag-ko">차량</div><div class="tag-en">주차 연락 · 파손 안내</div></span>
+      <span class="tag-titles"><div class="tag-ko" data-i18n="catVehicleTitle">차량</div><div class="tag-en" data-i18n="catVehicleSub">주차 연락 · 파손 안내</div></span>
       <span class="tag-check"></span>
     </div>
     <div class="tag-card" data-category="lost_item">
       <span class="tag-emoji">🎒</span>
-      <span class="tag-titles"><div class="tag-ko">분실 · 도난 우려 물품</div><div class="tag-en">가방 · 노트북 · 전자기기</div></span>
+      <span class="tag-titles"><div class="tag-ko" data-i18n="catLostTitle">분실 · 도난 우려 물품</div><div class="tag-en" data-i18n="catLostSub">가방 · 노트북 · 전자기기</div></span>
       <span class="tag-check"></span>
     </div>
     <div class="tag-card" data-category="vulnerable_person">
       <span class="tag-emoji">🧑‍🦳</span>
-      <span class="tag-titles"><div class="tag-ko">아동 · 치매 어르신 · 장애우</div><div class="tag-en">실종 대비</div></span>
+      <span class="tag-titles"><div class="tag-ko" data-i18n="catVulnTitle">아동 · 치매 어르신 · 장애우</div><div class="tag-en" data-i18n="catVulnSub">실종 대비</div></span>
       <span class="tag-check"></span>
     </div>
     <div class="tag-card" data-category="pet">
       <span class="tag-emoji">🐾</span>
-      <span class="tag-titles"><div class="tag-ko">반려동물</div><div class="tag-en">실종 대비 · 비문 인식</div></span>
+      <span class="tag-titles"><div class="tag-ko" data-i18n="catPetTitle">반려동물</div><div class="tag-en" data-i18n="catPetSub">실종 대비 · 비문 인식</div></span>
       <span class="tag-check"></span>
     </div>
     <div class="tag-card" data-category="callback_contact">
       <span class="tag-emoji">📮</span>
-      <span class="tag-titles"><div class="tag-ko">부재중 연락 <span class="optional-badge" style="margin-left:2px;">연락처 남김</span></div><div class="tag-en">번호 노출 없이 연락받기</div></span>
+      <span class="tag-titles"><div class="tag-ko" data-i18n="catCallbackTitle">부재중 연락 <span class="optional-badge" style="margin-left:2px;" data-i18n="optionalBadgeCallback">연락처 남김</span></div><div class="tag-en" data-i18n="catCallbackSub">번호 노출 없이 연락받기</div></span>
       <span class="tag-check"></span>
     </div>
     <div class="tag-card" data-category="misc_incident">
       <span class="tag-emoji">❓</span>
-      <span class="tag-titles"><div class="tag-ko">기타 물품 · 사건</div><div class="tag-en">위 분류에 해당하지 않는 경우</div></span>
+      <span class="tag-titles"><div class="tag-ko" data-i18n="catMiscTitle">기타 물품 · 사건</div><div class="tag-en" data-i18n="catMiscSub">위 분류에 해당하지 않는 경우</div></span>
       <span class="tag-check"></span>
     </div>
-    <div class="error-text" id="err0">등록할 대상을 하나 선택해주세요.</div>
+    <div class="error-text" id="err0" data-i18n="err0">등록할 대상을 하나 선택해주세요.</div>
   </div>
 
   <!-- STEP 1: 공통 정보 -->
   <div class="panel" data-panel="1">
-    <div class="panel-title">기본 정보</div>
-    <div class="panel-desc">실명은 필요 없지만, 나중에 수정·삭제하러 오실 때 필요하니 닉네임과 비밀번호는 꼭 기억해두세요.</div>
+    <div class="panel-title" data-i18n="step1Title">기본 정보</div>
+    <div class="panel-desc" data-i18n="step1Desc">실명은 필요 없지만, 나중에 수정·삭제하러 오실 때 필요하니 닉네임과 비밀번호는 꼭 기억해두세요.</div>
 
     <div class="field">
-      <label>닉네임 <span class="optional-badge">수정·삭제용 ID</span></label>
-      <div class="mic-input-wrap"><input type="text" id="nickname" placeholder="예: 산책러버" autocomplete="off"><button type="button" class="mic-btn-sm" data-target="nickname" aria-label="음성 입력">🎤</button></div>
+      <label><span data-i18n="nicknameLabel">닉네임</span> <span class="optional-badge" data-i18n="nicknameBadge">수정·삭제용 ID</span></label>
+      <div class="mic-input-wrap"><input type="text" id="nickname" data-i18n-placeholder="nicknamePlaceholder" placeholder="예: 산책러버" autocomplete="off"><button type="button" class="mic-btn-sm" data-target="nickname" aria-label="음성 입력">🎤</button></div>
       <div class="mic-status" id="nicknameStatus"></div>
     </div>
     <div class="field">
-      <label>비밀번호</label>
-      <input type="password" id="guestPassword" placeholder="6자 이상" autocomplete="new-password">
-      <div class="hint">이 닉네임+비밀번호로 나중에 언제든 다시 로그인해서 수정·삭제할 수 있어요.</div>
+      <label data-i18n="passwordLabel">비밀번호</label>
+      <input type="password" id="guestPassword" data-i18n-placeholder="passwordPlaceholder" placeholder="6자 이상" autocomplete="new-password">
+      <div class="hint" data-i18n="passwordHint">이 닉네임+비밀번호로 나중에 언제든 다시 로그인해서 수정·삭제할 수 있어요.</div>
     </div>
     <div class="field">
-      <label>국가</label>
+      <label data-i18n="countryLabel">국가</label>
       <select id="country">
         <option value="KR">🇰🇷 대한민국</option>
         <option value="JP">🇯🇵 일본</option>
@@ -314,11 +342,49 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
       </select>
     </div>
     <div class="field">
-      <label>백업 알림용 전화번호 <span class="optional-badge">선택</span></label>
+      <label><span data-i18n="wakeupLabel">백업 알림용 전화번호</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></label>
       <div class="mic-input-wrap"><input type="text" id="wakeupPhone" placeholder="+82 10-0000-0000"><button type="button" class="mic-btn-sm" data-target="wakeupPhone" aria-label="음성 입력">🎤</button></div>
-      <div class="hint">통화·문자를 직접 연결하는 용도가 아닙니다. 누군가 연결을 시도했는데 60초간 앱 알림에 응답이 없을 때만 "앱을 열어주세요" 문자 1통이 발송됩니다.</div>
+      <div class="hint" data-i18n="wakeupHint">통화·문자를 직접 연결하는 용도가 아닙니다. 누군가 연결을 시도했는데 60초간 앱 알림에 응답이 없을 때만 "앱을 열어주세요" 문자 1통이 발송됩니다.</div>
     </div>
-    <div class="error-text" id="err1">닉네임과 비밀번호(6자 이상)를 입력해주세요.</div>
+    <div class="error-text" id="err1" data-i18n="err1">닉네임과 비밀번호(6자 이상)를 입력해주세요.</div>
+  </div>
+
+  <!-- 구독 결제 모달 — 닉네임/비번으로 계정이 처음 만들어진 직후에만 뜸 -->
+  <div class="sub-modal-overlay" id="subModalOverlay">
+    <div class="sub-modal-box">
+      <div class="sub-modal-icon">🔔</div>
+      <h3 data-i18n="subModalTitle">수신서비스 구독</h3>
+      <p data-i18n="subModalDesc">발견자가 연결을 시도할 수 있으려면 구독이 필요해요. 아동·치매어르신·장애우·반려동물 등록은 구독과 무관하게 항상 무료로 연결됩니다.</p>
+
+      <div class="sub-period-tabs">
+        <div class="sub-period-tab selected" data-months="12">
+          <span data-i18n="period1yr">1년</span>
+          <span class="sub-price" data-price-usd="$1" data-price-krw="1,000원">$1 · 1,000원</span>
+          <span class="sub-bonus" data-i18n="bonus100">+100P 보너스</span>
+        </div>
+        <div class="sub-period-tab" data-months="24">
+          <span data-i18n="period2yr">2년</span>
+          <span class="sub-price" data-price-usd="$1.5" data-price-krw="1,500원">$1.5 · 1,500원</span>
+          <span class="sub-bonus" data-i18n="bonus200">+200P 보너스</span>
+        </div>
+        <div class="sub-period-tab" data-months="36">
+          <span data-i18n="period3yr">3년</span>
+          <span class="sub-price" data-price-usd="$2" data-price-krw="2,000원">$2 · 2,000원</span>
+          <span class="sub-bonus" data-i18n="bonus300">+300P 보너스</span>
+        </div>
+      </div>
+
+      <div class="sub-currency-tabs">
+        <div class="sub-currency-tab selected" data-currency="KRW">🇰🇷 KRW</div>
+        <div class="sub-currency-tab" data-currency="USD">💵 USD (PayPal)</div>
+      </div>
+
+      <div class="sub-summary" data-i18n="subSummaryLabel">결제 금액</div>
+      <div class="sub-summary-price" id="subModalPrice">1,000원</div>
+
+      <button class="sub-pay-btn" id="subModalPayBtn" data-i18n="subPayBtn">결제하고 계속하기</button>
+      <div class="hint" style="text-align:center; margin-top:10px;" data-i18n="subModalNote">구독은 계정 하나에 적용되며, 등록하시는 모든 물건에 함께 적용됩니다.</div>
+    </div>
   </div>
 
   <!-- STEP 2: 카테고리별 상세 -->
@@ -327,47 +393,47 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     <div class="panel-desc" id="detailDesc"></div>
 
     <div id="detail-vehicle" class="cat-detail" style="display:none;">
-      <div class="field"><label>차량번호</label><div class="mic-input-wrap"><input type="text" id="plateNumber" placeholder="12가 3456"><button type="button" class="mic-btn-sm" data-target="plateNumber" aria-label="음성 입력">🎤</button></div></div>
-      <div class="field"><label>제조사 · 모델 <span class="optional-badge">선택</span></label><div class="mic-input-wrap"><input type="text" id="vehicleMake" placeholder="현대 아반떼"><button type="button" class="mic-btn-sm" data-target="vehicleMake" aria-label="음성 입력">🎤</button></div></div>
-      <div class="field"><label>색상 <span class="optional-badge">선택</span></label><div class="mic-input-wrap"><input type="text" id="vehicleColor" placeholder="흰색"><button type="button" class="mic-btn-sm" data-target="vehicleColor" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label data-i18n="plateLabel">차량번호</label><div class="mic-input-wrap"><input type="text" id="plateNumber" placeholder="12가 3456"><button type="button" class="mic-btn-sm" data-target="plateNumber" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label><span data-i18n="makeLabel">제조사 · 모델</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></label><div class="mic-input-wrap"><input type="text" id="vehicleMake" placeholder="현대 아반떼"><button type="button" class="mic-btn-sm" data-target="vehicleMake" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label><span data-i18n="colorLabel">색상</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></label><div class="mic-input-wrap"><input type="text" id="vehicleColor" placeholder="흰색"><button type="button" class="mic-btn-sm" data-target="vehicleColor" aria-label="음성 입력">🎤</button></div></div>
     </div>
 
     <div id="detail-lost_item" class="cat-detail" style="display:none;">
-      <div class="field"><label>물품 종류</label><div class="mic-input-wrap"><input type="text" id="itemType" placeholder="가방 / 노트북 / 지갑 등"><button type="button" class="mic-btn-sm" data-target="itemType" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label data-i18n="itemTypeLabel">물품 종류</label><div class="mic-input-wrap"><input type="text" id="itemType" placeholder="가방 / 노트북 / 지갑 등"><button type="button" class="mic-btn-sm" data-target="itemType" aria-label="음성 입력">🎤</button></div></div>
     </div>
 
     <div id="detail-vulnerable_person" class="cat-detail" style="display:none;">
       <div class="field">
-        <label>대상</label>
+        <label data-i18n="targetLabel">대상</label>
         <div class="pill-group" id="personTypePills">
-          <div class="pill active" data-pill="child">아동</div>
-          <div class="pill" data-pill="dementia_elderly">치매 어르신</div>
+          <div class="pill active" data-pill="child" data-i18n="pillChild">아동</div>
+          <div class="pill" data-pill="dementia_elderly" data-i18n="pillDementia">치매 어르신</div>
         </div>
       </div>
-      <div class="field"><label>출생연도</label><input type="number" id="birthYear" placeholder="2019" style="max-width:140px;"></div>
+      <div class="field"><label data-i18n="birthYearLabel">출생연도</label><input type="number" id="birthYear" placeholder="2019" style="max-width:140px;"></div>
     </div>
 
     <div id="detail-pet" class="cat-detail" style="display:none;">
-      <div class="field"><label>종류</label><div class="mic-input-wrap"><input type="text" id="petSpecies" placeholder="강아지 / 고양이 등"><button type="button" class="mic-btn-sm" data-target="petSpecies" aria-label="음성 입력">🎤</button></div></div>
-      <div class="field"><label>이름</label><div class="mic-input-wrap"><input type="text" id="petName" placeholder="초코"><button type="button" class="mic-btn-sm" data-target="petName" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label data-i18n="speciesLabel">종류</label><div class="mic-input-wrap"><input type="text" id="petSpecies" placeholder="강아지 / 고양이 등"><button type="button" class="mic-btn-sm" data-target="petSpecies" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label data-i18n="petNameLabel">이름</label><div class="mic-input-wrap"><input type="text" id="petName" placeholder="초코"><button type="button" class="mic-btn-sm" data-target="petName" aria-label="음성 입력">🎤</button></div></div>
       <div class="field">
-        <label>비문(코 무늬) 사진 <span class="recommend-badge">권장</span></label>
-        <div class="dropzone" id="noseprintDropzone"><b>코 정면 사진 업로드</b>사람 지문처럼 개체마다 고유해, 발견 시 신원 확인에 쓰입니다<input type="file" id="noseprintFile" accept="image/*" style="display:none;"></div>
-        <a href="aliascall_guide.html#sec-noseprint" target="_blank" class="guide-link">📖 촬영 가이드 보기 — 실패 없이 찍는 법</a>
+        <label><span data-i18n="noseprintLabel">비문(코 무늬) 사진</span> <span class="recommend-badge" data-i18n="recommendBadge">권장</span></label>
+        <div class="dropzone" id="noseprintDropzone"><b data-i18n="noseprintUpload">코 정면 사진 업로드</b><span data-i18n="noseprintDesc">사람 지문처럼 개체마다 고유해, 발견 시 신원 확인에 쓰입니다</span><input type="file" id="noseprintFile" accept="image/*" style="display:none;"></div>
+        <a href="aliascall_guide.html#sec-noseprint" target="_blank" class="guide-link" data-i18n="noseprintGuideLink">📖 촬영 가이드 보기 — 실패 없이 찍는 법</a>
       </div>
     </div>
 
     <div id="detail-callback_contact" class="cat-detail" style="display:none;">
-      <div class="field"><label>사유</label><div class="mic-input-wrap"><input type="text" id="callbackReason" placeholder="예: 대형폐기물 수거 안내 / 이전 거주지 연락처"><button type="button" class="mic-btn-sm" data-target="callbackReason" aria-label="음성 입력">🎤</button></div></div>
-      <div class="field"><label>부착·게시 장소 <span class="optional-badge">선택</span></label><div class="mic-input-wrap"><input type="text" id="callbackLocation" placeholder="예: 아파트 분리수거장 입구"><button type="button" class="mic-btn-sm" data-target="callbackLocation" aria-label="음성 입력">🎤</button></div></div>
-      <div class="hint" style="margin-top:-6px; margin-bottom:18px;">이 카테고리는 실시간 응답보다 나중에 연락이 닿는 게 중요해서, 다음 화면의 백업 알림용 전화번호를 등록해두시길 특히 권해드려요.</div>
+      <div class="field"><label data-i18n="reasonLabel">사유</label><div class="mic-input-wrap"><input type="text" id="callbackReason" placeholder="예: 대형폐기물 수거 안내 / 이전 거주지 연락처"><button type="button" class="mic-btn-sm" data-target="callbackReason" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label><span data-i18n="locationLabel">부착·게시 장소</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></label><div class="mic-input-wrap"><input type="text" id="callbackLocation" placeholder="예: 아파트 분리수거장 입구"><button type="button" class="mic-btn-sm" data-target="callbackLocation" aria-label="음성 입력">🎤</button></div></div>
+      <div class="hint" style="margin-top:-6px; margin-bottom:18px;" data-i18n="callbackHint">이 카테고리는 실시간 응답보다 나중에 연락이 닿는 게 중요해서, 다음 화면의 백업 알림용 전화번호를 등록해두시길 특히 권해드려요.</div>
     </div>
 
     <div id="detail-misc_incident" class="cat-detail" style="display:none;"></div>
 
     <!-- 공통 설명칸 — 모든 카테고리에서 사용, 글 입력 + 음성입력(마이크) 둘 다 지원 -->
     <div class="field">
-      <label><span id="descLabelText">설명</span> <span class="optional-badge" id="descOptionalBadge">선택</span></label>
+      <label><span id="descLabelText">설명</span> <span class="optional-badge" id="descOptionalBadge" data-i18n="optionalBadge">선택</span></label>
       <div class="desc-input-wrap">
         <textarea id="descriptionText" placeholder=""></textarea>
         <button type="button" class="mic-btn" id="micBtn" aria-label="음성으로 입력하기">
@@ -375,76 +441,76 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
         </button>
       </div>
       <div class="mic-status" id="micStatus"></div>
-      <div class="hint" id="descSensitiveHint" style="display:none;">의료정보처럼 민감한 내용을 적으시면, 다음 단계에서 별도 동의를 한 번 더 받습니다.</div>
+      <div class="hint" id="descSensitiveHint" style="display:none;" data-i18n="descSensitiveHint">의료정보처럼 민감한 내용을 적으시면, 다음 단계에서 별도 동의를 한 번 더 받습니다.</div>
     </div>
 
-    <div class="error-text" id="err2">필수 항목을 입력해주세요.</div>
+    <div class="error-text" id="err2" data-i18n="err2">필수 항목을 입력해주세요.</div>
   </div>
 
   <!-- STEP 3: 미디어 첨부 -->
   <div class="panel" data-panel="3">
-    <div class="panel-title">사진과 자료</div>
-    <div class="panel-desc">정지화면 외에 짧은 동영상 · 음성 · 문서도 첨부할 수 있어요.</div>
+    <div class="panel-title" data-i18n="step3Title">사진과 자료</div>
+    <div class="panel-desc" data-i18n="step3Desc">정지화면 외에 짧은 동영상 · 음성 · 문서도 첨부할 수 있어요.</div>
 
     <div class="media-tabs">
-      <div class="media-tab active" data-media="photo">사진</div>
-      <div class="media-tab" data-media="video">동영상</div>
-      <div class="media-tab" data-media="audio">음성</div>
-      <div class="media-tab" data-media="document">문서</div>
+      <div class="media-tab active" data-media="photo" data-i18n="mediaPhoto">사진</div>
+      <div class="media-tab" data-media="video" data-i18n="mediaVideo">동영상</div>
+      <div class="media-tab" data-media="audio" data-i18n="mediaAudio">음성</div>
+      <div class="media-tab" data-media="document" data-i18n="mediaDocument">문서</div>
     </div>
-    <div class="dropzone" id="mediaDropzone"><b>사진을 끌어다 놓거나 탭하세요</b>최대 5장, 장당 10MB<input type="file" id="mediaFileInput" accept="image/*" style="display:none;" multiple></div>
+    <div class="dropzone" id="mediaDropzone"><b data-i18n="mediaDropTitlePhoto">사진을 끌어다 놓거나 탭하세요</b><span data-i18n="mediaDropSubPhoto">최대 5장, 장당 10MB</span><input type="file" id="mediaFileInput" accept="image/*" style="display:none;" multiple></div>
     <div class="staged-files" id="stagedMediaList"></div>
 
     <div id="reassurance-block" style="display:none; margin-top:26px;">
-      <div class="panel-title" style="font-size:16px;">안심 콘텐츠 <span class="optional-badge">선택</span></div>
-      <div class="panel-desc" style="margin-bottom:14px;">발견 직후 대상을 진정시키는 용도예요. 소유자 목소리나 익숙한 사진을 들려주고 보여줄 수 있습니다.</div>
-      <div class="field"><label>보호자 목소리 녹음</label><div class="dropzone" id="reassuranceDropzone"><b>탭해서 파일 선택하기</b>10초 이내 짧은 인사말이면 충분해요<input type="file" id="reassuranceFileInput" accept="audio/*" style="display:none;"></div></div>
+      <div class="panel-title" style="font-size:16px;"><span data-i18n="reassuranceTitle">안심 콘텐츠</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></div>
+      <div class="panel-desc" style="margin-bottom:14px;" data-i18n="reassuranceDesc">발견 직후 대상을 진정시키는 용도예요. 소유자 목소리나 익숙한 사진을 들려주고 보여줄 수 있습니다.</div>
+      <div class="field"><label data-i18n="reassuranceVoiceLabel">보호자 목소리 녹음</label><div class="dropzone" id="reassuranceDropzone"><b data-i18n="reassuranceUpload">탭해서 파일 선택하기</b><span data-i18n="reassuranceDesc2">10초 이내 짧은 인사말이면 충분해요</span><input type="file" id="reassuranceFileInput" accept="audio/*" style="display:none;"></div></div>
       <div class="staged-files" id="stagedReassuranceList"></div>
     </div>
   </div>
 
   <!-- STEP 4: 동의 -->
   <div class="panel" data-panel="4">
-    <div class="panel-title">마지막으로 확인할게요</div>
-    <div class="panel-desc">필요한 항목에만 동의를 받습니다.</div>
+    <div class="panel-title" data-i18n="step4Title">마지막으로 확인할게요</div>
+    <div class="panel-desc" data-i18n="step4Desc">필요한 항목에만 동의를 받습니다.</div>
 
     <div class="consent-row">
       <input type="checkbox" id="consent-privacy">
-      <div><div class="consent-title">개인정보처리방침 동의</div><div class="consent-sub">필수 · 대한민국 기준 약관이 표시됩니다</div></div>
+      <div><div class="consent-title" data-i18n="consentPrivacyTitle">개인정보처리방침 동의</div><div class="consent-sub" data-i18n="consentPrivacySub">필수 · 대한민국 기준 약관이 표시됩니다</div></div>
     </div>
     <div class="consent-row">
       <input type="checkbox" id="consent-terms">
-      <div><div class="consent-title">이용약관 동의</div><div class="consent-sub">필수</div></div>
+      <div><div class="consent-title" data-i18n="consentTermsTitle">이용약관 동의</div><div class="consent-sub" data-i18n="requiredOnly">필수</div></div>
     </div>
     <div id="consent-biometric" class="consent-special" style="display:none;">
       <div class="consent-row" style="border:none; padding:0;">
         <input type="checkbox" id="consent-bio">
-        <div><div class="consent-title">생체정보(비문) 수집 별도 동의</div><div class="consent-sub">코 무늬 사진은 일반 정보보다 엄격하게 보호되는 생체정보입니다. 이 동의 없이는 저장되지 않습니다.</div></div>
+        <div><div class="consent-title" data-i18n="consentBioTitle">생체정보(비문) 수집 별도 동의</div><div class="consent-sub" data-i18n="consentBioSub">코 무늬 사진은 일반 정보보다 엄격하게 보호되는 생체정보입니다. 이 동의 없이는 저장되지 않습니다.</div></div>
       </div>
     </div>
     <div id="consent-sensitive" class="consent-special" style="display:none; margin-top:12px;">
       <div class="consent-row" style="border:none; padding:0;">
         <input type="checkbox" id="consent-sens">
-        <div><div class="consent-title">민감정보(특이사항) 수집 별도 동의</div><div class="consent-sub">입력하신 특이사항에 의료정보 등이 포함될 수 있어 별도 동의를 받습니다.</div></div>
+        <div><div class="consent-title" data-i18n="consentSensTitle">민감정보(특이사항) 수집 별도 동의</div><div class="consent-sub" data-i18n="consentSensSub">입력하신 특이사항에 의료정보 등이 포함될 수 있어 별도 동의를 받습니다.</div></div>
       </div>
     </div>
-    <div class="error-text" id="err4">필수 항목에 동의해주세요.</div>
+    <div class="error-text" id="err4" data-i18n="err4">필수 항목에 동의해주세요.</div>
   </div>
 
   <!-- STEP 5: 완료 -->
   <div class="panel" data-panel="5">
-    <div class="panel-title">태그가 만들어졌어요</div>
-    <div class="panel-desc">아래 QR을 인쇄해서 대상에 부착하세요. 발견자가 스캔하면 바로 연결됩니다.</div>
+    <div class="panel-title" data-i18n="step5Title">태그가 만들어졌어요</div>
+    <div class="panel-desc" data-i18n="step5Desc">아래 QR을 인쇄해서 대상에 부착하세요. 발견자가 스캔하면 바로 연결됩니다.</div>
 
     <div class="qr-tag-preview">
       <div class="qr-box" id="qrBox"><div style="width:78px;height:78px;background:#f0f0f0;border-radius:4px;"></div></div>
       <div class="qr-title" id="doneTitle">등록 완료</div>
-      <div class="qr-sub" id="doneSub">스캔하면 바로 연결됩니다 · 앱 설치 불필요</div>
+      <div class="qr-sub" id="doneSub" data-i18n="doneSub">스캔하면 바로 연결됩니다 · 앱 설치 불필요</div>
       <div class="qr-token mono" id="doneToken">TOKEN · a91f2c8e4b17</div>
     </div>
-    <div class="hint" style="margin-top:10px; text-align:center;">💡 폰 기본 카메라로 이 QR을 비추면 자동으로 열립니다</div>
+    <div class="hint" style="margin-top:10px; text-align:center;" data-i18n="qrCameraHint">💡 폰 기본 카메라로 이 QR을 비추면 자동으로 열립니다</div>
 
-    <div class="section-label" style="margin-top:26px;">인쇄 사이즈 선택</div>
+    <div class="section-label" style="margin-top:26px;" data-i18n="sizeLabel">인쇄 사이즈 선택</div>
     <div class="size-grid" id="sizeGrid">
       <div class="size-card selected" data-size="3x3">3×3cm</div>
       <div class="size-card" data-size="4.5x4.5">4.5×4.5cm</div>
@@ -453,52 +519,238 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     </div>
 
     <div class="print-mode-tabs">
-      <div class="print-mode-tab selected" data-mode="fill" id="printModeFill">📄 이 사이즈로 가득채우기</div>
-      <div class="print-mode-tab" data-mode="sample" id="printModeSample">🔀 4개 사이즈 견본으로 섞어찍기</div>
+      <div class="print-mode-tab selected" data-mode="fill" id="printModeFill" data-i18n="printModeFill">📄 이 사이즈로 가득채우기</div>
+      <div class="print-mode-tab" data-mode="sample" id="printModeSample" data-i18n="printModeSample">🔀 4개 사이즈 견본으로 섞어찍기</div>
     </div>
-    <div class="hint" style="margin-bottom:16px;" id="printHint">A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. PC에서는 아래 "지금 인쇄하기"로 바로 프린터 미리보기를 여실 수 있어요.</div>
+    <div class="hint" style="margin-bottom:16px;" id="printHint" data-i18n="printHintFill">A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. PC에서는 아래 "지금 인쇄하기"로 바로 프린터 미리보기를 여실 수 있어요.</div>
 
     <div class="download-row">
       <div>
-        <div style="font-weight:600; font-size:14px;">A4 인쇄용 다운로드</div>
-        <div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;">보유 <span id="balanceInline" class="mono">3,200</span>P</div>
+        <div style="font-weight:600; font-size:14px;" data-i18n="downloadTitle">A4 인쇄용 다운로드</div>
+        <div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;"><span data-i18n="balanceLabel">보유</span> <span id="balanceInline" class="mono">3,200</span>P</div>
       </div>
-      <button class="btn btn-primary" id="downloadBtn" style="flex:0 0 auto; padding:12px 20px;">100P로 다운로드</button>
+      <button class="btn btn-primary" id="downloadBtn" style="flex:0 0 auto; padding:12px 20px;" data-i18n="downloadBtn">100P로 다운로드</button>
     </div>
-    <button class="btn btn-primary" id="printNowBtn" style="margin-top:10px; background:var(--teal-deep);">🖨️ 지금 인쇄하기</button>
-    <div class="error-text" id="err5">포인트가 부족합니다. 충전 후 다시 시도해주세요.</div>
-    <a href="#" class="guide-link" id="goRechargeLink" style="display:none;">💰 충전하러 가기</a>
+    <button class="btn btn-primary" id="printNowBtn" style="margin-top:10px; background:var(--teal-deep);" data-i18n="printNowBtn">🖨️ 지금 인쇄하기</button>
+    <div class="error-text" id="err5" data-i18n="err5">포인트가 부족합니다. 충전 후 다시 시도해주세요.</div>
+    <a href="#" class="guide-link" id="goRechargeLink" style="display:none;" data-i18n="goRecharge">💰 충전하러 가기</a>
   </div>
 
 </main>
 
 <div class="bottom-nav">
   <div class="inner">
-    <button class="btn btn-ghost" id="btnBack">이전</button>
-    <button class="btn btn-primary" id="btnNext">다음</button>
+    <button class="btn btn-ghost" id="btnBack" data-i18n="btnBack">이전</button>
+    <button class="btn btn-primary" id="btnNext" data-i18n="btnNext">다음</button>
   </div>
 </div>
 
 <script>
-const stepNames = ['무엇을 등록할까요', '기본 정보', '상세 정보', '사진과 자료', '동의', '완료'];
-const categoryLabels = {
-  vehicle: { detailTitle:'차량 정보', detailDesc:'차량번호만 있으면 됩니다.', done:'차량 등록 완료' },
-  lost_item: { detailTitle:'분실·도난 우려 물품 정보', detailDesc:'구별되는 특징을 적어주시면 찾기 쉬워요.', done:'등록 완료' },
-  vulnerable_person: { detailTitle:'대상자 정보', detailDesc:'출생연도만으로 충분합니다.', done:'등록 완료' },
-  pet: { detailTitle:'반려동물 정보', detailDesc:'비문 사진은 발견 시 신원 확인에 큰 도움이 됩니다.', done:'반려동물 등록 완료' },
-  callback_contact: { detailTitle:'부재중 연락 정보', detailDesc:'실제 번호 노출 없이 연락받을 수 있는 창구를 만듭니다.', done:'연락처 등록 완료' },
-  misc_incident: { detailTitle:'기타 물품·사건 정보', detailDesc:'상황을 자유롭게 설명해주세요.', done:'등록 완료' },
+// ── 언어 전환 (KR/EN) ──
+const I18N = {
+  ko: {
+    guideLink: '📖 사용설명서',
+    step0Title: '무엇을 등록할까요?', step0Desc: '등록 대상에 따라 다음 화면에서 필요한 정보만 물어봅니다.',
+    catVehicleTitle: '차량', catVehicleSub: '주차 연락 · 파손 안내',
+    catLostTitle: '분실 · 도난 우려 물품', catLostSub: '가방 · 노트북 · 전자기기',
+    catVulnTitle: '아동 · 치매 어르신 · 장애우', catVulnSub: '실종 대비',
+    catPetTitle: '반려동물', catPetSub: '실종 대비 · 비문 인식',
+    catCallbackTitle: '부재중 연락', optionalBadgeCallback: '연락처 남김', catCallbackSub: '번호 노출 없이 연락받기',
+    catMiscTitle: '기타 물품 · 사건', catMiscSub: '위 분류에 해당하지 않는 경우',
+    err0: '등록할 대상을 하나 선택해주세요.',
+    step1Title: '기본 정보', step1Desc: '실명은 필요 없지만, 나중에 수정·삭제하러 오실 때 필요하니 닉네임과 비밀번호는 꼭 기억해두세요.',
+    nicknameLabel: '닉네임', nicknameBadge: '수정·삭제용 ID', nicknamePlaceholder: '예: 산책러버',
+    passwordLabel: '비밀번호', passwordPlaceholder: '6자 이상', passwordHint: '이 닉네임+비밀번호로 나중에 언제든 다시 로그인해서 수정·삭제할 수 있어요.',
+    countryLabel: '국가',
+    wakeupLabel: '백업 알림용 전화번호', optionalBadge: '선택',
+    wakeupHint: '통화·문자를 직접 연결하는 용도가 아닙니다. 누군가 연결을 시도했는데 60초간 앱 알림에 응답이 없을 때만 "앱을 열어주세요" 문자 1통이 발송됩니다.',
+    err1: '닉네임과 비밀번호(6자 이상)를 입력해주세요.',
+    plateLabel: '차량번호', makeLabel: '제조사 · 모델', colorLabel: '색상',
+    itemTypeLabel: '물품 종류',
+    targetLabel: '대상', pillChild: '아동', pillDementia: '치매 어르신', birthYearLabel: '출생연도',
+    speciesLabel: '종류', petNameLabel: '이름',
+    noseprintLabel: '비문(코 무늬) 사진', recommendBadge: '권장',
+    noseprintUpload: '코 정면 사진 업로드', noseprintDesc: '사람 지문처럼 개체마다 고유해, 발견 시 신원 확인에 쓰입니다',
+    noseprintGuideLink: '📖 촬영 가이드 보기 — 실패 없이 찍는 법',
+    reasonLabel: '사유', locationLabel: '부착·게시 장소',
+    callbackHint: '이 카테고리는 실시간 응답보다 나중에 연락이 닿는 게 중요해서, 다음 화면의 백업 알림용 전화번호를 등록해두시길 특히 권해드려요.',
+    descSensitiveHint: '의료정보처럼 민감한 내용을 적으시면, 다음 단계에서 별도 동의를 한 번 더 받습니다.',
+    err2: '필수 항목을 입력해주세요.',
+    step3Title: '사진과 자료', step3Desc: '정지화면 외에 짧은 동영상 · 음성 · 문서도 첨부할 수 있어요.',
+    mediaPhoto: '사진', mediaVideo: '동영상', mediaAudio: '음성', mediaDocument: '문서',
+    mediaDropTitlePhoto: '사진을 끌어다 놓거나 탭하세요', mediaDropSubPhoto: '최대 5장, 장당 10MB',
+    reassuranceTitle: '안심 콘텐츠', reassuranceDesc: '발견 직후 대상을 진정시키는 용도예요. 소유자 목소리나 익숙한 사진을 들려주고 보여줄 수 있습니다.',
+    reassuranceVoiceLabel: '보호자 목소리 녹음', reassuranceUpload: '탭해서 파일 선택하기', reassuranceDesc2: '10초 이내 짧은 인사말이면 충분해요',
+    step4Title: '마지막으로 확인할게요', step4Desc: '필요한 항목에만 동의를 받습니다.',
+    consentPrivacyTitle: '개인정보처리방침 동의', consentPrivacySub: '필수 · 대한민국 기준 약관이 표시됩니다',
+    consentTermsTitle: '이용약관 동의', requiredOnly: '필수',
+    consentBioTitle: '생체정보(비문) 수집 별도 동의', consentBioSub: '코 무늬 사진은 일반 정보보다 엄격하게 보호되는 생체정보입니다. 이 동의 없이는 저장되지 않습니다.',
+    consentSensTitle: '민감정보(특이사항) 수집 별도 동의', consentSensSub: '입력하신 특이사항에 의료정보 등이 포함될 수 있어 별도 동의를 받습니다.',
+    err4: '필수 항목에 동의해주세요.',
+    step5Title: '태그가 만들어졌어요', step5Desc: '아래 QR을 인쇄해서 대상에 부착하세요. 발견자가 스캔하면 바로 연결됩니다.',
+    doneSub: '스캔하면 바로 연결됩니다 · 앱 설치 불필요', qrCameraHint: '💡 폰 기본 카메라로 이 QR을 비추면 자동으로 열립니다',
+    sizeLabel: '인쇄 사이즈 선택',
+    printModeFill: '📄 이 사이즈로 가득채우기', printModeSample: '🔀 4개 사이즈 견본으로 섞어찍기',
+    printHintFill: 'A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. PC에서는 아래 "지금 인쇄하기"로 바로 프린터 미리보기를 여실 수 있어요.',
+    printHintSample: '4개 사이즈를 한 장에 소량씩 섞어 찍어서, 잘라보고 어느 사이즈가 맞는지 먼저 확인하실 수 있어요.',
+    downloadTitle: 'A4 인쇄용 다운로드', balanceLabel: '보유', downloadBtn: '100P로 다운로드',
+    printNowBtn: '🖨️ 지금 인쇄하기', err5: '포인트가 부족합니다. 충전 후 다시 시도해주세요.', goRecharge: '💰 충전하러 가기',
+    guestSimAlert: '지금은 로그인 없이 체험 중이라 포인트 차감이 시뮬레이션으로만 동작합니다.\n실제 서비스에서는 로그인 후 진행하시면 여기서 바로 실제 포인트가 차감됩니다.',
+    downloadSuccess: (size, balance) => 'QR 태그(' + size + 'cm)가 다운로드됩니다. 100P가 차감되었습니다. (남은 포인트: ' + balance + 'P)',
+    downloadFailed: '다운로드에 실패했어요. 잠시 후 다시 시도해주세요.',
+    insufficientPoints: '포인트 부족',
+    registerFailed: (msg) => '등록에 실패했어요. 잠시 후 다시 시도해주세요.\n(' + (msg || '알 수 없는 오류') + ')',
+    completeFirst: '먼저 등록을 완료해주세요.',
+    noseprintSelected: (name) => '✓ ' + name + ' 선택됨',
+    nicknameTaken: '이미 사용 중인 닉네임이에요. 비밀번호가 다르면 다른 닉네임을 써주세요.',
+    signupFailed: '계정 생성에 실패했어요. 잠시 후 다시 시도해주세요.',
+    registering: '등록 중…', checking: '확인 중…', next: '다음',
+    voiceRetry: '음성을 인식하지 못했어요. 다시 시도해주세요.',
+    subModalTitle: '수신서비스 구독',
+    subModalDesc: '발견자가 연결을 시도할 수 있으려면 구독이 필요해요. 아동·치매어르신·장애우·반려동물 등록은 구독과 무관하게 항상 무료로 연결됩니다.',
+    period1yr: '1년', period2yr: '2년', period3yr: '3년',
+    bonus100: '+100P 보너스', bonus200: '+200P 보너스', bonus300: '+300P 보너스',
+    subSummaryLabel: '결제 금액', subPayBtn: '결제하고 계속하기',
+    subModalNote: '구독은 계정 하나에 적용되며, 등록하시는 모든 물건에 함께 적용됩니다.',
+    subPayFailed: (msg) => '결제에 실패했어요: ' + msg,
+    processing: '처리 중…',
+    btnBack: '이전', btnNext: '다음',
+    stepNames: ['무엇을 등록할까요', '기본 정보', '상세 정보', '사진과 자료', '동의', '완료'],
+    categoryLabels: {
+      vehicle: { detailTitle:'차량 정보', detailDesc:'차량번호만 있으면 됩니다.', done:'차량 등록 완료' },
+      lost_item: { detailTitle:'분실·도난 우려 물품 정보', detailDesc:'구별되는 특징을 적어주시면 찾기 쉬워요.', done:'등록 완료' },
+      vulnerable_person: { detailTitle:'대상자 정보', detailDesc:'출생연도만으로 충분합니다.', done:'등록 완료' },
+      pet: { detailTitle:'반려동물 정보', detailDesc:'비문 사진은 발견 시 신원 확인에 큰 도움이 됩니다.', done:'반려동물 등록 완료' },
+      callback_contact: { detailTitle:'부재중 연락 정보', detailDesc:'실제 번호 노출 없이 연락받을 수 있는 창구를 만듭니다.', done:'연락처 등록 완료' },
+      misc_incident: { detailTitle:'기타 물품·사건 정보', detailDesc:'상황을 자유롭게 설명해주세요.', done:'등록 완료' },
+    },
+    descriptionConfig: {
+      vehicle: { label:'추가 설명', optional:true, placeholder:'예: 앞범퍼에 살짝 눌린 자국이 있어요', sensitive:false },
+      lost_item: { label:'특징 설명', optional:false, placeholder:'색상, 브랜드, 스티커 등 구별되는 특징', sensitive:false },
+      vulnerable_person: { label:'특이사항', optional:true, placeholder:'복용 중인 약, 알레르기 등', sensitive:true },
+      pet: { label:'특징 설명', optional:true, placeholder:'예: 오른쪽 귀 끝이 살짝 접혀있어요', sensitive:false },
+      callback_contact: { label:'추가 메모', optional:true, placeholder:'그 밖에 전달하고 싶은 내용', sensitive:false },
+      misc_incident: { label:'내용 설명', optional:false, placeholder:'어떤 상황인지 자유롭게 적어주세요', sensitive:false },
+    },
+  },
+  en: {
+    guideLink: '📖 User Guide',
+    step0Title: 'What would you like to register?', step0Desc: "The next screen will only ask what's needed for your choice.",
+    catVehicleTitle: 'Vehicle', catVehicleSub: 'Parking contact · damage notice',
+    catLostTitle: 'Lost / at risk of theft', catLostSub: 'Bags · laptops · electronics',
+    catVulnTitle: 'Child · Dementia · Disability', catVulnSub: 'In case of going missing',
+    catPetTitle: 'Pet', catPetSub: 'Missing pet · nose-print ID',
+    catCallbackTitle: 'Callback contact', optionalBadgeCallback: 'Leave a number', catCallbackSub: 'Get contacted without exposing your number',
+    catMiscTitle: 'Other item / incident', catMiscSub: "Doesn't fit the categories above",
+    err0: 'Please select one item to register.',
+    step1Title: 'Basic info', step1Desc: "You don't need your real name, but remember your nickname and password — you'll need them to edit or delete later.",
+    nicknameLabel: 'Nickname', nicknameBadge: 'ID for edit/delete', nicknamePlaceholder: 'e.g. dogwalker',
+    passwordLabel: 'Password', passwordPlaceholder: 'At least 6 characters', passwordHint: 'Use this nickname + password to log back in anytime to edit or delete.',
+    countryLabel: 'Country',
+    wakeupLabel: 'Backup alert phone number', optionalBadge: 'Optional',
+    wakeupHint: "This isn't used to connect calls or texts directly. A single \"open the app\" text is only sent if you don't respond to an in-app notification within 60 seconds.",
+    err1: 'Please enter a nickname and a password (6+ characters).',
+    plateLabel: 'License plate', makeLabel: 'Make · model', colorLabel: 'Color',
+    itemTypeLabel: 'Item type',
+    targetLabel: 'Who is this for', pillChild: 'Child', pillDementia: 'Dementia / elderly', birthYearLabel: 'Birth year',
+    speciesLabel: 'Species', petNameLabel: 'Name',
+    noseprintLabel: 'Nose print photo', recommendBadge: 'Recommended',
+    noseprintUpload: 'Upload a straight-on nose photo', noseprintDesc: 'Unique to each pet like a human fingerprint — helps confirm identity when found',
+    noseprintGuideLink: '📖 See the photo guide — get it right the first time',
+    reasonLabel: 'Reason', locationLabel: 'Posted location',
+    callbackHint: "For this category, being reachable later matters more than an instant answer — we especially recommend adding a backup alert phone number on the next screen.",
+    descSensitiveHint: 'If you write sensitive details like medical info, we will ask for a separate consent on the next step.',
+    err2: 'Please fill in the required field.',
+    step3Title: 'Photos & files', step3Desc: 'You can also attach a short video, audio, or document, not just photos.',
+    mediaPhoto: 'Photo', mediaVideo: 'Video', mediaAudio: 'Audio', mediaDocument: 'Document',
+    mediaDropTitlePhoto: 'Drag a photo here or tap to upload', mediaDropSubPhoto: 'Up to 5 photos, 10MB each',
+    reassuranceTitle: 'Reassurance content', reassuranceDesc: "Helps calm them down right after they're found — play the owner's voice or show a familiar photo.",
+    reassuranceVoiceLabel: "Owner's voice recording", reassuranceUpload: 'Tap to choose a file', reassuranceDesc2: 'A short greeting under 10 seconds is enough',
+    step4Title: 'One last check', step4Desc: 'We only ask for consent where it applies.',
+    consentPrivacyTitle: 'Agree to Privacy Policy', consentPrivacySub: 'Required · terms shown are based on South Korea',
+    consentTermsTitle: 'Agree to Terms of Service', requiredOnly: 'Required',
+    consentBioTitle: 'Separate consent for biometric (nose print) data', consentBioSub: 'Nose print photos are biometric data, protected more strictly than general info. Without this consent, it will not be stored.',
+    consentSensTitle: 'Separate consent for sensitive info', consentSensSub: 'The details you entered may include medical info, so a separate consent is required.',
+    err4: 'Please agree to the required items.',
+    step5Title: 'Your tag is ready', step5Desc: 'Print the QR below and attach it. Scanning it connects instantly.',
+    doneSub: 'Scanning connects instantly · no app install needed', qrCameraHint: "💡 Point a phone's default camera at this QR and it opens automatically",
+    sizeLabel: 'Choose a print size',
+    printModeFill: '📄 Fill the page with this size', printModeSample: '🔀 Mix all 4 sizes as samples',
+    printHintFill: 'One A4 sheet will be filled with your chosen size. On PC, "Print now" below opens the print preview directly.',
+    printHintSample: 'Print a few of each of the 4 sizes on one sheet so you can cut and test which one fits.',
+    downloadTitle: 'Download for A4 printing', balanceLabel: 'Balance', downloadBtn: 'Download for 100P',
+    printNowBtn: '🖨️ Print now', err5: 'Not enough points. Please top up and try again.', goRecharge: '💰 Go top up',
+    guestSimAlert: "You're trying this without logging in, so the point deduction is only a simulation.\nIn the real service, log in first and points will be deducted for real here.",
+    downloadSuccess: (size, balance) => 'Your QR tag (' + size + 'cm) will download. 100P was deducted. (Balance: ' + balance + 'P)',
+    downloadFailed: 'Download failed. Please try again shortly.',
+    insufficientPoints: 'Insufficient points',
+    registerFailed: (msg) => 'Registration failed. Please try again shortly.\n(' + (msg || 'Unknown error') + ')',
+    completeFirst: 'Please finish registering first.',
+    noseprintSelected: (name) => '✓ ' + name + ' selected',
+    nicknameTaken: 'That nickname is already taken. If the password is different, please choose another nickname.',
+    signupFailed: 'Account creation failed. Please try again shortly.',
+    registering: 'Registering…', checking: 'Checking…', next: 'Next',
+    voiceRetry: "Couldn't recognize that. Please try again.",
+    subModalTitle: 'Subscribe to receive calls',
+    subModalDesc: "A subscription is required so finders can reach you. Registrations for children, dementia/elderly, disabled persons, and pets always connect for free, regardless of subscription.",
+    period1yr: '1 year', period2yr: '2 years', period3yr: '3 years',
+    bonus100: '+100P bonus', bonus200: '+200P bonus', bonus300: '+300P bonus',
+    subSummaryLabel: 'Amount', subPayBtn: 'Pay and continue',
+    subModalNote: 'This subscription applies to your whole account — it covers everything you register.',
+    subPayFailed: (msg) => 'Payment failed: ' + msg,
+    processing: 'Processing…',
+    btnBack: 'Back', btnNext: 'Next',
+    stepNames: ['What to register', 'Basic info', 'Details', 'Photos & files', 'Consent', 'Done'],
+    categoryLabels: {
+      vehicle: { detailTitle:'Vehicle info', detailDesc:'Just a license plate number is enough.', done:'Vehicle registered' },
+      lost_item: { detailTitle:'Lost item info', detailDesc:'Distinctive features make it easier to find.', done:'Registration complete' },
+      vulnerable_person: { detailTitle:'Subject info', detailDesc:'A birth year is enough.', done:'Registration complete' },
+      pet: { detailTitle:'Pet info', detailDesc:'A nose-print photo helps a lot when they are found.', done:'Pet registered' },
+      callback_contact: { detailTitle:'Callback contact info', detailDesc:'Creates a way to be reached without exposing your real number.', done:'Contact registered' },
+      misc_incident: { detailTitle:'Other item/incident info', detailDesc:'Describe the situation freely.', done:'Registration complete' },
+    },
+    descriptionConfig: {
+      vehicle: { label:'Additional notes', optional:true, placeholder:'e.g. A slight dent on the front bumper', sensitive:false },
+      lost_item: { label:'Distinguishing features', optional:false, placeholder:'Color, brand, stickers, etc.', sensitive:false },
+      vulnerable_person: { label:'Special notes', optional:true, placeholder:'Medication, allergies, etc.', sensitive:true },
+      pet: { label:'Distinguishing features', optional:true, placeholder:'e.g. Right ear tip is slightly folded', sensitive:false },
+      callback_contact: { label:'Additional notes', optional:true, placeholder:'Anything else you want to convey', sensitive:false },
+      misc_incident: { label:'Description', optional:false, placeholder:'Describe the situation freely', sensitive:false },
+    },
+  },
 };
+let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
+
+function applyLang(lang){
+  currentLang = lang;
+  localStorage.setItem('aliascall_lang', lang);
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.dataset.i18n;
+    if (I18N[lang][key] !== undefined) el.innerHTML = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.dataset.i18nPlaceholder;
+    if (I18N[lang][key] !== undefined) el.placeholder = I18N[lang][key];
+  });
+  document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+  stepNames = I18N[lang].stepNames;
+  categoryLabels = I18N[lang].categoryLabels;
+  descriptionConfig = I18N[lang].descriptionConfig;
+  if (typeof updateSubModalPrice === 'function') updateSubModalPrice();
+  if (typeof renderStep === 'function' && panels && panels.length) renderStep();  // 카테고리별 동적 라벨(detailTitle 등)도 다시 그림
+}
+document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+});
+
+let stepNames = I18N.ko.stepNames;
+let categoryLabels = I18N.ko.categoryLabels;
 
 // 공통 설명칸(모든 카테고리 공용) — 카테고리에 따라 라벨/필수여부/placeholder만 바뀜
-const descriptionConfig = {
-  vehicle: { label:'추가 설명', optional:true, placeholder:'예: 앞범퍼에 살짝 눌린 자국이 있어요', sensitive:false },
-  lost_item: { label:'특징 설명', optional:false, placeholder:'색상, 브랜드, 스티커 등 구별되는 특징', sensitive:false },
-  vulnerable_person: { label:'특이사항', optional:true, placeholder:'복용 중인 약, 알레르기 등', sensitive:true },
-  pet: { label:'특징 설명', optional:true, placeholder:'예: 오른쪽 귀 끝이 살짝 접혀있어요', sensitive:false },
-  callback_contact: { label:'추가 메모', optional:true, placeholder:'그 밖에 전달하고 싶은 내용', sensitive:false },
-  misc_incident: { label:'내용 설명', optional:false, placeholder:'어떤 상황인지 자유롭게 적어주세요', sensitive:false },
-};
+let descriptionConfig = I18N.ko.descriptionConfig;
 
 let currentStep = 0;
 let selectedCategory = null;
@@ -640,7 +892,7 @@ async function attemptDownload({ silent } = {}){
   const { data: { session } } = await sb.auth.getSession();
 
   if (!session) {
-    if (!silent) alert('지금은 로그인 없이 체험 중이라 포인트 차감이 시뮬레이션으로만 동작합니다.\n실제 서비스에서는 로그인 후 진행하시면 여기서 바로 실제 포인트가 차감됩니다.');
+    if (!silent) alert(I18N[currentLang].guestSimAlert);
     if (mockBalance < 100) { showError('err5', true); document.getElementById('goRechargeLink').style.display = 'inline-flex'; return; }
     mockBalance -= 100;
     document.getElementById('balanceInline').textContent = mockBalance.toLocaleString();
@@ -665,14 +917,14 @@ async function attemptDownload({ silent } = {}){
     });
 
     document.getElementById('balanceInline').textContent = Number(data.balance_after).toLocaleString();
-    alert('QR 태그(' + selectedSize + 'cm)가 다운로드됩니다. 100P가 차감되었습니다. (남은 포인트: ' + Number(data.balance_after).toLocaleString() + 'P)');
+    alert(I18N[currentLang].downloadSuccess(selectedSize, Number(data.balance_after).toLocaleString()));
   } catch (e) {
     console.error('[download] apply_point_transaction 호출 오류', e);
-    if (String(e.message || '').includes('포인트 부족')) {
+    if (String(e.message || '').includes(I18N.ko.insufficientPoints) || String(e.message || '').toLowerCase().includes('insufficient')) {
       showError('err5', true);
       document.getElementById('goRechargeLink').style.display = 'inline-flex';
     } else if (!silent) {
-      alert('다운로드에 실패했어요. 잠시 후 다시 시도해주세요.');
+      alert(I18N[currentLang].downloadFailed);
     }
   }
 }
@@ -761,7 +1013,7 @@ document.getElementById('noseprintDropzone').addEventListener('click', () => {
 document.getElementById('noseprintFile').addEventListener('change', (e) => {
   if (e.target.files[0]) {
     stagedNoseprint = e.target.files[0];
-    document.getElementById('noseprintDropzone').querySelector('b').textContent = '✓ ' + stagedNoseprint.name + ' 선택됨';
+    document.getElementById('noseprintDropzone').querySelector('b').textContent = I18N[currentLang].noseprintSelected(stagedNoseprint.name);
   }
 });
 
@@ -861,12 +1113,12 @@ async function signUpOrLoginGuestAccount(){
       String(signUpError.message || '').toLowerCase().includes('already exists')) {
     const { error: loginError } = await sb.auth.signInWithPassword({ email, password });
     if (!loginError) return true;  // 기존 계정으로 로그인 성공 -> 이어서 등록 진행
-    document.getElementById('nicknameStatus').textContent = '이미 사용 중인 닉네임이에요. 비밀번호가 다르면 다른 닉네임을 써주세요.';
+    document.getElementById('nicknameStatus').textContent = I18N[currentLang].nicknameTaken;
     return false;
   }
 
   console.error('[signup] signUp 오류', signUpError);
-  document.getElementById('nicknameStatus').textContent = '계정 생성에 실패했어요. 잠시 후 다시 시도해주세요.';
+  document.getElementById('nicknameStatus').textContent = I18N[currentLang].signupFailed;
   return false;
 }
 
@@ -891,7 +1143,7 @@ function generateRealQrCode(token){
 
 async function submitRegistration(){
   btnNext.disabled = true;
-  btnNext.textContent = '등록 중…';
+  btnNext.textContent = I18N[currentLang].registering;
   try {
     const { data, error } = await sb.rpc('create_registration_full', {
       p_category: selectedCategory,
@@ -912,7 +1164,7 @@ async function submitRegistration(){
     return true;
   } catch (e) {
     console.error('[registration] create_registration_full 호출 오류', e);
-    alert('등록에 실패했어요. 잠시 후 다시 시도해주세요.\n(' + (e.message || '알 수 없는 오류') + ')');
+    alert(I18N[currentLang].registerFailed(e.message));
     return false;
   } finally {
     btnNext.disabled = false;
@@ -978,6 +1230,77 @@ async function uploadStagedFiles(registrationId){
   }
 }
 
+// ── 구독 결제 모달 (닉네임+비번으로 계정을 처음 만든 직후) ──
+let subSelectedMonths = 12;
+let subSelectedCurrency = 'KRW';
+const SUB_PRICES = {
+  12: { usd: 100, krw: 1000 },
+  24: { usd: 150, krw: 1500 },
+  36: { usd: 200, krw: 2000 },
+};
+
+function updateSubModalPrice(){
+  const p = SUB_PRICES[subSelectedMonths];
+  const priceEl = document.getElementById('subModalPrice');
+  if (subSelectedCurrency === 'USD') {
+    const dollars = p.usd / 100;
+    priceEl.textContent = '$' + (Number.isInteger(dollars) ? dollars : dollars.toFixed(1));
+  } else {
+    priceEl.textContent = p.krw.toLocaleString() + (currentLang === 'ko' ? '원' : '');
+  }
+}
+
+document.querySelectorAll('.sub-period-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.sub-period-tab').forEach((t) => t.classList.remove('selected'));
+    tab.classList.add('selected');
+    subSelectedMonths = Number(tab.dataset.months);
+    updateSubModalPrice();
+  });
+});
+document.querySelectorAll('.sub-currency-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.sub-currency-tab').forEach((t) => t.classList.remove('selected'));
+    tab.classList.add('selected');
+    subSelectedCurrency = tab.dataset.currency;
+    updateSubModalPrice();
+  });
+});
+
+document.getElementById('subModalPayBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('subModalPayBtn');
+  btn.disabled = true; btn.textContent = I18N[currentLang].processing;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const p = SUB_PRICES[subSelectedMonths];
+    const amount = subSelectedCurrency === 'USD' ? p.usd : p.krw;
+    const method = subSelectedCurrency === 'USD' ? 'paypal' : 'inicis_card';
+
+    await sb.from('payments').insert({
+      user_id: session.user.id,
+      method,
+      amount_minor_units: amount,
+      currency_code: subSelectedCurrency,
+      status: 'completed',
+      purpose: 'subscription',
+      completed_at: new Date().toISOString(),
+    });
+
+    const { error } = await sb.rpc('extend_subscription', { p_months: subSelectedMonths });
+    if (error) throw error;
+
+    document.getElementById('subModalOverlay').classList.remove('show');
+    currentStep = 2;
+    renderStep();
+    window.scrollTo(0, 0);
+  } catch (e) {
+    console.error('[subscription] 결제 오류', e);
+    alert(I18N[currentLang].subPayFailed(e.message));
+  } finally {
+    btn.disabled = false; btn.textContent = I18N[currentLang].subPayBtn;
+  }
+});
+
 btnNext.addEventListener('click', async () => {
   if (!validateStep()) return;
 
@@ -985,11 +1308,22 @@ btnNext.addEventListener('click', async () => {
   if (currentStep === 1) {
     document.getElementById('nicknameStatus').textContent = '';
     btnNext.disabled = true;
-    btnNext.textContent = '확인 중…';
+    btnNext.textContent = I18N[currentLang].checking;
     const ok = await signUpOrLoginGuestAccount();
     btnNext.disabled = false;
-    btnNext.textContent = '다음';
+    btnNext.textContent = I18N[currentLang].next;
     if (!ok) return;
+
+    // 계정에 유효한 구독이 있는지 확인 -> 없으면 결제 모달을 띄우고 여기서 멈춤
+    // (모달의 결제버튼이 성공 시 직접 STEP2로 넘겨줌)
+    const { data: { session } } = await sb.auth.getSession();
+    const { data: profile } = await sb.from('profiles').select('subscription_expires_at').eq('id', session.user.id).maybeSingle();
+    const hasActiveSub = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) > new Date();
+    if (!hasActiveSub) {
+      updateSubModalPrice();
+      document.getElementById('subModalOverlay').classList.add('show');
+      return;
+    }
   }
 
   // STEP 4(동의, index 4) -> STEP 5(완료) 전환 시점에 실제 등록 생성
@@ -1005,6 +1339,7 @@ btnBack.addEventListener('click', () => {
 });
 
 renderStep();
+applyLang(currentLang);
 
 // ── 음성입력 (Web Speech API) ──
 // 크롬/삼성인터넷/엣지 등에서 지원. 사파리는 제한적, 파이어폭스는 미지원 —
@@ -1043,7 +1378,7 @@ function attachVoiceInput(inputEl, btnEl, statusEl, mode){
   recognition.onerror = () => {
     listening = false;
     btnEl.classList.remove('listening');
-    if (statusEl) statusEl.textContent = '음성을 인식하지 못했어요. 다시 시도해주세요.';
+    if (statusEl) statusEl.textContent = I18N[currentLang].voiceRetry;
   };
 
   btnEl.addEventListener('click', () => {
@@ -1106,7 +1441,7 @@ function buildPrintCell(mm){
 }
 
 document.getElementById('printNowBtn').addEventListener('click', () => {
-  if (!createdRegistration) { alert('먼저 등록을 완료해주세요.'); return; }
+  if (!createdRegistration) { alert(I18N[currentLang].completeFirst); return; }
 
   const sheet = document.getElementById('printSheet');
   sheet.innerHTML = '';
