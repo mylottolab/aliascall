@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aliascall — 내 계정</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_payments.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -271,6 +272,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     <div class="sub-summary" data-i18n="subSummaryLabel">결제 금액</div>
     <div class="sub-summary-price" id="newSubPrice">1,200원</div>
     <button class="reg-renew-btn" id="newSubPayBtn" style="width:100%;" data-i18n="subPayBtn">결제하고 계속하기</button>
+    <div id="newSubPaypalContainer" style="min-height:45px; display:none;"></div>
   </div>
 
   <!-- 구독까지 마친 신규가입자 -> 등록화면으로 안내 -->
@@ -346,10 +348,11 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
       <div class="renew-currency-tab" data-currency="USD">💵 USD (PayPal)</div>
     </div>
 
-    <div class="modal-btns">
+    <div class="modal-btns" id="renewModalBtns">
       <button class="cancel-btn" id="renewCancelBtn" data-i18n="cancel">취소</button>
       <button class="confirm-btn-teal" id="renewConfirmBtn" data-i18n="payNow">결제하기</button>
     </div>
+    <div id="renewPaypalContainer" style="min-height:45px; display:none;"></div>
   </div>
 </div>
 
@@ -534,6 +537,7 @@ const I18N = {
     welcomeTitle: '환영합니다!',
     welcomeDesc: '등록물을 발견자와 연결하려면 구독이 필요해요. 아동·치매어르신·장애우·반려동물 등록은 구독과 무관하게 항상 무료로 연결됩니다.',
     subDoneTitle: '구독 완료!', subDoneDesc: '이제 물건이나 사람·반려동물을 등록해보세요.',
+    subPaymentDone: '결제가 완료됐어요! 구독이 시작됩니다.',
     goRegisterBtn: '등록하러 가기',
     subUrgentNote: '⏰ 구독 기간이 1개월도 안 남았어요. 지금 갱신해두세요.',
     loginFieldsRequired: '닉네임과 비밀번호(6자 이상)를 입력해주세요.',
@@ -600,6 +604,7 @@ const I18N = {
     welcomeTitle: 'Welcome!',
     welcomeDesc: "A subscription is required so finders can reach you. Registrations for children, dementia/elderly, disabled persons, and pets always connect for free.",
     subDoneTitle: 'Subscribed!', subDoneDesc: 'Now go ahead and register an item, person, or pet.',
+    subPaymentDone: 'Payment complete! Your subscription is now active.',
     goRegisterBtn: 'Go register',
     subUrgentNote: '⏰ Less than a month left on your subscription. Renew now.',
     loginFieldsRequired: 'Please enter a nickname and password (6+ characters).',
@@ -1122,11 +1127,20 @@ const SUB_PRICES = { 12: { usd: 100, krw: 1200 }, 24: { usd: 150, krw: 1800 }, 3
 function updateNewSubPrice(){
   const p = SUB_PRICES[newSubMonths];
   const priceEl = document.getElementById('newSubPrice');
+  const payBtn = document.getElementById('newSubPayBtn');
+  const paypalContainer = document.getElementById('newSubPaypalContainer');
+
   if (newSubCurrency === 'USD') {
     const dollars = p.usd / 100;
     priceEl.textContent = '$' + (Number.isInteger(dollars) ? dollars : dollars.toFixed(1));
+    payBtn.style.display = 'none';
+    paypalContainer.style.display = 'block';
+    renderPayPalButtons(sb, 'newSubPaypalContainer', { purpose: 'subscription', months: newSubMonths }, onNewSubPaymentSuccess);
   } else {
     priceEl.textContent = p.krw.toLocaleString() + (currentLang === 'ko' ? '원' : '');
+    payBtn.style.display = 'block';
+    paypalContainer.style.display = 'none';
+    paypalContainer.innerHTML = '';
   }
 }
 document.querySelectorAll('#newSubscriberGate .sub-period-tab').forEach((tab) => {
@@ -1146,30 +1160,28 @@ document.querySelectorAll('#newSubscriberGate .sub-currency-tab').forEach((tab) 
   });
 });
 document.getElementById('newSubPayBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('newSubPayBtn');
-  btn.disabled = true; btn.textContent = I18N[currentLang].processing;
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    const p = SUB_PRICES[newSubMonths];
-    const amount = newSubCurrency === 'USD' ? p.usd : p.krw;
-    const method = newSubCurrency === 'USD' ? 'paypal' : 'inicis_card';
+  const { data: { session } } = await sb.auth.getSession();
+  const { data: profile } = await sb.from('profiles').select('nickname').eq('id', session.user.id).maybeSingle();
+  const p = SUB_PRICES[newSubMonths];
 
-    await sb.from('payments').insert({
-      user_id: session.user.id, method, amount_minor_units: amount, currency_code: newSubCurrency,
-      status: 'completed', purpose: 'subscription', completed_at: new Date().toISOString(),
-    });
-
-    const { error } = await sb.rpc('extend_subscription', { p_months: newSubMonths });
-    if (error) throw error;
-
-    hideAllGates();
-    document.getElementById('goRegisterGate').style.display = 'block';
-  } catch (e) {
-    alert(I18N[currentLang].loginFailed(e.message));
-  } finally {
-    btn.disabled = false; btn.textContent = I18N[currentLang].subPayBtn;
-  }
+  await startInicisPayment(sb, {
+    purpose: 'subscription',
+    price: p.krw,
+    goodname: 'Aliascall 수신서비스 구독 (' + (newSubMonths / 12) + '년)',
+    buyername: profile?.nickname || '회원',
+    months: newSubMonths,
+    returnPage: 'aliascall_my_account.html',
+  });
+  // ⚠ startInicisPayment가 성공하면 이니시스 결제창으로 페이지 자체가 이동하므로,
+  // 여기 이후 코드는 결제 준비 단계에서 실패했을 때만 실행됨(그 경우 함수 내부에서 alert 처리)
 });
+
+// PayPal로 구독 결제가 완료됐을 때 (capture-order가 이미 서버에서 구독 연장까지 마친 뒤 호출됨)
+function onNewSubPaymentSuccess(){
+  alert(I18N[currentLang].subPaymentDone);
+  hideAllGates();
+  document.getElementById('goRegisterGate').style.display = 'block';
+}
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   if (!confirm(I18N[currentLang].logoutConfirm)) return;
@@ -1579,6 +1591,7 @@ function openRenewModal(preselectMonths){
   document.querySelector('.renew-period-tab[data-months="' + renewMonths + '"]').classList.add('selected');
   document.querySelectorAll('.renew-currency-tab').forEach((t) => t.classList.remove('selected'));
   document.querySelector('.renew-currency-tab[data-currency="KRW"]').classList.add('selected');
+  updateRenewPayUI();
   document.getElementById('renewModal').classList.add('show');
 }
 document.querySelectorAll('.renew-quick-row .reg-renew-btn').forEach((btn) => {
@@ -1592,6 +1605,7 @@ document.querySelectorAll('.renew-period-tab').forEach((tab) => {
     document.querySelectorAll('.renew-period-tab').forEach((t) => t.classList.remove('selected'));
     tab.classList.add('selected');
     renewMonths = Number(tab.dataset.months);
+    if (renewCurrency === 'USD') updateRenewPayUI();
   });
 });
 document.querySelectorAll('.renew-currency-tab').forEach((tab) => {
@@ -1599,8 +1613,23 @@ document.querySelectorAll('.renew-currency-tab').forEach((tab) => {
     document.querySelectorAll('.renew-currency-tab').forEach((t) => t.classList.remove('selected'));
     tab.classList.add('selected');
     renewCurrency = tab.dataset.currency;
+    updateRenewPayUI();
   });
 });
+
+function updateRenewPayUI(){
+  const btnsRow = document.getElementById('renewModalBtns');
+  const paypalContainer = document.getElementById('renewPaypalContainer');
+  if (renewCurrency === 'USD') {
+    document.getElementById('renewConfirmBtn').style.display = 'none';
+    paypalContainer.style.display = 'block';
+    renderPayPalButtons(sb, 'renewPaypalContainer', { purpose: 'subscription', months: renewMonths }, onRenewPaymentSuccess);
+  } else {
+    document.getElementById('renewConfirmBtn').style.display = 'inline-block';
+    paypalContainer.style.display = 'none';
+    paypalContainer.innerHTML = '';
+  }
+}
 
 // 1년/2년/3년 공통 가격표(SUB_PRICES) 사용 — 신규가입과 반드시 동일해야 함
 function renewPriceMinorUnits(){
@@ -1609,40 +1638,28 @@ function renewPriceMinorUnits(){
 }
 
 document.getElementById('renewConfirmBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('renewConfirmBtn');
-  btn.disabled = true; btn.textContent = I18N[currentLang].processing;
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    const amount = renewPriceMinorUnits();
-    const method = renewCurrency === 'USD' ? 'paypal' : 'inicis_card';
+  const { data: { session } } = await sb.auth.getSession();
+  const { data: profile } = await sb.from('profiles').select('nickname').eq('id', session.user.id).maybeSingle();
+  const p = SUB_PRICES[renewMonths];
 
-    // 구독 갱신은 PayPal/이니시스 즉시결제만 지원 — 무통장입금은 여기 넣지 않기로 결정함.
-    // (승인 대기 중 유예기간·중복결제 등 확인할 게 많아지고, 소액 구독료 특성상 즉시결제만으로 충분하다고 판단)
-    // ⚠ 계정단위 구독으로 바뀌면서, registration_id 없이(=계정 전체 대상) 결제 기록됨
-    await sb.from('payments').insert({
-      user_id: session.user.id,
-      method,
-      amount_minor_units: amount,
-      currency_code: renewCurrency,
-      status: 'completed',
-      purpose: 'subscription',
-      completed_at: new Date().toISOString(),
-    });
-
-    const { error } = await sb.rpc('extend_subscription', { p_months: renewMonths });
-    if (error) throw error;
-
-    document.getElementById('renewModal').classList.remove('show');
-    const periodLabel = { 12: I18N[currentLang].period1yr, 24: I18N[currentLang].period2yr, 36: I18N[currentLang].period3yr }[renewMonths];
-    alert(I18N[currentLang].renewSuccess(periodLabel));
-    await loadSubscriptionStatus(session.user.id);
-  } catch (e) {
-    console.error('[renew] 오류', e);
-    alert(I18N[currentLang].renewFailed(e.message));
-  } finally {
-    btn.disabled = false; btn.textContent = I18N[currentLang].payNow;
-  }
+  await startInicisPayment(sb, {
+    purpose: 'subscription',
+    price: p.krw,
+    goodname: 'Aliascall 수신서비스 구독연장 (' + (renewMonths / 12) + '년)',
+    buyername: profile?.nickname || '회원',
+    months: renewMonths,
+    returnPage: 'aliascall_my_account.html',
+  });
+  // ⚠ 성공하면 이니시스 결제창으로 페이지 자체가 이동함 (실패시에만 함수 내부 alert로 여기서 멈춤)
 });
+
+// PayPal로 구독 갱신이 완료됐을 때 (capture-order가 서버에서 구독 연장까지 이미 마친 뒤 호출됨)
+function onRenewPaymentSuccess(){
+  document.getElementById('renewModal').classList.remove('show');
+  const periodLabel = { 12: I18N[currentLang].period1yr, 24: I18N[currentLang].period2yr, 36: I18N[currentLang].period3yr }[renewMonths];
+  alert(I18N[currentLang].renewSuccess(periodLabel));
+  sb.auth.getSession().then(({ data: { session } }) => loadSubscriptionStatus(session.user.id));
+}
 
 document.getElementById('openDeleteModalBtn').addEventListener('click', () => {
   document.getElementById('deleteModal').classList.add('show');
