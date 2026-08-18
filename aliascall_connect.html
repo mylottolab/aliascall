@@ -288,6 +288,7 @@ const I18N = {
     chatTitle: '채팅', chatInputPlaceholder: '메시지 입력…',
     voiceConnecting: '음성으로 연결 중…', videoConnecting: '영상으로 연결 중…',
     connected: '연결됨', callFailed: '연결 요청에 실패했어요. 잠시 후 다시 시도해주세요.',
+    mediaConnecting: '음성 경로 연결 중…',
     micPermission: '마이크(또는 카메라) 권한이 필요합니다.',
     noAnswerTitle: '지금은 응답이 없어요', noAnswerDesc: '아래에 메시지를 남겨두시면, 소유자가 나중에 확인할 수 있어요.',
     leaveMsgSent: '✅ 메시지를 남겼습니다. 소유자가 확인하면 답을 드릴 수 있어요.',
@@ -317,6 +318,7 @@ const I18N = {
     chatTitle: 'Chat', chatInputPlaceholder: 'Type a message…',
     voiceConnecting: 'Connecting by voice…', videoConnecting: 'Connecting by video…',
     connected: 'Connected', callFailed: 'Failed to send connection request. Please try again shortly.',
+    mediaConnecting: 'Connecting audio path…',
     micPermission: 'Microphone (or camera) permission is required.',
     noAnswerTitle: 'No answer right now', noAnswerDesc: 'Leave a message below and the owner can see it later.',
     leaveMsgSent: '✅ Your message has been left. The owner can reply once they check it.',
@@ -603,7 +605,9 @@ async function startCall(mode){
       // 뒤늦게 응답이 와서 이미 "메시지 남기기" 화면이 떠있었다면, 그 화면을 걷어내고 정상 통화 화면으로 복귀
       document.getElementById('leaveMsgBlock').classList.remove('show');
 
-      document.getElementById('callingStatus').textContent = I18N[currentLang].connected;
+      // ⚠ 여기서는 아직 "연결됨"이라고 하지 않음 — SDP 교환만 끝났을 뿐, 실제 미디어가 흐르는지는
+      // pc.onconnectionstatechange가 'connected'를 알려줄 때까지 지켜봐야 함(위 참고)
+      document.getElementById('callingStatus').textContent = I18N[currentLang].mediaConnecting;
       document.getElementById('callingSub').textContent = '';
       document.getElementById('pulseRing').style.display = 'none';
       document.getElementById('callControls').classList.add('show');
@@ -691,6 +695,16 @@ async function createOfferAsCaller(mode){
   // 감시해서, 끊기면(disconnected/failed/closed) 자동으로 통화 종료 처리함.
   pc.onconnectionstatechange = () => {
     if (!pc) return;
+    console.log('[webrtc] connectionState:', pc.connectionState);
+    if (pc.connectionState === 'connected') {
+      // ⚠ 예전엔 SDP만 주고받으면(answer 수신 즉시) "연결됨"이라고 표시했는데, 그건 신호 교환이
+      // 끝났다는 뜻일 뿐 실제 미디어(음성)가 흐르기 시작했다는 보장은 아니었음. ICE 협상이
+      // 중간에 막혀서 영원히 "연결 중"에 머물러도 화면엔 이미 "연결됨"이 떠서, 소리가 전혀
+      // 안 나는데도 정상 연결된 것처럼 보이던 원인. 이제는 실제 connectionState가 'connected'가
+      // 됐을 때만 "연결됨"으로 바꿈 — 여기까지 안 오면 진짜 네트워크 문제라는 뜻.
+      document.getElementById('callingStatus').textContent = I18N[currentLang].connected;
+      document.getElementById('callingSub').textContent = '';
+    }
     if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
       console.warn('[webrtc] 연결 상태 이상 감지:', pc.connectionState);
       endCall(true);

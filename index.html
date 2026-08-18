@@ -211,7 +211,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <video id="localVideo" autoplay playsinline muted></video>
     <audio id="remoteAudio" autoplay></audio>
   </div>
-  <h3>연결됨</h3>
+  <h3 id="inCallStatus">연결 확인 중…</h3>
   <p id="inCallSub"></p>
   <div class="call-controls show" id="callControls">
     <button class="ctrl-btn" id="muteBtn">🎤</button>
@@ -420,6 +420,7 @@ document.getElementById('unmuteBtn').addEventListener('click', () => {
 
 async function answerCall(session){
   const mode = session.call_type;
+  document.getElementById('inCallStatus').textContent = '연결 확인 중…';
   document.getElementById('inCallSub').textContent = '';
   document.getElementById('inCallOverlay').classList.add('show');
   document.getElementById('chatToggleBtn').classList.add('show');
@@ -446,6 +447,10 @@ async function answerCall(session){
       // 연결 상태를 직접 감시해서 끊기면 자동으로 통화 종료 처리함
       pc.onconnectionstatechange = () => {
         if (!pc) return;
+        console.log('[webrtc] connectionState:', pc.connectionState);
+        if (pc.connectionState === 'connected') {
+          document.getElementById('inCallStatus').textContent = '연결됨';
+        }
         if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
           console.warn('[webrtc] 연결 상태 이상 감지:', pc.connectionState);
           hangup(true);
