@@ -301,23 +301,34 @@ async function init(){
 }
 
 async function loadMissedMessages(){
+  // ⚠ 예전엔 left_message가 있는 것만 걸러서 보여줬는데, 그러면 "문자 없이 음성통화만 걸었다가
+  // 응답 못 받은 경우"가 화면에서 아예 안 보였음(DB엔 있는데 필터링당해서 숨겨짐).
+  // 이제는 등록물로 온 모든 연결시도를 다 보여주고, 상태별로 라벨만 다르게 표시함.
   const { data, error } = await sb.from('webrtc_sessions')
-    .select('id, left_message, call_type, created_at, registration_id, owner_read_at')
+    .select('id, left_message, call_type, created_at, registration_id, owner_read_at, owner_joined_at')
     .in('registration_id', myRegistrationIds)
-    .not('left_message', 'is', null)
     .order('created_at', { ascending: false })
-    .limit(20);
+    .limit(30);
   if (error || !data || data.length === 0) return;
 
   const container = document.getElementById('missedMessages');
   document.getElementById('emptyWait').style.display = 'none';
-  container.innerHTML = '<div class="page-title" style="font-size:15px; margin-bottom:12px;">📩 부재중 메시지</div>' +
-    data.map((m) => `
+  container.innerHTML = '<div class="page-title" style="font-size:15px; margin-bottom:12px;">📞 연결 기록</div>' +
+    data.map((m) => {
+      let label;
+      if (m.call_type === 'message') {
+        label = '💬 문자 메시지';
+      } else {
+        const typeName = m.call_type === 'video' ? '영상' : '음성';
+        label = m.owner_joined_at ? ('☎️ ' + typeName + ' 통화 (연결 후 종료됨)') : ('📵 부재중 ' + typeName + ' 통화');
+      }
+      return `
       <div class="missed-card">
-        <div class="m-top">${new Date(m.created_at).toLocaleString('ko-KR')} · ${m.call_type === 'message' ? '💬 문자 메시지' : (m.call_type === 'video' ? '영상' : '음성') + ' 통화 미응답'}</div>
-        <div class="m-text">${m.left_message}</div>
+        <div class="m-top">${new Date(m.created_at).toLocaleString('ko-KR')} · ${label}</div>
+        ${m.left_message ? '<div class="m-text">' + m.left_message + '</div>' : ''}
       </div>
-    `).join('');
+    `;
+    }).join('');
 
   // 이 화면을 연 시점 = 읽은 것으로 간주 -> 아직 안읽은 것들 읽음처리 (홈/마이페이지 배지 카운트가 이걸로 줄어듦)
   const unreadIds = data.filter((m) => !m.owner_read_at).map((m) => m.id);
@@ -391,7 +402,7 @@ async function answerCall(session){
   if (mode === 'video') document.getElementById('callVideoArea').classList.add('show');
   else document.getElementById('voiceAvatar').classList.add('show');
 
-  await sb.from('webrtc_sessions').update({ owner_joined_at: new Date().toISOString() }).eq('id', session.id);
+  await sb.from('webrtc_sessions').update({ owner_joined_at: new Date().toISOString(), owner_read_at: new Date().toISOString() }).eq('id', session.id); // 실제로 받은 통화는 그 자체로 '확인함' 처리 -> 배지에 안 뜸
 
   rtChannel = sb.channel('webrtc-' + session.session_token, { config: { broadcast: { self: false } } });
   rtChannel
@@ -406,6 +417,15 @@ async function answerCall(session){
         const audioEl = document.getElementById('remoteAudio');
         audioEl.srcObject = e.streams[0];
         tryPlayRemote(audioEl);
+      };
+      // ⚠ 연결이 끊겨도 서로에게 알리는 수단이 없어서 한쪽이 계속 "연결됨"으로 남아있던 문제 —
+      // 연결 상태를 직접 감시해서 끊기면 자동으로 통화 종료 처리함
+      pc.onconnectionstatechange = () => {
+        if (!pc) return;
+        if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
+          console.warn('[webrtc] 연결 상태 이상 감지:', pc.connectionState);
+          hangup(true);
+        }
       };
 
       try {
@@ -431,7 +451,11 @@ async function answerCall(session){
     .subscribe();
 }
 
+let callEnding = false; // pc.close() 자체가 connectionstatechange('closed')를 다시 유발해서 재귀호출되는 것 방지
+
 function hangup(silent){
+  if (callEnding) return;
+  callEnding = true;
   if (rtChannel && !silent) rtChannel.send({ type:'broadcast', event:'hangup', payload:{} });
   if (pc) { pc.close(); pc = null; }
   if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
@@ -443,6 +467,7 @@ function hangup(silent){
   document.getElementById('chatPanel').classList.remove('show');
   document.getElementById('chatMessages').innerHTML = '';
   pendingSession = null;
+  callEnding = false;
 }
 document.getElementById('hangupBtn').addEventListener('click', () => hangup(false));
 

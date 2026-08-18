@@ -686,6 +686,16 @@ async function createOfferAsCaller(mode){
     audioEl.srcObject = e.streams[0];
     tryPlayRemote(audioEl);
   };
+  // ⚠ 예전엔 연결이 끊겨도(네트워크 문제, 상대방이 탭을 그냥 닫음 등) 서로에게 전혀 알리는
+  // 코드가 없어서, 한쪽은 계속 "연결됨"으로 남아있는 상태가 됐었음. 연결 상태 자체를
+  // 감시해서, 끊기면(disconnected/failed/closed) 자동으로 통화 종료 처리함.
+  pc.onconnectionstatechange = () => {
+    if (!pc) return;
+    if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
+      console.warn('[webrtc] 연결 상태 이상 감지:', pc.connectionState);
+      endCall(true);
+    }
+  };
 
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' });
@@ -702,7 +712,23 @@ async function createOfferAsCaller(mode){
   rtChannel.send({ type: 'broadcast', event: 'offer', payload: { sdp: offer, registrationTitle: document.getElementById('foundTitle').textContent } });
 }
 
+let callEnding = false; // pc.close() 자체가 connectionstatechange('closed')를 다시 유발해서 재귀호출되는 것 방지
+
 function endCall(silent){
+  if (callEnding) return;
+  callEnding = true;
+
+  // ⚠ 통화가 어떻게 끝났는지(정상 종료/응답없음/연결끊김) DB에 남겨서, 소유자의 "부재중" 목록에
+  // 최소한의 기록이라도 남도록 함. 실패해도 화면 정리는 계속 진행(연결 종료가 더 중요하므로).
+  if (currentSessionToken) {
+    sb.from('webrtc_sessions').update({
+      ended_reason: silent ? 'disconnected' : 'caller_ended',
+      ended_at: new Date().toISOString(),
+    }).eq('session_token', currentSessionToken).then(({ error }) => {
+      if (error) console.error('[webrtc] 종료기록 저장 실패', error);
+    });
+  }
+
   if (rtChannel && !silent) rtChannel.send({ type: 'broadcast', event: 'hangup', payload: {} });
   if (pc) { pc.close(); pc = null; }
   if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
@@ -714,6 +740,8 @@ function endCall(silent){
   document.getElementById('chatToggleBtn').classList.remove('show');
   document.getElementById('chatPanel').classList.remove('show');
   document.getElementById('chatMessages').innerHTML = '';
+
+  callEnding = false;
 }
 
 let isMuted = false;
@@ -789,6 +817,16 @@ document.getElementById('textMsgSendBtn').addEventListener('click', async () => 
   document.getElementById('textMsgInput').value = '';
   document.getElementById('textMsgBlock').classList.remove('show');
   document.getElementById('textMsgSentNote').classList.add('show');
+});
+
+// ⚠ 탭을 그냥 닫거나 다른 페이지로 이동할 때도 최선을 다해 종료 신호를 남김 (100% 보장은
+// 안 되지만, 위의 pc.onconnectionstatechange 감지와 함께 이중 안전장치 역할)
+window.addEventListener('pagehide', () => {
+  if (currentSessionToken && (pc || rtChannel)) {
+    try {
+      sb.from('webrtc_sessions').update({ ended_reason: 'page_closed', ended_at: new Date().toISOString() }).eq('session_token', currentSessionToken);
+    } catch (e) { /* 페이지 종료 중이라 실패해도 무시 */ }
+  }
 });
 
 init();

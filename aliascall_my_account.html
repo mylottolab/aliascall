@@ -746,11 +746,12 @@ function stopRingtone(){
   if (ringtoneInterval) { clearInterval(ringtoneInterval); ringtoneInterval = null; }
 }
 
+// ⚠ left_message 유무로 거르지 않음 — 문자 없이 음성/영상통화만 걸었다가 응답 못 받은 것도
+// 이제 배지에 포함시킴(응답한 통화는 answerCall에서 owner_read_at을 바로 채워서 자동 제외됨)
 async function loadMissedBadge(pulse){
   const { count } = await sb.from('webrtc_sessions')
     .select('id', { count: 'exact', head: true })
     .in('registration_id', myWatchedRegIds)
-    .not('left_message', 'is', null)
     .is('owner_read_at', null);
 
   const el = document.getElementById('missedBadgeLink');
@@ -823,7 +824,7 @@ async function answerCall(session){
   if (mode === 'video') document.getElementById('callVideoArea').classList.add('show');
   else document.getElementById('voiceAvatar').classList.add('show');
 
-  await sb.from('webrtc_sessions').update({ owner_joined_at: new Date().toISOString() }).eq('id', session.id);
+  await sb.from('webrtc_sessions').update({ owner_joined_at: new Date().toISOString(), owner_read_at: new Date().toISOString() }).eq('id', session.id); // 실제로 받은 통화는 그 자체로 '확인함' 처리 -> 배지에 안 뜸
 
   rtChannel = sb.channel('webrtc-' + session.session_token, { config: { broadcast: { self: false } } });
   rtChannel
@@ -838,6 +839,15 @@ async function answerCall(session){
         const audioEl = document.getElementById('remoteAudio');
         audioEl.srcObject = e.streams[0];
         tryPlayRemote(audioEl);
+      };
+      // ⚠ 연결이 끊겨도 서로에게 알리는 수단이 없어서 한쪽이 계속 "연결됨"으로 남아있던 문제 —
+      // 연결 상태를 직접 감시해서 끊기면 자동으로 통화 종료 처리함
+      pc.onconnectionstatechange = () => {
+        if (!pc) return;
+        if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
+          console.warn('[webrtc] 연결 상태 이상 감지:', pc.connectionState);
+          hangupCall(true);
+        }
       };
 
       try {
@@ -863,7 +873,11 @@ async function answerCall(session){
     .subscribe();
 }
 
+let callEnding = false; // pc.close() 자체가 connectionstatechange('closed')를 다시 유발해서 재귀호출되는 것 방지
+
 function hangupCall(silent){
+  if (callEnding) return;
+  callEnding = true;
   if (rtChannel && !silent) rtChannel.send({ type:'broadcast', event:'hangup', payload:{} });
   if (pc) { pc.close(); pc = null; }
   if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
@@ -875,6 +889,7 @@ function hangupCall(silent){
   document.getElementById('chatPanel').classList.remove('show');
   document.getElementById('chatMessages').innerHTML = '';
   pendingSession = null;
+  callEnding = false;
 }
 document.getElementById('hangupBtn').addEventListener('click', () => hangupCall(false));
 
