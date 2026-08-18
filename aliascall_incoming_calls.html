@@ -199,10 +199,36 @@ async function init(){
 
   loadMissedMessages();
 
+// ── "딩동" 초인종 알림음 — 외부 음원 없이 코드로 합성 (Web Audio API) ──
+function playDoorbell(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ding = (freq, startTime, duration) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.3, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+    };
+    const now = ctx.currentTime;
+    ding(880, now, 0.26); ding(659, now + 0.28, 0.34);
+    ding(880, now + 0.80, 0.26); ding(659, now + 1.08, 0.34);
+  } catch (e) { console.warn('[notify] 초인종 소리 재생 실패', e); }
+}
+
   sb.channel('incoming-calls')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
       const row = payload.new;
-      if (myRegistrationIds.includes(row.registration_id)) showIncomingCall(row);
+      // ⚠ call_type이 'message'면 "문자만 보내기"로 생성된 행이라 실제 통화 요청이 아님 —
+      // 전화벨 대신 딩동 소리 + 부재중 메시지 목록만 새로고침함
+      if (!myRegistrationIds.includes(row.registration_id)) return;
+      if (row.call_type === 'message') { playDoorbell(); loadMissedMessages(); return; }
+      showIncomingCall(row);
     })
     .subscribe();
 }
@@ -221,7 +247,7 @@ async function loadMissedMessages(){
   container.innerHTML = '<div class="page-title" style="font-size:15px; margin-bottom:12px;">📩 부재중 메시지</div>' +
     data.map((m) => `
       <div class="missed-card">
-        <div class="m-top">${new Date(m.created_at).toLocaleString('ko-KR')} · ${m.call_type === 'video' ? '영상' : '음성'} 통화 미응답</div>
+        <div class="m-top">${new Date(m.created_at).toLocaleString('ko-KR')} · ${m.call_type === 'message' ? '💬 문자 메시지' : (m.call_type === 'video' ? '영상' : '음성') + ' 통화 미응답'}</div>
         <div class="m-text">${m.left_message}</div>
       </div>
     `).join('');

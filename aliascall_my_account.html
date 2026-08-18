@@ -82,6 +82,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .reg-qr-wrap{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:6px; }
 .reg-qr-box{ width:64px; height:64px; background:#fff; border-radius:8px; border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; overflow:hidden; }
 .reg-qr-download{ font-size:10px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border:none; border-radius:12px; padding:4px 9px; cursor:pointer; white-space:nowrap; }
+.reg-qr-token{ font-size:9.5px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; cursor:pointer; white-space:nowrap; }
+.reg-qr-token:hover{ color:var(--teal-deep); text-decoration:underline; }
 .reg-media-thumbs{ flex:1; display:flex; flex-wrap:wrap; gap:6px; align-content:flex-start; }
 .reg-media-thumb{ width:44px; height:44px; border-radius:8px; object-fit:cover; cursor:pointer; border:1.5px solid var(--line); }
 .reg-media-thumb-icon{ width:44px; height:44px; border-radius:8px; background:var(--paper); border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; }
@@ -98,6 +100,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .missed-badge-link{ display:none; margin-bottom:14px; }
 .missed-badge-link a{ display:flex; align-items:center; gap:8px; text-decoration:none; color:#fff; background:var(--coral); border-radius:12px; padding:12px 16px; font-size:13px; font-weight:700; }
 .missed-badge-link .n{ background:rgba(255,255,255,.28); border-radius:20px; padding:2px 9px; font-size:12px; }
+@keyframes badgePulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
+.missed-badge-link.pulse{ animation: badgePulse .45s ease-in-out 3; }
 .listen-reminder{ margin-bottom:18px; background:var(--teal-tint); border-radius:12px; padding:11px 15px; font-size:11.5px; color:var(--teal-deep); line-height:1.6; }
 .listen-reminder a{ color:var(--coral); font-weight:700; text-decoration:underline; }
 
@@ -477,6 +481,7 @@ const I18N = {
     period6mo: '6개월', period1yr: '1년', period2yr: '2년', period3yr: '3년', krwLabel: 'KRW (카드결제)',
     cancel: '취소', payNow: '결제하기',
     qrDownloadBtn: 'QR 다운로드', mediaLightboxOpenDoc: '새 탭에서 문서 열기', mediaLightboxClose: '닫기',
+    tokenLabel: 'TOKEN ·', tokenCopied: '✓ 복사됨',
     missedBadgeText: '부재중 메시지',
     listenReminderText: '💡 연결 요청을 놓치지 않으려면 <a href="aliascall_incoming_calls.html">수신 대기 화면</a>을 자주 확인해주세요. 이 화면(마이페이지)을 열어두셔도 연결 요청이 오면 바로 알림이 뜹니다.',
     ringSubVoice: '음성으로 연결 요청', ringSubVideo: '영상으로 연결 요청',
@@ -541,6 +546,7 @@ const I18N = {
     period6mo: '6 months', period1yr: '1 year', period2yr: '2 years', period3yr: '3 years', krwLabel: 'KRW (Card)',
     cancel: 'Cancel', payNow: 'Pay now',
     qrDownloadBtn: 'Download QR', mediaLightboxOpenDoc: 'Open document in new tab', mediaLightboxClose: 'Close',
+    tokenLabel: 'TOKEN ·', tokenCopied: '✓ Copied',
     missedBadgeText: 'Missed messages',
     listenReminderText: '💡 To avoid missing a connection request, check the <a href="aliascall_incoming_calls.html">Incoming Calls screen</a> often. Keeping this page open also works — a popup will appear here the moment a request comes in.',
     ringSubVoice: 'Voice connection request', ringSubVideo: 'Video connection request',
@@ -647,12 +653,38 @@ async function initIncomingWatcher(userId){
   sb.channel('incoming-calls-myaccount')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
       const row = payload.new;
-      if (myWatchedRegIds.includes(row.registration_id)) showIncomingCall(row);
+      // ⚠ call_type이 'message'면 "문자만 보내기"로 생성된 행이라 실제 통화 요청이 아님 —
+      // 전화벨 대신 부재중 메시지 배지만 조용히 갱신함
+      if (!myWatchedRegIds.includes(row.registration_id)) return;
+      if (row.call_type === 'message') { playDoorbell(); loadMissedBadge(true); return; }
+      showIncomingCall(row);
     })
     .subscribe();
 }
 
-async function loadMissedBadge(){
+// ── "딩동" 초인종 알림음 — 외부 음원 없이 코드로 합성 (Web Audio API) ──
+function playDoorbell(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ding = (freq, startTime, duration) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.3, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+    };
+    const now = ctx.currentTime;
+    ding(880, now, 0.26); ding(659, now + 0.28, 0.34);
+    ding(880, now + 0.80, 0.26); ding(659, now + 1.08, 0.34);
+  } catch (e) { console.warn('[notify] 초인종 소리 재생 실패', e); }
+}
+
+async function loadMissedBadge(pulse){
   const { count } = await sb.from('webrtc_sessions')
     .select('id', { count: 'exact', head: true })
     .in('registration_id', myWatchedRegIds)
@@ -663,6 +695,7 @@ async function loadMissedBadge(){
   if (count && count > 0) {
     document.getElementById('missedBadgeCount').textContent = count;
     el.style.display = 'block';
+    if (pulse) { el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
   } else {
     el.style.display = 'none';
   }
@@ -1063,6 +1096,7 @@ async function loadMyRegistrations(userId){
         <div class="reg-body-row">
           <div class="reg-qr-wrap">
             <div class="reg-qr-box" id="qr-${r.id}"></div>
+            <div class="reg-qr-token" title="${r.qr_code_token || ''}">${I18N[currentLang].tokenLabel} ${(r.qr_code_token || '').slice(0, 8)}…</div>
             <button type="button" class="reg-qr-download" data-id="${r.id}" data-name="${label}">${I18N[currentLang].qrDownloadBtn}</button>
           </div>
           <div class="reg-media-thumbs" id="media-${r.id}"></div>
@@ -1083,6 +1117,16 @@ async function loadMyRegistrations(userId){
   });
   container.querySelectorAll('.reg-qr-download').forEach((btn) => {
     btn.addEventListener('click', () => downloadQr(btn.dataset.id, btn.dataset.name));
+  });
+  container.querySelectorAll('.reg-qr-token').forEach((el) => {
+    el.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(el.title);
+        const original = el.textContent;
+        el.textContent = I18N[currentLang].tokenCopied;
+        setTimeout(() => { el.textContent = original; }, 1200);
+      } catch (e) { console.error('[token] 클립보드 복사 실패', e); }
+    });
   });
 
   // QR 코드 생성 (등록물마다)

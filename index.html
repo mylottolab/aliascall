@@ -72,6 +72,8 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
   background:var(--coral); border-radius:12px; padding:12px 16px; font-size:13px; font-weight:700;
 }
 .missed-badge-link .n{ background:rgba(255,255,255,.25); border-radius:20px; padding:2px 9px; font-size:12px; }
+@keyframes badgePulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
+.missed-badge-link.pulse{ animation: badgePulse .45s ease-in-out 3; }
 .listen-reminder{ display:none; margin:10px 24px 0; max-width:360px; margin-left:auto; margin-right:auto; background:rgba(255,255,255,.08); border-radius:12px; padding:11px 15px; font-size:11.5px; color:rgba(255,255,255,.75); line-height:1.6; text-align:left; }
 .listen-reminder a{ color:var(--coral); font-weight:700; text-decoration:underline; }
 
@@ -252,12 +254,39 @@ async function initIncomingWatcher(userId){
   sb.channel('incoming-calls-home')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
       const row = payload.new;
-      if (myRegistrationIds.includes(row.registration_id)) showIncomingCall(row);
+      // ⚠ call_type이 'message'면 "문자만 보내기"로 생성된 행이라 실제 통화 요청이 아님 —
+      // 전화벨 대신 부재중 메시지 배지만 조용히 갱신함
+      if (!myRegistrationIds.includes(row.registration_id)) return;
+      if (row.call_type === 'message') { playDoorbell(); loadMissedBadge(true); return; }
+      showIncomingCall(row);
     })
     .subscribe();
 }
 
-async function loadMissedBadge(){
+// ── "딩동" 초인종 알림음 — 외부 음원 없이 코드로 합성 (Web Audio API) ──
+// 문자 메시지가 도착했을 때 배지만으론 놓치기 쉬워서, 짧게 두 번 울려서 확실히 알림
+function playDoorbell(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ding = (freq, startTime, duration) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.3, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+    };
+    const now = ctx.currentTime;
+    ding(880, now, 0.26); ding(659, now + 0.28, 0.34);       // 딩동
+    ding(880, now + 0.80, 0.26); ding(659, now + 1.08, 0.34); // 딩동 (한번 더)
+  } catch (e) { console.warn('[notify] 초인종 소리 재생 실패', e); }
+}
+
+async function loadMissedBadge(pulse){
   const { count } = await sb.from('webrtc_sessions')
     .select('id', { count: 'exact', head: true })
     .in('registration_id', myRegistrationIds)
@@ -268,6 +297,7 @@ async function loadMissedBadge(){
   if (count && count > 0) {
     document.getElementById('missedBadgeCount').textContent = count;
     el.style.display = 'block';
+    if (pulse) { el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
   } else {
     el.style.display = 'none';
   }

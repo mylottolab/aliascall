@@ -12,7 +12,7 @@
   --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
   --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
   --coral:#E8734A; --coral-tint:#FDEAE1;
-  --line:#DCE3DE; --danger:#C1483A;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{ height:100%; }
@@ -93,7 +93,15 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 }
 .connect-btn.voice{ background:var(--teal); color:#fff; }
 .connect-btn.video{ background:var(--teal-tint); color:var(--teal-deep); }
+.connect-btn.text-msg{ background:var(--coral-tint); color:var(--coral); }
 .connect-btn:active{ transform:scale(0.98); }
+
+.text-msg-block{ display:none; flex-direction:column; gap:10px; margin-bottom:10px; text-align:left; }
+.text-msg-block.show{ display:flex; }
+.text-msg-block textarea{ border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:10px; padding:12px 14px; font-size:13.5px; font-family:'Inter',sans-serif; resize:none; min-height:64px; }
+.text-msg-block button{ background:var(--coral); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:13.5px; cursor:pointer; }
+.text-msg-sent-note{ display:none; font-size:12px; color:var(--found); font-weight:700; margin-bottom:10px; }
+.text-msg-sent-note.show{ display:block; }
 
 .guide-link-bottom{ display:block; text-align:center; margin-top:18px; font-size:12px; color:var(--ink-soft); text-decoration:underline; }
 
@@ -207,7 +215,14 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
           <span data-i18n="privacyNote">실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.</span>
         </div>
 
+        <div class="text-msg-sent-note" id="textMsgSentNote" data-i18n="textMsgSentNote">✓ 메시지를 보냈어요. 소유자가 확인하는 대로 답이 올 거예요.</div>
+        <div class="text-msg-block" id="textMsgBlock">
+          <textarea id="textMsgInput" rows="3" data-i18n-placeholder="textMsgPlaceholder" placeholder="예: 방금 등록해두신 물건 봤어요! 어디로 전달드리면 될까요?"></textarea>
+          <button id="textMsgSendBtn" data-i18n="textMsgSend">보내기</button>
+        </div>
+
         <div class="connect-btns">
+          <button class="connect-btn text-msg" id="btnTextMsg" data-i18n="connectTextMsg">💬 문자로 메세지 보내기</button>
           <button class="connect-btn voice" id="btnVoice" data-i18n="connectVoice">🎧 음성으로 연결하기</button>
           <button class="connect-btn video" id="btnVideo" data-i18n="connectVideo">🎥 영상으로 연결하기</button>
         </div>
@@ -276,6 +291,10 @@ const I18N = {
     noAnswerTitle: '지금은 응답이 없어요', noAnswerDesc: '아래에 메시지를 남겨두시면, 소유자가 나중에 확인할 수 있어요.',
     leaveMsgSent: '✅ 메시지를 남겼습니다. 소유자가 확인하면 답을 드릴 수 있어요.',
     leaveMsgFailed: '메시지 전송에 실패했어요. 다시 시도해주세요.', leaveMsgSending: '전송 중…',
+    connectTextMsg: '💬 문자로 메세지 보내기',
+    textMsgPlaceholder: '예: 방금 등록해두신 물건 봤어요! 어디로 전달드리면 될까요?',
+    textMsgSend: '보내기',
+    textMsgSentNote: '✓ 메시지를 보냈어요. 소유자가 확인하는 대로 답이 올 거예요.',
     unmuteBtn: '🔊 소리가 안 들리면 여기를 탭하세요',
     lateAnswerNote: '소유자가 응답했지만 시간이 초과됐어요. 다시 연결해주세요.',
     itemTypeLabel: '물품 종류', makeLabel: '제조사·모델', colorLabel: '색상',
@@ -301,6 +320,10 @@ const I18N = {
     noAnswerTitle: 'No answer right now', noAnswerDesc: 'Leave a message below and the owner can see it later.',
     leaveMsgSent: '✅ Your message has been left. The owner can reply once they check it.',
     leaveMsgFailed: 'Failed to send the message. Please try again.', leaveMsgSending: 'Sending…',
+    connectTextMsg: '💬 Send a text message',
+    textMsgPlaceholder: 'e.g. I saw the item you registered! Where should I bring it?',
+    textMsgSend: 'Send',
+    textMsgSentNote: '✓ Message sent. You\u2019ll hear back once the owner checks it.',
     unmuteBtn: '🔊 Tap here if you can\u2019t hear anything',
     lateAnswerNote: 'The owner answered, but it took too long. Please try connecting again.',
     itemTypeLabel: 'Item type', makeLabel: 'Make · model', colorLabel: 'Color',
@@ -724,6 +747,44 @@ document.getElementById('btnVoice').addEventListener('click', () => startCall('v
 document.getElementById('btnVideo').addEventListener('click', () => startCall('video'));
 document.getElementById('endCallBtn').addEventListener('click', () => endCall(false));
 document.getElementById('endCallBtnInitial').addEventListener('click', () => endCall(false));
+
+// ── 통화 시도 없이 "문자로 먼저 메시지 보내기" — 모르는 사람끼리는 전화보다 문자가 먼저인 경우가
+// 많아서 신설. 실제 통화 세션은 만들지 않고, webrtc_sessions에 call_type='message'로 즉시
+// left_message를 채워서 저장 -> 소유자 쪽 "부재중 메시지" 목록에 그대로 노출됨. ──
+document.getElementById('btnTextMsg').addEventListener('click', () => {
+  document.getElementById('textMsgBlock').classList.toggle('show');
+  document.getElementById('textMsgInput').focus();
+});
+
+document.getElementById('textMsgSendBtn').addEventListener('click', async () => {
+  const text = document.getElementById('textMsgInput').value.trim();
+  if (!text) return;
+  const btn = document.getElementById('textMsgSendBtn');
+  const t = I18N[currentLang];
+  btn.disabled = true;
+  btn.textContent = t.leaveMsgSending;
+
+  const registrationId = document.getElementById('stateFound').dataset.registrationId;
+  const { error } = await sb.from('webrtc_sessions').insert({
+    registration_id: registrationId,
+    session_token: (crypto.randomUUID ? crypto.randomUUID() : 'msg-' + Date.now() + '-' + Math.random().toString(36).slice(2)),
+    call_type: 'message',
+    left_message: text,
+  });
+
+  btn.disabled = false;
+  btn.textContent = t.textMsgSend;
+
+  if (error) {
+    console.error('[text-msg] 저장 실패', error);
+    alert(t.leaveMsgFailed);
+    return;
+  }
+
+  document.getElementById('textMsgInput').value = '';
+  document.getElementById('textMsgBlock').classList.remove('show');
+  document.getElementById('textMsgSentNote').classList.add('show');
+});
 
 init();
 applyLang(currentLang);
