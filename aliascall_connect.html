@@ -594,6 +594,11 @@ async function startCall(mode){
 
   // 2) 시그널링 채널 구독
   rtChannel = sb.channel('webrtc-' + currentSessionToken, { config: { broadcast: { self: false } } });
+  // ⚠ 상대방이 보낸 ICE 후보(네트워크 경로 정보)가, 우리가 setRemoteDescription을 끝내기도
+  // 전에 먼저 도착할 수 있음. 이때 addIceCandidate를 바로 호출하면 에러가 나서 조용히
+  // 버려졌었는데(연결이 계속 "연결 확인 중"에 멈춰있던 유력한 원인) — 그런 후보는 일단
+  // 큐에 담아뒀다가, setRemoteDescription이 끝난 직후 한꺼번에 적용함.
+  let pendingIceCandidates = [];
   rtChannel
     .on('broadcast', { event: 'answer' }, async ({ payload }) => {
       clearTimeout(noAnswerTimer);
@@ -601,6 +606,12 @@ async function startCall(mode){
       if (pc.signalingState !== 'have-local-offer') return; // 중복 응답 방어
 
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+
+      // 대기 중이던 ICE 후보들을 이제 적용
+      for (const candidate of pendingIceCandidates) {
+        try { await pc.addIceCandidate(candidate); } catch (e) { console.error('[webrtc] 지연 ICE 후보 추가 오류', e); }
+      }
+      pendingIceCandidates = [];
 
       // 뒤늦게 응답이 와서 이미 "메시지 남기기" 화면이 떠있었다면, 그 화면을 걷어내고 정상 통화 화면으로 복귀
       document.getElementById('leaveMsgBlock').classList.remove('show');
@@ -620,6 +631,7 @@ async function startCall(mode){
       showLeaveMessagePrompt();
     })
     .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
+      if (!pc || !pc.remoteDescription) { pendingIceCandidates.push(payload.candidate); return; }
       try { await pc.addIceCandidate(payload.candidate); } catch (e) { console.error('[webrtc] ICE 추가 오류', e); }
     })
     .on('broadcast', { event: 'chat' }, ({ payload }) => appendChatMessage(payload.text, 'them'))
@@ -709,6 +721,19 @@ async function createOfferAsCaller(mode){
       console.warn('[webrtc] 연결 상태 이상 감지:', pc.connectionState);
       endCall(true);
     }
+  };
+  // 일부 브라우저(구형 Safari 등)는 connectionState 대신 iceConnectionState만 갱신하는
+  // 경우가 있어서 보조로 같이 감시함 (진단용 로그 목적도 겸함)
+  pc.oniceconnectionstatechange = () => {
+    if (!pc) return;
+    console.log('[webrtc] iceConnectionState:', pc.iceConnectionState);
+    if ((pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') && document.getElementById('callingStatus').textContent !== I18N[currentLang].connected) {
+      document.getElementById('callingStatus').textContent = I18N[currentLang].connected;
+      document.getElementById('callingSub').textContent = '';
+    }
+  };
+  pc.onicegatheringstatechange = () => {
+    console.log('[webrtc] iceGatheringState:', pc?.iceGatheringState);
   };
 
   try {

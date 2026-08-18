@@ -828,6 +828,9 @@ async function answerCall(session){
   await sb.from('webrtc_sessions').update({ owner_joined_at: new Date().toISOString(), owner_read_at: new Date().toISOString() }).eq('id', session.id); // 실제로 받은 통화는 그 자체로 '확인함' 처리 -> 배지에 안 뜸
 
   rtChannel = sb.channel('webrtc-' + session.session_token, { config: { broadcast: { self: false } } });
+  // ⚠ 상대방 ICE 후보가 setRemoteDescription 끝나기 전에 먼저 도착하면 조용히 유실되던 문제 —
+  // 일단 큐에 담아뒀다가 준비되면 한꺼번에 적용함
+  let pendingIceCandidates = [];
   rtChannel
     .on('broadcast', { event: 'offer' }, async ({ payload }) => {
       pc = new RTCPeerConnection(RTC_CONFIG);
@@ -854,6 +857,14 @@ async function answerCall(session){
           hangupCall(true);
         }
       };
+      pc.oniceconnectionstatechange = () => {
+        if (!pc) return;
+        console.log('[webrtc] iceConnectionState:', pc.iceConnectionState);
+        if ((pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') && document.getElementById('inCallStatus').textContent !== '연결됨') {
+          document.getElementById('inCallStatus').textContent = '연결됨';
+        }
+      };
+      pc.onicegatheringstatechange = () => { console.log('[webrtc] iceGatheringState:', pc?.iceGatheringState); };
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' });
@@ -866,11 +877,16 @@ async function answerCall(session){
       if (mode === 'video') document.getElementById('localVideo').srcObject = localStream;
 
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+      for (const candidate of pendingIceCandidates) {
+        try { await pc.addIceCandidate(candidate); } catch (e) { console.error('[webrtc] 지연 ICE 후보 추가 오류', e); }
+      }
+      pendingIceCandidates = [];
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       rtChannel.send({ type:'broadcast', event:'answer', payload:{ sdp: answer } });
     })
     .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
+      if (!pc || !pc.remoteDescription) { pendingIceCandidates.push(payload.candidate); return; }
       try { await pc.addIceCandidate(payload.candidate); } catch (e) { console.error('[webrtc] ICE 추가 오류', e); }
     })
     .on('broadcast', { event: 'chat' }, ({ payload }) => appendChatMessage(payload.text, 'them'))
