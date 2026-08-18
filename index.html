@@ -313,6 +313,41 @@ document.getElementById('soundUnlockBtn').addEventListener('click', () => {
   document.getElementById('soundUnlockBanner').classList.add('hide');
 });
 
+// ── 실제 음성/영상 연결 요청이 왔을 때 울리는 "전화벨" — 문자 알림음(딩동)과는 별개로,
+// 응답할 때까지 계속 반복해서 울림 (수락/거절/타임아웃 시 stopRingtone으로 멈춤) ──
+let ringtoneInterval = null;
+
+function ringOnce(){
+  try {
+    const ctx = getAudioCtx();
+    const ring = (freq, startTime, duration) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.28, startTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+    };
+    const now = ctx.currentTime;
+    ring(740, now, 0.35); ring(740, now + 0.40, 0.35);
+    ring(740, now + 1.00, 0.35); ring(740, now + 1.40, 0.35);
+  } catch (e) { console.warn('[notify] 벨소리 재생 실패', e); }
+}
+
+function startRingtone(){
+  stopRingtone();
+  ringOnce();
+  ringtoneInterval = setInterval(ringOnce, 2200);
+}
+
+function stopRingtone(){
+  if (ringtoneInterval) { clearInterval(ringtoneInterval); ringtoneInterval = null; }
+}
+
 async function loadMissedBadge(pulse){
   const { count } = await sb.from('webrtc_sessions')
     .select('id', { count: 'exact', head: true })
@@ -334,6 +369,7 @@ async function showIncomingCall(row){
   pendingSession = row;
   document.getElementById('ringSub').textContent = row.call_type === 'video' ? I18N[currentLang].ringSubVideo : I18N[currentLang].ringSubVoice;
   document.getElementById('ringOverlay').classList.add('show');
+  startRingtone();
   try {
     const { data: reg } = await sb.from('registrations').select('category').eq('id', row.registration_id).maybeSingle();
     document.getElementById('ringAvatar').textContent = CATEGORY_EMOJI[reg?.category] || '📞';
@@ -343,6 +379,7 @@ async function showIncomingCall(row){
 }
 
 document.getElementById('declineBtn').addEventListener('click', () => {
+  stopRingtone();
   document.getElementById('ringOverlay').classList.remove('show');
   if (pendingSession) {
     const declineChannel = sb.channel('webrtc-' + pendingSession.session_token, { config: { broadcast: { self: false } } });
@@ -357,6 +394,7 @@ document.getElementById('declineBtn').addEventListener('click', () => {
 });
 
 document.getElementById('acceptBtn').addEventListener('click', async () => {
+  stopRingtone();
   document.getElementById('ringOverlay').classList.remove('show');
   await answerCall(pendingSession);
 });
