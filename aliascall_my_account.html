@@ -910,7 +910,11 @@ async function answerCall(session){
       console.log('[webrtc] ③ 이벤트 핸들러 등록 완료, getUserMedia 요청 시작');
 
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' });
+        localStream = await navigator.mediaDevices.getUserMedia({
+      // 에코 제거·잡음 억제·음량 자동조절을 켜서 통화 음질을 개선함 (기본값 audio:true만 쓰면 꺼져있는 브라우저가 있음)
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      video: mode === 'video',
+    });
       } catch (e) {
         console.error('[webrtc] ④ 마이크 권한 실패:', e);
         alert(I18N[currentLang].micPermission);
