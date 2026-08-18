@@ -397,6 +397,7 @@ document.getElementById('declineBtn').addEventListener('click', () => {
 document.getElementById('acceptBtn').addEventListener('click', async () => {
   stopRingtone();
   document.getElementById('ringOverlay').classList.remove('show');
+  if (!pendingSession) { console.error('[webrtc] pendingSession이 비어있어 수락 처리를 진행할 수 없음'); return; }
   await answerCall(pendingSession);
 });
 
@@ -435,12 +436,15 @@ async function answerCall(session){
   let pendingIceCandidates = [];
   rtChannel
     .on('broadcast', { event: 'offer' }, async ({ payload }) => {
+      console.log('[webrtc] ① offer 수신됨');
       // ⚠ 발신자가 응답받을 때까지 offer를 반복 재전송하도록 바꿨는데(유실 방지),
       // 이미 처리 중인 offer라면 중복으로 새 연결을 또 만들지 않도록 방어
-      if (pc && pc.signalingState !== 'closed') return;
+      if (pc && pc.signalingState !== 'closed') { console.log('[webrtc] (중복 offer, 이미 처리중이라 무시)'); return; }
       pc = new RTCPeerConnection(RTC_CONFIG);
-      pc.onicecandidate = (e) => { if (e.candidate) rtChannel.send({ type:'broadcast', event:'ice-candidate', payload:{ candidate: e.candidate } }); };
+      console.log('[webrtc] ② RTCPeerConnection 생성됨');
+      pc.onicecandidate = (e) => { if (e.candidate) { console.log('[webrtc] 내 ICE 후보 전송:', e.candidate.type); rtChannel.send({ type:'broadcast', event:'ice-candidate', payload:{ candidate: e.candidate } }); } else { console.log('[webrtc] 내 ICE 후보 수집 완료(null candidate)'); } };
       pc.ontrack = (e) => {
+        console.log('[webrtc] ⑦ 상대방 트랙 수신됨:', e.track.kind);
         // ⚠ 일부 브라우저(삼성 인터넷 등)는 <video> 태그로 오디오 전용 스트림을 재생할 때
         // 오디오 트랙을 놓치는 경우가 있어서, 별도의 <audio> 태그에도 동일 스트림을 연결해
         // 오디오 재생을 이중으로 보장함 (video는 muted 처리해서 소리는 audio 태그에서만 남).
@@ -470,18 +474,22 @@ async function answerCall(session){
         }
       };
       pc.onicegatheringstatechange = () => { console.log('[webrtc] iceGatheringState:', pc?.iceGatheringState); };
+      console.log('[webrtc] ③ 이벤트 핸들러 등록 완료, getUserMedia 요청 시작');
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' });
       } catch (e) {
+        console.error('[webrtc] ④ 마이크 권한 실패:', e);
         alert(I18N[currentLang].micPermission);
         hangup(true);
         return;
       }
+      console.log('[webrtc] ④ getUserMedia 성공, 트랙 개수:', localStream.getTracks().length);
       localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
       if (mode === 'video') document.getElementById('localVideo').srcObject = localStream;
 
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+      console.log('[webrtc] ⑤ setRemoteDescription 완료, 대기중이던 ICE 후보', pendingIceCandidates.length, '개 적용');
       for (const candidate of pendingIceCandidates) {
         try { await pc.addIceCandidate(candidate); } catch (e) { console.error('[webrtc] 지연 ICE 후보 추가 오류', e); }
       }
@@ -489,9 +497,11 @@ async function answerCall(session){
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       rtChannel.send({ type:'broadcast', event:'answer', payload:{ sdp: answer } });
+      console.log('[webrtc] ⑥ answer 전송 완료');
     })
     .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
-      if (!pc || !pc.remoteDescription) { pendingIceCandidates.push(payload.candidate); return; }
+      if (!pc || !pc.remoteDescription) { console.log('[webrtc] 상대 ICE 후보 도착(대기열에 저장):', payload.candidate.type); pendingIceCandidates.push(payload.candidate); return; }
+      console.log('[webrtc] 상대 ICE 후보 즉시 적용:', payload.candidate.type);
       try { await pc.addIceCandidate(payload.candidate); } catch (e) { console.error('[webrtc] ICE 추가 오류', e); }
     })
     .on('broadcast', { event: 'chat' }, ({ payload }) => appendChatMessage(payload.text, 'them'))
