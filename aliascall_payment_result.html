@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliascall — 결제 결과</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all;
+  display:flex; align-items:center; justify-content:center; padding:20px; }
+h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
+
+.result-card{ background:var(--card); border-radius:20px; padding:36px 28px; max-width:400px; width:100%; text-align:center; box-shadow:0 14px 30px -18px rgba(0,0,0,0.35); }
+.result-icon{ width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; margin:0 auto 18px; }
+.result-icon.success{ background:rgba(46,125,79,.12); color:var(--found); }
+.result-icon.fail{ background:rgba(193,72,58,.12); color:var(--danger); }
+.result-title{ font-size:20px; margin-bottom:8px; }
+.result-desc{ font-size:13px; color:var(--ink-soft); line-height:1.6; margin-bottom:26px; }
+.result-btn{ display:block; width:100%; border:none; border-radius:12px; padding:14px; font-size:14px; font-weight:700; cursor:pointer; text-decoration:none; box-sizing:border-box; }
+.result-btn.primary{ background:var(--teal); color:#fff; margin-bottom:10px; }
+.result-btn.secondary{ background:var(--teal-tint); color:var(--teal-deep); }
+</style>
+</head>
+<body>
+
+<div class="result-card">
+  <div class="result-icon" id="resultIcon">✓</div>
+  <div class="result-title" id="resultTitle">결제가 완료됐어요</div>
+  <div class="result-desc" id="resultDesc">잠시 후 자동으로 돌아갑니다.</div>
+  <a class="result-btn primary" id="primaryBtn" href="index.html">확인</a>
+  <a class="result-btn secondary" href="index.html">홈으로</a>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const status = params.get('status');
+const purpose = params.get('purpose');
+const msg = params.get('msg');
+
+const backPage = purpose === 'subscription' ? 'aliascall_my_account.html' : 'aliascall_recharge_mockup.html';
+
+if (status === 'success') {
+  document.getElementById('resultIcon').textContent = '✓';
+  document.getElementById('resultTitle').textContent = purpose === 'subscription' ? '구독이 연장됐어요' : '포인트가 충전됐어요';
+  document.getElementById('resultDesc').textContent = purpose === 'subscription'
+    ? '구독 만료일이 갱신됐고, 보너스 포인트도 함께 지급됐어요.'
+    : '충전한 포인트가 계정에 반영됐어요.';
+  document.getElementById('primaryBtn').href = backPage;
+  document.getElementById('primaryBtn').textContent = purpose === 'subscription' ? '내 계정으로 가기' : '충전소로 가기';
+} else {
+  document.getElementById('resultIcon').className = 'result-icon fail';
+  document.getElementById('resultIcon').textContent = '✕';
+  document.getElementById('resultTitle').textContent = '결제가 완료되지 않았어요';
+  document.getElementById('resultDesc').textContent = msg || '결제 중 문제가 발생했어요. 다시 시도해주세요.';
+  document.getElementById('primaryBtn').href = backPage;
+  document.getElementById('primaryBtn').textContent = '다시 시도하기';
+}
+</script>
+</body>
+</html>

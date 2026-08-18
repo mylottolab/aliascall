@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aliascall — 포인트 충전</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_payments.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -150,7 +151,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
     <span class="value mono" id="payAmount">$1.00</span>
   </div>
 
-  <button class="pay-btn paypal" id="payBtn">PayPal로 결제하기</button>
+  <button class="pay-btn inicis" id="payBtn" style="display:none;">카드로 결제하기 (이니시스)</button>
+  <div id="paypalButtonContainer" style="min-height:45px;"></div>
   <div class="note" id="payNote">외화 결제는 PayPal을 통해 안전하게 처리됩니다.</div>
 
   <div class="products-section" id="productsSection">
@@ -188,6 +190,7 @@ const I18N = {
     productsEmpty: '아직 등록된 상품이 없어요. 곧 채워질 예정이에요.',
     viewProduct: '상품보기 →',
     payConfirm: (method, symbol, amount, points) => method + ' 결제창으로 이동합니다. (' + symbol + amount + ' → ' + points + 'P)',
+    paymentDone: '결제가 완료됐어요! 충전된 포인트가 반영됩니다.',
   },
   en: {
     guideLink: '📖 User Guide',
@@ -209,6 +212,7 @@ const I18N = {
     productsEmpty: 'No products yet — check back soon.',
     viewProduct: 'View Product →',
     payConfirm: (method, symbol, amount, points) => 'Redirecting to ' + method + ' checkout. (' + symbol + amount + ' → ' + points + 'P)',
+    paymentDone: 'Payment complete! Your points have been credited.',
   },
 };
 
@@ -267,14 +271,20 @@ function renderSummary(){
   payAmount.textContent = p.symbol + fmt(p.amount) + (currentCurrency === 'KRW' ? t.krwSuffix : '');
 
   if (currentCurrency === 'USD') {
-    payBtn.className = 'pay-btn paypal';
-    payBtn.textContent = t.payBtnPaypal;
+    payBtn.style.display = 'none';
     payNote.textContent = t.noteUSD;
+    renderPayPalButtons(sb, 'paypalButtonContainer', { purpose: 'recharge', usdAmount: p.amount }, onPaymentSuccess);
   } else {
-    payBtn.className = 'pay-btn inicis';
+    payBtn.style.display = 'block';
+    document.getElementById('paypalButtonContainer').innerHTML = '';
     payBtn.textContent = t.payBtnInicis;
     payNote.textContent = t.noteKRW;
   }
+}
+
+function onPaymentSuccess(){
+  alert(I18N[currentLang].paymentDone);
+  window.location.reload();
 }
 
 document.querySelectorAll('.currency-tab').forEach(tab => {
@@ -318,16 +328,19 @@ document.querySelectorAll('.lang-toggle button').forEach((btn) => {
 const returnUrl = new URLSearchParams(window.location.search).get('return');
 
 payBtn.addEventListener('click', async () => {
-  const t = I18N[currentLang];
   const p = packages[currentCurrency][selectedIndex];
-  const method = currentCurrency === 'USD' ? 'PayPal' : (currentLang === 'ko' ? '이니시스' : 'Inicis');
+  const { data: { session } } = await sb.auth.getSession();
+  const nickname = (session && (await sb.from('profiles').select('nickname').eq('id', session.user.id).maybeSingle()).data?.nickname) || '회원';
 
-  alert(t.payConfirm(method, p.symbol, fmt(p.amount), fmt(p.points)));
-  // TODO: 실제 결제 연동 시 이 알림은 결제 성공 콜백(웹훅/리다이렉트) 안으로 옮겨야 함.
-  // 지금은 목업이라 결제 성공을 즉시로 가정하고, return 파라미터가 있으면 원래 화면으로 자동 복귀시킴
-  if (returnUrl) {
-    window.location.href = returnUrl;
-  }
+  await startInicisPayment(sb, {
+    purpose: 'recharge',
+    price: p.amount, // KRW 원 단위
+    goodname: 'Aliascall 포인트 충전 (' + fmt(p.points) + 'P)',
+    buyername: nickname,
+    returnPage: 'aliascall_recharge_mockup.html',
+  });
+  // ⚠ startInicisPayment는 성공하면 이니시스 결제창으로 페이지 자체를 이동시키므로,
+  // 여기 이후 코드는 결제 준비 단계에서 실패했을 때만 실행됨
 });
 
 // ── 관련 상품 (외부링크 카탈로그) — Aliascall이 직접 판매하지 않음, 클릭시 새 탭으로 판매처 이동 ──
