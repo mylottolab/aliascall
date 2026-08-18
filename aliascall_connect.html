@@ -548,6 +548,7 @@ const RTC_CONFIG = { iceServers: [
 const myClientId = 'caller-' + Math.random().toString(36).slice(2);
 
 let pc = null, localStream = null, rtChannel = null, currentSessionToken = null, currentMode = 'voice';
+let offerResendInterval = null;
 let noAnswerTimer = null;
 
 function makeSessionToken(){
@@ -602,6 +603,7 @@ async function startCall(mode){
   rtChannel
     .on('broadcast', { event: 'answer' }, async ({ payload }) => {
       clearTimeout(noAnswerTimer);
+      if (offerResendInterval) { clearInterval(offerResendInterval); offerResendInterval = null; }
       if (!pc || pc.signalingState === 'closed') return; // 이미 "연결 종료" 버튼으로 완전히 끝낸 경우만 무시
       if (pc.signalingState !== 'have-local-offer') return; // 중복 응답 방어
 
@@ -628,6 +630,7 @@ async function startCall(mode){
     })
     .on('broadcast', { event: 'declined' }, () => {
       clearTimeout(noAnswerTimer);
+      if (offerResendInterval) { clearInterval(offerResendInterval); offerResendInterval = null; }
       showLeaveMessagePrompt();
     })
     .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
@@ -748,7 +751,17 @@ async function createOfferAsCaller(mode){
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
-  rtChannel.send({ type: 'broadcast', event: 'offer', payload: { sdp: offer, registrationTitle: document.getElementById('foundTitle').textContent } });
+  sendOfferNow();
+
+  // ⚠ 소유자가 전화벨 팝업을 보고 수락하기까지 시간이 걸리는데(수 초~수십 초), offer를
+  // 딱 한 번만 보내면 그 사이에 도착한 offer는 유실됨 (소유자가 수락한 시점엔 이미 방송이
+  // 끝나버린 뒤라 채널에 아무도 없었던 것). 응답(answer)이 올 때까지 2.5초 간격으로 계속
+  // 재전송해서, 소유자가 언제 수락하든 다음 재전송 때 반드시 받도록 함.
+  offerResendInterval = setInterval(sendOfferNow, 2500);
+
+  function sendOfferNow(){
+    rtChannel.send({ type: 'broadcast', event: 'offer', payload: { sdp: offer, registrationTitle: document.getElementById('foundTitle').textContent } });
+  }
 }
 
 let callEnding = false; // pc.close() 자체가 connectionstatechange('closed')를 다시 유발해서 재귀호출되는 것 방지
@@ -756,6 +769,7 @@ let callEnding = false; // pc.close() 자체가 connectionstatechange('closed')�
 function endCall(silent){
   if (callEnding) return;
   callEnding = true;
+  if (offerResendInterval) { clearInterval(offerResendInterval); offerResendInterval = null; }
 
   // ⚠ 통화가 어떻게 끝났는지(정상 종료/응답없음/연결끊김) DB에 남겨서, 소유자의 "부재중" 목록에
   // 최소한의 기록이라도 남도록 함. 실패해도 화면 정리는 계속 진행(연결 종료가 더 중요하므로).

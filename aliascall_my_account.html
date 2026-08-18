@@ -833,6 +833,9 @@ async function answerCall(session){
   let pendingIceCandidates = [];
   rtChannel
     .on('broadcast', { event: 'offer' }, async ({ payload }) => {
+      // ⚠ 발신자가 응답받을 때까지 offer를 반복 재전송하도록 바꿨는데(유실 방지),
+      // 이미 처리 중인 offer라면 중복으로 새 연결을 또 만들지 않도록 방어
+      if (pc && pc.signalingState !== 'closed') return;
       pc = new RTCPeerConnection(RTC_CONFIG);
       pc.onicecandidate = (e) => { if (e.candidate) rtChannel.send({ type:'broadcast', event:'ice-candidate', payload:{ candidate: e.candidate } }); };
       pc.ontrack = (e) => {
