@@ -187,19 +187,6 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
   <div id="resultsArea"></div>
 </main>
 
-<div class="connect-overlay" id="connectOverlay">
-  <div class="connect-sheet">
-    <div class="big-emoji" id="connectEmoji">🚗</div>
-    <h3 id="connectTitle">151노8409</h3>
-    <p data-i18n="connectPrivacyNote">실제 연락처는 노출되지 않습니다. 브라우저에서 바로 연결됩니다.</p>
-    <div class="connect-btns">
-      <button class="connect-btn voice" data-i18n="connectVoice">🎧 음성으로 연결하기</button>
-      <button class="connect-btn video" data-i18n="connectVideo">🎥 영상으로 연결하기</button>
-      <button class="connect-btn cancel" id="closeOverlay" data-i18n="close">닫기</button>
-    </div>
-  </div>
-</div>
-
 <!-- QR 카메라 스캔 오버레이 -->
 <div class="qr-cam-overlay" id="qrCamOverlay">
   <div class="qr-cam-top">
@@ -230,6 +217,7 @@ const I18N = {
     emptyStart: '검색어를 입력하거나<br>마이크·QR스캔을 이용해보세요',
     emptyNoResult: '일치하는 등록 정보를 찾지 못했어요',
     searching: '검색 중…', searchFailed: '검색에 실패했어요. 잠시 후 다시 시도해주세요.',
+    noTokenError: '연결 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
     cameraOpening: '카메라가 열립니다. (실제 구현시 QR 스캔 라이브러리 연동)',
     cameraError: '카메라를 열 수 없어요. 브라우저 카메라 권한을 확인해주세요.',
     qrRecognizing: '인식됨: 확인 중…', qrNoMatch: '일치하는 등록 정보를 찾지 못했어요. QR이 손상됐을 수 있어요 — 검색창에서 직접 찾아보세요.',
@@ -249,6 +237,7 @@ const I18N = {
     emptyStart: 'Type a search term, or<br>use the mic or QR scan',
     emptyNoResult: 'No matching registration found',
     searching: 'Searching…', searchFailed: 'Search failed. Please try again shortly.',
+    noTokenError: 'Could not load connection info. Please try again shortly.',
     cameraOpening: 'Opening camera. (QR scan library to be integrated in production)',
     cameraError: 'Could not open the camera. Please check your browser camera permission.',
     qrRecognizing: 'Recognized: checking…', qrNoMatch: 'No matching registration found. The QR may be damaged — try searching directly instead.',
@@ -295,7 +284,7 @@ function normalize(s){ return (s || '').replace(/[\s\-]/g, '').toLowerCase(); }
 // (RLS "누구나 활성 등록 검색 가능" 정책 덕분에 비로그인 상태로도 조회됨 — aliascall_functions_v1.sql 참고)
 async function fetchResults(query){
   let q = sb.from('registrations')
-    .select('id, category, search_key, title, description')
+    .select('id, category, search_key, title, description, qr_code_token')
     .eq('status', 'active')
     .limit(20);
 
@@ -332,7 +321,7 @@ async function renderResults(query){
   }
 
   area.innerHTML = data.map(d => `
-    <div class="result-card" data-id="${d.id}" data-emoji="${CATEGORY_EMOJI[d.category] || '❓'}">
+    <div class="result-card" data-token="${d.qr_code_token || ''}">
       <span class="result-emoji">${CATEGORY_EMOJI[d.category] || '❓'}</span>
       <span class="result-titles">
         <div class="result-key">${d.search_key || d.title || '(제목 없음)'}</div>
@@ -343,7 +332,13 @@ async function renderResults(query){
   `).join('');
 
   area.querySelectorAll('.result-card').forEach(card => {
-    card.addEventListener('click', () => openConnect(card.dataset.id, card.dataset.emoji));
+    card.addEventListener('click', () => {
+      const token = card.dataset.token;
+      if (!token) { alert(t.noTokenError); return; }
+      // ⚠ 예전엔 여기서 미완성 목업 팝업(음성/영상 버튼이 아무 동작도 안 하는 것)을 띄웠는데,
+      // QR 스캔과 동일하게 실제 연결화면(aliascall_connect.html)으로 바로 이동하도록 수정함
+      window.location.href = 'aliascall_connect.html?t=' + encodeURIComponent(token);
+    });
   });
 }
 
@@ -445,23 +440,14 @@ async function handleQrResult(raw){
       alert(I18N[currentLang].qrNoMatch);
       return;
     }
-    openConnect(data.id, CATEGORY_EMOJI[data.category] || '❓');
+    // ⚠ 여기도 검색결과와 동일하게 미완성 목업 팝업 대신 실제 연결화면으로 바로 이동
+    window.location.href = 'aliascall_connect.html?t=' + encodeURIComponent(token);
   } catch (e) {
     stopQrScan();
     console.error('[qr-scan] 조회 오류', e);
     alert(I18N[currentLang].qrLookupError);
   }
 }
-
-function openConnect(registrationId, emoji){
-  document.getElementById('connectEmoji').textContent = emoji;
-  document.getElementById('connectTitle').textContent = registrationId;  // TODO: webrtc_sessions 생성 로직 연동 시 표시용 텍스트로 교체
-  document.getElementById('connectOverlay').classList.add('show');
-  document.getElementById('connectOverlay').dataset.registrationId = registrationId;
-}
-document.getElementById('closeOverlay').addEventListener('click', () => {
-  document.getElementById('connectOverlay').classList.remove('show');
-});
 
 // 홈화면(index.html)의 빠른검색에서 ?q=검색어 로 넘어온 경우 바로 반영
 const initialQuery = new URLSearchParams(window.location.search).get('q') || '';
