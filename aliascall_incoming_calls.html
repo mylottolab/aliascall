@@ -100,6 +100,9 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
+.sound-unlock-banner{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--amber-tint, #FBF1DE); border:1px solid #E9CE94; border-radius:12px; padding:12px 14px; margin-bottom:16px; font-size:12.5px; color:#8a6416; }
+.sound-unlock-banner button{ background:#8a6416; color:#fff; border:none; border-radius:16px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.sound-unlock-banner.hide{ display:none; }
 </style>
 </head>
 <body>
@@ -120,6 +123,11 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 <main>
   <div class="page-title">수신 대기</div>
   <div class="page-desc">이 화면을 열어두시면, 회원님의 등록물로 누군가 연결을 시도할 때 여기로 바로 알림이 뜹니다.</div>
+
+  <div class="sound-unlock-banner" id="soundUnlockBanner">
+    <span>🔔 문자 도착 알림음을 받으려면 탭 한 번만 해주세요</span>
+    <button type="button" id="soundUnlockBtn">알림음 켜기</button>
+  </div>
 
   <div class="login-needed" id="loginNeeded">로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.</div>
 
@@ -145,8 +153,9 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 <div class="ring-overlay" id="inCallOverlay">
   <div class="voice-avatar" id="voiceAvatar">🎧</div>
   <div class="call-video-area" id="callVideoArea">
-    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="remoteVideo" autoplay playsinline muted></video>
     <video id="localVideo" autoplay playsinline muted></video>
+    <audio id="remoteAudio" autoplay></audio>
   </div>
   <h3>연결됨</h3>
   <p id="inCallSub"></p>
@@ -185,24 +194,20 @@ let myRegistrationIds = [];
 let pendingSession = null;
 let pc = null, localStream = null, rtChannel = null;
 
-async function init(){
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { document.getElementById('loginNeeded').style.display = 'block'; return; }
-
-  document.getElementById('loginNeeded').style.display = 'none';
-  document.getElementById('waitContent').style.display = 'block';
-  document.getElementById('listenBadge').style.display = 'flex';
-
-  const { data: regs } = await sb.from('registrations').select('id').eq('user_id', session.user.id);
-  myRegistrationIds = (regs || []).map((r) => r.id);
-  if (myRegistrationIds.length === 0) return;
-
-  loadMissedMessages();
-
 // ── "딩동" 초인종 알림음 — 외부 음원 없이 코드로 합성 (Web Audio API) ──
+// ⚠ 브라우저는 사용자가 페이지에서 최소 한 번 터치/클릭하기 전까지 오디오 재생을 막음.
+// "수신 대기" 화면은 아무것도 안 누른 채 열어두고 기다리는 화면이라 이 제약에 특히 잘 걸려서,
+// 상단에 "알림음 켜기" 버튼을 두고 그걸 누르면 AudioContext를 미리 깨워둔 뒤 계속 재사용함.
+let sharedAudioCtx = null;
+
+function getAudioCtx(){
+  if (!sharedAudioCtx) sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return sharedAudioCtx;
+}
+
 function playDoorbell(){
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioCtx();
     const ding = (freq, startTime, duration) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -220,6 +225,33 @@ function playDoorbell(){
     ding(880, now + 0.80, 0.26); ding(659, now + 1.08, 0.34);
   } catch (e) { console.warn('[notify] 초인종 소리 재생 실패', e); }
 }
+
+document.getElementById('soundUnlockBtn').addEventListener('click', () => {
+  const ctx = getAudioCtx();
+  if (ctx.state === 'suspended') ctx.resume();
+  // 아주 짧고 작은 소리를 한번 내서 오디오 재생 자체를 "허가"받아둠 (사실상 무음에 가까움)
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  gain.gain.value = 0.001;
+  osc.connect(gain).connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.05);
+  document.getElementById('soundUnlockBanner').classList.add('hide');
+});
+
+async function init(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { document.getElementById('loginNeeded').style.display = 'block'; return; }
+
+  document.getElementById('loginNeeded').style.display = 'none';
+  document.getElementById('waitContent').style.display = 'block';
+  document.getElementById('listenBadge').style.display = 'flex';
+
+  const { data: regs } = await sb.from('registrations').select('id').eq('user_id', session.user.id);
+  myRegistrationIds = (regs || []).map((r) => r.id);
+  if (myRegistrationIds.length === 0) return;
+
+  loadMissedMessages();
 
   sb.channel('incoming-calls')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
@@ -308,8 +340,8 @@ function tryPlayRemote(remoteEl){
   }
 }
 document.getElementById('unmuteBtn').addEventListener('click', () => {
-  const remoteEl = document.getElementById('remoteVideo');
-  remoteEl.play().catch((err) => console.error('[webrtc] 수동 재생도 실패', err));
+  const audioEl = document.getElementById('remoteAudio');
+  audioEl.play().catch((err) => console.error('[webrtc] 수동 재생도 실패', err));
   document.getElementById('unmuteBtn').classList.remove('show');
 });
 
@@ -328,7 +360,15 @@ async function answerCall(session){
     .on('broadcast', { event: 'offer' }, async ({ payload }) => {
       pc = new RTCPeerConnection(RTC_CONFIG);
       pc.onicecandidate = (e) => { if (e.candidate) rtChannel.send({ type:'broadcast', event:'ice-candidate', payload:{ candidate: e.candidate } }); };
-      pc.ontrack = (e) => { const remoteEl = document.getElementById('remoteVideo'); remoteEl.srcObject = e.streams[0]; tryPlayRemote(remoteEl); };
+      pc.ontrack = (e) => {
+        // ⚠ 일부 브라우저(삼성 인터넷 등)는 <video> 태그로 오디오 전용 스트림을 재생할 때
+        // 오디오 트랙을 놓치는 경우가 있어서, 별도의 <audio> 태그에도 동일 스트림을 연결해
+        // 오디오 재생을 이중으로 보장함 (video는 muted 처리해서 소리는 audio 태그에서만 남).
+        document.getElementById('remoteVideo').srcObject = e.streams[0];
+        const audioEl = document.getElementById('remoteAudio');
+        audioEl.srcObject = e.streams[0];
+        tryPlayRemote(audioEl);
+      };
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' });

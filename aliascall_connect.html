@@ -242,8 +242,9 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
   <div class="pulse-ring" id="pulseRing"><div class="dot"></div></div>
   <div class="voice-avatar" id="voiceAvatar">🎧</div>
   <div class="call-video-area" id="callVideoArea">
-    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="remoteVideo" autoplay playsinline muted></video>
     <video id="localVideo" autoplay playsinline muted></video>
+    <audio id="remoteAudio" autoplay></audio>
   </div>
   <h3 id="callingStatus" data-i18n="connecting">연결 중…</h3>
   <p id="callingSub" data-i18n="notifyingOwner">소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.</p>
@@ -666,8 +667,8 @@ function tryPlayRemote(remoteEl){
   }
 }
 document.getElementById('unmuteBtn').addEventListener('click', () => {
-  const remoteEl = document.getElementById('remoteVideo');
-  remoteEl.play().catch((err) => console.error('[webrtc] 수동 재생도 실패', err));
+  const audioEl = document.getElementById('remoteAudio');
+  audioEl.play().catch((err) => console.error('[webrtc] 수동 재생도 실패', err));
   document.getElementById('unmuteBtn').classList.remove('show');
 });
 
@@ -677,9 +678,13 @@ async function createOfferAsCaller(mode){
     if (e.candidate) rtChannel.send({ type: 'broadcast', event: 'ice-candidate', payload: { candidate: e.candidate } });
   };
   pc.ontrack = (e) => {
-    const remoteEl = document.getElementById('remoteVideo');
-    remoteEl.srcObject = e.streams[0];
-    tryPlayRemote(remoteEl);
+    // ⚠ 일부 브라우저(삼성 인터넷 등)는 <video> 태그로 오디오 전용 스트림을 재생할 때
+    // 오디오 트랙을 놓치는 경우가 있어서, 별도의 <audio> 태그에도 동일 스트림을 연결해
+    // 오디오 재생을 이중으로 보장함 (video는 muted 처리해서 소리는 audio 태그에서만 남).
+    document.getElementById('remoteVideo').srcObject = e.streams[0];
+    const audioEl = document.getElementById('remoteAudio');
+    audioEl.srcObject = e.streams[0];
+    tryPlayRemote(audioEl);
   };
 
   try {
