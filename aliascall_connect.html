@@ -549,6 +549,40 @@ const myClientId = 'caller-' + Math.random().toString(36).slice(2);
 
 let pc = null, localStream = null, rtChannel = null, currentSessionToken = null, currentMode = 'voice';
 let offerResendInterval = null;
+
+// ── chrome://webrtc-internals 안 찾아다녀도, 연결 실패시 후보쌍(candidate-pair) 정보를
+// 콘솔에 바로 찍어주는 진단 함수 — 어떤 경로(직접연결 host/srflx, 또는 TURN relay)로
+// 시도했다가 왜 실패했는지 여기서 바로 확인 가능 ──
+async function logIceCandidatePairs(pcRef){
+  try {
+    const stats = await pcRef.getStats();
+    console.log('%c[webrtc] ── candidate-pair 진단 시작 ──', 'color:#E8734A;font-weight:bold;');
+    const candidates = {};
+    stats.forEach((report) => {
+      if (report.type === 'local-candidate' || report.type === 'remote-candidate') {
+        candidates[report.id] = report;
+      }
+    });
+    let pairCount = 0;
+    stats.forEach((report) => {
+      if (report.type === 'candidate-pair') {
+        pairCount++;
+        const local = candidates[report.localCandidateId];
+        const remote = candidates[report.remoteCandidateId];
+        console.log(
+          '[webrtc] pair 상태:', report.state,
+          '| 로컬:', local ? local.candidateType + '(' + local.protocol + ')' : '?',
+          '| 원격:', remote ? remote.candidateType + '(' + remote.protocol + ')' : '?',
+          '| nominated:', report.nominated
+        );
+      }
+    });
+    if (pairCount === 0) console.warn('[webrtc] candidate-pair가 하나도 없음 — ICE 후보 자체가 상대와 전혀 매칭 안 됨');
+    console.log('%c[webrtc] ── candidate-pair 진단 끝 ──', 'color:#E8734A;font-weight:bold;');
+  } catch (e) {
+    console.error('[webrtc] getStats 진단 실패', e);
+  }
+}
 let noAnswerTimer = null;
 
 function makeSessionToken(){
@@ -728,6 +762,7 @@ async function createOfferAsCaller(mode){
     }
     if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
       console.warn('[webrtc] 연결 상태 이상 감지:', pc.connectionState);
+      if (pc.connectionState === 'failed') logIceCandidatePairs(pc);
       endCall(true);
     }
   };
