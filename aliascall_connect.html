@@ -583,11 +583,11 @@ async function startCall(mode){
     return;
   }
 
-  // ⚠ 25초는 실제 테스트에서 너무 짧아서(폰 두 대 오가며 수락 누르는 시간 감안), 40초로 늘림.
-  // 그리고 25초가 지나 "메시지 남기기" 화면으로 넘어간 뒤에도 소유자가 뒤늦게 수락하는 경우가
-  // 있었는데, 그때 pc가 이미 정리(close)된 상태라 answer를 조용히 무시해버리던 버그가 있었음
-  // (소유자 쪽은 연결된 것처럼 보이는데 발견자 쪽은 소리도 안 들리고 아무 반응도 없던 원인).
-  // 이제는 그 상황이 감지되면 최소한 안내 문구라도 보여줌.
+  // ⚠ 25초는 너무 짧았고, 40초로 늘린 뒤에도 실제로 소유자가 그보다 늦게 수락하는 일이 있었음.
+  // 예전엔 타임아웃되면 pc.close()로 연결 자체를 완전히 죽여버려서, 뒤늦게 소유자가 수락해도
+  // 조용히 실패했었음(소유자 쪽엔 "연결됨"이라고 뜨는데 발견자 쪽엔 소리도 안 들리고 반응도 없던
+  // 원인). 이제는 타임아웃되면 "메시지 남기기" 화면만 추가로 보여줄 뿐, 연결 자체(pc·localStream)는
+  // 계속 살려두고 백그라운드에서 계속 기다림. 그래서 소유자가 언제 수락하든 정상적으로 연결됨.
   noAnswerTimer = setTimeout(() => showLeaveMessagePrompt(), 40000);
 
   // 2) 시그널링 채널 구독
@@ -595,13 +595,14 @@ async function startCall(mode){
   rtChannel
     .on('broadcast', { event: 'answer' }, async ({ payload }) => {
       clearTimeout(noAnswerTimer);
-      if (!pc) {
-        // 이미 "메시지 남기기" 화면으로 전환된 뒤 뒤늦게 응답이 온 경우 — 연결을 재사용할 수 없어 재시도 안내
-        console.warn('[webrtc] 응답이 너무 늦게 도착해 연결을 재사용할 수 없음 (이미 메시지 남기기 화면으로 전환됨)');
-        document.getElementById('callingSub').textContent = I18N[currentLang].lateAnswerNote;
-        return;
-      }
+      if (!pc || pc.signalingState === 'closed') return; // 이미 "연결 종료" 버튼으로 완전히 끝낸 경우만 무시
+      if (pc.signalingState !== 'have-local-offer') return; // 중복 응답 방어
+
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+
+      // 뒤늦게 응답이 와서 이미 "메시지 남기기" 화면이 떠있었다면, 그 화면을 걷어내고 정상 통화 화면으로 복귀
+      document.getElementById('leaveMsgBlock').classList.remove('show');
+
       document.getElementById('callingStatus').textContent = I18N[currentLang].connected;
       document.getElementById('callingSub').textContent = '';
       document.getElementById('pulseRing').style.display = 'none';
@@ -624,10 +625,9 @@ async function startCall(mode){
     });
 }
 
-// ── 응답이 없거나 거절됐을 때: 그 자리에서 메시지 남기기 ──
+// ── 응답이 없거나 거절됐을 때: 연결은 살려둔 채로 그 자리에서 메시지 남기기 옵션을 보여줌
+// (연결을 여기서 끊어버리면 소유자가 뒤늦게 수락했을 때 조용히 실패하는 문제가 있었음) ──
 function showLeaveMessagePrompt(){
-  if (pc) { pc.close(); pc = null; }
-  if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
   document.getElementById('pulseRing').style.display = 'none';
   document.getElementById('callingStatus').textContent = I18N[currentLang].noAnswerTitle;
   document.getElementById('callingSub').textContent = I18N[currentLang].noAnswerDesc;
