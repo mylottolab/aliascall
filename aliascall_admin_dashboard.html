@@ -217,7 +217,14 @@ tr:hover td{ background:rgba(31,111,107,.03); }
 <script>
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ⚠ 2026-08-19: 관리자 페이지는 일반 회원 페이지(마이페이지 등)와 로그인 세션이 절대
+// 섞이면 안 돼서, storageKey를 별도로 지정함. 이렇게 하면 이 페이지의 로그인 세션은
+// localStorage의 'aliascall-admin-auth' 키에만 저장되고, 일반 페이지가 쓰는 기본 키
+// (sb-<project-ref>-auth-token)와는 완전히 분리됨 — 같은 브라우저에서 관리자로 로그인해도
+// 일반 페이지는 로그인 안 된 상태로 보이고, 그 반대도 마찬가지임.
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { storageKey: 'aliascall-admin-auth' }
+});
 
 const CATEGORY_LABEL = { vehicle:'차량', lost_item:'분실·도난', vulnerable_person:'아동·노인', pet:'반려동물', callback_contact:'부재중연락', misc_incident:'기타' };
 const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('ko-KR') : '-';
