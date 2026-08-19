@@ -4,7 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Aliascall — 연결하기</title>
+<!-- 2026-08-20: 발견자용 익명 긴급 알림(웹푸시)에 필요 -->
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/aliascall_icon_192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Aliascall">
+<meta name="theme-color" content="#1F6F6B">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_push.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -158,9 +165,14 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
 .chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
 .chat-bubble.them{ align-self:flex-start; background:var(--card); border:1px solid var(--line); border-bottom-left-radius:4px; }
-.chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); flex-shrink:0; }
+.chat-bubble.photo{ padding:4px; background:none !important; border:none !important; }
+.chat-photo{ max-width:170px; max-height:220px; border-radius:12px; display:block; cursor:pointer; object-fit:cover; }
+.chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); flex-shrink:0; align-items:center; }
 .chat-input-row input{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
 .chat-input-row button{ background:var(--teal); color:#fff; border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; }
+.chat-attach-btn{ background:var(--teal-tint) !important; color:var(--teal-deep) !important; font-size:18px !important; }
+.chat-closed-note{ display:none; text-align:center; padding:10px 14px; font-size:11.5px; color:var(--ink-soft); background:var(--paper); border-top:1px solid var(--line); }
+.chat-closed-note.show{ display:block; }
 
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
@@ -271,7 +283,10 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
       <button id="chatOnlyEndBtn" data-i18n="chatOnlyEnd">채팅 종료</button>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-closed-note" id="chatClosedNote">🔒 이 사건은 종료되어 더 이상 메시지를 보낼 수 없어요. 다시 연락하시려면 새로 메시지를 보내주세요.</div>
     <div class="chat-input-row">
+      <input type="file" id="chatPhotoInput" accept="image/*" style="display:none;">
+      <button type="button" class="chat-attach-btn" id="chatAttachBtn" title="사진 첨부">📎</button>
       <input type="text" id="chatInput" data-i18n-placeholder="chatInputPlaceholder" placeholder="메시지 입력…">
       <button id="chatSendBtn">➤</button>
     </div>
@@ -294,6 +309,9 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
   <button class="bottom-nav-btn mode-message" id="navTextMsg" data-mode="message">
     <span class="bn-icon">✉️</span><span data-i18n="navTextMsg">문자</span>
   </button>
+  <button class="bottom-nav-btn mode-photo" id="navPhoto" data-mode="photo">
+    <span class="bn-icon">📷</span><span data-i18n="navPhoto">사진</span>
+  </button>
 </div>
 
 <script>
@@ -308,7 +326,7 @@ const I18N = {
     findOther: '다른 등록물 찾기',
     privacyNote: '실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.',
     connectVoice: '🎧 음성 통화하기', connectVideo: '🎥 영상 통화하기', connectLiveChat: '💬 문자 채팅하기',
-    navLiveChat: '채팅', navVoice: '음성', navVideo: '영상', navTextMsg: '문자',
+    navLiveChat: '채팅', navVoice: '음성', navVideo: '영상', navTextMsg: '문자', navPhoto: '사진',
     connecting: '연결 중…', notifyingOwner: '소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.',
     leaveMsgPlaceholder: '예: 지금 못 받으시면 010-0000-0000으로 연락주세요',
     leaveMsgSend: '메시지 남기기', endCall: '연결 종료',
@@ -339,7 +357,7 @@ const I18N = {
     findOther: 'Find something else',
     privacyNote: 'Real phone numbers are never revealed. You will connect anonymously right in your browser.',
     connectVoice: '🎧 Connect by voice', connectVideo: '🎥 Connect by video', connectLiveChat: '💬 Live chat',
-    navLiveChat: 'Chat', navVoice: 'Voice', navVideo: 'Video', navTextMsg: 'Text',
+    navLiveChat: 'Chat', navVoice: 'Voice', navVideo: 'Video', navTextMsg: 'Text', navPhoto: 'Photo',
     connecting: 'Connecting…', notifyingOwner: 'Notifying the owner. Please hold on a moment.',
     leaveMsgPlaceholder: 'e.g. If you miss this, please call 010-0000-0000',
     leaveMsgSend: 'Leave a message', endCall: 'End',
@@ -577,9 +595,23 @@ const RTC_CONFIG = { iceServers: [
 const myClientId = 'caller-' + Math.random().toString(36).slice(2);
 
 let pc = null, localStream = null, rtChannel = null, currentSessionToken = null, currentMode = 'voice';
-let chatChannel = null; // 2026-08-19: 채팅은 통화 협상(rtChannel)과 완전히 분리된 별도 채널
 let offerResendInterval = null;
 let wakeupPushTimer = null; // 60초 무응답시 긴급 웹푸시 발송용 (2026-08-19 신설)
+
+// ── 2026-08-20 신설: "사건(case)" 시스템 — 채팅/사진이 영구 저장되고, 소유자가 나중에라도
+// 답장할 수 있게 하는 대화 저장 구조. finderAnonId는 이 발견자 브라우저의 익명 식별값
+// (로그인 아님 — localStorage에 저장돼서, 같은 등록물에 다시 오면 이전 대화를 이어볼 수 있음).
+function getFinderAnonId(){
+  let id = localStorage.getItem('aliascall_finder_anon_id');
+  if (!id) {
+    id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    localStorage.setItem('aliascall_finder_anon_id', id);
+  }
+  return id;
+}
+const finderAnonId = getFinderAnonId();
+let currentCaseId = null;
+let caseRealtimeChannel = null;
 
 // ── chrome://webrtc-internals 안 찾아다녀도, 연결 실패시 후보쌍(candidate-pair) 정보를
 // 콘솔에 바로 찍어주는 진단 함수 — 어떤 경로(직접연결 host/srflx, 또는 TURN relay)로
@@ -680,7 +712,21 @@ async function startCall(mode){
 
   // 2026-08-19: 채팅은 통화 협상(마이크 권한/수락 여부)과 완전히 무관하게, 요청을 보낸 이 순간
   // 바로 열림 — 소유자가 아직 수락 안 했어도, 혹은 통화 자체를 거절하더라도 문자로는 바로 소통 가능
-  subscribeChatChannel(currentSessionToken);
+  // 2026-08-20: 통화 중 미니 채팅도 이제 영구 저장되는 사건 시스템을 그대로 씀 (일관성 + 소유자가
+  // 나중에 답장 가능하도록)
+  try {
+    const openRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-open`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ registrationId, finderAnonId }),
+    });
+    const openData = await openRes.json();
+    if (openRes.ok) {
+      currentCaseId = openData.caseId;
+      (openData.messages || []).forEach((m) => appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'));
+      subscribeCaseRealtime(currentCaseId);
+    }
+  } catch (e) { console.warn('[case] 통화중 채팅용 사건 열기 실패(통화 자체엔 영향 없음)', e); }
 
   // 2) 시그널링 채널 구독
   rtChannel = sb.channel('webrtc-' + currentSessionToken, { config: { broadcast: { self: false } } });
@@ -730,7 +776,7 @@ async function startCall(mode){
       console.log('[webrtc] 상대 ICE 후보 즉시 적용:', payload.candidate.type);
       try { await pc.addIceCandidate(payload.candidate); } catch (e) { console.error('[webrtc] ICE 추가 오류', e); }
     })
-    // ⚠ 2026-08-19: 채팅은 이제 별도 chatChannel(chat-{token})로 완전히 분리됨 — 여기서는 처리 안 함
+    // ⚠ 2026-08-20: 채팅은 이제 사건(case) 시스템의 실시간 채널(case-{caseId})로 완전히 분리됨 — 여기서는 처리 안 함
     .on('broadcast', { event: 'hangup' }, () => endCall(false))
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') await createOfferAsCaller(mode);
@@ -892,7 +938,8 @@ function endCall(silent){
   if (pc) { pc.close(); pc = null; }
   if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
   if (rtChannel) { sb.removeChannel(rtChannel); rtChannel = null; }
-  unsubscribeChatChannel(); // 2026-08-19: 통화 종료와 함께 채팅 채널도 정리
+  unsubscribeCaseRealtime(); // 2026-08-20: 통화/채팅 종료와 함께 사건 실시간 채널도 정리
+  currentCaseId = null;
   document.getElementById('callingOverlay').classList.remove('show');
   document.getElementById('callControls').classList.remove('show');
   document.getElementById('callVideoArea').classList.remove('show');
@@ -900,6 +947,9 @@ function endCall(silent){
   document.getElementById('chatPanel').classList.remove('show');
   document.getElementById('chatToggleMiniBtn').style.display = 'none';
   document.getElementById('chatOnlyHeader').style.display = 'none';
+  document.getElementById('chatClosedNote').classList.remove('show');
+  document.getElementById('chatInput').disabled = false;
+  document.getElementById('chatSendBtn').disabled = false;
   updateBottomNavActive(null); // 2026-08-20: 통화/채팅이 어떤 이유로든 끝나면 하단 바 활성 표시도 초기화
   document.getElementById('chatMessages').innerHTML = '';
 
@@ -940,22 +990,54 @@ function playChatPing(){
   } catch (e) { console.warn('[notify] 채팅 알림음 재생 실패', e); }
 }
 
-function subscribeChatChannel(sessionToken){
-  if (chatChannel) { try { sb.removeChannel(chatChannel); } catch (e) {} }
-  chatChannel = sb.channel('chat-' + sessionToken, { config: { broadcast: { self: false } } });
-  chatChannel
-    .on('broadcast', { event: 'chat' }, ({ payload }) => {
-      appendChatMessage(payload.text, 'them');
+// ── 2026-08-20 신설: 사건 실시간 채널 구독 (양쪽이 화면을 열어두고 있으면 새로고침 없이 바로 반영) ──
+function subscribeCaseRealtime(caseId){
+  if (caseRealtimeChannel) { try { sb.removeChannel(caseRealtimeChannel); } catch (e) {} }
+  caseRealtimeChannel = sb.channel('case-' + caseId, { config: { broadcast: { self: false } } });
+  caseRealtimeChannel
+    .on('broadcast', { event: 'new-message' }, ({ payload }) => {
+      appendChatMessage(payload, 'them');
       playChatPing();
     })
     .subscribe();
 }
-function unsubscribeChatChannel(){
-  if (chatChannel) { try { sb.removeChannel(chatChannel); } catch (e) {} chatChannel = null; }
+function unsubscribeCaseRealtime(){
+  if (caseRealtimeChannel) { try { sb.removeChannel(caseRealtimeChannel); } catch (e) {} caseRealtimeChannel = null; }
 }
 
-// ── 2026-08-19 (2차) 신설: "문자 채팅하기" 전용 플로우 — 통화 시도 자체가 전혀 없음 ──
+// ── 2026-08-20 신설: 발견자용 익명 긴급 알림(웹푸시) — 소유자가 답장하면 화면을 안 보고 있어도
+// 알림이 오도록 함. 별도 설정화면 없이, 첫 메시지 전송이라는 자연스러운 흐름 안에서 자동으로
+// 브라우저 허용 팝업을 띄움(사용자가 "허용"만 누르면 끝 — 계정/전화번호 필요 없음). ──
+async function attemptFinderPushSubscribe(caseId){
+  try {
+    if (!pushIsSupported() || (_isIOS() && !_isStandalone())) return; // 미지원 환경이거나 iOS 홈화면 미추가면 조용히 건너뜀
+    if (Notification.permission === 'denied') return; // 이미 거부했으면 재요청 안 함(브라우저가 어차피 막음)
+    const reg = await registerAliascallServiceWorker();
+    if (!reg) return;
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) return; // 이미 구독중이면 스킵
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: _urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+    const subJson = sub.toJSON();
+    await fetch(`${SUPABASE_URL}/functions/v1/aliascall-finder-push-subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caseId, finderAnonId, endpoint: subJson.endpoint, p256dh: subJson.keys.p256dh, auth_key: subJson.keys.auth }),
+    });
+  } catch (e) { console.warn('[push] 발견자 익명 알림 구독 시도 실패(대화 자체엔 영향 없음)', e); }
+}
+
+// ── 2026-08-19 (2차) 신설, 2026-08-20 대폭 수정(사건 시스템 연동) ──
+// "문자 채팅하기" 전용 플로우 — 통화 시도 자체가 전혀 없음. 이제 대화 내용이 영구 저장되고,
+// 소유자가 나중에라도 답장할 수 있음(기존엔 그 순간 방송만 하고 사라졌음).
 async function startLiveChatOnly(){
+  const registrationId = document.getElementById('stateFound').dataset.registrationId; // ⚠ 2026-08-20: 예전엔 이 선언이 빠져있어서 채팅 시작이 에러로 깨져있었음(수정함)
   currentMode = 'chat';
   currentSessionToken = makeSessionToken();
   const overlay = document.getElementById('callingOverlay');
@@ -965,20 +1047,40 @@ async function startLiveChatOnly(){
   document.getElementById('chatToggleMiniBtn').style.display = 'none';
   document.getElementById('chatPanel').classList.add('show');
   document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('chatClosedNote').classList.remove('show');
+  document.getElementById('chatInput').disabled = false;
+  document.getElementById('chatSendBtn').disabled = false;
 
+  // 1) 사건 확보 (기존 열린 사건이 있으면 재사용 + 대화 이력 불러옴, 없으면 새로 생성)
+  let openData;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-open`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ registrationId, finderAnonId }),
+    });
+    openData = await res.json();
+    if (!res.ok) throw new Error(openData.error || '사건 생성 실패');
+  } catch (e) {
+    console.error('[case] 사건 열기 실패', e);
+    alert(I18N[currentLang].callFailed);
+    endCall(true);
+    return;
+  }
+  currentCaseId = openData.caseId;
+  (openData.messages || []).forEach((m) => appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'));
+
+  // 2) 소유자 알림용 webrtc_sessions 행 생성(기존 전화벨/배너 알림 구조 그대로 재사용) + case_id 연결
   const { error } = await sb.from('webrtc_sessions').insert({
     registration_id: registrationId,
     call_type: 'chat',
     session_token: currentSessionToken,
     owner_notified_at: new Date().toISOString(),
+    case_id: currentCaseId,
   });
-  if (error) {
-    alert(I18N[currentLang].callFailed);
-    endCall(true);
-    return;
-  }
+  if (error) console.warn('[webrtc] 채팅 알림용 세션 기록 실패(대화 자체엔 영향 없음)', error);
 
-  subscribeChatChannel(currentSessionToken);
+  subscribeCaseRealtime(currentCaseId);
 
   // 통화와 마찬가지로, 소유자가 15초간 응답 없으면 긴급 웹푸시 발송 (2026-08-20: 60초→15초 단축)
   wakeupPushTimer = setTimeout(() => {
@@ -989,26 +1091,134 @@ async function startLiveChatOnly(){
     }).catch((e) => console.warn('[push] 긴급 알림 발송 요청 실패(채팅 자체엔 영향 없음)', e));
   }, 15000);
 }
-document.getElementById('chatOnlyEndBtn').addEventListener('click', () => endCall(false));
+document.getElementById('chatOnlyEndBtn').addEventListener('click', async () => {
+  // 2026-08-20: "채팅 종료" 버튼은 이제 사건 자체를 종료함(양쪽 다 다시 메시지 못 보냄)
+  if (currentCaseId && confirm('이 대화를 종료하시겠어요? 종료하면 더 이상 메시지를 주고받을 수 없어요.')) {
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-close`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ caseId: currentCaseId, finderAnonId }),
+      });
+    } catch (e) { console.warn('[case] 사건 종료 요청 실패', e); }
+  }
+  endCall(false);
+});
 document.getElementById('chatToggleMiniBtn').addEventListener('click', () => {
   document.getElementById('chatPanel').classList.toggle('show');
 });
 
-function appendChatMessage(text, who){
+// ── 사진 첨부 ──
+document.getElementById('chatAttachBtn').addEventListener('click', () => document.getElementById('chatPhotoInput').click());
+document.getElementById('chatPhotoInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  await sendChatPhoto(file);
+});
+
+async function sendChatPhoto(file){
+  if (!currentCaseId) return;
+  if (file.size > 8 * 1024 * 1024) { alert('사진 용량이 너무 커요 (최대 8MB).'); return; }
+  const attachBtn = document.getElementById('chatAttachBtn');
+  attachBtn.disabled = true;
+  try {
+    const base64Data = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const uploadRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-photo-upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caseId: currentCaseId, base64Data, contentType: file.type }),
+    });
+    const uploadData = await uploadRes.json();
+    if (!uploadRes.ok) throw new Error(uploadData.error || '업로드 실패');
+
+    const msgRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ finderAnonId, registrationId: document.getElementById('stateFound').dataset.registrationId, caseId: currentCaseId, photoUrl: uploadData.url }),
+    });
+    const msgData = await msgRes.json();
+    if (!msgRes.ok) throw new Error(msgData.error || '전송 실패');
+
+    appendChatMessage({ message_type: 'photo', content: uploadData.url }, 'me');
+    attemptFinderPushSubscribe(currentCaseId);
+  } catch (e) {
+    console.error('[case] 사진 전송 실패', e);
+    if (String(e.message || '').includes('종료')) {
+      document.getElementById('chatClosedNote').classList.add('show');
+      document.getElementById('chatInput').disabled = true;
+      document.getElementById('chatSendBtn').disabled = true;
+    } else {
+      alert('사진을 보내지 못했어요. 잠시 후 다시 시도해주세요.');
+    }
+  } finally {
+    attachBtn.disabled = false;
+  }
+}
+
+// ── 2026-08-20 신설: 하단 바 "사진" 버튼 — 채팅 모드가 아니면 먼저 채팅을 열고 바로 사진 선택창을 띄움
+document.getElementById('navPhoto').addEventListener('click', async () => {
+  if (currentMode !== 'chat' || !document.getElementById('callingOverlay').classList.contains('show')) {
+    switchMode('chat');
+    // startLiveChatOnly()의 사건 확보(fetch)가 끝나야 currentCaseId가 준비되므로 잠깐 기다림
+    let tries = 0;
+    while (!currentCaseId && tries < 40) { await new Promise((r) => setTimeout(r, 100)); tries++; }
+  }
+  document.getElementById('chatPhotoInput').click();
+});
+
+function appendChatMessage(msg, who){
   const el = document.createElement('div');
-  el.className = 'chat-bubble ' + who;
-  el.textContent = text;
+  const isPhoto = msg.message_type === 'photo';
+  el.className = 'chat-bubble ' + who + (isPhoto ? ' photo' : '');
+  if (isPhoto) {
+    const img = document.createElement('img');
+    img.src = msg.content;
+    img.className = 'chat-photo';
+    img.addEventListener('click', () => openLightbox('<img src="' + msg.content + '" style="max-width:100%;max-height:85vh;border-radius:8px;">'));
+    el.appendChild(img);
+  } else {
+    el.textContent = msg.content;
+  }
   const list = document.getElementById('chatMessages');
   list.appendChild(el);
   list.scrollTop = list.scrollHeight;
 }
-function sendChatMessage(){
+async function sendChatMessage(){
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
-  if (!text || !chatChannel) return;
-  chatChannel.send({ type: 'broadcast', event: 'chat', payload: { text } });
-  appendChatMessage(text, 'me');
-  input.value = '';
+  if (!text || !currentCaseId) return;
+  const sendBtn = document.getElementById('chatSendBtn');
+  sendBtn.disabled = true;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ finderAnonId, registrationId: document.getElementById('stateFound').dataset.registrationId, caseId: currentCaseId, text }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '전송 실패');
+    appendChatMessage({ message_type: 'text', content: text }, 'me');
+    input.value = '';
+    attemptFinderPushSubscribe(currentCaseId); // 2026-08-20: 첫 메시지 보낸 김에 자연스럽게 답장 알림도 물어봄
+  } catch (e) {
+    console.error('[case] 메시지 전송 실패', e);
+    if (String(e.message || '').includes('종료')) {
+      document.getElementById('chatClosedNote').classList.add('show');
+      input.disabled = true;
+      sendBtn.disabled = true;
+      return;
+    }
+    alert('메시지를 보내지 못했어요. 잠시 후 다시 시도해주세요.');
+  } finally {
+    if (!input.disabled) sendBtn.disabled = false;
+  }
 }
 document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
 document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
