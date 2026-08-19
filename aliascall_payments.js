@@ -12,11 +12,29 @@ async function _getAuthToken(sb){
   return session?.access_token || null;
 }
 
-// ── 이니시스 결제 시작 (INIpay PRO, 모바일표준결제 P_ 파라미터 방식) ──
-// ⚠ 이 부분(폼 필드명·게이트웨이 주소)은 이니시스 공식 연동 가이드의 "모바일표준결제"
-// 규격을 기준으로 재구성한 것입니다. 실제 결제 전에 반드시 이니시스 테스트(TEST) 모드로
-// 먼저 결제 흐름을 검증해보시길 권장드립니다 (금액 위변조 방지 서명이 안 맞으면 이니시스
-// 쪽에서 바로 에러를 띄워주기 때문에, 틀렸다면 실제 결제 전에 확인하실 수 있어요).
+// ── 이니시스 결제 시작 (INIpay PRO 공식 SDK 방식) ──
+// ⚠ 2026-08-19 수정: 처음엔 이니시스 공식 SDK 코드를 못 받아서 "모바일표준결제 P_ 파라미터를
+// 수동으로 폼에 담아 mobile.inicis.com에 직접 POST하는" 방식으로 추측 구현했었는데, 이게 실제
+// 이니시스 스펙과 안 맞아서 결제창 자체가 안 뜨고 바로 실패했음. PaperLotto의 실제 작동 코드를
+// 받아서 확인해보니, INIPayPro_v2.js라는 공식 SDK를 로드해서 INIPayPro.requestPayment(...) 함수를
+// 직접 호출하는 방식이었음 — 이제 그 방식 그대로 이식함.
+let _iniPaySdkLoaded = false;
+let _iniPaySdkLoading = null;
+
+function _loadIniPaySdk(){
+  if (_iniPaySdkLoaded) return Promise.resolve();
+  if (_iniPaySdkLoading) return _iniPaySdkLoading;
+  _iniPaySdkLoading = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://paypro.inicis.com/std/payment/js/INIPayPro_v2.js';
+    script.charset = 'UTF-8';
+    script.onload = () => { _iniPaySdkLoaded = true; resolve(); };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+  return _iniPaySdkLoading;
+}
+
 async function startInicisPayment(sb, opts){
   const { purpose, price, goodname, buyername, buyertel, buyeremail, months, returnPage } = opts;
   const token = await _getAuthToken(sb);
@@ -37,34 +55,35 @@ async function startInicisPayment(sb, opts){
     return;
   }
 
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = 'https://mobile.inicis.com/smart/payment/';
-  form.acceptCharset = 'UTF-8';
-  const fields = {
-    P_INI_PAYMENT: 'CARD',
+  try {
+    await _loadIniPaySdk();
+  } catch (e) {
+    console.error('[payments] 이니시스 SDK 로드 실패', e);
+    alert('결제 모듈을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+
+  // PC/모바일 자동 감지 (INIpay PRO는 이 값 하나로 PC/모바일 결제창을 구분함)
+  const deviceType = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'MOBILE' : 'WEB';
+
+  window.INIPayPro.requestPayment({
     P_MID: data.mid,
     P_OID: data.oid,
+    P_PAY_TYPE: 'CARD',
+    P_DEVICE_TYPE: deviceType,
+    P_IDCCODE: 'Y',
     P_AMT: data.amt,
-    P_GOODS: goodname,
-    P_UNAME: buyername,
-    P_MOBILE: buyertel || '',
-    P_EMAIL: buyeremail || '',
+    P_GOODS: data.goodname,
+    P_UNAME: data.buyername,
+    P_MOBILE: data.buyertel || '',
+    P_EMAIL: data.buyeremail || '',
     P_NEXT_URL: data.nextUrl,
     P_NOTI_URL: data.notiUrl,
-    P_HPP_METHOD: '1',
+    P_CLOSE_URL: data.closeUrl,
     P_CHARSET: 'UTF-8',
     P_TIMESTAMP: data.timestamp,
     P_CHKFAKE: data.chkfake,
-    P_CLOSE_URL: data.closeUrl,
-  };
-  for (const [k, v] of Object.entries(fields)) {
-    const input = document.createElement('input');
-    input.type = 'hidden'; input.name = k; input.value = v;
-    form.appendChild(input);
-  }
-  document.body.appendChild(form);
-  form.submit();
+  });
 }
 
 // ── PayPal 버튼 렌더링 (충전/구독 공용) ──
