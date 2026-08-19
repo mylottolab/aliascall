@@ -105,53 +105,51 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 
 .guide-link-bottom{ display:block; text-align:center; margin-top:18px; font-size:12px; color:var(--ink-soft); text-decoration:underline; }
 
-.calling-overlay{ display:none; position:fixed; inset:0; background:var(--teal-deep); z-index:50; flex-direction:column; align-items:center; justify-content:center; color:#fff; text-align:center; padding:24px; }
+/* 2026-08-19: 통화 진행 화면을 전체화면 오버레이에서 "상단 상태바 + 하단 상시 채팅" 구조로
+   재설계함 — 채팅이 마이크 권한/수락 여부와 무관하게 요청 시작 즉시 열리도록 하기 위함
+   (수신자 쪽 aliascall_incoming_calls.html과 동일한 설계) */
+.calling-overlay{ display:none; position:fixed; inset:0; z-index:50; background:var(--paper); flex-direction:column; }
 .calling-overlay.show{ display:flex; }
-.calling-overlay .pulse-ring{ width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; margin-bottom:20px; animation:pulseRing 1.6s ease-in-out infinite; }
-.calling-overlay .pulse-ring .dot{ width:44px; height:44px; border-radius:50%; background:#fff; }
-@keyframes pulseRing{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,255,255,.25); } 50%{ box-shadow:0 0 0 16px rgba(255,255,255,0); } }
-.calling-overlay h3{ font-size:17px; margin-bottom:6px; }
-.calling-overlay p{ font-size:12.5px; color:rgba(255,255,255,.75); margin:0 0 24px; }
-.calling-overlay .end-btn{ background:var(--coral); color:#fff; border:none; border-radius:12px; padding:13px 28px; font-weight:700; font-size:14px; cursor:pointer; }
-.leave-msg-block{ display:none; flex-direction:column; gap:10px; width:100%; max-width:340px; margin-top:6px; }
+.calling-topbar{ flex-shrink:0; max-height:42vh; overflow-y:auto; background:var(--teal-deep); color:#fff; text-align:center; padding:20px 22px; display:flex; flex-direction:column; align-items:center; }
+.calling-topbar .pulse-ring{ width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; margin-bottom:12px; animation:pulseRing 1.6s ease-in-out infinite; flex-shrink:0; }
+.calling-topbar .pulse-ring .dot{ width:30px; height:30px; border-radius:50%; background:#fff; }
+@keyframes pulseRing{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,255,255,.25); } 50%{ box-shadow:0 0 0 14px rgba(255,255,255,0); } }
+.calling-topbar h3{ font-size:15.5px; margin:0 0 3px; }
+.calling-topbar p{ font-size:11.5px; color:rgba(255,255,255,.75); margin:0 0 14px; }
+.calling-topbar .end-btn{ background:var(--coral); color:#fff; border:none; border-radius:10px; padding:10px 22px; font-weight:700; font-size:13px; cursor:pointer; }
+.leave-msg-block{ display:none; flex-direction:column; gap:9px; width:100%; max-width:340px; margin-top:4px; }
 .leave-msg-block.show{ display:flex; }
-.leave-msg-block input{ border:1.5px solid rgba(255,255,255,.3); background:rgba(255,255,255,.08); color:#fff; border-radius:10px; padding:12px 14px; font-size:13.5px; }
+.leave-msg-block input{ border:1.5px solid rgba(255,255,255,.3); background:rgba(255,255,255,.08); color:#fff; border-radius:10px; padding:11px 13px; font-size:13px; }
 .leave-msg-block input::placeholder{ color:rgba(255,255,255,.5); }
-.leave-msg-block button{ background:var(--coral); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:13.5px; cursor:pointer; }
+.leave-msg-block button{ background:var(--coral); color:#fff; border:none; border-radius:10px; padding:11px; font-weight:700; font-size:13px; cursor:pointer; }
 
-/* ── 통화중 화면 (비디오/컨트롤/채팅) ──
-   ⚠ 예전엔 display:none으로 숨겼는데, 음성통화 모드에서는 이 안에 있는 #remoteVideo가
+/* ⚠ 예전엔 display:none으로 숨겼는데, 음성통화 모드에서는 이 안에 있는 #remoteVideo가
    상대방 오디오까지 재생하는 요소라서, display:none인 조상 안에 있으면 모바일 브라우저에서
    오디오 재생이 막히거나 불안정해지는 문제가 있었음(음성연결은 되는데 소리가 안 들리는 버그의
    원인). visibility:hidden + height:0 방식으로 바꿔서 화면엔 안 보이되 오디오는 계속 흐르게 함. */
-.call-video-area{ visibility:hidden; height:0; overflow:hidden; position:relative; width:100%; max-width:360px; aspect-ratio:3/4; background:#000; border-radius:16px; margin-bottom:0; }
-.call-video-area.show{ visibility:visible; height:auto; margin-bottom:18px; }
+.call-video-area{ visibility:hidden; height:0; overflow:hidden; position:relative; width:100%; max-width:200px; aspect-ratio:3/4; background:#000; border-radius:12px; margin-bottom:0; }
+.call-video-area.show{ visibility:visible; height:auto; margin-bottom:10px; }
 .call-video-area video{ width:100%; height:100%; object-fit:cover; }
 #remoteVideo{ position:absolute; inset:0; }
-#localVideo{ position:absolute; width:88px; height:118px; right:10px; bottom:10px; border-radius:10px; border:2px solid rgba(255,255,255,.6); object-fit:cover; }
-.voice-avatar{ display:none; width:88px; height:88px; border-radius:50%; background:rgba(255,255,255,.14); align-items:center; justify-content:center; font-size:36px; margin-bottom:20px; }
+#localVideo{ position:absolute; width:60px; height:80px; right:8px; bottom:8px; border-radius:8px; border:2px solid rgba(255,255,255,.6); object-fit:cover; }
+.voice-avatar{ display:none; width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,.14); align-items:center; justify-content:center; font-size:24px; margin-bottom:10px; flex-shrink:0; }
 .voice-avatar.show{ display:flex; }
 
-.call-controls{ display:none; gap:14px; margin-top:6px; }
+.call-controls{ display:none; gap:12px; margin-top:4px; }
 .call-controls.show{ display:flex; }
-.ctrl-btn{ width:52px; height:52px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(255,255,255,.14); color:#fff; }
+.ctrl-btn{ width:44px; height:44px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:17px; background:rgba(255,255,255,.14); color:#fff; }
 .ctrl-btn.active-off{ background:var(--coral); }
 .ctrl-btn.hangup{ background:var(--danger); }
-.unmute-btn{ display:none; margin-top:16px; background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.4); border-radius:20px; padding:10px 18px; font-size:12.5px; font-weight:700; cursor:pointer; }
+.unmute-btn{ display:none; margin-top:12px; background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.4); border-radius:18px; padding:8px 14px; font-size:11.5px; font-weight:700; cursor:pointer; }
 .unmute-btn.show{ display:inline-block; }
 
-.chat-toggle-btn{ position:fixed; right:18px; bottom:18px; width:52px; height:52px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:20px; cursor:pointer; z-index:55; display:none; align-items:center; justify-content:center; }
-.chat-toggle-btn.show{ display:flex; }
-.chat-panel{ display:none; position:fixed; inset:0; z-index:60; background:var(--paper); flex-direction:column; }
-.chat-panel.show{ display:flex; }
-.chat-panel-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line); background:var(--card); }
-.chat-panel-header b{ font-size:14px; }
-.chat-panel-header button{ background:none; border:none; font-size:18px; cursor:pointer; color:var(--ink-soft); }
+/* 2026-08-19: 채팅은 통화 협상과 완전히 분리, 요청 시작 즉시 하단에 상시 표시 */
+.session-chat{ flex:1; display:flex; flex-direction:column; min-height:0; background:var(--paper); }
 .chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
 .chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
 .chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
 .chat-bubble.them{ align-self:flex-start; background:var(--card); border:1px solid var(--line); border-bottom-left-radius:4px; }
-.chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); }
+.chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); flex-shrink:0; }
 .chat-input-row input{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
 .chat-input-row button{ background:var(--teal); color:#fff; border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; }
 
@@ -239,34 +237,35 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 </div>
 
 <div class="calling-overlay" id="callingOverlay">
-  <div class="pulse-ring" id="pulseRing"><div class="dot"></div></div>
-  <div class="voice-avatar" id="voiceAvatar">🎧</div>
-  <div class="call-video-area" id="callVideoArea">
-    <video id="remoteVideo" autoplay playsinline muted></video>
-    <video id="localVideo" autoplay playsinline muted></video>
-    <audio id="remoteAudio" autoplay></audio>
+  <div class="calling-topbar" id="callingTopbar">
+    <div class="pulse-ring" id="pulseRing"><div class="dot"></div></div>
+    <div class="voice-avatar" id="voiceAvatar">🎧</div>
+    <div class="call-video-area" id="callVideoArea">
+      <video id="remoteVideo" autoplay playsinline muted></video>
+      <video id="localVideo" autoplay playsinline muted></video>
+      <audio id="remoteAudio" autoplay></audio>
+    </div>
+    <h3 id="callingStatus" data-i18n="connecting">연결 중…</h3>
+    <p id="callingSub" data-i18n="notifyingOwner">소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.</p>
+    <div class="call-controls" id="callControls">
+      <button class="ctrl-btn" id="muteBtn">🎤</button>
+      <button class="ctrl-btn hangup" id="endCallBtn">📵</button>
+    </div>
+    <button class="unmute-btn" id="unmuteBtn" data-i18n="unmuteBtn">🔊 소리가 안 들리면 여기를 탭하세요</button>
+    <div class="leave-msg-block" id="leaveMsgBlock">
+      <input type="text" id="leaveMsgInput" data-i18n-placeholder="leaveMsgPlaceholder" placeholder="예: 지금 못 받으시면 010-0000-0000으로 연락주세요">
+      <button id="leaveMsgSendBtn" data-i18n="leaveMsgSend">메시지 남기기</button>
+    </div>
+    <button class="end-btn" id="endCallBtnInitial" data-i18n="endCall">연결 종료</button>
   </div>
-  <h3 id="callingStatus" data-i18n="connecting">연결 중…</h3>
-  <p id="callingSub" data-i18n="notifyingOwner">소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.</p>
-  <div class="call-controls" id="callControls">
-    <button class="ctrl-btn" id="muteBtn">🎤</button>
-    <button class="ctrl-btn hangup" id="endCallBtn">📵</button>
-  </div>
-  <button class="unmute-btn" id="unmuteBtn" data-i18n="unmuteBtn">🔊 소리가 안 들리면 여기를 탭하세요</button>
-  <div class="leave-msg-block" id="leaveMsgBlock">
-    <input type="text" id="leaveMsgInput" data-i18n-placeholder="leaveMsgPlaceholder" placeholder="예: 지금 못 받으시면 010-0000-0000으로 연락주세요">
-    <button id="leaveMsgSendBtn" data-i18n="leaveMsgSend">메시지 남기기</button>
-  </div>
-  <button class="end-btn" id="endCallBtnInitial" data-i18n="endCall">연결 종료</button>
-</div>
 
-<button class="chat-toggle-btn" id="chatToggleBtn">💬</button>
-<div class="chat-panel" id="chatPanel">
-  <div class="chat-panel-header"><b data-i18n="chatTitle">채팅</b><button id="chatCloseBtn">✕</button></div>
-  <div class="chat-messages" id="chatMessages"></div>
-  <div class="chat-input-row">
-    <input type="text" id="chatInput" data-i18n-placeholder="chatInputPlaceholder" placeholder="메시지 입력…">
-    <button id="chatSendBtn">➤</button>
+  <!-- 2026-08-19: 채팅은 통화 협상(마이크 권한/수락 여부)과 완전히 분리, 요청 시작 즉시 상시 표시 -->
+  <div class="session-chat" id="chatPanel">
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" data-i18n-placeholder="chatInputPlaceholder" placeholder="메시지 입력…">
+      <button id="chatSendBtn">➤</button>
+    </div>
   </div>
 </div>
 
@@ -548,6 +547,7 @@ const RTC_CONFIG = { iceServers: [
 const myClientId = 'caller-' + Math.random().toString(36).slice(2);
 
 let pc = null, localStream = null, rtChannel = null, currentSessionToken = null, currentMode = 'voice';
+let chatChannel = null; // 2026-08-19: 채팅은 통화 협상(rtChannel)과 완전히 분리된 별도 채널
 let offerResendInterval = null;
 let wakeupPushTimer = null; // 60초 무응답시 긴급 웹푸시 발송용 (2026-08-19 신설)
 
@@ -641,6 +641,10 @@ async function startCall(mode){
     }).catch((e) => console.warn('[push] 긴급 알림 발송 요청 실패(통화 자체엔 영향 없음)', e));
   }, 60000);
 
+  // 2026-08-19: 채팅은 통화 협상(마이크 권한/수락 여부)과 완전히 무관하게, 요청을 보낸 이 순간
+  // 바로 열림 — 소유자가 아직 수락 안 했어도, 혹은 통화 자체를 거절하더라도 문자로는 바로 소통 가능
+  subscribeChatChannel(currentSessionToken);
+
   // 2) 시그널링 채널 구독
   rtChannel = sb.channel('webrtc-' + currentSessionToken, { config: { broadcast: { self: false } } });
   // ⚠ 상대방이 보낸 ICE 후보(네트워크 경로 정보)가, 우리가 setRemoteDescription을 끝내기도
@@ -675,7 +679,6 @@ async function startCall(mode){
       document.getElementById('callingSub').textContent = '';
       document.getElementById('pulseRing').style.display = 'none';
       document.getElementById('callControls').classList.add('show');
-      document.getElementById('chatToggleBtn').classList.add('show');
       if (mode === 'video') document.getElementById('callVideoArea').classList.add('show');
       else document.getElementById('voiceAvatar').classList.add('show');
     })
@@ -690,7 +693,7 @@ async function startCall(mode){
       console.log('[webrtc] 상대 ICE 후보 즉시 적용:', payload.candidate.type);
       try { await pc.addIceCandidate(payload.candidate); } catch (e) { console.error('[webrtc] ICE 추가 오류', e); }
     })
-    .on('broadcast', { event: 'chat' }, ({ payload }) => appendChatMessage(payload.text, 'them'))
+    // ⚠ 2026-08-19: 채팅은 이제 별도 chatChannel(chat-{token})로 완전히 분리됨 — 여기서는 처리 안 함
     .on('broadcast', { event: 'hangup' }, () => endCall(false))
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') await createOfferAsCaller(mode);
@@ -852,12 +855,11 @@ function endCall(silent){
   if (pc) { pc.close(); pc = null; }
   if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
   if (rtChannel) { sb.removeChannel(rtChannel); rtChannel = null; }
+  unsubscribeChatChannel(); // 2026-08-19: 통화 종료와 함께 채팅 채널도 정리
   document.getElementById('callingOverlay').classList.remove('show');
   document.getElementById('callControls').classList.remove('show');
   document.getElementById('callVideoArea').classList.remove('show');
   document.getElementById('voiceAvatar').classList.remove('show');
-  document.getElementById('chatToggleBtn').classList.remove('show');
-  document.getElementById('chatPanel').classList.remove('show');
   document.getElementById('chatMessages').innerHTML = '';
 
   callEnding = false;
@@ -873,7 +875,44 @@ document.getElementById('muteBtn').addEventListener('click', () => {
   btn.classList.toggle('active-off', isMuted);
 });
 
-// ── 채팅 (일회성, DB 미저장) ──
+// ── 채팅 (일회성, DB 미저장) — 2026-08-19: 통화 협상과 완전히 분리된 별도 채널로 재설계 ──
+let sharedAudioCtx = null;
+function getAudioCtx(){
+  if (!sharedAudioCtx) sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return sharedAudioCtx;
+}
+// 채팅 메시지 도착 알림음 — 통화벨과 헷갈리지 않도록 짧은 "핑" 한 번으로 구분 (수신자 쪽과 동일)
+function playChatPing(){
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 1046;
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.22, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.22);
+  } catch (e) { console.warn('[notify] 채팅 알림음 재생 실패', e); }
+}
+
+function subscribeChatChannel(sessionToken){
+  if (chatChannel) { try { sb.removeChannel(chatChannel); } catch (e) {} }
+  chatChannel = sb.channel('chat-' + sessionToken, { config: { broadcast: { self: false } } });
+  chatChannel
+    .on('broadcast', { event: 'chat' }, ({ payload }) => {
+      appendChatMessage(payload.text, 'them');
+      playChatPing();
+    })
+    .subscribe();
+}
+function unsubscribeChatChannel(){
+  if (chatChannel) { try { sb.removeChannel(chatChannel); } catch (e) {} chatChannel = null; }
+}
+
 function appendChatMessage(text, who){
   const el = document.createElement('div');
   el.className = 'chat-bubble ' + who;
@@ -882,13 +921,11 @@ function appendChatMessage(text, who){
   list.appendChild(el);
   list.scrollTop = list.scrollHeight;
 }
-document.getElementById('chatToggleBtn').addEventListener('click', () => document.getElementById('chatPanel').classList.add('show'));
-document.getElementById('chatCloseBtn').addEventListener('click', () => document.getElementById('chatPanel').classList.remove('show'));
 function sendChatMessage(){
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
-  if (!text || !rtChannel) return;
-  rtChannel.send({ type: 'broadcast', event: 'chat', payload: { text } });
+  if (!text || !chatChannel) return;
+  chatChannel.send({ type: 'broadcast', event: 'chat', payload: { text } });
   appendChatMessage(text, 'me');
   input.value = '';
 }
