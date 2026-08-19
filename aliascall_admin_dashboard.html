@@ -380,7 +380,7 @@ async function loadPayments(){
   tbody.innerHTML = data.map(p => `
     <tr>
       <td>${p.method}</td>
-      <td class="mono">${(p.currency_code === 'KRW' ? '₩' : '$')}${Number(p.amount_minor_units).toLocaleString()}</td>
+      <td class="mono">${p.currency_code === 'KRW' ? '₩' + Number(p.amount_minor_units).toLocaleString() : '$' + (Number(p.amount_minor_units) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
       <td><span class="chip ${p.status === 'completed' ? 'active' : (p.status === 'pending' ? 'pending' : 'suspended')}">${p.status}</span></td>
       <td>${fmtDate(p.created_at)}</td>
     </tr>
