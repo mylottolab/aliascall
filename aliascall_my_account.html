@@ -4,8 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aliascall — 내 계정</title>
+<!-- 2026-08-19: 웹푸시(iOS 홈화면 추가 포함)를 위한 PWA 매니페스트 + 아이콘 링크 -->
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/aliascall_icon_192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Aliascall">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1F6F6B">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_payments.js"></script>
+<script src="aliascall_push.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -211,6 +219,17 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
+
+/* 2026-08-19: 웹푸시 "긴급 알림 켜기" UI 공용 스타일 (registration_mockup.html과 동일) */
+.push-optin-card{ background:var(--teal-tint); border:1px solid rgba(31,111,107,.25); border-radius:14px; padding:16px 18px; }
+.push-optin-title{ font-weight:700; font-size:14.5px; color:var(--teal-deep); margin-bottom:6px; }
+.push-optin-desc{ font-size:13px; color:var(--ink-soft); line-height:1.55; margin-bottom:12px; }
+.push-optin-btn{ background:var(--teal); color:#fff; border:none; border-radius:10px; padding:10px 16px; font-size:13.5px; font-weight:600; cursor:pointer; }
+.push-optin-btn:disabled{ opacity:.6; cursor:default; }
+.push-optin-btn-off{ background:transparent; color:var(--teal-deep); border:1px solid rgba(31,111,107,.35); }
+.push-optin-active{ background:#E4F3EA; border-color:rgba(31,111,107,.3); }
+.push-optin-ios-guide b{ color:var(--teal-deep); }
+.push-optin-note{ font-size:12.5px; color:var(--ink-soft); padding:8px 4px; }
 </style>
 </head>
 <body>
@@ -294,6 +313,11 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     <div class="listen-reminder" id="listenReminder" data-i18n-html="listenReminderText">
       💡 연결 요청을 놓치지 않으려면 <a href="aliascall_incoming_calls.html">수신 대기 화면</a>을 자주 확인해주세요. 이 화면(마이페이지)을 열어두셔도 연결 요청이 오면 바로 알림이 뜹니다.
     </div>
+
+    <!-- 2026-08-19 신설: 화면을 안 보고 있어도 놓치지 않도록 하는 긴급 알림(웹푸시) 켜기 UI.
+         등록화면 완료단계에서 이미 켜셨다면 여기선 "켜짐" 상태로 표시되고, 아직이면 여기서도 켤 수 있음. -->
+    <div id="pushOptInContainer" style="margin-bottom:16px;"></div>
+
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
       <div class="page-title" data-i18n="pageTitle" style="margin-bottom:0;">내 계정</div>
       <button id="logoutBtn" class="logout-btn" data-i18n="logoutBtn">로그아웃</button>
@@ -1027,6 +1051,7 @@ async function showMyPage(session){
   await loadSubscriptionStatus(session.user.id);
   await loadMyRegistrations(session.user.id);
   initIncomingWatcher(session.user.id);
+  renderPushOptIn(sb, 'pushOptInContainer'); // 2026-08-19: 긴급 알림 켜기/상태 표시
 }
 
 (async function init(){

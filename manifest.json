@@ -1,0 +1,15 @@
+{
+  "name": "Aliascall",
+  "short_name": "Aliascall",
+  "description": "실제 전화번호 노출 없이 QR코드로 발견자와 소유자를 익명 연결합니다.",
+  "start_url": "/aliascall_my_account.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F4EDE3",
+  "theme_color": "#1F6F63",
+  "lang": "ko",
+  "icons": [
+    { "src": "/aliascall_icon_192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/aliascall_icon_512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

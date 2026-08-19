@@ -4,8 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aliascall — 등록하기</title>
+<!-- 2026-08-19: 웹푸시(iOS 홈화면 추가 포함)를 위한 PWA 매니페스트 + 아이콘 링크 -->
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/aliascall_icon_192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Aliascall">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1F6F6B">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_payments.js"></script>
+<script src="aliascall_push.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -260,6 +268,17 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
+
+/* 2026-08-19: 웹푸시 "긴급 알림 켜기" UI 공용 스타일 (아이콘 배지 카드 형태) */
+.push-optin-card{ background:var(--teal-tint); border:1px solid rgba(31,111,107,.25); border-radius:14px; padding:16px 18px; }
+.push-optin-title{ font-weight:700; font-size:14.5px; color:var(--teal-deep); margin-bottom:6px; }
+.push-optin-desc{ font-size:13px; color:var(--ink-soft); line-height:1.55; margin-bottom:12px; }
+.push-optin-btn{ background:var(--teal); color:#fff; border:none; border-radius:10px; padding:10px 16px; font-size:13.5px; font-weight:600; cursor:pointer; }
+.push-optin-btn:disabled{ opacity:.6; cursor:default; }
+.push-optin-btn-off{ background:transparent; color:var(--teal-deep); border:1px solid rgba(31,111,107,.35); }
+.push-optin-active{ background:#E4F3EA; border-color:rgba(31,111,107,.3); }
+.push-optin-ios-guide b{ color:var(--teal-deep); }
+.push-optin-note{ font-size:12.5px; color:var(--ink-soft); padding:8px 4px; }
 </style>
 </head>
 <body>
@@ -365,11 +384,6 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
         <option value="IT">🇮🇹 이탈리아</option>
         <option value="DE">🇩🇪 독일</option>
       </select>
-    </div>
-    <div class="field">
-      <label><span data-i18n="wakeupLabel">백업 알림용 전화번호</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></label>
-      <div class="mic-input-wrap"><input type="text" id="wakeupPhone" placeholder="+82 10-0000-0000"><button type="button" class="mic-btn-sm" data-target="wakeupPhone" aria-label="음성 입력">🎤</button></div>
-      <div class="hint" data-i18n="wakeupHint">통화·문자를 직접 연결하는 용도가 아닙니다. 누군가 연결을 시도했는데 60초간 앱 알림에 응답이 없을 때만 "앱을 열어주세요" 문자 1통이 발송됩니다.</div>
     </div>
     <div class="error-text" id="err1" data-i18n="err1">닉네임과 비밀번호(6자 이상)를 입력해주세요.</div>
   </div>
@@ -506,6 +520,11 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
       <div class="qr-token mono" id="doneToken">TOKEN · a91f2c8e4b17</div>
     </div>
     <div class="hint" style="margin-top:10px; text-align:center;" data-i18n="qrCameraHint">💡 폰 기본 카메라로 이 QR을 비추면 자동으로 열립니다</div>
+
+    <!-- 2026-08-19 신설: 예전엔 여기서 전화번호를 받아 SMS로 긴급알림을 보내려 했으나,
+         Aliascall은 전화번호를 아예 수집하지 않는 정책이라 웹푸시로 대체함.
+         계정이 이미 만들어진 이 완료 단계에서 켜야 로그인 세션으로 구독을 저장할 수 있음. -->
+    <div id="pushOptInContainer" style="margin-top:22px;"></div>
 
     <div class="section-label" style="margin-top:26px;" data-i18n="sizeLabel">인쇄 사이즈 선택</div>
     <div class="size-grid" id="sizeGrid">
@@ -817,6 +836,9 @@ function renderStep(){
     document.getElementById('doneToken').textContent = createdRegistration
       ? 'TOKEN · ' + createdRegistration.qr_code_token
       : 'TOKEN · (생성 실패, 새로고침 후 다시 시도해주세요)';
+    // 2026-08-19: 등록·계정 생성이 다 끝난 시점이라 로그인 세션이 확실히 있어서, 여기서 웹푸시
+    // "긴급 알림" 켜기 UI를 렌더링함 (아이폰이면 자동으로 "홈화면에 추가" 안내로 대체됨)
+    renderPushOptIn(sb, 'pushOptInContainer');
   }
 }
 
