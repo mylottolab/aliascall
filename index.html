@@ -103,47 +103,31 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .toggle-switch.on .toggle-knob{ left:23px; }
 .notify-pc-note{ font-size:10.5px; color:rgba(255,255,255,.55); padding:10px 0 12px; border-top:1px solid rgba(255,255,255,.12); line-height:1.5; text-align:left; }
 
-/* ── 전화벨 팝업 / 통화중 오버레이 / 채팅 — 홈 화면 어디서든 뜰 수 있도록 이식 (수신대기 페이지와 동일 로직) ── */
-.ring-overlay{ display:none; position:fixed; inset:0; background:var(--teal-deep); z-index:80; flex-direction:column; align-items:center; justify-content:center; color:#fff; padding:28px; text-align:center; }
-.ring-overlay.show{ display:flex; }
-.ring-avatar{ width:96px; height:96px; border-radius:50%; background:rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; font-size:40px; margin-bottom:18px; animation:ringPulse 1.2s ease-in-out infinite; }
-@keyframes ringPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,255,255,.3); } 50%{ box-shadow:0 0 0 18px rgba(255,255,255,0); } }
-.ring-overlay h3{ font-size:19px; margin-bottom:6px; font-family:'Space Grotesk',sans-serif; }
-.ring-overlay p{ font-size:13px; color:rgba(255,255,255,.75); margin:0 0 30px; }
-.ring-btns{ display:flex; gap:16px; }
-.ring-btn{ width:64px; height:64px; border-radius:50%; border:none; font-size:24px; cursor:pointer; }
-.ring-btn.accept{ background:var(--found); color:#fff; }
-.ring-btn.decline{ background:var(--danger); color:#fff; }
+/* 2026-08-19 (3차 — 중복코드 통합): 이 화면(index.html)은 더 이상 자체 WebRTC 통화 응답
+   로직을 갖지 않음. 전화벨/채팅 요청은 가벼운 배너로만 알리고, 실제 연결(마이크 권한, SDP
+   협상 등)은 검증된 단일 구현체인 aliascall_incoming_calls.html로 넘겨서 처리함 —
+   똑같은 로직이 index.html / my_account.html / incoming_calls.html 세 군데 따로 있으면,
+   오늘처럼 한 곳만 고치고 나머지 두 곳은 예전 버그가 남아있는 사고가 반복되기 때문. */
+.ring-banner{ display:none; position:fixed; top:0; left:0; right:0; z-index:80; background:var(--teal-deep); color:#fff; padding:14px 18px; box-shadow:0 4px 14px rgba(0,0,0,.3); }
+.ring-banner.show{ display:block; }
+.ring-banner-inner{ max-width:480px; margin:0 auto; display:flex; align-items:center; gap:12px; }
+.ring-avatar-mini{ width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; animation:ringPulse 1.2s ease-in-out infinite; }
+@keyframes ringPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,255,255,.3); } 50%{ box-shadow:0 0 0 12px rgba(255,255,255,0); } }
+.ring-banner-text{ flex:1; min-width:0; }
+.ring-banner-text h3{ font-size:13.5px; margin:0 0 2px; font-family:'Space Grotesk',sans-serif; font-weight:600; }
+.ring-banner-text p{ font-size:11px; margin:0; color:rgba(255,255,255,.7); }
+.ring-banner-btns{ display:flex; gap:8px; flex-shrink:0; }
+.ring-btn-mini{ width:34px; height:34px; border-radius:50%; border:none; font-size:14px; cursor:pointer; }
+.ring-btn-mini.accept{ background:var(--found); color:#fff; }
+.ring-btn-mini.decline{ background:var(--danger); color:#fff; }
 
-.call-video-area{ visibility:hidden; height:0; overflow:hidden; position:relative; width:100%; max-width:340px; aspect-ratio:3/4; background:#000; border-radius:16px; margin-bottom:0; }
-.call-video-area.show{ visibility:visible; height:auto; margin-bottom:18px; }
-.call-video-area video{ width:100%; height:100%; object-fit:cover; }
-#remoteVideo{ position:absolute; inset:0; }
-#localVideo{ position:absolute; width:84px; height:112px; right:10px; bottom:10px; border-radius:10px; border:2px solid rgba(255,255,255,.6); object-fit:cover; }
-.voice-avatar{ display:none; width:84px; height:84px; border-radius:50%; background:rgba(255,255,255,.14); align-items:center; justify-content:center; font-size:34px; margin-bottom:18px; }
-.voice-avatar.show{ display:flex; }
-.call-controls{ display:none; gap:14px; margin-top:6px; }
-.call-controls.show{ display:flex; }
-.ctrl-btn{ width:52px; height:52px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(255,255,255,.14); color:#fff; }
-.ctrl-btn.active-off{ background:var(--coral); }
-.ctrl-btn.hangup{ background:var(--danger); }
-.unmute-btn{ display:none; margin-top:16px; background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.4); border-radius:20px; padding:10px 18px; font-size:12.5px; font-weight:700; cursor:pointer; }
-.unmute-btn.show{ display:inline-block; }
-
-.chat-toggle-btn{ position:fixed; right:18px; bottom:18px; width:52px; height:52px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:20px; cursor:pointer; z-index:85; display:none; align-items:center; justify-content:center; }
-.chat-toggle-btn.show{ display:flex; }
-.chat-panel{ display:none; position:fixed; inset:0; z-index:90; background:var(--paper); flex-direction:column; }
-.chat-panel.show{ display:flex; }
-.chat-panel-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line); background:var(--card); }
-.chat-panel-header b{ font-size:14px; color:var(--ink); }
-.chat-panel-header button{ background:none; border:none; font-size:18px; cursor:pointer; color:var(--ink-soft); }
-.chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
-.chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
-.chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
-.chat-bubble.them{ align-self:flex-start; background:var(--card); color:var(--ink); border:1px solid var(--line); border-bottom-left-radius:4px; }
-.chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); }
-.chat-input-row input{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
-.chat-input-row button{ background:var(--teal); color:#fff; border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; }
+/* 2026-08-19 (3차) 신설: 실시간 문자메시지 피드 — 메인화면에 열어두고 있으면 새 메시지가
+   흐르듯이 카드로 나타남 (my_account.html에도 동일하게 적용) */
+.live-msg-feed{ margin:10px 24px 0; max-width:360px; margin-left:auto; margin-right:auto; }
+.live-msg-card{ background:rgba(255,255,255,.08); border-radius:12px; padding:12px 14px; margin-bottom:8px; text-align:left; animation:msgSlideIn .3s ease; }
+@keyframes msgSlideIn{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:translateY(0); } }
+.live-msg-card .m-top{ font-size:10.5px; color:rgba(255,255,255,.55); margin-bottom:5px; }
+.live-msg-card .m-text{ font-size:12.5px; color:#fff; line-height:1.5; }
 
 footer{ text-align:center; padding:26px 24px 40px; font-size:11px; color:rgba(255,255,255,.4); line-height:1.7; }
 footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
@@ -206,6 +190,8 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 <div class="listen-reminder" id="listenReminder" data-i18n-html="listenReminderText">
   💡 연결 요청을 놓치지 않으려면 <a href="aliascall_incoming_calls.html">수신 대기 화면</a>을 자주 확인해주세요. 이 화면(홈)을 열어두셔도 연결 요청이 오면 바로 알림이 뜹니다.
 </div>
+<!-- 2026-08-19 (3차) 신설: 실시간 문자메시지 피드 -->
+<div class="live-msg-feed" id="liveMsgFeed"></div>
 
 <footer>
   <a href="aliascall_guide.html" data-i18n="guide">ℹ️ 사용설명서</a><br><br>
@@ -215,39 +201,32 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 
 </div>
 
-<div class="ring-overlay" id="ringOverlay">
-  <div class="ring-avatar" id="ringAvatar">📞</div>
-  <h3 id="ringTitle">연결 요청이 왔어요</h3>
-  <p id="ringSub">음성으로 연결 요청</p>
-  <div class="ring-btns">
-    <button class="ring-btn decline" id="declineBtn">✕</button>
-    <button class="ring-btn accept" id="acceptBtn">✓</button>
+<!-- 2026-08-19 (3차): 가벼운 배너로만 알리고, 실제 연결은 incoming_calls.html로 넘김 -->
+<div class="ring-banner" id="ringBanner">
+  <div class="ring-banner-inner">
+    <div class="ring-avatar-mini" id="ringAvatar">📞</div>
+    <div class="ring-banner-text">
+      <h3 id="ringTitle">연결 요청이 왔어요</h3>
+      <p id="ringSub">음성으로 연결 요청</p>
+    </div>
+    <div class="ring-banner-btns">
+      <button class="ring-btn-mini decline" id="declineBtn">✕</button>
+      <button class="ring-btn-mini accept" id="acceptBtn">✓</button>
+    </div>
   </div>
 </div>
 
-<div class="ring-overlay" id="inCallOverlay">
-  <div class="voice-avatar" id="voiceAvatar">🎧</div>
-  <div class="call-video-area" id="callVideoArea">
-    <video id="remoteVideo" autoplay playsinline muted></video>
-    <video id="localVideo" autoplay playsinline muted></video>
-    <audio id="remoteAudio" autoplay></audio>
-  </div>
-  <h3 id="inCallStatus">연결 확인 중…</h3>
-  <p id="inCallSub"></p>
-  <div class="call-controls show" id="callControls">
-    <button class="ctrl-btn" id="muteBtn">🎤</button>
-    <button class="ctrl-btn hangup" id="hangupBtn">📵</button>
-  </div>
-  <button class="unmute-btn" id="unmuteBtn" data-i18n="unmuteBtn">🔊 소리가 안 들리면 여기를 탭하세요</button>
-</div>
-
-<button class="chat-toggle-btn" id="chatToggleBtn">💬</button>
-<div class="chat-panel" id="chatPanel">
-  <div class="chat-panel-header"><b>채팅</b><button id="chatCloseBtn">✕</button></div>
-  <div class="chat-messages" id="chatMessages"></div>
-  <div class="chat-input-row">
-    <input type="text" id="chatInput" placeholder="메시지 입력…">
-    <button id="chatSendBtn">➤</button>
+<div class="ring-banner" id="chatRequestBanner">
+  <div class="ring-banner-inner">
+    <div class="ring-avatar-mini">💬</div>
+    <div class="ring-banner-text">
+      <h3>문자 채팅 요청이 왔어요</h3>
+      <p>탭해서 바로 대화를 시작하세요</p>
+    </div>
+    <div class="ring-banner-btns">
+      <button class="ring-btn-mini decline" id="chatDismissBtn">✕</button>
+      <button class="ring-btn-mini accept" id="chatOpenBtn">💬</button>
+    </div>
   </div>
 </div>
 
@@ -256,89 +235,19 @@ const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ── 실시간 수신 감지 + 전화벨 팝업 (aliascall_incoming_calls.html과 동일 로직을 홈 화면에도 이식 —
-//    2026-08-17: 사용자가 수신대기 페이지를 안 열어놔도 홈 화면에 있으면 바로 팝업이 뜨도록) ──
-// Metered.ca TURN 서버 연동 (2026-08-17, Free 500MB 플랜, Global 리전) —
-// STUN만으로 연결 안 되는 이동통신사 데이터망 등에서 이 TURN 서버가 중계를 맡아줌
-const RTC_CONFIG = { iceServers: [
-  { urls: 'stun:stun.relay.metered.ca:80' },
-  { urls: 'turn:global.relay.metered.ca:80', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-  { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-  { urls: 'turn:global.relay.metered.ca:443', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-  { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-] };
+// ── 실시간 수신 감지 + 가벼운 알림 배너 ──
+// 2026-08-19 (3차 — 중복코드 통합): 예전엔 이 화면도 전화 응답(WebRTC)을 통째로 직접 처리했는데,
+// aliascall_incoming_calls.html과 코드가 따로 복제돼있다보니 한쪽만 고치고 다른 쪽은 예전 버그가
+// 남아있는 사고가 났음(2026-08-19 오늘 answer 재전송 버그 등). 이제 이 화면은 "요청이 왔다"는
+// 걸 가벼운 배너로만 알리고, 실제 연결(마이크 권한, SDP 협상, ICE 등)은 항상 incoming_calls.html
+// 단 한 곳에서만 처리하도록 통합함 — 수락을 누르면 그 화면으로 넘어가서 자동으로 이어받음.
 const CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
 
 let myRegistrationIds = [];
 let pendingSession = null;
-let pc = null, localStream = null, rtChannel = null;
 
-// ── chrome://webrtc-internals 안 찾아다녀도, 연결 실패시 후보쌍(candidate-pair) 정보를
-// 콘솔에 바로 찍어주는 진단 함수 — 어떤 경로(직접연결 host/srflx, 또는 TURN relay)로
-// 시도했다가 왜 실패했는지 여기서 바로 확인 가능 ──
-async function logIceCandidatePairs(pcRef){
-  try {
-    const stats = await pcRef.getStats();
-    console.log('%c[webrtc] ── candidate-pair 진단 시작 ──', 'color:#E8734A;font-weight:bold;');
-    const candidates = {};
-    stats.forEach((report) => {
-      if (report.type === 'local-candidate' || report.type === 'remote-candidate') {
-        candidates[report.id] = report;
-      }
-    });
-    let pairCount = 0;
-    stats.forEach((report) => {
-      if (report.type === 'candidate-pair') {
-        pairCount++;
-        const local = candidates[report.localCandidateId];
-        const remote = candidates[report.remoteCandidateId];
-        console.log(
-          '[webrtc] pair 상태:', report.state,
-          '| 로컬:', local ? local.candidateType + '(' + local.protocol + ')' : '?',
-          '| 원격:', remote ? remote.candidateType + '(' + remote.protocol + ')' : '?',
-          '| nominated:', report.nominated
-        );
-      }
-    });
-    if (pairCount === 0) console.warn('[webrtc] candidate-pair가 하나도 없음 — ICE 후보 자체가 상대와 전혀 매칭 안 됨');
-    console.log('%c[webrtc] ── candidate-pair 진단 끝 ──', 'color:#E8734A;font-weight:bold;');
-  } catch (e) {
-    console.error('[webrtc] getStats 진단 실패', e);
-  }
-}
-
-async function initIncomingWatcher(userId){
-  const { data: regs } = await sb.from('registrations').select('id').eq('user_id', userId);
-  myRegistrationIds = (regs || []).map((r) => r.id);
-  if (myRegistrationIds.length === 0) return;
-
-  loadMissedBadge();
-
-  sb.channel('incoming-calls-home')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
-      const row = payload.new;
-      // ⚠ call_type이 'message'면 "문자만 보내기"로 생성된 행이라 실제 통화 요청이 아님 —
-      // 전화벨 대신 부재중 메시지 배지만 조용히 갱신함
-      if (!myRegistrationIds.includes(row.registration_id)) return;
-      if (row.call_type === 'message') { playDoorbell(); loadMissedBadge(true); return; }
-      showIncomingCall(row);
-    })
-    .subscribe();
-
-  // 2026-08-19 (2차): 탭이 백그라운드였다 다시 보일 때 + 주기적으로 배지 재확인
-  // (incoming_calls.html / my_account.html과 동일한 안전장치 — Realtime이 놓친 이벤트를 보완)
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) loadMissedBadge();
-  });
-  setInterval(() => {
-    if (!document.hidden) loadMissedBadge();
-  }, 45000);
-}
-
-// ── "딩동" 초인종 알림음 — 외부 음원 없이 코드로 합성 (Web Audio API) ──
-// 문자 메시지가 도착했을 때 배지만으론 놓치기 쉬워서, 짧게 두 번 울려서 확실히 알림
-// ⚠ 브라우저는 사용자가 페이지에서 최소 한 번 터치/클릭하기 전까지 오디오 재생을 막아서,
-// 위에 "알림음 켜기" 버튼을 두고 눌렀을 때 AudioContext를 미리 깨워둔 뒤 계속 재사용함.
+// ── "딩동" 초인종 알림음 / "전화벨" — 외부 음원 없이 코드로 합성 (Web Audio API) ──
+// 2026-08-19 (2차): 재생 전 aliascallIsSoundEnabled()로 켜져있는지 확인 (통합 토글, aliascall_push.js)
 let sharedAudioCtx = null;
 function getAudioCtx(){
   if (!sharedAudioCtx) sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -361,15 +270,11 @@ function playDoorbell(){
       osc.stop(startTime + duration + 0.05);
     };
     const now = ctx.currentTime;
-    ding(880, now, 0.26); ding(659, now + 0.28, 0.34);       // 딩동
-    ding(880, now + 0.80, 0.26); ding(659, now + 1.08, 0.34); // 딩동 (한번 더)
+    ding(880, now, 0.26); ding(659, now + 0.28, 0.34);
+    ding(880, now + 0.80, 0.26); ding(659, now + 1.08, 0.34);
   } catch (e) { console.warn('[notify] 초인종 소리 재생 실패', e); }
 }
-
-// ── 실제 음성/영상 연결 요청이 왔을 때 울리는 "전화벨" — 문자 알림음(딩동)과는 별개로,
-// 응답할 때까지 계속 반복해서 울림 (수락/거절/타임아웃 시 stopRingtone으로 멈춤) ──
 let ringtoneInterval = null;
-
 function ringOnce(){
   if (!aliascallIsSoundEnabled()) return;
   try {
@@ -391,19 +296,17 @@ function ringOnce(){
     ring(740, now + 1.00, 0.35); ring(740, now + 1.40, 0.35);
   } catch (e) { console.warn('[notify] 벨소리 재생 실패', e); }
 }
-
 function startRingtone(){
   stopRingtone();
   ringOnce();
   ringtoneInterval = setInterval(ringOnce, 2200);
 }
-
 function stopRingtone(){
   if (ringtoneInterval) { clearInterval(ringtoneInterval); ringtoneInterval = null; }
 }
 
 // ⚠ left_message 유무로 거르지 않음 — 문자 없이 음성/영상통화만 걸었다가 응답 못 받은 것도
-// 이제 배지에 포함시킴(응답한 통화는 answerCall에서 owner_read_at을 바로 채워서 자동 제외됨)
+// 이제 배지에 포함시킴(응답한 통화는 incoming_calls.html의 answerCall에서 owner_read_at을 바로 채워서 자동 제외됨)
 async function loadMissedBadge(pulse){
   const { count } = await sb.from('webrtc_sessions')
     .select('id', { count: 'exact', head: true })
@@ -420,23 +323,21 @@ async function loadMissedBadge(pulse){
   }
 }
 
-async function showIncomingCall(row){
+function showIncomingCall(row){
   pendingSession = row;
   document.getElementById('ringSub').textContent = row.call_type === 'video' ? I18N[currentLang].ringSubVideo : I18N[currentLang].ringSubVoice;
-  document.getElementById('ringOverlay').classList.add('show');
+  document.getElementById('ringBanner').classList.add('show');
   startRingtone();
-  try {
-    const { data: reg } = await sb.from('registrations').select('category').eq('id', row.registration_id).maybeSingle();
+  sb.from('registrations').select('category').eq('id', row.registration_id).maybeSingle().then(({ data: reg }) => {
     document.getElementById('ringAvatar').textContent = CATEGORY_EMOJI[reg?.category] || '📞';
-  } catch (e) {
-    document.getElementById('ringAvatar').textContent = '📞';
-  }
+  }).catch(() => { document.getElementById('ringAvatar').textContent = '📞'; });
 }
 
 document.getElementById('declineBtn').addEventListener('click', () => {
   stopRingtone();
-  document.getElementById('ringOverlay').classList.remove('show');
+  document.getElementById('ringBanner').classList.remove('show');
   if (pendingSession) {
+    // 거절 신호를 발견자에게 즉시 보내서, 타임아웃까지 안 기다리고 바로 "메시지 남기기"로 넘어가게 함
     const declineChannel = sb.channel('webrtc-' + pendingSession.session_token, { config: { broadcast: { self: false } } });
     declineChannel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
@@ -448,177 +349,85 @@ document.getElementById('declineBtn').addEventListener('click', () => {
   pendingSession = null;
 });
 
-document.getElementById('acceptBtn').addEventListener('click', async () => {
+// 2026-08-19 (3차): 수락하면 실제 연결은 incoming_calls.html로 넘김 — 그 화면이 열리자마자
+// autoaccept 파라미터를 보고 이 세션을 자동으로 이어받아 응답 처리함 (링 UI 다시 안 보여줌)
+document.getElementById('acceptBtn').addEventListener('click', () => {
   stopRingtone();
-  document.getElementById('ringOverlay').classList.remove('show');
   if (!pendingSession) { console.error('[webrtc] pendingSession이 비어있어 수락 처리를 진행할 수 없음'); return; }
-  await answerCall(pendingSession);
+  window.location.href = 'aliascall_incoming_calls.html?autoaccept=' + encodeURIComponent(pendingSession.session_token);
 });
 
-// ⚠ 일부 모바일 브라우저는 srcObject를 비동기 콜백 안에서 늦게 할당하면 autoplay 속성만으로는
-// 오디오 재생을 조용히 막아버림. 명시적으로 .play()를 시도하고, 그마저 막히면(NotAllowedError)
-// "탭하여 소리 켜기" 버튼을 노출시켜 실제 클릭(사용자 제스처)으로 재생을 강제함.
-function tryPlayRemote(remoteEl){
-  const playPromise = remoteEl.play();
-  if (playPromise && playPromise.catch) {
-    playPromise.catch((err) => {
-      console.warn('[webrtc] 원격 오디오 자동재생 실패, 수동 재생 버튼 노출', err);
-      document.getElementById('unmuteBtn').classList.add('show');
-    });
-  }
+// ── "문자 채팅" 요청(call_type='chat')은 수락/거절 개념이 없음(권한이 필요 없는 비침습적
+// 수단) — 배너에서 "열기"를 누르면 바로 채팅 화면으로 넘어감, "닫기"는 배너만 숨김 ──
+let pendingChatSession = null;
+function showChatRequest(row){
+  pendingChatSession = row;
+  document.getElementById('chatRequestBanner').classList.add('show');
+  playDoorbell();
 }
-document.getElementById('unmuteBtn').addEventListener('click', () => {
-  const audioEl = document.getElementById('remoteAudio');
-  audioEl.play().catch((err) => console.error('[webrtc] 수동 재생도 실패', err));
-  document.getElementById('unmuteBtn').classList.remove('show');
+document.getElementById('chatDismissBtn').addEventListener('click', () => {
+  document.getElementById('chatRequestBanner').classList.remove('show');
+  pendingChatSession = null;
+});
+document.getElementById('chatOpenBtn').addEventListener('click', () => {
+  if (!pendingChatSession) return;
+  window.location.href = 'aliascall_incoming_calls.html?autoaccept=' + encodeURIComponent(pendingChatSession.session_token);
 });
 
-async function answerCall(session){
-  const mode = session.call_type;
-  document.getElementById('inCallStatus').textContent = '연결 확인 중…';
-  document.getElementById('inCallSub').textContent = '';
-  document.getElementById('inCallOverlay').classList.add('show');
-  document.getElementById('chatToggleBtn').classList.add('show');
-  if (mode === 'video') document.getElementById('callVideoArea').classList.add('show');
-  else document.getElementById('voiceAvatar').classList.add('show');
+// ── 2026-08-19 (3차) 신설: 실시간 문자메시지 피드 — "물 흐르듯이" 새 메시지가 카드로 나타남 ──
+function prependLiveMessage(row){
+  const feed = document.getElementById('liveMsgFeed');
+  if (!feed) return;
+  const card = document.createElement('div');
+  card.className = 'live-msg-card';
+  card.innerHTML = '<div class="m-top">' + new Date(row.created_at || Date.now()).toLocaleString('ko-KR') + ' · 💬 새 문자메시지</div>' +
+    '<div class="m-text">' + (row.left_message || '') + '</div>';
+  feed.prepend(card);
+  // 화면이 너무 길어지지 않도록 최근 5개만 유지
+  while (feed.children.length > 5) feed.removeChild(feed.lastChild);
+}
+async function loadRecentLiveMessages(){
+  const { data } = await sb.from('webrtc_sessions')
+    .select('left_message, created_at')
+    .in('registration_id', myRegistrationIds)
+    .eq('call_type', 'message')
+    .order('created_at', { ascending: false })
+    .limit(3);
+  const feed = document.getElementById('liveMsgFeed');
+  if (!feed || !data) return;
+  feed.innerHTML = '';
+  data.slice().reverse().forEach((row) => prependLiveMessage(row));
+}
 
-  await sb.from('webrtc_sessions').update({ owner_joined_at: new Date().toISOString(), owner_read_at: new Date().toISOString() }).eq('id', session.id); // 실제로 받은 통화는 그 자체로 '확인함' 처리 -> 배지에 안 뜸
+async function initIncomingWatcher(userId){
+  const { data: regs } = await sb.from('registrations').select('id').eq('user_id', userId);
+  myRegistrationIds = (regs || []).map((r) => r.id);
+  if (myRegistrationIds.length === 0) return;
 
-  rtChannel = sb.channel('webrtc-' + session.session_token, { config: { broadcast: { self: false } } });
-  // ⚠ 상대방 ICE 후보가 setRemoteDescription 끝나기 전에 먼저 도착하면 조용히 유실되던 문제 —
-  // 일단 큐에 담아뒀다가 준비되면 한꺼번에 적용함
-  let pendingIceCandidates = [];
-  rtChannel
-    .on('broadcast', { event: 'offer' }, async ({ payload }) => {
-      console.log('[webrtc] ① offer 수신됨');
-      // ⚠ 발신자가 응답받을 때까지 offer를 반복 재전송하도록 바꿨는데(유실 방지),
-      // 이미 처리 중인 offer라면 중복으로 새 연결을 또 만들지 않도록 방어
-      if (pc && pc.signalingState !== 'closed') { console.log('[webrtc] (중복 offer, 이미 처리중이라 무시)'); return; }
-      pc = new RTCPeerConnection(RTC_CONFIG);
-      console.log('[webrtc] ② RTCPeerConnection 생성됨');
-      pc.onicecandidate = (e) => { if (e.candidate) { console.log('[webrtc] 내 ICE 후보 전송:', e.candidate.type); rtChannel.send({ type:'broadcast', event:'ice-candidate', payload:{ candidate: e.candidate } }); } else { console.log('[webrtc] 내 ICE 후보 수집 완료(null candidate)'); } };
-      pc.ontrack = (e) => {
-        console.log('[webrtc] ⑦ 상대방 트랙 수신됨:', e.track.kind);
-        // ⚠ 일부 브라우저(삼성 인터넷 등)는 <video> 태그로 오디오 전용 스트림을 재생할 때
-        // 오디오 트랙을 놓치는 경우가 있어서, 별도의 <audio> 태그에도 동일 스트림을 연결해
-        // 오디오 재생을 이중으로 보장함 (video는 muted 처리해서 소리는 audio 태그에서만 남).
-        document.getElementById('remoteVideo').srcObject = e.streams[0];
-        const audioEl = document.getElementById('remoteAudio');
-        audioEl.srcObject = e.streams[0];
-        tryPlayRemote(audioEl);
-      };
-      // ⚠ 연결이 끊겨도 서로에게 알리는 수단이 없어서 한쪽이 계속 "연결됨"으로 남아있던 문제 —
-      // 연결 상태를 직접 감시해서 끊기면 자동으로 통화 종료 처리함
-      pc.onconnectionstatechange = () => {
-        if (!pc) return;
-        console.log('[webrtc] connectionState:', pc.connectionState);
-        if (pc.connectionState === 'connected') {
-          document.getElementById('inCallStatus').textContent = '연결됨';
-        }
-        if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
-          console.warn('[webrtc] 연결 상태 이상 감지:', pc.connectionState);
-          if (pc.connectionState === 'failed') logIceCandidatePairs(pc);
-          hangup(true);
-        }
-      };
-      pc.oniceconnectionstatechange = () => {
-        if (!pc) return;
-        console.log('[webrtc] iceConnectionState:', pc.iceConnectionState);
-        if ((pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') && document.getElementById('inCallStatus').textContent !== '연결됨') {
-          document.getElementById('inCallStatus').textContent = '연결됨';
-        }
-      };
-      pc.onicegatheringstatechange = () => { console.log('[webrtc] iceGatheringState:', pc?.iceGatheringState); };
-      console.log('[webrtc] ③ 이벤트 핸들러 등록 완료, getUserMedia 요청 시작');
+  loadMissedBadge();
+  loadRecentLiveMessages(); // 2026-08-19 (3차): 최근 문자메시지 몇 개를 미리 피드에 표시
 
-      try {
-        localStream = await navigator.mediaDevices.getUserMedia({
-      // 에코 제거·잡음 억제·음량 자동조절을 켜서 통화 음질을 개선함 (기본값 audio:true만 쓰면 꺼져있는 브라우저가 있음)
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      video: mode === 'video',
-    });
-      } catch (e) {
-        console.error('[webrtc] ④ 마이크 권한 실패:', e);
-        alert(I18N[currentLang].micPermission);
-        hangup(true);
-        return;
-      }
-      console.log('[webrtc] ④ getUserMedia 성공, 트랙 개수:', localStream.getTracks().length);
-      localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
-      if (mode === 'video') document.getElementById('localVideo').srcObject = localStream;
-
-      await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-      console.log('[webrtc] ⑤ setRemoteDescription 완료, 대기중이던 ICE 후보', pendingIceCandidates.length, '개 적용');
-      for (const candidate of pendingIceCandidates) {
-        try { await pc.addIceCandidate(candidate); } catch (e) { console.error('[webrtc] 지연 ICE 후보 추가 오류', e); }
-      }
-      pendingIceCandidates = [];
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      rtChannel.send({ type:'broadcast', event:'answer', payload:{ sdp: answer } });
-      console.log('[webrtc] ⑥ answer 전송 완료');
+  sb.channel('incoming-calls-home')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
+      const row = payload.new;
+      if (!myRegistrationIds.includes(row.registration_id)) return;
+      // ⚠ call_type이 'message'면 "문자만 보내기"로 생성된 행이라 실제 통화 요청이 아님 —
+      // 딩동 소리 + 배지 갱신 + (2026-08-19 3차) 실시간 피드에 카드로 흘러들어오게 함
+      if (row.call_type === 'message') { playDoorbell(); loadMissedBadge(true); prependLiveMessage(row); return; }
+      // 'chat'이면 통화 UI 없이 가벼운 배너만 (수락/거절 없음, 열기/닫기만)
+      if (row.call_type === 'chat') { showChatRequest(row); return; }
+      showIncomingCall(row);
     })
-    .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
-      if (!pc || !pc.remoteDescription) { console.log('[webrtc] 상대 ICE 후보 도착(대기열에 저장):', payload.candidate.type); pendingIceCandidates.push(payload.candidate); return; }
-      console.log('[webrtc] 상대 ICE 후보 즉시 적용:', payload.candidate.type);
-      try { await pc.addIceCandidate(payload.candidate); } catch (e) { console.error('[webrtc] ICE 추가 오류', e); }
-    })
-    .on('broadcast', { event: 'chat' }, ({ payload }) => appendChatMessage(payload.text, 'them'))
-    .on('broadcast', { event: 'hangup' }, () => hangup(true))
     .subscribe();
+
+  // 2026-08-19 (3차): 탭이 백그라운드였다 다시 보일 때 + 주기적으로 재확인 (Realtime 놓친 이벤트 보완)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) { loadMissedBadge(); loadRecentLiveMessages(); }
+  });
+  setInterval(() => {
+    if (!document.hidden) { loadMissedBadge(); loadRecentLiveMessages(); }
+  }, 45000);
 }
-
-let callEnding = false; // pc.close() 자체가 connectionstatechange('closed')를 다시 유발해서 재귀호출되는 것 방지
-
-function hangup(silent){
-  if (callEnding) return;
-  callEnding = true;
-  if (rtChannel && !silent) rtChannel.send({ type:'broadcast', event:'hangup', payload:{} });
-  if (pc) { pc.close(); pc = null; }
-  if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
-  if (rtChannel) { sb.removeChannel(rtChannel); rtChannel = null; }
-  document.getElementById('inCallOverlay').classList.remove('show');
-  document.getElementById('callVideoArea').classList.remove('show');
-  document.getElementById('voiceAvatar').classList.remove('show');
-  document.getElementById('chatToggleBtn').classList.remove('show');
-  document.getElementById('chatPanel').classList.remove('show');
-  document.getElementById('chatMessages').innerHTML = '';
-  pendingSession = null;
-  callEnding = false;
-}
-document.getElementById('hangupBtn').addEventListener('click', () => hangup(false));
-
-let isMuted = false;
-document.getElementById('muteBtn').addEventListener('click', () => {
-  if (!localStream) return;
-  isMuted = !isMuted;
-  localStream.getAudioTracks().forEach((t) => (t.enabled = !isMuted));
-  const btn = document.getElementById('muteBtn');
-  btn.textContent = isMuted ? '🔇' : '🎤';
-  btn.classList.toggle('active-off', isMuted);
-});
-
-function appendChatMessage(text, who){
-  const el = document.createElement('div');
-  el.className = 'chat-bubble ' + who;
-  el.textContent = text;
-  const list = document.getElementById('chatMessages');
-  list.appendChild(el);
-  list.scrollTop = list.scrollHeight;
-}
-document.getElementById('chatToggleBtn').addEventListener('click', () => document.getElementById('chatPanel').classList.add('show'));
-document.getElementById('chatCloseBtn').addEventListener('click', () => document.getElementById('chatPanel').classList.remove('show'));
-function sendChatMessage(){
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text || !rtChannel) return;
-  rtChannel.send({ type:'broadcast', event:'chat', payload:{ text } });
-  appendChatMessage(text, 'me');
-  input.value = '';
-}
-document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
-document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
-
 // ── 언어 전환 (KR/EN) — data-i18n 속성이 붙은 요소의 텍스트를 그대로 교체 ──
 const I18N = {
   ko: {
