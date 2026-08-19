@@ -40,6 +40,12 @@ async function startInicisPayment(sb, opts){
   const token = await _getAuthToken(sb);
   if (!token) { alert('로그인이 필요합니다.'); return; }
 
+  // ⚠ SDK를 여기서(클릭 시점에) 처음 불러오면, 그 로딩 시간(+ 결제준비 API 응답 대기시간)
+  // 때문에 실제 requestPayment() 호출이 "클릭"과 너무 멀어져서 브라우저가 이걸 팝업 차단
+  // 대상으로 오인하고 조용히 막아버림 — "결제하기를 한 번 누르면 반응 없다가, 한 번 더
+  // 눌러야 결제창이 뜨는" 버그의 원인이었음. 그래서 SDK는 페이지 로드 시점에 미리
+  // 백그라운드로 불러와두고(_preloadIniPaySdk, 파일 맨 아래), 여기서는 이미 준비된 SDK를
+  // 재사용하기만 함.
   let data;
   try {
     const res = await fetch(`${PAYMENTS_FN_BASE}/aliascall-inicis-prepare`, {
@@ -56,7 +62,7 @@ async function startInicisPayment(sb, opts){
   }
 
   try {
-    await _loadIniPaySdk();
+    await _loadIniPaySdk(); // 이미 불러와져 있으면 즉시 반환됨(위 preload 덕분에 보통 여기서 지연 없음)
   } catch (e) {
     console.error('[payments] 이니시스 SDK 로드 실패', e);
     alert('결제 모듈을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
@@ -151,3 +157,10 @@ async function renderPayPalButtons(sb, containerId, opts, onSuccess){
     },
   }).render('#' + containerId);
 }
+
+// ── 이니시스 SDK를 페이지가 열리는 즉시(백그라운드로) 미리 불러와둠 ──
+// PayPal은 어차피 버튼을 실제 렌더링해야 쓸 수 있어서 지연이 눈에 안 띄지만, 이니시스는
+// "클릭 → 즉시 결제창"이 자연스러워야 해서 미리 준비해둠 (위 startInicisPayment 참고).
+// aliascall_payments.js를 불러오는 3개 화면(충전소/마이페이지/등록화면) 전부에서 이 파일
+// 로드 즉시 실행되므로, 사용자가 KRW를 선택하지 않고 그냥 페이지를 열기만 해도 준비됨.
+_loadIniPaySdk().catch((e) => console.warn('[payments] 이니시스 SDK 사전로드 실패(결제 시도 시 재시도됨)', e));
