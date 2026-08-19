@@ -105,9 +105,14 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
 .chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
 .chat-bubble.them{ align-self:flex-start; background:var(--card); border:1px solid var(--line); border-bottom-left-radius:4px; }
-.chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); flex-shrink:0; }
+.chat-bubble.photo{ padding:4px; background:none !important; border:none !important; }
+.chat-photo{ max-width:170px; max-height:220px; border-radius:12px; display:block; cursor:pointer; object-fit:cover; }
+.chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); flex-shrink:0; align-items:center; }
 .chat-input-row input{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
 .chat-input-row button{ background:var(--teal); color:#fff; border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; }
+.chat-attach-btn{ background:var(--teal-tint) !important; color:var(--teal-deep) !important; font-size:18px !important; }
+.chat-closed-note{ display:none; text-align:center; padding:10px 14px; font-size:11.5px; color:var(--ink-soft); background:var(--paper); border-top:1px solid var(--line); }
+.chat-closed-note.show{ display:block; }
 
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
@@ -201,7 +206,10 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
       <button id="chatOnlyEndBtn">채팅 종료</button>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-closed-note" id="chatClosedNote">🔒 이 사건은 종료되어 더 이상 메시지를 보낼 수 없어요.</div>
     <div class="chat-input-row">
+      <input type="file" id="chatPhotoInput" accept="image/*" style="display:none;">
+      <button type="button" class="chat-attach-btn" id="chatAttachBtn" title="사진 첨부">📎</button>
       <input type="text" id="chatInput" placeholder="메시지 입력…">
       <button id="chatSendBtn">➤</button>
     </div>
@@ -226,7 +234,7 @@ const RTC_CONFIG = { iceServers: [
 let myRegistrationIds = [];
 let pendingSession = null;
 let pc = null, localStream = null, rtChannel = null;
-let chatChannel = null; // 2026-08-19: 채팅은 통화 협상(rtChannel)과 완전히 분리된 별도 채널
+// (2026-08-20: chatChannel 변수는 사건(case) 시스템 도입으로 더 이상 필요 없어짐 — currentCaseId/caseRealtimeChannel로 대체됨)
 let answerResendInterval = null; // 2026-08-19: answer도 offer처럼 연결될 때까지 반복 재전송 (아래 참고)
 
 // ── chrome://webrtc-internals 안 찾아다녀도, 연결 실패시 후보쌍(candidate-pair) 정보를
@@ -378,10 +386,9 @@ async function init(){
       const { data: row } = await sb.from('webrtc_sessions').select('*').eq('session_token', autoacceptToken).maybeSingle();
       if (row && myRegistrationIds.includes(row.registration_id) && !row.ended_at) {
         if (row.call_type === 'chat') {
-          showIncomingCall(row); // chat 분기는 showIncomingCall 안에서 바로 채팅화면을 열어줌
+          openCaseChat(row.case_id); // 2026-08-20: 채팅 분기는 사건(case) 시스템으로 바로 열어줌
         } else {
           pendingSession = row;
-          subscribeChatChannel(row.session_token); // 2026-08-19 (3차): 통화쪽도 채팅 채널은 미리 구독(토글로 열람 가능)
           await answerCall(row); // 음성/영상은 링 UI 없이 바로 이어받아 응답 처리
         }
       }
@@ -389,6 +396,14 @@ async function init(){
       console.error('[webrtc] autoaccept 처리 실패', e);
     }
     // URL을 깨끗하게 정리 (새로고침해도 같은 세션을 또 자동수락하지 않도록)
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
+  // 2026-08-20 신설: 마이페이지 "사건함"에서 특정 사건을 클릭해서 들어온 경우
+  // (?case=<caseId> — 링잉/webrtc_sessions와 무관하게 언제든 직접 대화 이어보기 가능)
+  const directCaseId = new URLSearchParams(window.location.search).get('case');
+  if (directCaseId) {
+    openCaseChat(directCaseId);
     window.history.replaceState({}, '', window.location.pathname);
   }
 
@@ -462,15 +477,10 @@ async function showIncomingCall(row){
   // 2026-08-19 (2차): "문자 채팅하기"로 온 요청(call_type='chat')은 통화 UI 자체가 없는
   // 순수 채팅 화면으로 바로 열림 (수락/거절 절차 없음 — 마이크/카메라 권한이 필요 없는
   // 비침습적 수단이라 굳이 승인받을 필요가 없음). 음성/영상은 기존 수락/거절 흐름 그대로.
+  // 2026-08-20: 채팅 내용은 이제 사건(case) 시스템에 영구 저장됨 — openCaseChat()에 위임
   if (row.call_type === 'chat') {
-    document.getElementById('sessionView').classList.add('show');
-    document.getElementById('sessionTopbar').style.display = 'none';
-    document.getElementById('chatOnlyHeader').style.display = 'flex';
-    document.getElementById('chatToggleMiniBtn').style.display = 'none';
-    document.getElementById('chatPanel').classList.add('show');
-    document.getElementById('chatMessages').innerHTML = '';
     playDoorbell(); // 링(전화벨) 대신 도착 알림만 짧게
-    subscribeChatChannel(row.session_token);
+    openCaseChat(row.case_id);
     return;
   }
 
@@ -484,10 +494,6 @@ async function showIncomingCall(row){
   document.getElementById('incallState').style.display = 'none';
   startRingtone();
 
-  // 2026-08-19: 채팅은 통화 수락 여부와 무관하게 채널 자체는 미리 구독해두되(토글로 열람 가능),
-  // 화면엔 자동으로 뜨지 않음 — 통화 중 채팅이 같이 뜨면 오히려 혼선이 된다는 판단 반영
-  subscribeChatChannel(row.session_token);
-
   // webrtc_sessions엔 카테고리 정보가 없어서, 알림에 표시할 아이콘은 registrations를 별도 조회
   try {
     const { data: reg } = await sb.from('registrations').select('category').eq('id', row.registration_id).maybeSingle();
@@ -497,26 +503,71 @@ async function showIncomingCall(row){
   }
 }
 
-// ── 2026-08-19 신설: 채팅 전용 채널 (통화 협상용 rtChannel과 완전히 분리) ──
-// 연결 요청이 오는 즉시 구독을 시작해서, 수락/거절과 무관하게 바로 대화가 가능하게 함.
-function subscribeChatChannel(sessionToken){
-  if (chatChannel) { try { sb.removeChannel(chatChannel); } catch (e) {} }
-  chatChannel = sb.channel('chat-' + sessionToken, { config: { broadcast: { self: false } } });
-  chatChannel
-    .on('broadcast', { event: 'chat' }, ({ payload }) => {
-      appendChatMessage(payload.text, 'them');
+// ── 2026-08-20 신설: 사건(case) 시스템 기반 채팅 — 영구 저장 + 사진 + 소유자 답장까지 지원 ──
+let currentCaseId = null;
+let caseRealtimeChannel = null;
+
+function subscribeCaseRealtime(caseId){
+  if (caseRealtimeChannel) { try { sb.removeChannel(caseRealtimeChannel); } catch (e) {} }
+  caseRealtimeChannel = sb.channel('case-' + caseId, { config: { broadcast: { self: false } } });
+  caseRealtimeChannel
+    .on('broadcast', { event: 'new-message' }, ({ payload }) => {
+      appendChatMessage(payload, 'them');
       playChatPing();
     })
     .subscribe();
 }
-function unsubscribeChatChannel(){
-  if (chatChannel) { try { sb.removeChannel(chatChannel); } catch (e) {} chatChannel = null; }
+function unsubscribeCaseRealtime(){
+  if (caseRealtimeChannel) { try { sb.removeChannel(caseRealtimeChannel); } catch (e) {} caseRealtimeChannel = null; }
+}
+
+// 사건 대화창 열기 — 링잉 알림(showIncomingCall)에서든, 마이페이지 "사건함"에서 직접 클릭해서든
+// (?case=<caseId>) 둘 다 이 함수로 들어옴
+async function openCaseChat(caseId){
+  if (!caseId) { console.error('[case] caseId가 없어서 대화창을 열 수 없음'); return; }
+  currentCaseId = caseId;
+
+  document.getElementById('sessionView').classList.add('show');
+  document.getElementById('sessionTopbar').style.display = 'none';
+  document.getElementById('chatOnlyHeader').style.display = 'flex';
+  document.getElementById('chatToggleMiniBtn').style.display = 'none';
+  document.getElementById('chatPanel').classList.add('show');
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('chatClosedNote').classList.remove('show');
+  document.getElementById('chatInput').disabled = false;
+  document.getElementById('chatSendBtn').disabled = false;
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ caseId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '대화 불러오기 실패');
+
+    document.getElementById('chatOnlyHeader').querySelector('b').textContent = '💬 ' + (data.registrationTitle || '문자 채팅');
+    (data.messages || []).forEach((m) => appendChatMessage(m, m.sender === 'owner' ? 'me' : 'them'));
+
+    if (data.status === 'closed') {
+      document.getElementById('chatClosedNote').classList.add('show');
+      document.getElementById('chatInput').disabled = true;
+      document.getElementById('chatSendBtn').disabled = true;
+    }
+  } catch (e) {
+    console.error('[case] 대화 불러오기 실패', e);
+  }
+
+  subscribeCaseRealtime(caseId);
 }
 
 document.getElementById('declineBtn').addEventListener('click', async () => {
   stopRingtone();
   document.getElementById('sessionView').classList.remove('show');
-  unsubscribeChatChannel();
+  unsubscribeCaseRealtime();
   document.getElementById('chatMessages').innerHTML = '';
   if (pendingSession) {
     // 거절 신호를 발견자에게 즉시 보내서, 25초 타임아웃까지 안 기다리고 바로 "메시지 남기기"로 넘어가게 함
@@ -684,19 +735,38 @@ function hangup(silent){
   if (pc) { pc.close(); pc = null; }
   if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
   if (rtChannel) { sb.removeChannel(rtChannel); rtChannel = null; }
-  unsubscribeChatChannel(); // 2026-08-19: 통화 종료와 함께 채팅 채널도 정리
+  unsubscribeCaseRealtime(); // 2026-08-20: 통화/채팅 종료와 함께 사건 실시간 채널도 정리
+  currentCaseId = null;
   document.getElementById('sessionView').classList.remove('show');
   document.getElementById('callVideoArea').classList.remove('show');
   document.getElementById('voiceAvatar').classList.remove('show');
   document.getElementById('chatPanel').classList.remove('show');
   document.getElementById('chatToggleMiniBtn').style.display = 'none';
   document.getElementById('chatOnlyHeader').style.display = 'none';
+  document.getElementById('chatClosedNote').classList.remove('show');
+  document.getElementById('chatInput').disabled = false;
+  document.getElementById('chatSendBtn').disabled = false;
   document.getElementById('chatMessages').innerHTML = '';
   pendingSession = null;
   callEnding = false;
 }
 document.getElementById('hangupBtn').addEventListener('click', () => hangup(false));
-document.getElementById('chatOnlyEndBtn').addEventListener('click', () => hangup(false)); // 2026-08-19: 순수 채팅 종료
+document.getElementById('chatOnlyEndBtn').addEventListener('click', async () => {
+  // 2026-08-20: "채팅 종료" 버튼은 이제 사건 자체를 종료함 (양쪽 다 다시 메시지 못 보냄)
+  if (currentCaseId && confirm('이 대화를 종료하시겠어요? 종료하면 더 이상 메시지를 주고받을 수 없어요.')) {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-close`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+          body: JSON.stringify({ caseId: currentCaseId }),
+        });
+      }
+    } catch (e) { console.warn('[case] 사건 종료 요청 실패', e); }
+  }
+  hangup(false);
+});
 document.getElementById('chatToggleMiniBtn').addEventListener('click', () => {
   document.getElementById('chatPanel').classList.toggle('show');
 });
@@ -711,22 +781,93 @@ document.getElementById('muteBtn').addEventListener('click', () => {
   btn.classList.toggle('active-off', isMuted);
 });
 
-function appendChatMessage(text, who){
+// ── 사진 첨부 (2026-08-20 신설) ──
+document.getElementById('chatAttachBtn').addEventListener('click', () => document.getElementById('chatPhotoInput').click());
+document.getElementById('chatPhotoInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file || !currentCaseId) return;
+  if (file.size > 8 * 1024 * 1024) { alert('사진 용량이 너무 커요 (최대 8MB).'); return; }
+
+  const attachBtn = document.getElementById('chatAttachBtn');
+  attachBtn.disabled = true;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error('로그인이 필요합니다.');
+
+    const base64Data = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const uploadRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-photo-upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caseId: currentCaseId, base64Data, contentType: file.type }),
+    });
+    const uploadData = await uploadRes.json();
+    if (!uploadRes.ok) throw new Error(uploadData.error || '업로드 실패');
+
+    const msgRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ caseId: currentCaseId, photoUrl: uploadData.url }),
+    });
+    const msgData = await msgRes.json();
+    if (!msgRes.ok) throw new Error(msgData.error || '전송 실패');
+
+    appendChatMessage({ message_type: 'photo', content: uploadData.url }, 'me');
+  } catch (e) {
+    console.error('[case] 사진 전송 실패', e);
+    alert('사진을 보내지 못했어요. 잠시 후 다시 시도해주세요.');
+  } finally {
+    attachBtn.disabled = false;
+  }
+});
+
+function appendChatMessage(msg, who){
   const el = document.createElement('div');
-  el.className = 'chat-bubble ' + who;
-  el.textContent = text;
+  const isPhoto = msg.message_type === 'photo';
+  el.className = 'chat-bubble ' + who + (isPhoto ? ' photo' : '');
+  if (isPhoto) {
+    const img = document.createElement('img');
+    img.src = msg.content;
+    img.className = 'chat-photo';
+    img.addEventListener('click', () => window.open(msg.content, '_blank'));
+    el.appendChild(img);
+  } else {
+    el.textContent = msg.content;
+  }
   const list = document.getElementById('chatMessages');
   list.appendChild(el);
   list.scrollTop = list.scrollHeight;
 }
-// 2026-08-19: 채팅창이 이제 상시 열려있는 구조라 토글/닫기 버튼 자체가 필요 없어짐 (제거함)
-function sendChatMessage(){
+async function sendChatMessage(){
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
-  if (!text || !chatChannel) return;
-  chatChannel.send({ type:'broadcast', event:'chat', payload:{ text } });
-  appendChatMessage(text, 'me');
-  input.value = '';
+  if (!text || !currentCaseId) return;
+  const sendBtn = document.getElementById('chatSendBtn');
+  sendBtn.disabled = true;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error('로그인이 필요합니다.');
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ caseId: currentCaseId, text }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '전송 실패');
+    appendChatMessage({ message_type: 'text', content: text }, 'me');
+    input.value = '';
+  } catch (e) {
+    console.error('[case] 메시지 전송 실패', e);
+    alert('메시지를 보내지 못했어요. 잠시 후 다시 시도해주세요.');
+  } finally {
+    sendBtn.disabled = false;
+  }
 }
 document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
 document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });

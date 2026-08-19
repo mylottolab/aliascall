@@ -154,6 +154,18 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .live-msg-card .m-top{ font-size:10.5px; color:var(--ink-soft); margin-bottom:5px; }
 .live-msg-card .m-text{ font-size:12.5px; color:var(--ink); line-height:1.5; }
 
+/* 2026-08-20 신설: 사건함 목록 */
+.case-item{ display:flex; align-items:center; gap:11px; padding:11px 4px; border-bottom:1px solid var(--line); cursor:pointer; text-align:left; background:none; border-left:none; border-right:none; border-top:none; width:100%; }
+.case-item:last-child{ border-bottom:none; }
+.case-item:active{ background:var(--paper); }
+.case-item .ci-emoji{ font-size:22px; flex-shrink:0; }
+.case-item .ci-body{ flex:1; min-width:0; }
+.case-item .ci-title{ font-size:13px; font-weight:700; color:var(--ink); margin-bottom:2px; display:flex; align-items:center; gap:6px; }
+.case-item .ci-badge{ font-size:9.5px; font-weight:700; padding:2px 6px; border-radius:8px; background:var(--coral-tint); color:var(--coral); flex-shrink:0; }
+.case-item .ci-preview{ font-size:12px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.case-item .ci-time{ font-size:10px; color:var(--ink-soft); flex-shrink:0; }
+.case-item.closed{ opacity:.6; }
+
 .empty-regs{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:24px; }
 
 .confirm-btn-teal{ background:var(--teal); }
@@ -310,6 +322,15 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     </div>
     <!-- 2026-08-19 (3차) 신설: 실시간 문자메시지 피드 -->
     <div class="live-msg-feed" id="liveMsgFeed"></div>
+
+    <!-- 2026-08-20 신설: "사건함" — 발견자와의 대화(문자/채팅/사진)를 나중에라도 이어보고 답장할 수 있음 -->
+    <div class="card" id="caseInboxCard">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <b style="font-size:14px;">📂 진행 중인 사건함</b>
+        <button type="button" id="toggleClosedCasesBtn" style="background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;">지난 사건 보기</button>
+      </div>
+      <div id="caseInboxList"><div class="empty-regs" style="padding:14px;">불러오는 중…</div></div>
+    </div>
 
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
       <div class="page-title" data-i18n="pageTitle" style="margin-bottom:0;">내 계정</div>
@@ -860,7 +881,62 @@ async function showMyPage(session){
   await loadMyRegistrations(session.user.id);
   initIncomingWatcher(session.user.id);
   renderNotifySettings(sb, 'notifySettingsContainer'); // 2026-08-19 (2차): 통합 알림설정 렌더링
+  loadCaseInbox(); // 2026-08-20 신설: 사건함
 }
+
+// ── 2026-08-20 신설: 사건함 — 발견자와의 대화 목록, 클릭하면 대화 이어보기/답장 화면으로 이동 ──
+const CASE_CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
+let showingClosedCases = false;
+
+async function loadCaseInbox(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const listEl = document.getElementById('caseInboxList');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-list`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ includeClosed: showingClosedCases }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '조회 실패');
+
+    if (!data.cases || data.cases.length === 0) {
+      listEl.innerHTML = '<div class="empty-regs" style="padding:14px;">' + (showingClosedCases ? '사건이 없어요.' : '진행 중인 사건이 없어요.') + '</div>';
+      return;
+    }
+
+    listEl.innerHTML = data.cases.map((c) => {
+      const emoji = CASE_CATEGORY_EMOJI[c.category] || '❓';
+      const preview = c.lastMessage ? (c.lastMessage.sender === 'owner' ? '나: ' : '') + c.lastMessage.preview : '(메시지 없음)';
+      const time = c.lastActivityAt ? new Date(c.lastActivityAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : '';
+      const closedBadge = c.status === 'closed' ? '<span class="ci-badge">종료됨</span>' : '';
+      return `
+        <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}" data-case-id="${c.caseId}">
+          <span class="ci-emoji">${emoji}</span>
+          <span class="ci-body">
+            <span class="ci-title">${c.registrationTitle || '등록물'} ${closedBadge}</span>
+            <span class="ci-preview">${preview}</span>
+          </span>
+          <span class="ci-time">${time}</span>
+        </button>`;
+    }).join('');
+
+    listEl.querySelectorAll('.case-item').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        window.location.href = 'aliascall_incoming_calls.html?case=' + encodeURIComponent(btn.dataset.caseId);
+      });
+    });
+  } catch (e) {
+    console.error('[case] 사건함 조회 실패', e);
+    listEl.innerHTML = '<div class="empty-regs" style="padding:14px;">불러오지 못했어요.</div>';
+  }
+}
+document.getElementById('toggleClosedCasesBtn').addEventListener('click', () => {
+  showingClosedCases = !showingClosedCases;
+  document.getElementById('toggleClosedCasesBtn').textContent = showingClosedCases ? '진행중인 사건만 보기' : '지난 사건 보기';
+  loadCaseInbox();
+});
 
 (async function init(){
   const { data: { session } } = await sb.auth.getSession();
