@@ -91,9 +91,10 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
   border:none; border-radius:13px; padding:16px; font-size:15px; font-weight:700; cursor:pointer;
   display:flex; align-items:center; justify-content:center; gap:9px;
 }
+.connect-btn.livechat{ background:var(--coral); color:#fff; }
 .connect-btn.voice{ background:var(--teal); color:#fff; }
 .connect-btn.video{ background:var(--teal-tint); color:var(--teal-deep); }
-.connect-btn.text-msg{ background:var(--coral-tint); color:var(--coral); }
+.connect-btn.text-msg{ background:var(--card); color:var(--ink-soft); border:1.5px solid var(--line); }
 .connect-btn:active{ transform:scale(0.98); }
 
 .text-msg-block{ display:none; flex-direction:column; gap:10px; margin-bottom:10px; text-align:left; }
@@ -143,8 +144,15 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .unmute-btn{ display:none; margin-top:12px; background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.4); border-radius:18px; padding:8px 14px; font-size:11.5px; font-weight:700; cursor:pointer; }
 .unmute-btn.show{ display:inline-block; }
 
-/* 2026-08-19: 채팅은 통화 협상과 완전히 분리, 요청 시작 즉시 하단에 상시 표시 */
-.session-chat{ flex:1; display:flex; flex-direction:column; min-height:0; background:var(--paper); }
+/* 2026-08-19 (2차 수정): 통화 중엔 채팅이 자동으로 안 뜨고, 작은 토글 버튼으로만 열리도록
+   되돌림 — 음성/영상통화 시도 중에 채팅창까지 같이 뜨면 오히려 혼선을 준다는 판단 반영.
+   반면 "문자 채팅하기"는 아예 별도의 순수 채팅 전용 화면으로 분리함 (통화 UI 자체가 없음). */
+.session-chat{ display:none; flex:1; flex-direction:column; min-height:0; background:var(--paper); }
+.session-chat.show{ display:flex; }
+.chat-only-header{ display:none; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:var(--card); flex-shrink:0; }
+.chat-only-header b{ font-size:14px; }
+.chat-only-header button{ background:var(--danger); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:12.5px; font-weight:700; cursor:pointer; }
+.chat-mini-toggle{ display:none; position:fixed; right:18px; bottom:18px; width:50px; height:50px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:19px; cursor:pointer; z-index:65; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(18,48,46,.25); }
 .chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
 .chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
 .chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
@@ -220,9 +228,10 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
         </div>
 
         <div class="connect-btns">
-          <button class="connect-btn text-msg" id="btnTextMsg" data-i18n="connectTextMsg">💬 문자로 메세지 보내기</button>
-          <button class="connect-btn voice" id="btnVoice" data-i18n="connectVoice">🎧 음성으로 연결하기</button>
-          <button class="connect-btn video" id="btnVideo" data-i18n="connectVideo">🎥 영상으로 연결하기</button>
+          <button class="connect-btn livechat" id="btnLiveChat" data-i18n="connectLiveChat">💬 문자 채팅하기</button>
+          <button class="connect-btn voice" id="btnVoice" data-i18n="connectVoice">🎧 음성 통화하기</button>
+          <button class="connect-btn video" id="btnVideo" data-i18n="connectVideo">🎥 영상 통화하기</button>
+          <button class="connect-btn text-msg" id="btnTextMsg" data-i18n="connectTextMsg">✉️ 문자메세지 남기기</button>
         </div>
       </div>
       <a href="aliascall_search_mockup.html" class="guide-link-bottom" data-i18n="findOther">다른 등록물 찾기</a>
@@ -259,8 +268,13 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
     <button class="end-btn" id="endCallBtnInitial" data-i18n="endCall">연결 종료</button>
   </div>
 
-  <!-- 2026-08-19: 채팅은 통화 협상(마이크 권한/수락 여부)과 완전히 분리, 요청 시작 즉시 상시 표시 -->
+  <!-- 2026-08-19 (2차): 통화모드에선 기본 숨김(토글 버튼으로만 열림), "문자 채팅하기" 모드에선
+       상단 헤더(chat-only-header)와 함께 처음부터 항상 열려있음 -->
   <div class="session-chat" id="chatPanel">
+    <div class="chat-only-header" id="chatOnlyHeader">
+      <b>💬 문자 채팅</b>
+      <button id="chatOnlyEndBtn" data-i18n="chatOnlyEnd">채팅 종료</button>
+    </div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-input-row">
       <input type="text" id="chatInput" data-i18n-placeholder="chatInputPlaceholder" placeholder="메시지 입력…">
@@ -268,6 +282,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
     </div>
   </div>
 </div>
+<button class="chat-mini-toggle" id="chatToggleMiniBtn">💬</button>
 
 <script>
 // ── 언어 전환 (KR/EN) ──
@@ -280,11 +295,11 @@ const I18N = {
     expiredDesc: '소유자의 수신서비스 기간이 만료되었습니다.<br>소유자에게 갱신을 안내해주시면 다시 연결할 수 있어요.',
     findOther: '다른 등록물 찾기',
     privacyNote: '실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.',
-    connectVoice: '🎧 음성으로 연결하기', connectVideo: '🎥 영상으로 연결하기',
+    connectVoice: '🎧 음성 통화하기', connectVideo: '🎥 영상 통화하기', connectLiveChat: '💬 문자 채팅하기',
     connecting: '연결 중…', notifyingOwner: '소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.',
     leaveMsgPlaceholder: '예: 지금 못 받으시면 010-0000-0000으로 연락주세요',
     leaveMsgSend: '메시지 남기기', endCall: '연결 종료',
-    chatTitle: '채팅', chatInputPlaceholder: '메시지 입력…',
+    chatTitle: '채팅', chatInputPlaceholder: '메시지 입력…', chatOnlyEnd: '채팅 종료',
     voiceConnecting: '음성으로 연결 중…', videoConnecting: '영상으로 연결 중…',
     connected: '연결됨', callFailed: '연결 요청에 실패했어요. 잠시 후 다시 시도해주세요.',
     mediaConnecting: '음성 경로 연결 중…',
@@ -292,7 +307,7 @@ const I18N = {
     noAnswerTitle: '지금은 응답이 없어요', noAnswerDesc: '아래에 메시지를 남겨두시면, 소유자가 나중에 확인할 수 있어요.',
     leaveMsgSent: '✅ 메시지를 남겼습니다. 소유자가 확인하면 답을 드릴 수 있어요.',
     leaveMsgFailed: '메시지 전송에 실패했어요. 다시 시도해주세요.', leaveMsgSending: '전송 중…',
-    connectTextMsg: '💬 문자로 메세지 보내기',
+    connectTextMsg: '✉️ 문자메세지 남기기',
     textMsgPlaceholder: '예: 방금 등록해두신 물건 봤어요! 어디로 전달드리면 될까요?',
     textMsgSend: '보내기',
     textMsgSentNote: '✓ 메시지를 보냈어요. 소유자가 확인하는 대로 답이 올 거예요.',
@@ -310,11 +325,11 @@ const I18N = {
     expiredDesc: "The owner's subscription has expired.<br>Let the owner know to renew, and this will reconnect.",
     findOther: 'Find something else',
     privacyNote: 'Real phone numbers are never revealed. You will connect anonymously right in your browser.',
-    connectVoice: '🎧 Connect by voice', connectVideo: '🎥 Connect by video',
+    connectVoice: '🎧 Connect by voice', connectVideo: '🎥 Connect by video', connectLiveChat: '💬 Live chat',
     connecting: 'Connecting…', notifyingOwner: 'Notifying the owner. Please hold on a moment.',
     leaveMsgPlaceholder: 'e.g. If you miss this, please call 010-0000-0000',
     leaveMsgSend: 'Leave a message', endCall: 'End',
-    chatTitle: 'Chat', chatInputPlaceholder: 'Type a message…',
+    chatTitle: 'Chat', chatInputPlaceholder: 'Type a message…', chatOnlyEnd: 'End chat',
     voiceConnecting: 'Connecting by voice…', videoConnecting: 'Connecting by video…',
     connected: 'Connected', callFailed: 'Failed to send connection request. Please try again shortly.',
     mediaConnecting: 'Connecting audio path…',
@@ -322,7 +337,7 @@ const I18N = {
     noAnswerTitle: 'No answer right now', noAnswerDesc: 'Leave a message below and the owner can see it later.',
     leaveMsgSent: '✅ Your message has been left. The owner can reply once they check it.',
     leaveMsgFailed: 'Failed to send the message. Please try again.', leaveMsgSending: 'Sending…',
-    connectTextMsg: '💬 Send a text message',
+    connectTextMsg: '✉️ Leave a text message',
     textMsgPlaceholder: 'e.g. I saw the item you registered! Where should I bring it?',
     textMsgSend: 'Send',
     textMsgSentNote: '✓ Message sent. You\u2019ll hear back once the owner checks it.',
@@ -596,6 +611,11 @@ async function startCall(mode){
   currentMode = mode;
   const overlay = document.getElementById('callingOverlay');
   overlay.classList.add('show');
+  // 2026-08-19 (2차): 채팅전용 모드에서 넘어왔을 수도 있으니, 통화모드 기본 상태로 확실히 리셋
+  document.getElementById('callingTopbar').style.display = '';
+  document.getElementById('chatOnlyHeader').style.display = 'none';
+  document.getElementById('chatPanel').classList.remove('show');
+  document.getElementById('chatToggleMiniBtn').style.display = 'flex';
   document.getElementById('callingStatus').textContent = mode === 'voice' ? I18N[currentLang].voiceConnecting : I18N[currentLang].videoConnecting;
   document.getElementById('callingSub').textContent = I18N[currentLang].notifyingOwner;
   document.getElementById('pulseRing').style.display = 'flex';
@@ -860,6 +880,9 @@ function endCall(silent){
   document.getElementById('callControls').classList.remove('show');
   document.getElementById('callVideoArea').classList.remove('show');
   document.getElementById('voiceAvatar').classList.remove('show');
+  document.getElementById('chatPanel').classList.remove('show');
+  document.getElementById('chatToggleMiniBtn').style.display = 'none';
+  document.getElementById('chatOnlyHeader').style.display = 'none';
   document.getElementById('chatMessages').innerHTML = '';
 
   callEnding = false;
@@ -912,6 +935,47 @@ function subscribeChatChannel(sessionToken){
 function unsubscribeChatChannel(){
   if (chatChannel) { try { sb.removeChannel(chatChannel); } catch (e) {} chatChannel = null; }
 }
+
+// ── 2026-08-19 (2차) 신설: "문자 채팅하기" 전용 플로우 — 통화 시도 자체가 전혀 없음 ──
+async function startLiveChatOnly(){
+  currentMode = 'chat';
+  currentSessionToken = makeSessionToken();
+  const overlay = document.getElementById('callingOverlay');
+  overlay.classList.add('show');
+  document.getElementById('callingTopbar').style.display = 'none';
+  document.getElementById('chatOnlyHeader').style.display = 'flex';
+  document.getElementById('chatToggleMiniBtn').style.display = 'none';
+  document.getElementById('chatPanel').classList.add('show');
+  document.getElementById('chatMessages').innerHTML = '';
+
+  const { error } = await sb.from('webrtc_sessions').insert({
+    registration_id: registrationId,
+    call_type: 'chat',
+    session_token: currentSessionToken,
+    owner_notified_at: new Date().toISOString(),
+  });
+  if (error) {
+    alert(I18N[currentLang].callFailed);
+    endCall(true);
+    return;
+  }
+
+  subscribeChatChannel(currentSessionToken);
+
+  // 통화와 마찬가지로, 소유자가 60초간 응답 없으면 긴급 웹푸시 발송
+  wakeupPushTimer = setTimeout(() => {
+    fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-wakeup-push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ registrationId, mode: 'chat', registrationTitle: document.getElementById('foundTitle').textContent }),
+    }).catch((e) => console.warn('[push] 긴급 알림 발송 요청 실패(채팅 자체엔 영향 없음)', e));
+  }, 60000);
+}
+document.getElementById('btnLiveChat').addEventListener('click', startLiveChatOnly);
+document.getElementById('chatOnlyEndBtn').addEventListener('click', () => endCall(false));
+document.getElementById('chatToggleMiniBtn').addEventListener('click', () => {
+  document.getElementById('chatPanel').classList.toggle('show');
+});
 
 function appendChatMessage(text, who){
   const el = document.createElement('div');

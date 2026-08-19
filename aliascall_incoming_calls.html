@@ -92,9 +92,15 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .unmute-btn{ display:none; margin-top:12px; background:rgba(255,255,255,.15); color:#fff; border:1.5px solid rgba(255,255,255,.4); border-radius:18px; padding:8px 14px; font-size:11.5px; font-weight:700; cursor:pointer; }
 .unmute-btn.show{ display:inline-block; }
 
-/* 2026-08-19: 채팅을 통화 협상과 완전히 분리하고, 연결 시도가 시작되는 즉시(수락 전부터)
-   화면 하단에 항상 열려있도록 재설계함 — 채팅 우선순위가 가장 높다는 요청 반영 */
-.session-chat{ flex:1; display:flex; flex-direction:column; min-height:0; background:var(--paper); }
+/* 2026-08-19 (2차 수정): 통화 중엔 채팅이 자동으로 안 뜨고 작은 토글 버튼으로만 열리도록
+   되돌림 — 음성/영상통화 진행 중 채팅창까지 같이 뜨면 오히려 혼선을 준다는 판단 반영.
+   "문자 채팅" 요청(call_type='chat')일 때만 통화 UI 없이 순수 채팅 화면으로 전체 표시함. */
+.session-chat{ display:none; flex:1; flex-direction:column; min-height:0; background:var(--paper); }
+.session-chat.show{ display:flex; }
+.chat-only-header{ display:none; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:var(--card); flex-shrink:0; }
+.chat-only-header b{ font-size:14px; }
+.chat-only-header button{ background:var(--danger); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:12.5px; font-weight:700; cursor:pointer; }
+.chat-mini-toggle{ display:none; position:fixed; right:18px; bottom:18px; width:50px; height:50px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:19px; cursor:pointer; z-index:65; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(18,48,46,.25); }
 .chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
 .chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
 .chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
@@ -175,8 +181,13 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
     </div>
   </div>
 
-  <!-- 2026-08-19: 채팅은 통화 수락 여부와 무관하게, 연결 요청이 온 순간부터 항상 열려있음 -->
+  <!-- 2026-08-19 (2차): 채팅은 통화모드에선 기본 숨김(토글로만), "채팅 요청"모드에선 헤더와 함께
+       항상 열려있음. 통화 UI(session-topbar)는 "채팅 요청"모드에선 아예 숨김. -->
   <div class="session-chat" id="chatPanel">
+    <div class="chat-only-header" id="chatOnlyHeader">
+      <b>💬 문자 채팅</b>
+      <button id="chatOnlyEndBtn">채팅 종료</button>
+    </div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-input-row">
       <input type="text" id="chatInput" placeholder="메시지 입력…">
@@ -184,6 +195,7 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
     </div>
   </div>
 </div>
+<button class="chat-mini-toggle" id="chatToggleMiniBtn">💬</button>
 
 <script>
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
@@ -408,14 +420,34 @@ const CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'�
 
 async function showIncomingCall(row){
   pendingSession = row;
+
+  // 2026-08-19 (2차): "문자 채팅하기"로 온 요청(call_type='chat')은 통화 UI 자체가 없는
+  // 순수 채팅 화면으로 바로 열림 (수락/거절 절차 없음 — 마이크/카메라 권한이 필요 없는
+  // 비침습적 수단이라 굳이 승인받을 필요가 없음). 음성/영상은 기존 수락/거절 흐름 그대로.
+  if (row.call_type === 'chat') {
+    document.getElementById('sessionView').classList.add('show');
+    document.getElementById('sessionTopbar').style.display = 'none';
+    document.getElementById('chatOnlyHeader').style.display = 'flex';
+    document.getElementById('chatToggleMiniBtn').style.display = 'none';
+    document.getElementById('chatPanel').classList.add('show');
+    document.getElementById('chatMessages').innerHTML = '';
+    playDoorbell(); // 링(전화벨) 대신 도착 알림만 짧게
+    subscribeChatChannel(row.session_token);
+    return;
+  }
+
   document.getElementById('ringSub').textContent = row.call_type === 'video' ? '영상으로 연결 요청' : '음성으로 연결 요청';
   document.getElementById('sessionView').classList.add('show');
+  document.getElementById('sessionTopbar').style.display = 'flex';
+  document.getElementById('chatOnlyHeader').style.display = 'none';
+  document.getElementById('chatPanel').classList.remove('show');
+  document.getElementById('chatToggleMiniBtn').style.display = 'flex';
   document.getElementById('ringState').style.display = 'block';
   document.getElementById('incallState').style.display = 'none';
   startRingtone();
 
-  // 2026-08-19: 채팅은 통화 수락 여부와 무관하게, 연결 요청이 온 이 순간부터 바로 열림
-  // (마이크 권한이나 SDP 협상과 완전히 분리된 별도 채널이라 즉시 가능함)
+  // 2026-08-19: 채팅은 통화 수락 여부와 무관하게 채널 자체는 미리 구독해두되(토글로 열람 가능),
+  // 화면엔 자동으로 뜨지 않음 — 통화 중 채팅이 같이 뜨면 오히려 혼선이 된다는 판단 반영
   subscribeChatChannel(row.session_token);
 
   // webrtc_sessions엔 카테고리 정보가 없어서, 알림에 표시할 아이콘은 registrations를 별도 조회
@@ -612,11 +644,18 @@ function hangup(silent){
   document.getElementById('sessionView').classList.remove('show');
   document.getElementById('callVideoArea').classList.remove('show');
   document.getElementById('voiceAvatar').classList.remove('show');
+  document.getElementById('chatPanel').classList.remove('show');
+  document.getElementById('chatToggleMiniBtn').style.display = 'none';
+  document.getElementById('chatOnlyHeader').style.display = 'none';
   document.getElementById('chatMessages').innerHTML = '';
   pendingSession = null;
   callEnding = false;
 }
 document.getElementById('hangupBtn').addEventListener('click', () => hangup(false));
+document.getElementById('chatOnlyEndBtn').addEventListener('click', () => hangup(false)); // 2026-08-19: 순수 채팅 종료
+document.getElementById('chatToggleMiniBtn').addEventListener('click', () => {
+  document.getElementById('chatPanel').classList.toggle('show');
+});
 
 let isMuted = false;
 document.getElementById('muteBtn').addEventListener('click', () => {
