@@ -114,6 +114,20 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .sound-unlock-banner{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--amber-tint, #FBF1DE); border:1px solid #E9CE94; border-radius:12px; padding:12px 14px; margin-bottom:16px; font-size:12.5px; color:#8a6416; }
 .sound-unlock-banner button{ background:#8a6416; color:#fff; border:none; border-radius:16px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0; }
 .sound-unlock-banner.hide{ display:none; }
+
+/* 2026-08-19 (2차): 통합 알림설정 — "통화·문자 알림음" + "긴급 알림" ON/OFF 슬라이드 스위치 */
+.notify-settings{ background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:6px 16px; }
+.notify-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 0; }
+.notify-row + .notify-row{ border-top:1px solid var(--line); }
+.notify-label{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.notify-label b{ font-size:13.5px; }
+.notify-sub{ font-size:11.5px; color:var(--ink-soft); line-height:1.4; }
+.toggle-switch{ position:relative; width:46px; height:26px; border-radius:14px; border:none; background:#C7D0CC; cursor:pointer; flex-shrink:0; padding:0; transition:background .15s ease; }
+.toggle-switch.on{ background:var(--teal); }
+.toggle-switch:disabled{ opacity:.5; cursor:not-allowed; }
+.toggle-knob{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:left .15s ease; }
+.toggle-switch.on .toggle-knob{ left:23px; }
+.notify-pc-note{ font-size:11px; color:var(--ink-soft); padding:10px 0 12px; border-top:1px solid var(--line); line-height:1.5; }
 </style>
 </head>
 <body>
@@ -135,10 +149,8 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
   <div class="page-title">수신 대기</div>
   <div class="page-desc">이 화면을 열어두시면, 회원님의 등록물로 누군가 연결을 시도할 때 여기로 바로 알림이 뜹니다.</div>
 
-  <div class="sound-unlock-banner" id="soundUnlockBanner">
-    <span>🔔 문자 도착 알림음을 받으려면 탭 한 번만 해주세요</span>
-    <button type="button" id="soundUnlockBtn">알림음 켜기</button>
-  </div>
+  <!-- 2026-08-19 (2차): "알림음 켜기" 배너 + 없던 긴급알림 토글을 하나로 통합 -->
+  <div id="notifySettingsContainer" style="margin-bottom:18px;"></div>
 
   <div class="login-needed" id="loginNeeded">로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.</div>
 
@@ -252,9 +264,7 @@ async function logIceCandidatePairs(pcRef){
 }
 
 // ── "딩동" 초인종 알림음 — 외부 음원 없이 코드로 합성 (Web Audio API) ──
-// ⚠ 브라우저는 사용자가 페이지에서 최소 한 번 터치/클릭하기 전까지 오디오 재생을 막음.
-// "수신 대기" 화면은 아무것도 안 누른 채 열어두고 기다리는 화면이라 이 제약에 특히 잘 걸려서,
-// 상단에 "알림음 켜기" 버튼을 두고 그걸 누르면 AudioContext를 미리 깨워둔 뒤 계속 재사용함.
+// 2026-08-19 (2차): 재생 전 aliascallIsSoundEnabled()로 켜져있는지 확인 (통합 토글, aliascall_push.js)
 let sharedAudioCtx = null;
 
 function getAudioCtx(){
@@ -263,6 +273,7 @@ function getAudioCtx(){
 }
 
 function playDoorbell(){
+  if (!aliascallIsSoundEnabled()) return;
   try {
     const ctx = getAudioCtx();
     const ding = (freq, startTime, duration) => {
@@ -285,6 +296,7 @@ function playDoorbell(){
 
 // 2026-08-19: 채팅 메시지 도착 알림음 — 통화벨/딩동과 헷갈리지 않도록 짧은 "핑" 한 번으로 구분
 function playChatPing(){
+  if (!aliascallIsSoundEnabled()) return;
   try {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
@@ -301,24 +313,12 @@ function playChatPing(){
   } catch (e) { console.warn('[notify] 채팅 알림음 재생 실패', e); }
 }
 
-document.getElementById('soundUnlockBtn').addEventListener('click', () => {
-  const ctx = getAudioCtx();
-  if (ctx.state === 'suspended') ctx.resume();
-  // 아주 짧고 작은 소리를 한번 내서 오디오 재생 자체를 "허가"받아둠 (사실상 무음에 가까움)
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  gain.gain.value = 0.001;
-  osc.connect(gain).connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.05);
-  document.getElementById('soundUnlockBanner').classList.add('hide');
-});
-
 // ── 실제 음성/영상 연결 요청이 왔을 때 울리는 "전화벨" — 문자 알림음(딩동)과는 별개로,
 // 응답할 때까지 계속 반복해서 울림 (수락/거절/타임아웃 시 stopRingtone으로 멈춤) ──
 let ringtoneInterval = null;
 
 function ringOnce(){
+  if (!aliascallIsSoundEnabled()) return;
   try {
     const ctx = getAudioCtx();
     const ring = (freq, startTime, duration) => {
@@ -356,6 +356,7 @@ async function init(){
   document.getElementById('loginNeeded').style.display = 'none';
   document.getElementById('waitContent').style.display = 'block';
   document.getElementById('listenBadge').style.display = 'flex';
+  renderNotifySettings(sb, 'notifySettingsContainer'); // 2026-08-19 (2차): 통합 알림설정 렌더링
 
   // 2026-08-19: 이 화면이 실제로 알림을 받아야 하는 화면이므로, 서비스워커를 미리 등록해둠.
   // (알림 켜기 버튼은 마이페이지/등록완료화면에 있고, 여기서는 그냥 SW가 준비돼있는지만 보장)
@@ -367,6 +368,30 @@ async function init(){
 
   loadMissedMessages();
 
+  // 2026-08-19 (3차 — 중복코드 통합): index.html/my_account.html에서 "수락"을 누르면
+  // 그 화면들은 실제 연결을 처리하지 않고 여기로 ?autoaccept=<session_token>과 함께 넘어옴.
+  // 이 화면이 유일하게 실제 통화 응답(WebRTC)을 처리하는 곳이라, 도착하자마자 해당 세션을
+  // 직접 조회해서 자동으로 이어받음 (사용자가 여기서 다시 수락 버튼을 누를 필요 없음).
+  const autoacceptToken = new URLSearchParams(window.location.search).get('autoaccept');
+  if (autoacceptToken) {
+    try {
+      const { data: row } = await sb.from('webrtc_sessions').select('*').eq('session_token', autoacceptToken).maybeSingle();
+      if (row && myRegistrationIds.includes(row.registration_id) && !row.ended_at) {
+        if (row.call_type === 'chat') {
+          showIncomingCall(row); // chat 분기는 showIncomingCall 안에서 바로 채팅화면을 열어줌
+        } else {
+          pendingSession = row;
+          subscribeChatChannel(row.session_token); // 2026-08-19 (3차): 통화쪽도 채팅 채널은 미리 구독(토글로 열람 가능)
+          await answerCall(row); // 음성/영상은 링 UI 없이 바로 이어받아 응답 처리
+        }
+      }
+    } catch (e) {
+      console.error('[webrtc] autoaccept 처리 실패', e);
+    }
+    // URL을 깨끗하게 정리 (새로고침해도 같은 세션을 또 자동수락하지 않도록)
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
   sb.channel('incoming-calls')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
       const row = payload.new;
@@ -377,6 +402,19 @@ async function init(){
       showIncomingCall(row);
     })
     .subscribe();
+
+  // ⚠ 2026-08-19 (2차) 신설: 실시간(postgres_changes)이 이론상으로는 즉시 반영돼야 하지만,
+  // 탭이 한동안 백그라운드에 있었거나 네트워크가 잠깐 끊겼다 재연결된 경우 등, 브라우저가
+  // 웹소켓을 잠시 쉬게 했다가 다시 켜는 사이의 이벤트를 놓칠 수 있음(놓친 이벤트는 재전송되지
+  // 않는 게 Realtime의 특성). "문자메시지를 남겼는데 상대 화면엔 새로고침해야 뜨는" 문제의
+  // 안전장치로, (1) 탭이 다시 보일 때, (2) 45초마다 주기적으로 목록을 다시 확인해서
+  // 자동으로 최신 상태를 반영함.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) loadMissedMessages();
+  });
+  setInterval(() => {
+    if (!document.hidden) loadMissedMessages();
+  }, 45000);
 }
 
 async function loadMissedMessages(){
@@ -521,10 +559,16 @@ document.getElementById('unmuteBtn').addEventListener('click', () => {
 
 async function answerCall(session){
   const mode = session.call_type;
+  // 2026-08-19 (3차): acceptBtn을 거치지 않고 autoaccept로 바로 호출되는 경우(index.html 등에서
+  // 넘어온 경우)도 있어서, 여기서 직접 sessionView/incallState를 켜줌 (중복 호출은 무해함)
+  document.getElementById('sessionView').classList.add('show');
+  document.getElementById('sessionTopbar').style.display = 'flex';
+  document.getElementById('ringState').style.display = 'none';
+  document.getElementById('incallState').style.display = 'block';
+  document.getElementById('chatOnlyHeader').style.display = 'none';
+  document.getElementById('chatToggleMiniBtn').style.display = 'flex';
   document.getElementById('inCallStatus').textContent = '연결 확인 중…';
   document.getElementById('inCallSub').textContent = '';
-  // sessionView는 이미 showIncomingCall()에서 켜져있고(채팅이 먼저 열려있던 상태), 여기선
-  // 상단 상태만 "링잉"에서 "통화중"으로 전환함 (acceptBtn 클릭 핸들러에서 이미 처리됨)
   if (mode === 'video') document.getElementById('callVideoArea').classList.add('show');
   else document.getElementById('voiceAvatar').classList.add('show');
 
