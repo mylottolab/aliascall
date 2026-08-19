@@ -82,7 +82,7 @@ async function renderPushOptIn(sb, containerId){
     el.innerHTML = `
       <div class="push-optin-card push-optin-active">
         <div class="push-optin-title">🔔 긴급 알림이 켜져 있어요</div>
-        <div class="push-optin-desc">앱을 안 보고 있어도, 60초 안에 응답이 없으면 알림으로 알려드려요.</div>
+        <div class="push-optin-desc">앱을 안 보고 있어도, 15초 안에 응답이 없으면 알림으로 알려드려요.</div>
         <button type="button" class="push-optin-btn push-optin-btn-off" id="pushOptOutBtn">알림 끄기</button>
       </div>`;
     document.getElementById('pushOptOutBtn').addEventListener('click', () => unsubscribeAliascallPush(sb, containerId));
@@ -92,7 +92,7 @@ async function renderPushOptIn(sb, containerId){
   el.innerHTML = `
     <div class="push-optin-card">
       <div class="push-optin-title">🔔 긴급 알림을 켜두시면 좋아요</div>
-      <div class="push-optin-desc">누군가 연결을 시도했는데 60초간 응답이 없으면, 앱을 안 보고 있어도 알림으로 알려드려요.</div>
+      <div class="push-optin-desc">누군가 연결을 시도했는데 15초간 응답이 없으면, 앱을 안 보고 있어도 알림으로 알려드려요.</div>
       <button type="button" class="push-optin-btn" id="pushOptInBtn">긴급 알림 켜기</button>
     </div>`;
   document.getElementById('pushOptInBtn').addEventListener('click', () => subscribeAliascallPush(sb, containerId));

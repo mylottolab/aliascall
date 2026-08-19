@@ -648,10 +648,12 @@ async function startCall(mode){
   // 계속 살려두고 백그라운드에서 계속 기다림. 그래서 소유자가 언제 수락하든 정상적으로 연결됨.
   noAnswerTimer = setTimeout(() => showLeaveMessagePrompt(), 40000);
 
-  // ⚠ 2026-08-19 신설: 소유자가 incoming_calls.html 화면을 안 보고 있으면(탭을 닫아뒀거나
-  // 다른 화면으로 이동한 경우), 지금까지는 완전히 놓칠 수밖에 없었음. 60초까지 응답이 없으면
-  // 웹푸시로 "긴급 알림"을 보내서 앱을 안 보고 있어도 소유자 기기에 알림이 뜨도록 함
-  // (전화번호를 안 쓰는 정책이라 SMS 대신 웹푸시 사용, aliascall_push.js 참고).
+  // ⚠ 2026-08-19 신설 (2026-08-20 수정: 60초→15초, 사용자 피드백 반영 — "긴급"인데 너무 길다는
+  // 의견이 많아서 단축함. 발신자 쪽 40초 "메시지 남기기" 타이머보다 확실히 먼저 오도록 해서,
+  // 발견자가 아직 기다리고 있는 동안 소유자에게 알림이 도착하게 함) 소유자가 incoming_calls.html
+  // 화면을 안 보고 있으면(탭을 닫아뒀거나 다른 화면으로 이동한 경우), 지금까지는 완전히 놓칠
+  // 수밖에 없었음. 15초까지 응답이 없으면 웹푸시로 "긴급 알림"을 보내서 앱을 안 보고 있어도
+  // 소유자 기기에 알림이 뜨도록 함 (전화번호를 안 쓰는 정책이라 SMS 대신 웹푸시 사용, aliascall_push.js 참고).
   // 이미 답이 왔거나 통화가 끝났으면 아래 answer/declined 핸들러에서 clearTimeout으로 취소됨.
   wakeupPushTimer = setTimeout(() => {
     fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-wakeup-push`, {
@@ -659,7 +661,7 @@ async function startCall(mode){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ registrationId, mode, registrationTitle: document.getElementById('foundTitle').textContent }),
     }).catch((e) => console.warn('[push] 긴급 알림 발송 요청 실패(통화 자체엔 영향 없음)', e));
-  }, 60000);
+  }, 15000);
 
   // 2026-08-19: 채팅은 통화 협상(마이크 권한/수락 여부)과 완전히 무관하게, 요청을 보낸 이 순간
   // 바로 열림 — 소유자가 아직 수락 안 했어도, 혹은 통화 자체를 거절하더라도 문자로는 바로 소통 가능
@@ -962,14 +964,14 @@ async function startLiveChatOnly(){
 
   subscribeChatChannel(currentSessionToken);
 
-  // 통화와 마찬가지로, 소유자가 60초간 응답 없으면 긴급 웹푸시 발송
+  // 통화와 마찬가지로, 소유자가 15초간 응답 없으면 긴급 웹푸시 발송 (2026-08-20: 60초→15초 단축)
   wakeupPushTimer = setTimeout(() => {
     fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-wakeup-push`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ registrationId, mode: 'chat', registrationTitle: document.getElementById('foundTitle').textContent }),
     }).catch((e) => console.warn('[push] 긴급 알림 발송 요청 실패(채팅 자체엔 영향 없음)', e));
-  }, 60000);
+  }, 15000);
 }
 document.getElementById('btnLiveChat').addEventListener('click', startLiveChatOnly);
 document.getElementById('chatOnlyEndBtn').addEventListener('click', () => endCall(false));
