@@ -135,7 +135,7 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 
   <div class="balance-card">
     <div class="label" data-i18n="currentBalanceLabel">현재 보유 포인트</div>
-    <div class="amount mono" id="currentBalance">3,200P</div>
+    <div class="amount mono" id="currentBalance">0P</div>
   </div>
 
   <div class="currency-tabs">
@@ -407,8 +407,27 @@ function renderProducts(){
   });
 }
 
+// ── 현재 보유 포인트 실제 조회 (예전엔 목업용 고정값 "3,200P"가 로그인 여부와 무관하게
+// 항상 떠있던 버그였음 — 실제 DB에서 가져오도록 수정) ──
+async function loadCurrentBalance(){
+  const { data: { session } } = await sb.auth.getSession();
+  const balanceEl = document.getElementById('currentBalance');
+  if (!session) {
+    balanceEl.textContent = '0P';
+    return;
+  }
+  const { data: profile, error } = await sb.from('profiles').select('points_balance').eq('id', session.user.id).maybeSingle();
+  if (error) {
+    console.error('[recharge] 포인트 잔액 조회 오류', error);
+    balanceEl.textContent = '0P';
+    return;
+  }
+  balanceEl.textContent = (profile?.points_balance ?? 0).toLocaleString() + 'P';
+}
+
 applyLang(currentLang);
 loadProducts();
+loadCurrentBalance();
 </script>
 </div><!-- /app-shell -->
 
