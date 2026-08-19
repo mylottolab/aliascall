@@ -46,7 +46,16 @@ header{ padding:18px 20px; text-align:center; }
 .brand-name{ font-size:15px; font-weight:600; }
 .brand-name em{ font-style:normal; color:var(--coral); }
 
-main{ flex:1; display:flex; align-items:center; justify-content:center; padding:20px; }
+/* 2026-08-20: 하단 4개 통신수단 메뉴를 화면 하단에 항상 고정 표시 — 통화/채팅 진행 중에도
+   보이게 해서, 언제든 다른 수단으로 즉시 전환할 수 있게 함(예전엔 종료 후 메뉴로 돌아가야
+   했는데, 이제는 그냥 다른 버튼 누르면 지금 하던 건 정리되고 바로 그걸로 전환됨). */
+main{ flex:1; display:flex; align-items:center; justify-content:center; padding:20px 20px 88px; }
+.bottom-nav{ position:fixed; left:0; right:0; bottom:0; z-index:120; display:flex; background:var(--card); border-top:1.5px solid var(--line); box-shadow:0 -2px 12px rgba(18,48,46,.08); padding-bottom:env(safe-area-inset-bottom,0); }
+.bottom-nav-btn{ flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:9px 2px 8px; font-size:10.5px; font-weight:700; color:var(--ink-soft); cursor:pointer; }
+.bottom-nav-btn .bn-icon{ font-size:19px; line-height:1; }
+.bottom-nav-btn.active{ color:var(--teal); }
+.bottom-nav-btn.active.mode-livechat{ color:var(--coral); }
+.bottom-nav-btn:active{ opacity:.7; }
 .wrap{ max-width:420px; width:100%; }
 
 .state-loading{ text-align:center; padding:60px 20px; }
@@ -86,16 +95,8 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .privacy-note{ display:flex; align-items:flex-start; gap:8px; background:var(--teal-tint); border-radius:12px; padding:12px 14px; text-align:left; font-size:12px; color:var(--teal-deep); line-height:1.55; margin-bottom:22px; }
 .privacy-note .icon{ font-size:16px; flex-shrink:0; }
 
-.connect-btns{ display:flex; flex-direction:column; gap:10px; }
-.connect-btn{
-  border:none; border-radius:13px; padding:16px; font-size:15px; font-weight:700; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; gap:9px;
-}
-.connect-btn.livechat{ background:var(--coral); color:#fff; }
-.connect-btn.voice{ background:var(--teal); color:#fff; }
-.connect-btn.video{ background:var(--teal-tint); color:var(--teal-deep); }
-.connect-btn.text-msg{ background:var(--card); color:var(--ink-soft); border:1.5px solid var(--line); }
-.connect-btn:active{ transform:scale(0.98); }
+/* ⚠ 2026-08-20: 세로로 쌓인 큰 버튼들(.connect-btn 등)은 하단 고정 바(.bottom-nav)로 대체되어
+   제거함. 문자메세지 입력창(.text-msg-block)은 별도 스타일(아래 101번째 줄 부근)로 계속 유지됨. */
 
 .text-msg-block{ display:none; flex-direction:column; gap:10px; margin-bottom:10px; text-align:left; }
 .text-msg-block.show{ display:flex; }
@@ -109,7 +110,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 /* 2026-08-19: 통화 진행 화면을 전체화면 오버레이에서 "상단 상태바 + 하단 상시 채팅" 구조로
    재설계함 — 채팅이 마이크 권한/수락 여부와 무관하게 요청 시작 즉시 열리도록 하기 위함
    (수신자 쪽 aliascall_incoming_calls.html과 동일한 설계) */
-.calling-overlay{ display:none; position:fixed; inset:0; z-index:50; background:var(--paper); flex-direction:column; }
+.calling-overlay{ display:none; position:fixed; top:0; left:0; right:0; bottom:64px; z-index:50; background:var(--paper); flex-direction:column; }
 .calling-overlay.show{ display:flex; }
 .calling-topbar{ flex-shrink:0; max-height:42vh; overflow-y:auto; background:var(--teal-deep); color:#fff; text-align:center; padding:20px 22px; display:flex; flex-direction:column; align-items:center; }
 .calling-topbar .pulse-ring{ width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; margin-bottom:12px; animation:pulseRing 1.6s ease-in-out infinite; flex-shrink:0; }
@@ -152,7 +153,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .chat-only-header{ display:none; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:var(--card); flex-shrink:0; }
 .chat-only-header b{ font-size:14px; }
 .chat-only-header button{ background:var(--danger); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:12.5px; font-weight:700; cursor:pointer; }
-.chat-mini-toggle{ display:none; position:fixed; right:18px; bottom:18px; width:50px; height:50px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:19px; cursor:pointer; z-index:65; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(18,48,46,.25); }
+.chat-mini-toggle{ display:none; position:fixed; right:18px; bottom:78px; width:50px; height:50px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:19px; cursor:pointer; z-index:65; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(18,48,46,.25); }
 .chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
 .chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
 .chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
@@ -227,12 +228,6 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
           <button id="textMsgSendBtn" data-i18n="textMsgSend">보내기</button>
         </div>
 
-        <div class="connect-btns">
-          <button class="connect-btn livechat" id="btnLiveChat" data-i18n="connectLiveChat">💬 문자 채팅하기</button>
-          <button class="connect-btn voice" id="btnVoice" data-i18n="connectVoice">🎧 음성 통화하기</button>
-          <button class="connect-btn video" id="btnVideo" data-i18n="connectVideo">🎥 영상 통화하기</button>
-          <button class="connect-btn text-msg" id="btnTextMsg" data-i18n="connectTextMsg">✉️ 문자메세지 남기기</button>
-        </div>
       </div>
       <a href="aliascall_search_mockup.html" class="guide-link-bottom" data-i18n="findOther">다른 등록물 찾기</a>
     </div>
@@ -284,6 +279,23 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 </div>
 <button class="chat-mini-toggle" id="chatToggleMiniBtn">💬</button>
 
+<!-- 2026-08-20 신설: 4개 통신수단을 화면 하단에 항상 고정 표시 — 통화/채팅 진행 중에도 계속
+     보여서, 언제든 다른 버튼을 누르면 지금 하던 걸 정리하고 바로 그걸로 전환됨 -->
+<div class="bottom-nav" id="bottomNav" style="display:none;">
+  <button class="bottom-nav-btn mode-livechat" id="navLiveChat" data-mode="chat">
+    <span class="bn-icon">💬</span><span data-i18n="navLiveChat">채팅</span>
+  </button>
+  <button class="bottom-nav-btn mode-voice" id="navVoice" data-mode="voice">
+    <span class="bn-icon">🎧</span><span data-i18n="navVoice">음성</span>
+  </button>
+  <button class="bottom-nav-btn mode-video" id="navVideo" data-mode="video">
+    <span class="bn-icon">🎥</span><span data-i18n="navVideo">영상</span>
+  </button>
+  <button class="bottom-nav-btn mode-message" id="navTextMsg" data-mode="message">
+    <span class="bn-icon">✉️</span><span data-i18n="navTextMsg">문자</span>
+  </button>
+</div>
+
 <script>
 // ── 언어 전환 (KR/EN) ──
 const I18N = {
@@ -296,6 +308,7 @@ const I18N = {
     findOther: '다른 등록물 찾기',
     privacyNote: '실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.',
     connectVoice: '🎧 음성 통화하기', connectVideo: '🎥 영상 통화하기', connectLiveChat: '💬 문자 채팅하기',
+    navLiveChat: '채팅', navVoice: '음성', navVideo: '영상', navTextMsg: '문자',
     connecting: '연결 중…', notifyingOwner: '소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.',
     leaveMsgPlaceholder: '예: 지금 못 받으시면 010-0000-0000으로 연락주세요',
     leaveMsgSend: '메시지 남기기', endCall: '연결 종료',
@@ -326,6 +339,7 @@ const I18N = {
     findOther: 'Find something else',
     privacyNote: 'Real phone numbers are never revealed. You will connect anonymously right in your browser.',
     connectVoice: '🎧 Connect by voice', connectVideo: '🎥 Connect by video', connectLiveChat: '💬 Live chat',
+    navLiveChat: 'Chat', navVoice: 'Voice', navVideo: 'Video', navTextMsg: 'Text',
     connecting: 'Connecting…', notifyingOwner: 'Notifying the owner. Please hold on a moment.',
     leaveMsgPlaceholder: 'e.g. If you miss this, please call 010-0000-0000',
     leaveMsgSend: 'Leave a message', endCall: 'End',
@@ -433,6 +447,7 @@ async function init(){
     }
 
     foundEl.style.display = 'block';
+    document.getElementById('bottomNav').style.display = 'flex'; // 2026-08-20: 등록물 확인되면 하단 통신수단 바 표시
     foundEl.dataset.registrationId = data.id;
 
     await loadCategoryDetail(data.id, data.category);
@@ -885,6 +900,7 @@ function endCall(silent){
   document.getElementById('chatPanel').classList.remove('show');
   document.getElementById('chatToggleMiniBtn').style.display = 'none';
   document.getElementById('chatOnlyHeader').style.display = 'none';
+  updateBottomNavActive(null); // 2026-08-20: 통화/채팅이 어떤 이유로든 끝나면 하단 바 활성 표시도 초기화
   document.getElementById('chatMessages').innerHTML = '';
 
   callEnding = false;
@@ -973,7 +989,6 @@ async function startLiveChatOnly(){
     }).catch((e) => console.warn('[push] 긴급 알림 발송 요청 실패(채팅 자체엔 영향 없음)', e));
   }, 15000);
 }
-document.getElementById('btnLiveChat').addEventListener('click', startLiveChatOnly);
 document.getElementById('chatOnlyEndBtn').addEventListener('click', () => endCall(false));
 document.getElementById('chatToggleMiniBtn').addEventListener('click', () => {
   document.getElementById('chatPanel').classList.toggle('show');
@@ -998,19 +1013,49 @@ function sendChatMessage(){
 document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
 document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
-document.getElementById('btnVoice').addEventListener('click', () => startCall('voice'));
-document.getElementById('btnVideo').addEventListener('click', () => startCall('video'));
 document.getElementById('endCallBtn').addEventListener('click', () => endCall(false));
 document.getElementById('endCallBtnInitial').addEventListener('click', () => endCall(false));
+
+// ── 2026-08-20 신설: 하단 고정 4버튼 — 지금 뭘 하고 있든(통화중/채팅중/문자입력중) 상관없이
+// 언제든 다른 버튼을 누르면 하던 걸 정리하고 즉시 그걸로 전환됨. 예전처럼 "종료 → 메뉴로
+// 돌아가기 → 다시 선택" 단계가 필요 없음. ──
+function updateBottomNavActive(mode){
+  document.querySelectorAll('.bottom-nav-btn').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+}
+
+function switchMode(mode){
+  const overlayActive = document.getElementById('callingOverlay').classList.contains('show');
+
+  if (mode === 'message') {
+    if (overlayActive) endCall(false); // 통화/채팅 중이었으면 상대에게 알리고 정리
+    document.getElementById('textMsgBlock').classList.add('show');
+    document.getElementById('textMsgInput').focus();
+    updateBottomNavActive('message');
+    return;
+  }
+
+  // 문자메세지 입력창이 열려있었다면 닫고, 통화/채팅 중이었으면 정리 후 바로 새 모드 시작
+  document.getElementById('textMsgBlock').classList.remove('show');
+  if (overlayActive) {
+    if (currentMode === mode) return; // 이미 같은 모드 진행 중이면 중복 재시작 방지
+    endCall(false);
+  }
+
+  if (mode === 'chat') startLiveChatOnly();
+  else startCall(mode); // 'voice' | 'video'
+  updateBottomNavActive(mode);
+}
+
+document.getElementById('navLiveChat').addEventListener('click', () => switchMode('chat'));
+document.getElementById('navVoice').addEventListener('click', () => switchMode('voice'));
+document.getElementById('navVideo').addEventListener('click', () => switchMode('video'));
+document.getElementById('navTextMsg').addEventListener('click', () => switchMode('message'));
 
 // ── 통화 시도 없이 "문자로 먼저 메시지 보내기" — 모르는 사람끼리는 전화보다 문자가 먼저인 경우가
 // 많아서 신설. 실제 통화 세션은 만들지 않고, webrtc_sessions에 call_type='message'로 즉시
 // left_message를 채워서 저장 -> 소유자 쪽 "부재중 메시지" 목록에 그대로 노출됨. ──
-document.getElementById('btnTextMsg').addEventListener('click', () => {
-  document.getElementById('textMsgBlock').classList.toggle('show');
-  document.getElementById('textMsgInput').focus();
-});
-
 document.getElementById('textMsgSendBtn').addEventListener('click', async () => {
   const text = document.getElementById('textMsgInput').value.trim();
   if (!text) return;
