@@ -4,7 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aliascall — 안전한 연결</title>
+<!-- 2026-08-19: 웹푸시(iOS 홈화면 추가 포함)를 위한 PWA 매니페스트 + 아이콘 링크 -->
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/aliascall_icon_192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Aliascall">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1F6F6B">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_push.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -79,6 +87,21 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .sound-unlock-banner.hide{ display:none; }
 .listen-reminder{ display:none; margin:10px 24px 0; max-width:360px; margin-left:auto; margin-right:auto; background:rgba(255,255,255,.08); border-radius:12px; padding:11px 15px; font-size:11.5px; color:rgba(255,255,255,.75); line-height:1.6; text-align:left; }
 .listen-reminder a{ color:var(--coral); font-weight:700; text-decoration:underline; }
+
+/* 2026-08-19 (2차): 통합 알림설정 — "통화·문자 알림음" + "긴급 알림" ON/OFF 슬라이드 스위치
+   (홈 화면은 어두운 배경이라 흰색 계열로 톤 맞춤) */
+.notify-settings{ background:rgba(255,255,255,.08); border-radius:14px; padding:6px 16px; margin:10px 24px 0; max-width:360px; margin-left:auto; margin-right:auto; }
+.notify-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 0; }
+.notify-row + .notify-row{ border-top:1px solid rgba(255,255,255,.12); }
+.notify-label{ display:flex; flex-direction:column; gap:2px; min-width:0; text-align:left; }
+.notify-label b{ font-size:13px; color:#fff; }
+.notify-sub{ font-size:11px; color:rgba(255,255,255,.65); line-height:1.4; }
+.toggle-switch{ position:relative; width:46px; height:26px; border-radius:14px; border:none; background:rgba(255,255,255,.25); cursor:pointer; flex-shrink:0; padding:0; transition:background .15s ease; }
+.toggle-switch.on{ background:var(--coral); }
+.toggle-switch:disabled{ opacity:.5; cursor:not-allowed; }
+.toggle-knob{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:left .15s ease; }
+.toggle-switch.on .toggle-knob{ left:23px; }
+.notify-pc-note{ font-size:10.5px; color:rgba(255,255,255,.55); padding:10px 0 12px; border-top:1px solid rgba(255,255,255,.12); line-height:1.5; text-align:left; }
 
 /* ── 전화벨 팝업 / 통화중 오버레이 / 채팅 — 홈 화면 어디서든 뜰 수 있도록 이식 (수신대기 페이지와 동일 로직) ── */
 .ring-overlay{ display:none; position:fixed; inset:0; background:var(--teal-deep); z-index:80; flex-direction:column; align-items:center; justify-content:center; color:#fff; padding:28px; text-align:center; }
@@ -175,10 +198,8 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 </div>
 
 <div class="login-status" id="loginStatus"></div>
-<div class="sound-unlock-banner" id="soundUnlockBanner">
-  <span data-i18n="soundUnlockText">🔔 알림음을 받으려면 탭 한 번만 해주세요</span>
-  <button type="button" id="soundUnlockBtn" data-i18n="soundUnlockBtn">알림음 켜기</button>
-</div>
+<!-- 2026-08-19 (2차): "알림음 켜기" 배너를 통합 토글 위젯으로 교체 -->
+<div id="notifySettingsContainer"></div>
 <div class="missed-badge-link" id="missedBadgeLink">
   <a href="aliascall_incoming_calls.html">📩 <span data-i18n="missedBadgeText">부재중 메시지</span> <span class="n" id="missedBadgeCount">0</span></a>
 </div>
@@ -303,6 +324,15 @@ async function initIncomingWatcher(userId){
       showIncomingCall(row);
     })
     .subscribe();
+
+  // 2026-08-19 (2차): 탭이 백그라운드였다 다시 보일 때 + 주기적으로 배지 재확인
+  // (incoming_calls.html / my_account.html과 동일한 안전장치 — Realtime이 놓친 이벤트를 보완)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) loadMissedBadge();
+  });
+  setInterval(() => {
+    if (!document.hidden) loadMissedBadge();
+  }, 45000);
 }
 
 // ── "딩동" 초인종 알림음 — 외부 음원 없이 코드로 합성 (Web Audio API) ──
@@ -315,6 +345,7 @@ function getAudioCtx(){
   return sharedAudioCtx;
 }
 function playDoorbell(){
+  if (!aliascallIsSoundEnabled()) return;
   try {
     const ctx = getAudioCtx();
     const ding = (freq, startTime, duration) => {
@@ -335,23 +366,12 @@ function playDoorbell(){
   } catch (e) { console.warn('[notify] 초인종 소리 재생 실패', e); }
 }
 
-document.getElementById('soundUnlockBtn').addEventListener('click', () => {
-  const ctx = getAudioCtx();
-  if (ctx.state === 'suspended') ctx.resume();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  gain.gain.value = 0.001;
-  osc.connect(gain).connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.05);
-  document.getElementById('soundUnlockBanner').classList.add('hide');
-});
-
 // ── 실제 음성/영상 연결 요청이 왔을 때 울리는 "전화벨" — 문자 알림음(딩동)과는 별개로,
 // 응답할 때까지 계속 반복해서 울림 (수락/거절/타임아웃 시 stopRingtone으로 멈춤) ──
 let ringtoneInterval = null;
 
 function ringOnce(){
+  if (!aliascallIsSoundEnabled()) return;
   try {
     const ctx = getAudioCtx();
     const ring = (freq, startTime, duration) => {
@@ -717,6 +737,7 @@ function renderLoginStatus(){
     document.getElementById('listenReminder').style.display = 'block';
     initIncomingWatcher(session.user.id);
   }
+  renderNotifySettings(sb, 'notifySettingsContainer'); // 2026-08-19 (2차): 통합 알림설정 렌더링
   applyLang(currentLang);
 })();
 </script>
