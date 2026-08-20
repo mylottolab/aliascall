@@ -460,6 +460,27 @@ function renderFoundRegistration(data){
   foundEl.style.display = 'block';
   document.getElementById('bottomNav').style.display = 'flex';
   foundEl.dataset.registrationId = data.id;
+
+  subscribeFinderIncomingCallWatcher(data.id); // 2026-08-21 신설
+}
+
+// ── 2026-08-21 신설: 발견자가 이미 이 화면을 열어두고 대기 중일 때, 소유자가 콜백을 걸면
+// 실시간으로 바로 전화벨이 울리게 함. ⚠ 지금까지는 "긴급 알림(푸시)을 눌러서 들어오는 경우"만
+// 처리하고 있었고, "화면을 이미 보고 있는 경우"는 감지하는 코드 자체가 없었음 — 그래서 소유자가
+// 걸어도 발견자 화면에 아무 변화가 없던 버그의 원인이었음.
+let finderIncomingWatcherChannel = null;
+function subscribeFinderIncomingCallWatcher(registrationId){
+  if (finderIncomingWatcherChannel) { try { sb.removeChannel(finderIncomingWatcherChannel); } catch (e) {} }
+  finderIncomingWatcherChannel = sb.channel('finder-incoming-' + registrationId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
+      const row = payload.new;
+      if (row.registration_id !== registrationId) return;
+      if (row.direction !== 'owner_to_finder') return; // 소유자가 나에게 건 콜백만 반응
+      if (finderIncomingSession && finderIncomingSession.session_token === row.session_token) return; // 이미 처리 중인 세션이면 중복 무시
+      finderIncomingSession = row;
+      showIncomingCallRing(row);
+    })
+    .subscribe();
 }
 
 async function init(){
