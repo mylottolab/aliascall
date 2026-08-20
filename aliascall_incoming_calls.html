@@ -100,6 +100,7 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .chat-only-header{ display:none; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:var(--card); flex-shrink:0; }
 .chat-only-header b{ font-size:14px; }
 .chat-only-header button{ background:var(--danger); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:12.5px; font-weight:700; cursor:pointer; }
+.owner-call-btn{ background:var(--teal-tint) !important; color:var(--teal-deep) !important; padding:7px 10px !important; font-size:15px !important; border-radius:50% !important; }
 .chat-mini-toggle{ display:none; position:fixed; right:18px; bottom:18px; width:50px; height:50px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:19px; cursor:pointer; z-index:65; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(18,48,46,.25); }
 .chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
 .chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
@@ -227,7 +228,11 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
   <div class="session-chat" id="chatPanel">
     <div class="chat-only-header" id="chatOnlyHeader">
       <b>💬 문자 채팅</b>
-      <button id="chatOnlyEndBtn">채팅 종료</button>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button type="button" id="ownerCallVoiceBtn" class="owner-call-btn" title="음성으로 걸기">🎧</button>
+        <button type="button" id="ownerCallVideoBtn" class="owner-call-btn" title="영상으로 걸기">🎥</button>
+        <button id="chatOnlyEndBtn">채팅 종료</button>
+      </div>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-closed-note" id="chatClosedNote">🔒 이 사건은 종료되어 더 이상 메시지를 보낼 수 없어요.</div>
@@ -544,8 +549,10 @@ async function showIncomingCall(row){
 
 // ── 2026-08-20 신설: 사건(case) 시스템 기반 채팅 — 영구 저장 + 사진 + 소유자 답장까지 지원 ──
 let currentCaseId = null;
+let currentCaseRegistrationId = null; // 2026-08-20 (3단계): 소유자가 콜백 걸 때 필요
 let caseRealtimeChannel = null;
 let caseMessagePollInterval = null;
+let activeCallDirection = null; // 2026-08-20 (3단계): 'incoming' | 'outgoing' | null — 통화중 버튼(mute/hangup)이 어느 쪽 변수를 조작할지 구분
 
 function subscribeCaseRealtime(caseId){
   if (caseRealtimeChannel) { try { sb.removeChannel(caseRealtimeChannel); } catch (e) {} }
@@ -612,6 +619,7 @@ async function refreshCaseMessages(caseId, accessToken, silent){
     if (!res.ok) throw new Error(data.error || '대화 불러오기 실패');
 
     if (!silent) document.getElementById('chatOnlyHeader').querySelector('b').textContent = '💬 ' + (data.registrationTitle || '문자 채팅');
+    if (data.registrationId) currentCaseRegistrationId = data.registrationId; // 2026-08-20 (3단계)
     (data.messages || []).forEach((m) => {
       if (renderedMsgIds.has(m.id)) return;
       renderedMsgIds.add(m.id);
@@ -675,6 +683,7 @@ document.getElementById('unmuteBtn').addEventListener('click', () => {
 
 async function answerCall(session){
   const mode = session.call_type;
+  activeCallDirection = 'incoming'; // 2026-08-20 (3단계)
   // 2026-08-19 (3차): acceptBtn을 거치지 않고 autoaccept로 바로 호출되는 경우(index.html 등에서
   // 넘어온 경우)도 있어서, 여기서 직접 sessionView/incallState를 켜줌 (중복 호출은 무해함)
   document.getElementById('sessionView').classList.add('show');
@@ -798,6 +807,7 @@ let callEnding = false; // pc.close() 자체가 connectionstatechange('closed')�
 function hangup(silent){
   if (callEnding) return;
   callEnding = true;
+  activeCallDirection = null; // 2026-08-20 (3단계)
   if (answerResendInterval) { clearInterval(answerResendInterval); answerResendInterval = null; } // 2026-08-19
   if (rtChannel && !silent) rtChannel.send({ type:'broadcast', event:'hangup', payload:{} });
   if (pc) { pc.close(); pc = null; }
@@ -819,7 +829,177 @@ function hangup(silent){
   pendingSession = null;
   callEnding = false;
 }
-document.getElementById('hangupBtn').addEventListener('click', () => hangup(false));
+document.getElementById('hangupBtn').addEventListener('click', () => {
+  if (activeCallDirection === 'outgoing') endOwnerCall(false); else hangup(false);
+});
+
+// =====================================================
+// 2026-08-20 (3단계) 신설: 소유자가 사건함에서 발견자에게 직접 거는 콜백 기능.
+// ⚠ 위의 pc/localStream/rtChannel(수신통화용)과는 완전히 분리된 별도 변수를 씀 —
+// 기존에 잘 작동하는 수신통화 로직을 절대 건드리지 않기 위한 안전장치.
+// connect.html의 createOfferAsCaller()와 대칭 구조 (발신자 로직을 그대로 이식).
+// =====================================================
+let ownerPc = null, ownerLocalStream = null, ownerRtChannel = null;
+let ownerOfferResendInterval = null, ownerCallWasConnected = false;
+let ownerCallSessionToken = null;
+
+async function startOwnerCall(mode){
+  if (!currentCaseId || !currentCaseRegistrationId) { alert('사건 정보를 아직 불러오는 중이에요. 잠시 후 다시 시도해주세요.'); return; }
+
+  activeCallDirection = 'outgoing';
+  ownerCallSessionToken = (window.crypto && crypto.randomUUID) ? crypto.randomUUID().replace(/-/g, '') : Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+
+  // 채팅 화면을 잠시 걷어내고 통화 UI(기존 incallState 재사용)로 전환
+  document.getElementById('chatOnlyHeader').style.display = 'none';
+  document.getElementById('chatPanel').classList.remove('show');
+  document.getElementById('sessionTopbar').style.display = 'flex';
+  document.getElementById('ringState').style.display = 'none';
+  document.getElementById('incallState').style.display = 'block';
+  document.getElementById('chatToggleMiniBtn').style.display = 'flex';
+  document.getElementById('inCallStatus').textContent = '전화 거는 중…';
+  document.getElementById('inCallSub').textContent = '발견자에게 알림을 보내고 있어요.';
+  document.getElementById('callControls').classList.add('show');
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { alert('로그인이 필요합니다.'); endOwnerCall(true); return; }
+
+  // 1) webrtc_sessions에 콜백 기록 (방향: owner_to_finder)
+  const { error: insertErr } = await sb.from('webrtc_sessions').insert({
+    registration_id: currentCaseRegistrationId,
+    call_type: mode,
+    session_token: ownerCallSessionToken,
+    case_id: currentCaseId,
+    direction: 'owner_to_finder',
+  });
+  if (insertErr) {
+    console.error('[webrtc] 콜백 세션 생성 실패', insertErr);
+    alert('연결에 실패했어요. 잠시 후 다시 시도해주세요.');
+    endOwnerCall(true);
+    return;
+  }
+
+  // 2) 발견자에게 "전화왔어요" 익명 푸시 발송 (발견자가 화면을 안 보고 있을 가능성이 높으므로)
+  fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-finder-call-push`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+    body: JSON.stringify({ caseId: currentCaseId, sessionToken: ownerCallSessionToken, mode, registrationTitle: document.getElementById('chatOnlyHeader').querySelector('b').textContent.replace('💬 ', '') }),
+  }).catch((e) => console.warn('[push] 발견자 알림 발송 실패(통화 자체엔 영향 없음)', e));
+
+  // 3) 사건 타임라인에도 기록
+  fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+    body: JSON.stringify({ caseId: currentCaseId, callLog: (mode === 'video' ? '🎥 영상통화' : '🎧 음성통화') + ' 걸었음' }),
+  }).catch((e) => console.warn('[case] 통화 시도 기록 실패', e));
+
+  // 4) 시그널링 채널 구독 + 발신자로서 offer 생성 (connect.html의 createOfferAsCaller와 동일 구조)
+  ownerRtChannel = sb.channel('webrtc-' + ownerCallSessionToken, { config: { broadcast: { self: false } } });
+  let pendingIceCandidates = [];
+  ownerRtChannel
+    .on('broadcast', { event: 'answer' }, async ({ payload }) => {
+      if (ownerOfferResendInterval) { clearInterval(ownerOfferResendInterval); ownerOfferResendInterval = null; }
+      if (!ownerPc || ownerPc.signalingState === 'closed' || ownerPc.signalingState !== 'have-local-offer') return;
+      await ownerPc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+      for (const candidate of pendingIceCandidates) {
+        try { await ownerPc.addIceCandidate(candidate); } catch (e) { console.error('[webrtc] 지연 ICE 추가 오류', e); }
+      }
+      pendingIceCandidates = [];
+      document.getElementById('inCallStatus').textContent = '연결 확인 중…';
+      document.getElementById('inCallSub').textContent = '';
+    })
+    .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
+      if (!ownerPc || !ownerPc.remoteDescription) { pendingIceCandidates.push(payload.candidate); return; }
+      try { await ownerPc.addIceCandidate(payload.candidate); } catch (e) { console.error('[webrtc] ICE 추가 오류', e); }
+    })
+    .on('broadcast', { event: 'hangup' }, () => endOwnerCall(true))
+    .subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') await createOwnerOffer(mode);
+    });
+}
+
+async function createOwnerOffer(mode){
+  ownerPc = new RTCPeerConnection(RTC_CONFIG);
+  ownerPc.onicecandidate = (e) => {
+    if (e.candidate) ownerRtChannel.send({ type: 'broadcast', event: 'ice-candidate', payload: { candidate: e.candidate } });
+  };
+  ownerPc.ontrack = (e) => {
+    document.getElementById('remoteVideo').srcObject = e.streams[0];
+    const audioEl = document.getElementById('remoteAudio');
+    audioEl.srcObject = e.streams[0];
+    const playPromise = audioEl.play();
+    if (playPromise && playPromise.catch) playPromise.catch(() => document.getElementById('unmuteBtn').classList.add('show'));
+  };
+  ownerPc.onconnectionstatechange = () => {
+    if (!ownerPc) return;
+    if (ownerPc.connectionState === 'connected') {
+      document.getElementById('inCallStatus').textContent = '연결됨';
+      document.getElementById('inCallSub').textContent = '';
+      ownerCallWasConnected = true;
+    }
+    if (['disconnected', 'failed', 'closed'].includes(ownerPc.connectionState)) {
+      endOwnerCall(true);
+    }
+  };
+
+  try {
+    ownerLocalStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      video: mode === 'video',
+    });
+  } catch (e) {
+    console.error('[webrtc] 마이크 권한 실패', e);
+    alert('마이크(또는 카메라) 권한이 필요합니다.');
+    endOwnerCall(true);
+    return;
+  }
+  ownerLocalStream.getTracks().forEach((t) => ownerPc.addTrack(t, ownerLocalStream));
+  if (mode === 'video') { document.getElementById('localVideo').srcObject = ownerLocalStream; document.getElementById('callVideoArea').classList.add('show'); }
+  else document.getElementById('voiceAvatar').classList.add('show');
+
+  const offer = await ownerPc.createOffer();
+  await ownerPc.setLocalDescription(offer);
+  sendOfferNow();
+  ownerOfferResendInterval = setInterval(sendOfferNow, 2500);
+  function sendOfferNow(){
+    ownerRtChannel.send({ type: 'broadcast', event: 'offer', payload: { sdp: offer } });
+  }
+}
+
+function endOwnerCall(silent){
+  if (ownerOfferResendInterval) { clearInterval(ownerOfferResendInterval); ownerOfferResendInterval = null; }
+  if (ownerRtChannel && !silent) ownerRtChannel.send({ type: 'broadcast', event: 'hangup', payload: {} });
+  if (ownerPc) { ownerPc.close(); ownerPc = null; }
+  if (ownerLocalStream) { ownerLocalStream.getTracks().forEach((t) => t.stop()); ownerLocalStream = null; }
+  if (ownerRtChannel) { sb.removeChannel(ownerRtChannel); ownerRtChannel = null; }
+
+  // 통화 종료 기록 (연결됐었는지/부재중이었는지 구분)
+  if (currentCaseId) {
+    const modeLabel = document.getElementById('callVideoArea').classList.contains('show') ? '🎥 영상통화' : '🎧 음성통화';
+    const outcome = ownerCallWasConnected ? (modeLabel + ' 종료 (연결됨)') : (modeLabel + ' 응답 없음');
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return;
+      fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ caseId: currentCaseId, callLog: outcome }),
+      }).catch(() => {});
+    });
+  }
+  ownerCallWasConnected = false;
+  activeCallDirection = null;
+
+  // 통화 UI를 걷어내고 채팅 화면으로 복귀 (사건 자체는 그대로 유지)
+  document.getElementById('sessionTopbar').style.display = 'none';
+  document.getElementById('callVideoArea').classList.remove('show');
+  document.getElementById('voiceAvatar').classList.remove('show');
+  document.getElementById('chatOnlyHeader').style.display = 'flex';
+  document.getElementById('chatToggleMiniBtn').style.display = 'none';
+  document.getElementById('chatPanel').classList.add('show');
+}
+
+document.getElementById('ownerCallVoiceBtn').addEventListener('click', () => startOwnerCall('voice'));
+document.getElementById('ownerCallVideoBtn').addEventListener('click', () => startOwnerCall('video'));
+
 document.getElementById('chatOnlyEndBtn').addEventListener('click', async () => {
   // 2026-08-20: "채팅 종료" 버튼은 이제 사건 자체를 종료함 (양쪽 다 다시 메시지 못 보냄)
   if (currentCaseId && confirm('이 대화를 종료하시겠어요? 종료하면 더 이상 메시지를 주고받을 수 없어요.')) {
@@ -842,9 +1022,11 @@ document.getElementById('chatToggleMiniBtn').addEventListener('click', () => {
 
 let isMuted = false;
 document.getElementById('muteBtn').addEventListener('click', () => {
-  if (!localStream) return;
+  // 2026-08-20 (3단계): 지금 활성인 게 수신통화(localStream)인지 발신통화(ownerLocalStream)인지에 따라 분기
+  const stream = activeCallDirection === 'outgoing' ? ownerLocalStream : localStream;
+  if (!stream) return;
   isMuted = !isMuted;
-  localStream.getAudioTracks().forEach((t) => (t.enabled = !isMuted));
+  stream.getAudioTracks().forEach((t) => (t.enabled = !isMuted));
   const btn = document.getElementById('muteBtn');
   btn.textContent = isMuted ? '🔇' : '🎤';
   btn.classList.toggle('active-off', isMuted);
