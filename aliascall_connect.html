@@ -595,6 +595,14 @@ function showIncomingCallRing(session){
   document.getElementById('callingOverlay').classList.add('show');
   document.getElementById('incomingRingState').style.display = 'block';
   document.getElementById('incomingCallSub').textContent = session.call_type === 'video' ? '영상통화 요청' : '음성통화 요청';
+  // ⚠ 2026-08-21 수정: calling-topbar 안의 기본 요소들(pulseRing/callingStatus/callingSub/
+  // endCallBtnInitial/leaveMsgBlock)은 발신(거는) 흐름 전용으로 항상 보이게 되어있었는데,
+  // 수신 알림을 띄울 땐 이것들을 안 숨겨서 "전화가 왔어요"와 "연결 중…"이 겹쳐 보이던 버그.
+  document.getElementById('pulseRing').style.display = 'none';
+  document.getElementById('callingStatus').style.display = 'none';
+  document.getElementById('callingSub').style.display = 'none';
+  document.getElementById('endCallBtnInitial').style.display = 'none';
+  document.getElementById('leaveMsgBlock').classList.remove('show');
   startFinderRingtone();
 }
 
@@ -611,6 +619,11 @@ document.getElementById('incomingDeclineBtn').addEventListener('click', () => {
   }
   document.getElementById('callingOverlay').classList.remove('show');
   document.getElementById('incomingRingState').style.display = 'none';
+  // 2026-08-21: 다음에 다른 흐름(발신 통화 등)이 쓸 수 있도록 기본 상태로 복원
+  document.getElementById('pulseRing').style.display = 'flex';
+  document.getElementById('callingStatus').style.display = 'block';
+  document.getElementById('callingSub').style.display = 'block';
+  document.getElementById('endCallBtnInitial').style.display = '';
   finderIncomingSession = null;
 });
 
@@ -619,6 +632,10 @@ document.getElementById('incomingAcceptBtn').addEventListener('click', async () 
   if (!finderIncomingSession) return;
   activeCallRole = 'incoming'; // 2026-08-20 (3단계)
   document.getElementById('incomingRingState').style.display = 'none';
+  // 2026-08-21: 실제 통화 화면에 필요한 요소들을 다시 보여줌 (수신 알림 표시하며 숨겨뒀던 것)
+  document.getElementById('pulseRing').style.display = 'flex';
+  document.getElementById('callingStatus').style.display = 'block';
+  document.getElementById('callingSub').style.display = 'block';
   document.getElementById('callControls').classList.add('show');
   document.getElementById('callingStatus').textContent = '연결 확인 중…';
   document.getElementById('callingSub').textContent = '';
@@ -703,6 +720,11 @@ function endIncomingCall(silent){
   document.getElementById('callControls').classList.remove('show');
   document.getElementById('callVideoArea').classList.remove('show');
   document.getElementById('voiceAvatar').classList.remove('show');
+  // 2026-08-21: 다음에 다른 흐름(발신 통화 등)이 쓸 수 있도록 기본 상태로 복원
+  document.getElementById('pulseRing').style.display = 'flex';
+  document.getElementById('callingStatus').style.display = 'block';
+  document.getElementById('callingSub').style.display = 'block';
+  document.getElementById('endCallBtnInitial').style.display = '';
   finderIncomingSession = null;
   finderCallEnding = false;
   activeCallRole = null; // 2026-08-20 (3단계)
