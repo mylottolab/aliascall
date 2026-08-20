@@ -101,6 +101,9 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .lightbox-close{ position:absolute; top:20px; right:20px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.15); color:#fff; border:none; font-size:18px; cursor:pointer; }
 .privacy-note{ display:flex; align-items:flex-start; gap:8px; background:var(--teal-tint); border-radius:12px; padding:12px 14px; text-align:left; font-size:12px; color:var(--teal-deep); line-height:1.55; margin-bottom:22px; }
 .privacy-note .icon{ font-size:16px; flex-shrink:0; }
+/* 2026-08-21 신설: "이 화면을 열어두시면 지속적으로 연락 가능" 안내 — 실시간 콜백 수신 기능과 연동됨 */
+.keep-open-note{ display:flex; align-items:flex-start; gap:8px; background:var(--amber-tint, #FBF1DE); border-radius:12px; padding:12px 14px; text-align:left; font-size:11.5px; color:#8a6416; line-height:1.55; margin-bottom:22px; margin-top:-10px; }
+.keep-open-note .icon{ font-size:15px; flex-shrink:0; }
 
 /* ⚠ 2026-08-20: 세로로 쌓인 큰 버튼들(.connect-btn 등)은 하단 고정 바(.bottom-nav)로 대체되어
    제거함. 문자메세지 입력창(.text-msg-block)은 별도 스타일(아래 101번째 줄 부근)로 계속 유지됨. */
@@ -242,6 +245,11 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
           <span data-i18n="privacyNote">실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.</span>
         </div>
 
+        <div class="keep-open-note" id="keepOpenNote">
+          <span class="icon">💡</span>
+          <span data-i18n="keepOpenNote">완전히 본 건이 해결되기 전까지는 이 화면을 닫지 말고 열어두시면, 상대와 지속적인 연락이 가능합니다.</span>
+        </div>
+
         <div class="text-msg-sent-note" id="textMsgSentNote" data-i18n="textMsgSentNote">✓ 메시지를 보냈어요. 소유자가 확인하는 대로 답이 올 거예요.</div>
         <div class="text-msg-block" id="textMsgBlock">
           <textarea id="textMsgInput" rows="3" data-i18n-placeholder="textMsgPlaceholder" placeholder="예: 방금 등록해두신 물건 봤어요! 어디로 전달드리면 될까요?"></textarea>
@@ -352,6 +360,7 @@ const I18N = {
     expiredDesc: '소유자의 수신서비스 기간이 만료되었습니다.<br>소유자에게 갱신을 안내해주시면 다시 연결할 수 있어요.',
     findOther: '다른 등록물 찾기',
     privacyNote: '실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.',
+    keepOpenNote: '완전히 본 건이 해결되기 전까지는 이 화면을 닫지 말고 열어두시면, 상대와 지속적인 연락이 가능합니다.',
     connectVoice: '🎧 음성 통화하기', connectVideo: '🎥 영상 통화하기', connectLiveChat: '💬 문자 채팅하기',
     navLiveChat: '채팅', navVoice: '음성', navVideo: '영상', navTextMsg: '문자', navPhoto: '사진',
     connecting: '연결 중…', notifyingOwner: '소유자에게 알림을 보내고 있어요. 잠시만 기다려주세요.',
@@ -383,6 +392,7 @@ const I18N = {
     expiredDesc: "The owner's subscription has expired.<br>Let the owner know to renew, and this will reconnect.",
     findOther: 'Find something else',
     privacyNote: 'Real phone numbers are never revealed. You will connect anonymously right in your browser.',
+    keepOpenNote: 'Please keep this screen open until the matter is fully resolved, so you can stay in touch.',
     connectVoice: '🎧 Connect by voice', connectVideo: '🎥 Connect by video', connectLiveChat: '💬 Live chat',
     navLiveChat: 'Chat', navVoice: 'Voice', navVideo: 'Video', navTextMsg: 'Text', navPhoto: 'Photo',
     connecting: 'Connecting…', notifyingOwner: 'Notifying the owner. Please hold on a moment.',
