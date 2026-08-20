@@ -65,7 +65,7 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .missed-card .m-top{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); margin-bottom:8px; }
 .missed-card .m-text{ font-size:13.5px; line-height:1.6; background:var(--paper); border-radius:10px; padding:11px 13px; }
 
-.session-view{ display:none; position:fixed; inset:0; z-index:60; background:var(--paper); flex-direction:column; }
+.session-view{ display:none; position:fixed; top:0; left:0; right:0; bottom:64px; z-index:60; background:var(--paper); flex-direction:column; }
 .session-view.show{ display:flex; }
 .session-topbar{ flex-shrink:0; max-height:42vh; overflow-y:auto; background:var(--teal-deep); color:#fff; padding:20px 22px; display:flex; flex-direction:column; align-items:center; text-align:center; }
 .ring-avatar{ width:64px; height:64px; border-radius:50%; background:rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; font-size:27px; margin-bottom:10px; animation:ringPulse 1.2s ease-in-out infinite; flex-shrink:0; }
@@ -100,8 +100,12 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .chat-only-header{ display:none; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:var(--card); flex-shrink:0; }
 .chat-only-header b{ font-size:14px; }
 .chat-only-header button{ background:var(--danger); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:12.5px; font-weight:700; cursor:pointer; }
-.owner-call-btn{ background:var(--teal-tint) !important; color:var(--teal-deep) !important; padding:7px 10px !important; font-size:15px !important; border-radius:50% !important; }
-.chat-mini-toggle{ display:none; position:fixed; right:18px; bottom:18px; width:50px; height:50px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:19px; cursor:pointer; z-index:65; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(18,48,46,.25); }
+/* 2026-08-21 신설: 하단 고정 바 — 발신자 화면(connect.html)과 동일 스타일 */
+.bottom-nav{ position:fixed; left:0; right:0; bottom:0; z-index:120; display:flex; background:var(--card); border-top:1.5px solid var(--line); box-shadow:0 -2px 12px rgba(18,48,46,.08); padding-bottom:env(safe-area-inset-bottom,0); }
+.bottom-nav-btn{ flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:9px 2px 8px; font-size:10.5px; font-weight:700; color:var(--ink-soft); cursor:pointer; }
+.bottom-nav-btn .bn-icon{ font-size:19px; line-height:1; }
+.bottom-nav-btn.active{ color:var(--teal); }
+.chat-mini-toggle{ display:none; position:fixed; right:18px; bottom:78px; width:50px; height:50px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:19px; cursor:pointer; z-index:65; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(18,48,46,.25); }
 .chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
 .chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
 .chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
@@ -229,11 +233,7 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
   <div class="session-chat" id="chatPanel">
     <div class="chat-only-header" id="chatOnlyHeader">
       <b>💬 문자 채팅</b>
-      <div style="display:flex; gap:6px; align-items:center;">
-        <button type="button" id="ownerCallVoiceBtn" class="owner-call-btn" title="음성으로 걸기">🎧</button>
-        <button type="button" id="ownerCallVideoBtn" class="owner-call-btn" title="영상으로 걸기">🎥</button>
-        <button id="chatOnlyEndBtn">채팅 종료</button>
-      </div>
+      <button id="chatOnlyEndBtn">채팅 종료</button>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-closed-note" id="chatClosedNote">
@@ -249,6 +249,26 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
   </div>
 </div>
 <button class="chat-mini-toggle" id="chatToggleMiniBtn">💬</button>
+
+<!-- 2026-08-21 신설: 발신자 화면(connect.html)과 동일한 형태의 하단 고정 바 —
+     소통 화면이 열려있는 동안 항상 보이며, 채팅/음성/영상/문자/사진 어디로든 바로 전환 가능 -->
+<div class="bottom-nav" id="ownerBottomNav" style="display:none;">
+  <button class="bottom-nav-btn" id="ownerNavChat">
+    <span class="bn-icon">💬</span><span>채팅</span>
+  </button>
+  <button class="bottom-nav-btn" id="ownerNavVoice">
+    <span class="bn-icon">🎧</span><span>음성</span>
+  </button>
+  <button class="bottom-nav-btn" id="ownerNavVideo">
+    <span class="bn-icon">🎥</span><span>영상</span>
+  </button>
+  <button class="bottom-nav-btn" id="ownerNavMessage">
+    <span class="bn-icon">✉️</span><span>문자</span>
+  </button>
+  <button class="bottom-nav-btn" id="ownerNavPhoto">
+    <span class="bn-icon">📷</span><span>사진</span>
+  </button>
+</div>
 
 <script>
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
@@ -608,6 +628,8 @@ async function openCaseChat(caseId){
   document.getElementById('chatClosedNote').classList.remove('show');
   document.getElementById('chatInput').disabled = false;
   document.getElementById('chatSendBtn').disabled = false;
+  document.getElementById('ownerBottomNav').style.display = 'flex'; // 2026-08-21: 발신자 화면과 동일한 하단 바 표시
+  updateOwnerBottomNavActive('chat');
 
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
@@ -842,6 +864,7 @@ function hangup(silent){
   document.getElementById('chatInput').disabled = false;
   document.getElementById('chatSendBtn').disabled = false;
   document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('ownerBottomNav').style.display = 'none'; // 2026-08-21
   pendingSession = null;
   callEnding = false;
 }
@@ -861,8 +884,10 @@ let ownerCallSessionToken = null;
 
 async function startOwnerCall(mode){
   if (!currentCaseId || !currentCaseRegistrationId) { alert('소통 정보를 아직 불러오는 중이에요. 잠시 후 다시 시도해주세요.'); return; }
+  if (activeCallDirection) return; // 2026-08-21: 이미 통화 진행 중이면 중복 시도 방지
 
   activeCallDirection = 'outgoing';
+  updateOwnerBottomNavActive(mode);
   ownerCallSessionToken = (window.crypto && crypto.randomUUID) ? crypto.randomUUID().replace(/-/g, '') : Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
 
   // 채팅 화면을 잠시 걷어내고 통화 UI(기존 incallState 재사용)로 전환
@@ -1011,10 +1036,32 @@ function endOwnerCall(silent){
   document.getElementById('chatOnlyHeader').style.display = 'flex';
   document.getElementById('chatToggleMiniBtn').style.display = 'none';
   document.getElementById('chatPanel').classList.add('show');
+  updateOwnerBottomNavActive('chat');
 }
 
-document.getElementById('ownerCallVoiceBtn').addEventListener('click', () => startOwnerCall('voice'));
-document.getElementById('ownerCallVideoBtn').addEventListener('click', () => startOwnerCall('video'));
+// ── 2026-08-21 신설: 발신자 화면(connect.html)과 동일한 하단 고정 바 ──
+function updateOwnerBottomNavActive(mode){
+  document.querySelectorAll('#ownerBottomNav .bottom-nav-btn').forEach((btn) => btn.classList.remove('active'));
+  const idMap = { chat: 'ownerNavChat', voice: 'ownerNavVoice', video: 'ownerNavVideo' };
+  if (idMap[mode]) document.getElementById(idMap[mode]).classList.add('active');
+}
+document.getElementById('ownerNavChat').addEventListener('click', () => {
+  if (activeCallDirection === 'outgoing') { endOwnerCall(false); return; }
+  document.getElementById('chatInput').focus();
+  updateOwnerBottomNavActive('chat');
+});
+document.getElementById('ownerNavVoice').addEventListener('click', () => startOwnerCall('voice'));
+document.getElementById('ownerNavVideo').addEventListener('click', () => startOwnerCall('video'));
+document.getElementById('ownerNavMessage').addEventListener('click', () => {
+  if (activeCallDirection === 'outgoing') endOwnerCall(false);
+  document.getElementById('chatInput').focus();
+  updateOwnerBottomNavActive('chat');
+});
+document.getElementById('ownerNavPhoto').addEventListener('click', () => {
+  if (activeCallDirection === 'outgoing') endOwnerCall(false);
+  document.getElementById('chatPhotoInput').click();
+  updateOwnerBottomNavActive('chat');
+});
 
 document.getElementById('reopenCaseBtn').addEventListener('click', async () => {
   if (!currentCaseId) return;
