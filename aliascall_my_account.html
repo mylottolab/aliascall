@@ -311,7 +311,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
          답장할 수 있음. (2026-08-20 (3차): "부재중 메시지" 배지 + 실시간 피드는 사건함으로 통합되어 제거) -->
     <div class="card" id="caseInboxCard">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-        <b style="font-size:14px;">📂 진행 중인 사건함</b>
+        <b style="font-size:14px;" id="caseInboxTitle">📂 진행 중인 사건함</b>
         <button type="button" id="toggleClosedCasesBtn" style="background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;">지난 사건 보기</button>
       </div>
       <div id="caseInboxList"><div class="empty-regs" style="padding:14px;">불러오는 중…</div></div>
@@ -877,6 +877,7 @@ async function loadCaseInbox(){
 document.getElementById('toggleClosedCasesBtn').addEventListener('click', () => {
   showingClosedCases = !showingClosedCases;
   document.getElementById('toggleClosedCasesBtn').textContent = showingClosedCases ? '진행중인 사건만 보기' : '지난 사건 보기';
+  document.getElementById('caseInboxTitle').textContent = showingClosedCases ? '📂 지난 사건함' : '📂 진행 중인 사건함';
   loadCaseInbox();
 });
 
