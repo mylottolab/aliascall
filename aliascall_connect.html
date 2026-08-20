@@ -970,13 +970,15 @@ document.getElementById('muteBtn').addEventListener('click', () => {
 });
 
 // ── 채팅 (일회성, DB 미저장) — 2026-08-19: 통화 협상과 완전히 분리된 별도 채널로 재설계 ──
-let sharedAudioCtx = null;
+// 2026-08-20: 이 화면만의 별도 AudioContext 대신, aliascall_push.js가 관리하는 공유
+// 컨텍스트를 그대로 씀 — "알림음 켜기" 토글로 허가받은 컨텍스트와 실제 재생 컨텍스트가
+// 서로 다른 객체라 소리가 하나도 안 나던 버그의 원인이었음(통합 위젯 도입 시 발견됨).
 function getAudioCtx(){
-  if (!sharedAudioCtx) sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return sharedAudioCtx;
+  return getAliascallAudioCtx();
 }
 // 채팅 메시지 도착 알림음 — 통화벨과 헷갈리지 않도록 짧은 "핑" 한 번으로 구분 (수신자 쪽과 동일)
 function playChatPing(){
+  if (!aliascallIsSoundEnabled()) return;
   try {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
@@ -999,8 +1001,16 @@ function subscribeCaseRealtime(caseId){
   caseRealtimeChannel = sb.channel('case-' + caseId, { config: { broadcast: { self: false } } });
   caseRealtimeChannel
     .on('broadcast', { event: 'new-message' }, ({ payload }) => {
-      appendChatMessage(payload, 'them');
-      playChatPing();
+      // ⚠ 2026-08-20 수정: self:false는 "이 브라우저가 이 채널로 직접 보낸 것"만 걸러줌.
+      // 실제 방송은 서버(Edge Function)가 대신 보내는 거라 이 필터가 전혀 안 먹혀서,
+      // 내가 보낸 메시지가 서버를 거쳐 나에게 다시 돌아오면 무조건 "상대방"으로 잘못
+      // 표시되고 중복으로 찍히던 버그가 있었음. 이미 렌더링된 메시지(renderedMsgIds)면
+      // 건너뛰고, sender 값을 보고 정확히 나/상대를 구분하도록 수정.
+      if (renderedMsgIds.has(payload.id)) return;
+      renderedMsgIds.add(payload.id);
+      const who = payload.sender === 'finder' ? 'me' : 'them';
+      appendChatMessage(payload, who);
+      if (who === 'them') playChatPing();
     })
     .subscribe();
 }

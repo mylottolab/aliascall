@@ -273,11 +273,10 @@ async function logIceCandidatePairs(pcRef){
 
 // ── "딩동" 초인종 알림음 — 외부 음원 없이 코드로 합성 (Web Audio API) ──
 // 2026-08-19 (2차): 재생 전 aliascallIsSoundEnabled()로 켜져있는지 확인 (통합 토글, aliascall_push.js)
-let sharedAudioCtx = null;
-
+// 2026-08-20: 이 화면만의 별도 AudioContext 대신 aliascall_push.js의 공유 컨텍스트를 씀
+// (별개 컨텍스트를 쓰면 "알림음 켜기" 허가가 안 이어져서 소리가 안 나던 버그가 있었음)
 function getAudioCtx(){
-  if (!sharedAudioCtx) sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return sharedAudioCtx;
+  return getAliascallAudioCtx();
 }
 
 function playDoorbell(){
@@ -450,6 +449,8 @@ async function loadMissedMessages(){
       let label;
       if (m.call_type === 'message') {
         label = '💬 문자 메시지';
+      } else if (m.call_type === 'chat') {
+        label = '💬 문자 채팅'; // 2026-08-20: 'chat' 분기가 없어서 무조건 "음성 통화"로 잘못 찍히던 버그 수정
       } else {
         const typeName = m.call_type === 'video' ? '영상' : '음성';
         label = m.owner_joined_at ? ('☎️ ' + typeName + ' 통화 (연결 후 종료됨)') : ('📵 부재중 ' + typeName + ' 통화');
@@ -513,8 +514,14 @@ function subscribeCaseRealtime(caseId){
   caseRealtimeChannel = sb.channel('case-' + caseId, { config: { broadcast: { self: false } } });
   caseRealtimeChannel
     .on('broadcast', { event: 'new-message' }, ({ payload }) => {
-      appendChatMessage(payload, 'them');
-      playChatPing();
+      // ⚠ 2026-08-20 수정: self:false는 실제 방송이 서버(Edge Function)를 거쳐서 오기 때문에
+      // 전혀 안 먹혀서, 내가 보낸 메시지가 "상대방"으로 잘못 표시되며 중복되던 버그가 있었음.
+      // renderedMsgIds로 이미 렌더링된 건 건너뛰고, sender 값으로 정확히 구분함.
+      if (renderedMsgIds.has(payload.id)) return;
+      renderedMsgIds.add(payload.id);
+      const who = payload.sender === 'owner' ? 'me' : 'them';
+      appendChatMessage(payload, who);
+      if (who === 'them') playChatPing();
     })
     .subscribe();
 }

@@ -186,7 +186,19 @@ async function unsubscribeAliascallPush(sb, containerId){
 // (각 화면의 playDoorbell/startRingtone/playChatPing 함수들이 재생 직전에
 //  aliascallIsSoundEnabled()를 확인하도록 되어있음)
 const ALIASCALL_SOUND_KEY = 'aliascall_sound_enabled';
-let _aliascallUnlockCtx = null;
+let _aliascallSharedCtx = null;
+
+// ⚠ 2026-08-20 수정: 예전엔 이 파일(push.js)이 "언락용" 오디오 컨텍스트를 하나 만들고,
+// 각 화면(index.html/my_account.html/incoming_calls.html/connect.html)은 각자 별도의
+// AudioContext(sharedAudioCtx)를 또 만들어서 실제 딩동/벨소리를 재생했음. 브라우저 정책상
+// "사용자 제스처로 허가받은" 오디오 컨텍스트와, 그 이후 새로 만든 별개의 컨텍스트는 서로
+// 다른 객체라 허가가 안 이어질 수 있어서, 토글은 켜졌는데 실제 소리는 하나도 안 나던 버그의
+// 원인이었음. 이제 모든 화면이 이 함수 하나로 같은 컨텍스트를 공유해서 씀.
+function getAliascallAudioCtx(){
+  if (!_aliascallSharedCtx) _aliascallSharedCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_aliascallSharedCtx.state === 'suspended') _aliascallSharedCtx.resume().catch(() => {});
+  return _aliascallSharedCtx;
+}
 
 function aliascallIsSoundEnabled(){
   // 기본값: 아직 한 번도 설정 안 했으면 '켜짐'으로 간주하지 않음(브라우저가 자동재생을 막고
@@ -195,16 +207,16 @@ function aliascallIsSoundEnabled(){
 }
 async function aliascallEnableSound(){
   try {
-    if (!_aliascallUnlockCtx) _aliascallUnlockCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (_aliascallUnlockCtx.state === 'suspended') await _aliascallUnlockCtx.resume();
+    const ctx = getAliascallAudioCtx();
+    if (ctx.state === 'suspended') await ctx.resume();
     // 아주 짧고 작은 소리를 한번 내서 오디오 재생 자체를 "허가"받아둠 (사실상 무음에 가까움) —
-    // 이후 각 화면에서 새로 만드는 AudioContext도 같은 페이지 세션 내라 재생이 허용됨
-    const osc = _aliascallUnlockCtx.createOscillator();
-    const gain = _aliascallUnlockCtx.createGain();
+    // 이후 이 페이지에서 재생하는 모든 소리가 같은 컨텍스트(getAliascallAudioCtx)를 쓰므로 계속 허용됨
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
     gain.gain.value = 0.001;
-    osc.connect(gain).connect(_aliascallUnlockCtx.destination);
+    osc.connect(gain).connect(ctx.destination);
     osc.start();
-    osc.stop(_aliascallUnlockCtx.currentTime + 0.05);
+    osc.stop(ctx.currentTime + 0.05);
   } catch (e) { console.warn('[sound] 오디오 언락 실패', e); }
   localStorage.setItem(ALIASCALL_SOUND_KEY, '1');
 }
