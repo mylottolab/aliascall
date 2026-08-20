@@ -156,6 +156,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .case-item.closed{ opacity:.6; }
 
 .empty-regs{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:24px; }
+.case-inbox-alert-title{ font-style:italic; font-size:12px; color:var(--ink-soft); padding:2px 2px 10px; }
 
 .confirm-btn-teal{ background:var(--teal); }
 .renew-period-tabs{ display:flex; gap:8px; margin-bottom:14px; }
@@ -311,8 +312,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
          답장할 수 있음. (2026-08-20 (3차): "부재중 메시지" 배지 + 실시간 피드는 사건함으로 통합되어 제거) -->
     <div class="card" id="caseInboxCard">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-        <b style="font-size:14px;" id="caseInboxTitle">📂 진행 중인 사건함</b>
-        <button type="button" id="toggleClosedCasesBtn" style="background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;">지난 사건 보기</button>
+        <b style="font-size:14px;" id="caseInboxTitle">📂 진행 중인 소통함</b>
+        <button type="button" id="toggleClosedCasesBtn" style="background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;">지난 소통 보기</button>
       </div>
       <div id="caseInboxList"><div class="empty-regs" style="padding:14px;">불러오는 중…</div></div>
     </div>
@@ -845,11 +846,12 @@ async function loadCaseInbox(){
     if (!res.ok) throw new Error(data.error || '조회 실패');
 
     if (!data.cases || data.cases.length === 0) {
-      listEl.innerHTML = '<div class="empty-regs" style="padding:14px;">' + (showingClosedCases ? '사건이 없어요.' : '진행 중인 사건이 없어요.') + '</div>';
+      listEl.innerHTML = '<div class="empty-regs" style="padding:14px;">' + (showingClosedCases ? '지난 소통이 없어요.' : '확인해야 할 알림이 없어요.') + '</div>';
       return;
     }
 
-    listEl.innerHTML = data.cases.map((c) => {
+    const alertTitleHtml = !showingClosedCases ? '<div class="case-inbox-alert-title">확인해야 할 알림입니다</div>' : '';
+    listEl.innerHTML = alertTitleHtml + data.cases.map((c) => {
       const emoji = CASE_CATEGORY_EMOJI[c.category] || '❓';
       const preview = c.lastMessage
         ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? '나: ' : '') + c.lastMessage.preview)
@@ -887,8 +889,8 @@ async function loadCaseInbox(){
 }
 document.getElementById('toggleClosedCasesBtn').addEventListener('click', () => {
   showingClosedCases = !showingClosedCases;
-  document.getElementById('toggleClosedCasesBtn').textContent = showingClosedCases ? '진행중인 사건만 보기' : '지난 사건 보기';
-  document.getElementById('caseInboxTitle').textContent = showingClosedCases ? '📂 지난 사건함' : '📂 진행 중인 사건함';
+  document.getElementById('toggleClosedCasesBtn').textContent = showingClosedCases ? '진행중인 소통만 보기' : '지난 소통 보기';
+  document.getElementById('caseInboxTitle').textContent = showingClosedCases ? '📂 지난 소통함' : '📂 진행 중인 소통함';
   loadCaseInbox();
 });
 
