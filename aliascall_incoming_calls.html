@@ -235,7 +235,10 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
       </div>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-closed-note" id="chatClosedNote">🔒 이 사건은 종료되어 더 이상 메시지를 보낼 수 없어요.</div>
+    <div class="chat-closed-note" id="chatClosedNote">
+      🔒 이 사건은 종료되어 더 이상 메시지를 보낼 수 없어요.
+      <button type="button" id="reopenCaseBtn" style="margin-left:8px; background:var(--teal); color:#fff; border:none; border-radius:8px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;">다시 열기</button>
+    </div>
     <div class="chat-input-row">
       <input type="file" id="chatPhotoInput" accept="image/*" style="display:none;">
       <button type="button" class="chat-attach-btn" id="chatAttachBtn" title="사진 첨부">📎</button>
@@ -438,9 +441,12 @@ async function init(){
   sb.channel('incoming-calls')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
       const row = payload.new;
+      if (!myRegistrationIds.includes(row.registration_id)) return;
+      // ⚠ 2026-08-21 수정: 내가 방금 발견자에게 건 콜백(owner_to_finder)이면 내 화면에
+      // "연결 요청 왔어요"로 뜨면 안 됨 — 자기 자신에게 알림 뜨던 버그의 원인
+      if (row.direction === 'owner_to_finder') { loadCaseInbox(); return; }
       // ⚠ call_type이 'message'면 "문자만 보내기"로 생성된 행이라 실제 통화 요청이 아님 —
       // 전화벨 대신 딩동 소리 + 부재중 메시지 목록만 새로고침함
-      if (!myRegistrationIds.includes(row.registration_id)) return;
       if (row.call_type === 'message') { playDoorbell(); loadCaseInbox(); return; }
       showIncomingCall(row);
     })
@@ -1008,6 +1014,27 @@ function endOwnerCall(silent){
 document.getElementById('ownerCallVoiceBtn').addEventListener('click', () => startOwnerCall('voice'));
 document.getElementById('ownerCallVideoBtn').addEventListener('click', () => startOwnerCall('video'));
 
+document.getElementById('reopenCaseBtn').addEventListener('click', async () => {
+  if (!currentCaseId) return;
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-reopen`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ caseId: currentCaseId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '재개 실패');
+    document.getElementById('chatClosedNote').classList.remove('show');
+    document.getElementById('chatInput').disabled = false;
+    document.getElementById('chatSendBtn').disabled = false;
+    loadCaseInbox(); // 사건함 목록의 "종료됨" 배지도 갱신
+  } catch (e) {
+    console.error('[case] 사건 재개 실패', e);
+    alert('다시 열지 못했어요. 잠시 후 다시 시도해주세요.');
+  }
+});
 document.getElementById('chatOnlyEndBtn').addEventListener('click', async () => {
   // 2026-08-20: "채팅 종료" 버튼은 이제 사건 자체를 종료함 (양쪽 다 다시 메시지 못 보냄)
   if (currentCaseId && confirm('이 대화를 종료하시겠어요? 종료하면 더 이상 메시지를 주고받을 수 없어요.')) {

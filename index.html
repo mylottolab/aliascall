@@ -436,6 +436,10 @@ async function initIncomingWatcher(userId){
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
       const row = payload.new;
       if (!myRegistrationIds.includes(row.registration_id)) return;
+      // ⚠ 2026-08-21 수정: direction이 'owner_to_finder'면 "내가 방금 발견자에게 건 콜백"임 —
+      // 이건 내 화면에 "연결 요청 왔어요"로 뜨면 안 됨(자기 자신에게 알림 뜨던 버그의 원인).
+      // 이 경우는 무시하고 사건함만 조용히 갱신함.
+      if (row.direction === 'owner_to_finder') { loadCaseInbox(); return; }
       // ⚠ call_type이 'message'면 "문자만 보내기"로 생성된 행이라 실제 통화 요청이 아님 —
       // 딩동 소리 + 사건함 갱신 (2026-08-20 (3차): 예전엔 별도 배지/피드가 있었는데 사건함으로 통합됨)
       if (row.call_type === 'message') { playDoorbell(); loadCaseInbox(); return; }

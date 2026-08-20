@@ -165,6 +165,8 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .chat-only-header{ display:none; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); background:var(--card); flex-shrink:0; }
 .chat-only-header b{ font-size:14px; }
 .chat-only-header button{ background:var(--danger); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:12.5px; font-weight:700; cursor:pointer; }
+.finder-push-toggle{ background:var(--line) !important; color:var(--ink-soft) !important; width:32px; height:32px; border-radius:50% !important; padding:0 !important; font-size:15px !important; display:flex; align-items:center; justify-content:center; }
+.finder-push-toggle.on{ background:var(--teal) !important; color:#fff !important; }
 .chat-mini-toggle{ display:none; position:fixed; right:18px; bottom:78px; width:50px; height:50px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:19px; cursor:pointer; z-index:65; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(18,48,46,.25); }
 .chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
 .chat-bubble{ max-width:75%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
@@ -297,10 +299,18 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
   <div class="session-chat" id="chatPanel">
     <div class="chat-only-header" id="chatOnlyHeader">
       <b>💬 문자 채팅</b>
-      <button id="chatOnlyEndBtn" data-i18n="chatOnlyEnd">채팅 종료</button>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <!-- 2026-08-21 신설: 발견자용 긴급 알림 토글 — 예전엔 첫 메시지 보낼 때 조용히 한 번만
+             물어봐서 "안 보인다"는 피드백이 있었음. 이제 채팅창 상단에 항상 눈에 보이게 둠. -->
+        <button type="button" id="finderPushToggleBtn" class="finder-push-toggle" title="긴급 알림">🔔</button>
+        <button id="chatOnlyEndBtn" data-i18n="chatOnlyEnd">채팅 종료</button>
+      </div>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-closed-note" id="chatClosedNote">🔒 이 사건은 종료되어 더 이상 메시지를 보낼 수 없어요. 다시 연락하시려면 새로 메시지를 보내주세요.</div>
+    <div class="chat-closed-note" id="chatClosedNote">
+      🔒 이 사건은 종료되어 더 이상 메시지를 보낼 수 없어요.
+      <button type="button" id="reopenCaseBtn" style="margin-left:8px; background:var(--teal); color:#fff; border:none; border-radius:8px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;">다시 열기</button>
+    </div>
     <div class="chat-input-row">
       <input type="file" id="chatPhotoInput" accept="image/*" style="display:none;">
       <button type="button" class="chat-attach-btn" id="chatAttachBtn" title="사진 첨부">📎</button>
@@ -884,6 +894,7 @@ async function startCall(mode){
       renderedMsgIds = new Set();
       (openData.messages || []).forEach((m) => { appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'); renderedMsgIds.add(m.id); });
       subscribeCaseRealtime(currentCaseId);
+      renderFinderPushToggle(); // 2026-08-21
 
       const callLogText = (mode === 'video' ? '🎥 영상통화' : '🎧 음성통화') + ' 시도';
       fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
@@ -1304,6 +1315,42 @@ async function attemptFinderPushSubscribe(caseId){
   } catch (e) { console.warn('[push] 발견자 익명 알림 구독 시도 실패(대화 자체엔 영향 없음)', e); }
 }
 
+// ── 2026-08-21 신설: 채팅창 상단에 항상 보이는 긴급 알림 토글 ──
+// (예전엔 첫 메시지 보낼 때 조용히 한 번만 물어봐서 "안 보인다"는 피드백이 있었음)
+async function renderFinderPushToggle(){
+  const btn = document.getElementById('finderPushToggleBtn');
+  if (!btn) return;
+  if (!pushIsSupported() || (_isIOS() && !_isStandalone())) { btn.style.display = 'none'; return; }
+  btn.style.display = 'flex';
+  const reg = await registerAliascallServiceWorker();
+  if (!reg) return;
+  const sub = await reg.pushManager.getSubscription();
+  const isOn = !!(sub && Notification.permission === 'granted');
+  btn.classList.toggle('on', isOn);
+}
+document.getElementById('finderPushToggleBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('finderPushToggleBtn');
+  if (btn.classList.contains('on')) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        const endpoint = sub.endpoint;
+        await sub.unsubscribe();
+        await fetch(`${SUPABASE_URL}/functions/v1/aliascall-finder-push-subscribe`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint }),
+        });
+      }
+    } catch (e) { console.warn('[push] 발견자 알림 끄기 실패', e); }
+  } else {
+    if (!currentCaseId) { alert('잠시 후 다시 시도해주세요.'); return; }
+    await attemptFinderPushSubscribe(currentCaseId);
+  }
+  renderFinderPushToggle();
+});
+
 // ── 2026-08-19 (2차) 신설, 2026-08-20 대폭 수정(사건 시스템 연동) ──
 // "문자 채팅하기" 전용 플로우 — 통화 시도 자체가 전혀 없음. 이제 대화 내용이 영구 저장되고,
 // 소유자가 나중에라도 답장할 수 있음(기존엔 그 순간 방송만 하고 사라졌음).
@@ -1353,6 +1400,7 @@ async function startLiveChatOnly(){
   if (error) console.warn('[webrtc] 채팅 알림용 세션 기록 실패(대화 자체엔 영향 없음)', error);
 
   subscribeCaseRealtime(currentCaseId);
+  renderFinderPushToggle(); // 2026-08-21
 
   // ⚠ 2026-08-20 신설: 실시간 방송을 놓쳤을 경우의 안전장치 — 채팅창이 열려있는 동안
   // 8초마다 조용히 다시 확인해서, 놓친 메시지가 있으면 자동으로 채워넣음 (새로고침 불필요)
@@ -1395,6 +1443,24 @@ async function refreshCaseMessages(caseId, silent){
     if (!silent) console.error('[case] 대화 불러오기 실패', e);
   }
 }
+document.getElementById('reopenCaseBtn').addEventListener('click', async () => {
+  if (!currentCaseId) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-reopen`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caseId: currentCaseId, finderAnonId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '재개 실패');
+    document.getElementById('chatClosedNote').classList.remove('show');
+    document.getElementById('chatInput').disabled = false;
+    document.getElementById('chatSendBtn').disabled = false;
+  } catch (e) {
+    console.error('[case] 사건 재개 실패', e);
+    alert('다시 열지 못했어요. 잠시 후 다시 시도해주세요.');
+  }
+});
 document.getElementById('chatOnlyEndBtn').addEventListener('click', async () => {
   // 2026-08-20: "채팅 종료" 버튼은 이제 사건 자체를 종료함(양쪽 다 다시 메시지 못 보냄)
   if (currentCaseId && confirm('이 대화를 종료하시겠어요? 종료하면 더 이상 메시지를 주고받을 수 없어요.')) {

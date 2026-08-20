@@ -779,6 +779,9 @@ async function initIncomingWatcher(userId){
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
       const row = payload.new;
       if (!myWatchedRegIds.includes(row.registration_id)) return;
+      // ⚠ 2026-08-21 수정: 내가 방금 발견자에게 건 콜백(owner_to_finder)이면 내 화면에
+      // "연결 요청 왔어요"로 뜨면 안 됨 — 자기 자신에게 알림 뜨던 버그의 원인
+      if (row.direction === 'owner_to_finder') { loadCaseInbox(); return; }
       // 2026-08-20 (3차): "부재중 메시지" 배지/피드는 사건함으로 통합되어 제거 — 딩동 + 사건함 갱신만
       if (row.call_type === 'message') { playDoorbell(); loadCaseInbox(); return; }
       if (row.call_type === 'chat') { showChatRequest(row); return; }
