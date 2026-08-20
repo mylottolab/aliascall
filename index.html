@@ -387,7 +387,15 @@ async function loadCaseInbox(){
       const preview = c.lastMessage
         ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? '나: ' : '') + c.lastMessage.preview)
         : '(메시지 없음)';
-      const time = c.lastActivityAt ? new Date(c.lastActivityAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : '';
+      const time = c.lastActivityAt ? (() => {
+        const d = new Date(c.lastActivityAt);
+        const now = new Date();
+        const isToday = d.toDateString() === now.toDateString();
+        // 2026-08-20: 오늘이면 시:분까지, 아니면 날짜만 (둘 다 보여주면 길어져서 오늘/이전을 구분해서 표시)
+        return isToday
+          ? d.toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: true })
+          : d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
+      })() : '';
       const closedBadge = c.status === 'closed' ? '<span class="ci-badge">종료됨</span>' : '';
       return `
         <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}" data-case-id="${c.caseId}">
