@@ -506,6 +506,7 @@ async function showIncomingCall(row){
 // ── 2026-08-20 신설: 사건(case) 시스템 기반 채팅 — 영구 저장 + 사진 + 소유자 답장까지 지원 ──
 let currentCaseId = null;
 let caseRealtimeChannel = null;
+let caseMessagePollInterval = null;
 
 function subscribeCaseRealtime(caseId){
   if (caseRealtimeChannel) { try { sb.removeChannel(caseRealtimeChannel); } catch (e) {} }
@@ -523,9 +524,12 @@ function unsubscribeCaseRealtime(){
 
 // 사건 대화창 열기 — 링잉 알림(showIncomingCall)에서든, 마이페이지 "사건함"에서 직접 클릭해서든
 // (?case=<caseId>) 둘 다 이 함수로 들어옴
+let renderedMsgIds = new Set(); // 2026-08-20: 폴링 시 중복 렌더링 방지용
+
 async function openCaseChat(caseId){
   if (!caseId) { console.error('[case] caseId가 없어서 대화창을 열 수 없음'); return; }
   currentCaseId = caseId;
+  renderedMsgIds = new Set();
 
   document.getElementById('sessionView').classList.add('show');
   document.getElementById('sessionTopbar').style.display = 'none';
@@ -540,17 +544,35 @@ async function openCaseChat(caseId){
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
 
+  await refreshCaseMessages(caseId, session.access_token);
+  subscribeCaseRealtime(caseId);
+
+  // ⚠ 2026-08-20 신설: 실시간 방송을 놓쳤을 경우의 안전장치 — 채팅창이 열려있는 동안
+  // 8초마다 조용히 다시 확인해서, 놓친 메시지가 있으면 자동으로 채워넣음 (새로고침 불필요)
+  if (caseMessagePollInterval) clearInterval(caseMessagePollInterval);
+  caseMessagePollInterval = setInterval(async () => {
+    const { data: { session: s } } = await sb.auth.getSession();
+    if (s && currentCaseId === caseId) refreshCaseMessages(caseId, s.access_token, true);
+  }, 8000);
+}
+
+async function refreshCaseMessages(caseId, accessToken, silent){
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-messages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + accessToken },
       body: JSON.stringify({ caseId }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '대화 불러오기 실패');
 
-    document.getElementById('chatOnlyHeader').querySelector('b').textContent = '💬 ' + (data.registrationTitle || '문자 채팅');
-    (data.messages || []).forEach((m) => appendChatMessage(m, m.sender === 'owner' ? 'me' : 'them'));
+    if (!silent) document.getElementById('chatOnlyHeader').querySelector('b').textContent = '💬 ' + (data.registrationTitle || '문자 채팅');
+    (data.messages || []).forEach((m) => {
+      if (renderedMsgIds.has(m.id)) return;
+      renderedMsgIds.add(m.id);
+      appendChatMessage(m, m.sender === 'owner' ? 'me' : 'them');
+      if (silent && m.sender !== 'owner') playChatPing(); // 폴링으로 새로 발견된 상대 메시지엔 알림음
+    });
 
     if (data.status === 'closed') {
       document.getElementById('chatClosedNote').classList.add('show');
@@ -558,10 +580,8 @@ async function openCaseChat(caseId){
       document.getElementById('chatSendBtn').disabled = true;
     }
   } catch (e) {
-    console.error('[case] 대화 불러오기 실패', e);
+    if (!silent) console.error('[case] 대화 불러오기 실패', e);
   }
-
-  subscribeCaseRealtime(caseId);
 }
 
 document.getElementById('declineBtn').addEventListener('click', async () => {
@@ -736,6 +756,7 @@ function hangup(silent){
   if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
   if (rtChannel) { sb.removeChannel(rtChannel); rtChannel = null; }
   unsubscribeCaseRealtime(); // 2026-08-20: 통화/채팅 종료와 함께 사건 실시간 채널도 정리
+  if (caseMessagePollInterval) { clearInterval(caseMessagePollInterval); caseMessagePollInterval = null; }
   currentCaseId = null;
   document.getElementById('sessionView').classList.remove('show');
   document.getElementById('callVideoArea').classList.remove('show');
@@ -819,6 +840,7 @@ document.getElementById('chatPhotoInput').addEventListener('change', async (e) =
     if (!msgRes.ok) throw new Error(msgData.error || '전송 실패');
 
     appendChatMessage({ message_type: 'photo', content: uploadData.url }, 'me');
+    if (msgData.messageId) renderedMsgIds.add(msgData.messageId); // 2026-08-20: 폴링 시 중복 방지
   } catch (e) {
     console.error('[case] 사진 전송 실패', e);
     alert('사진을 보내지 못했어요. 잠시 후 다시 시도해주세요.');
@@ -861,6 +883,7 @@ async function sendChatMessage(){
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '전송 실패');
     appendChatMessage({ message_type: 'text', content: text }, 'me');
+    if (data.messageId) renderedMsgIds.add(data.messageId); // 2026-08-20: 폴링 시 중복 방지
     input.value = '';
   } catch (e) {
     console.error('[case] 메시지 전송 실패', e);

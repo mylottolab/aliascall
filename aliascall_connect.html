@@ -612,6 +612,8 @@ function getFinderAnonId(){
 const finderAnonId = getFinderAnonId();
 let currentCaseId = null;
 let caseRealtimeChannel = null;
+let caseMessagePollInterval = null;
+let renderedMsgIds = new Set(); // 2026-08-20: 폴링 시 중복 렌더링 방지용
 
 // ── chrome://webrtc-internals 안 찾아다녀도, 연결 실패시 후보쌍(candidate-pair) 정보를
 // 콘솔에 바로 찍어주는 진단 함수 — 어떤 경로(직접연결 host/srflx, 또는 TURN relay)로
@@ -939,6 +941,7 @@ function endCall(silent){
   if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
   if (rtChannel) { sb.removeChannel(rtChannel); rtChannel = null; }
   unsubscribeCaseRealtime(); // 2026-08-20: 통화/채팅 종료와 함께 사건 실시간 채널도 정리
+  if (caseMessagePollInterval) { clearInterval(caseMessagePollInterval); caseMessagePollInterval = null; }
   currentCaseId = null;
   document.getElementById('callingOverlay').classList.remove('show');
   document.getElementById('callControls').classList.remove('show');
@@ -1068,7 +1071,8 @@ async function startLiveChatOnly(){
     return;
   }
   currentCaseId = openData.caseId;
-  (openData.messages || []).forEach((m) => appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'));
+  renderedMsgIds = new Set();
+  (openData.messages || []).forEach((m) => { appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'); renderedMsgIds.add(m.id); });
 
   // 2) 소유자 알림용 webrtc_sessions 행 생성(기존 전화벨/배너 알림 구조 그대로 재사용) + case_id 연결
   const { error } = await sb.from('webrtc_sessions').insert({
@@ -1082,6 +1086,13 @@ async function startLiveChatOnly(){
 
   subscribeCaseRealtime(currentCaseId);
 
+  // ⚠ 2026-08-20 신설: 실시간 방송을 놓쳤을 경우의 안전장치 — 채팅창이 열려있는 동안
+  // 8초마다 조용히 다시 확인해서, 놓친 메시지가 있으면 자동으로 채워넣음 (새로고침 불필요)
+  if (caseMessagePollInterval) clearInterval(caseMessagePollInterval);
+  caseMessagePollInterval = setInterval(() => {
+    if (currentCaseId) refreshCaseMessages(currentCaseId, true);
+  }, 8000);
+
   // 통화와 마찬가지로, 소유자가 15초간 응답 없으면 긴급 웹푸시 발송 (2026-08-20: 60초→15초 단축)
   wakeupPushTimer = setTimeout(() => {
     fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-wakeup-push`, {
@@ -1090,6 +1101,31 @@ async function startLiveChatOnly(){
       body: JSON.stringify({ registrationId, mode: 'chat', registrationTitle: document.getElementById('foundTitle').textContent }),
     }).catch((e) => console.warn('[push] 긴급 알림 발송 요청 실패(채팅 자체엔 영향 없음)', e));
   }, 15000);
+}
+
+async function refreshCaseMessages(caseId, silent){
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caseId, finderAnonId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '대화 불러오기 실패');
+    (data.messages || []).forEach((m) => {
+      if (renderedMsgIds.has(m.id)) return;
+      renderedMsgIds.add(m.id);
+      appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them');
+      if (silent && m.sender !== 'finder') playChatPing();
+    });
+    if (data.status === 'closed') {
+      document.getElementById('chatClosedNote').classList.add('show');
+      document.getElementById('chatInput').disabled = true;
+      document.getElementById('chatSendBtn').disabled = true;
+    }
+  } catch (e) {
+    if (!silent) console.error('[case] 대화 불러오기 실패', e);
+  }
 }
 document.getElementById('chatOnlyEndBtn').addEventListener('click', async () => {
   // 2026-08-20: "채팅 종료" 버튼은 이제 사건 자체를 종료함(양쪽 다 다시 메시지 못 보냄)
@@ -1147,6 +1183,7 @@ async function sendChatPhoto(file){
     if (!msgRes.ok) throw new Error(msgData.error || '전송 실패');
 
     appendChatMessage({ message_type: 'photo', content: uploadData.url }, 'me');
+    if (msgData.messageId) renderedMsgIds.add(msgData.messageId); // 2026-08-20: 폴링 시 중복 방지
     attemptFinderPushSubscribe(currentCaseId);
   } catch (e) {
     console.error('[case] 사진 전송 실패', e);
@@ -1205,6 +1242,7 @@ async function sendChatMessage(){
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '전송 실패');
     appendChatMessage({ message_type: 'text', content: text }, 'me');
+    if (data.messageId) renderedMsgIds.add(data.messageId); // 2026-08-20: 폴링 시 중복 방지
     input.value = '';
     attemptFinderPushSubscribe(currentCaseId); // 2026-08-20: 첫 메시지 보낸 김에 자연스럽게 답장 알림도 물어봄
   } catch (e) {
