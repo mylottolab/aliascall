@@ -1192,8 +1192,13 @@ async function sendChatPhoto(file){
     const msgData = await msgRes.json();
     if (!msgRes.ok) throw new Error(msgData.error || '전송 실패');
 
-    appendChatMessage({ message_type: 'photo', content: uploadData.url }, 'me');
-    if (msgData.messageId) renderedMsgIds.add(msgData.messageId); // 2026-08-20: 폴링 시 중복 방지
+    // ⚠ 2026-08-20 (2차) 수정: 서버 응답이 도착하기 전에 8초 폴링(refreshCaseMessages)이
+    // 먼저 이 메시지를 발견해서 화면에 붙여버릴 수 있음(네트워크가 느릴 때 랜덤하게 발생) —
+    // 이미 붙어있으면 또 붙이지 않도록 renderedMsgIds를 먼저 확인
+    if (!msgData.messageId || !renderedMsgIds.has(msgData.messageId)) {
+      appendChatMessage({ message_type: 'photo', content: uploadData.url }, 'me');
+      if (msgData.messageId) renderedMsgIds.add(msgData.messageId);
+    }
     attemptFinderPushSubscribe(currentCaseId);
   } catch (e) {
     console.error('[case] 사진 전송 실패', e);
@@ -1251,8 +1256,11 @@ async function sendChatMessage(){
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '전송 실패');
-    appendChatMessage({ message_type: 'text', content: text }, 'me');
-    if (data.messageId) renderedMsgIds.add(data.messageId); // 2026-08-20: 폴링 시 중복 방지
+    // ⚠ 2026-08-20 (2차) 수정: 서버 응답 전에 폴링이 먼저 렌더링했을 수 있어 중복 방지 확인
+    if (!data.messageId || !renderedMsgIds.has(data.messageId)) {
+      appendChatMessage({ message_type: 'text', content: text }, 'me');
+      if (data.messageId) renderedMsgIds.add(data.messageId);
+    }
     input.value = '';
     attemptFinderPushSubscribe(currentCaseId); // 2026-08-20: 첫 메시지 보낸 김에 자연스럽게 답장 알림도 물어봄
   } catch (e) {
