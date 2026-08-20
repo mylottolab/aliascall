@@ -113,6 +113,21 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .chat-attach-btn{ background:var(--teal-tint) !important; color:var(--teal-deep) !important; font-size:18px !important; }
 .chat-closed-note{ display:none; text-align:center; padding:10px 14px; font-size:11.5px; color:var(--ink-soft); background:var(--paper); border-top:1px solid var(--line); }
 .chat-closed-note.show{ display:block; }
+.chat-system-note{ align-self:center; font-size:11px; color:var(--ink-soft); background:var(--line); padding:5px 12px; border-radius:12px; margin:4px 0; }
+
+/* 2026-08-20 (3차) 신설: 사건함 (my_account.html과 동일 스타일) */
+.card{ background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px 22px; }
+.case-item{ display:flex; align-items:center; gap:11px; padding:11px 4px; border-bottom:1px solid var(--line); cursor:pointer; text-align:left; background:none; border-left:none; border-right:none; border-top:none; width:100%; }
+.case-item:last-child{ border-bottom:none; }
+.case-item:active{ background:var(--paper); }
+.case-item .ci-emoji{ font-size:22px; flex-shrink:0; }
+.case-item .ci-body{ flex:1; min-width:0; }
+.case-item .ci-title{ font-size:13px; font-weight:700; color:var(--ink); margin-bottom:2px; display:flex; align-items:center; gap:6px; }
+.case-item .ci-badge{ font-size:9.5px; font-weight:700; padding:2px 6px; border-radius:8px; background:var(--coral-tint,#FDEAE1); color:var(--coral); flex-shrink:0; }
+.case-item .ci-preview{ font-size:12px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.case-item .ci-time{ font-size:10px; color:var(--ink-soft); flex-shrink:0; }
+.case-item.closed{ opacity:.6; }
+.case-inbox-empty{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:14px; }
 
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
@@ -160,10 +175,19 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
   <div class="login-needed" id="loginNeeded">로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.</div>
 
   <div id="waitContent" style="display:none;">
-    <div id="missedMessages"></div>
+    <!-- 2026-08-20 (3차) 신설: 사건함 — 문자/채팅/사진/통화기록이 다 여기 시간순으로 모임.
+         (예전엔 이 위치에 "부재중 메시지"/"연결 기록"이 별도로 있었는데, 사건함과 정보가
+         겹치고 방향이 갈려서 혼란스럽다는 피드백을 반영 — 이제 사건함이 유일한 소통 기록임) -->
+    <div class="card" id="caseInboxCard" style="margin-bottom:16px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <b style="font-size:14px;">📂 진행 중인 사건함</b>
+        <button type="button" id="toggleClosedCasesBtn" style="background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;">지난 사건 보기</button>
+      </div>
+      <div id="caseInboxList"><div class="case-inbox-empty">불러오는 중…</div></div>
+    </div>
     <div class="empty-wait" id="emptyWait">
       <div class="big">📞</div>
-      <p>지금은 대기중입니다.<br>연결 요청이 오면 이 화면에 바로 알림이 뜹니다.</p>
+      <p>이 화면을 열어두시면, 연결 요청이 오면 바로 알림이 뜹니다.</p>
     </div>
   </div>
 </main>
@@ -373,7 +397,7 @@ async function init(){
   myRegistrationIds = (regs || []).map((r) => r.id);
   if (myRegistrationIds.length === 0) return;
 
-  loadMissedMessages();
+  loadCaseInbox(); // 2026-08-20 (3차): 사건함
 
   // 2026-08-19 (3차 — 중복코드 통합): index.html/my_account.html에서 "수락"을 누르면
   // 그 화면들은 실제 연결을 처리하지 않고 여기로 ?autoaccept=<session_token>과 함께 넘어옴.
@@ -412,7 +436,7 @@ async function init(){
       // ⚠ call_type이 'message'면 "문자만 보내기"로 생성된 행이라 실제 통화 요청이 아님 —
       // 전화벨 대신 딩동 소리 + 부재중 메시지 목록만 새로고침함
       if (!myRegistrationIds.includes(row.registration_id)) return;
-      if (row.call_type === 'message') { playDoorbell(); loadMissedMessages(); return; }
+      if (row.call_type === 'message') { playDoorbell(); loadCaseInbox(); return; }
       showIncomingCall(row);
     })
     .subscribe();
@@ -424,51 +448,64 @@ async function init(){
   // 안전장치로, (1) 탭이 다시 보일 때, (2) 45초마다 주기적으로 목록을 다시 확인해서
   // 자동으로 최신 상태를 반영함.
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) loadMissedMessages();
+    if (!document.hidden) loadCaseInbox();
   });
   setInterval(() => {
-    if (!document.hidden) loadMissedMessages();
+    if (!document.hidden) loadCaseInbox();
   }, 45000);
 }
 
-async function loadMissedMessages(){
-  // ⚠ 예전엔 left_message가 있는 것만 걸러서 보여줬는데, 그러면 "문자 없이 음성통화만 걸었다가
-  // 응답 못 받은 경우"가 화면에서 아예 안 보였음(DB엔 있는데 필터링당해서 숨겨짐).
-  // 이제는 등록물로 온 모든 연결시도를 다 보여주고, 상태별로 라벨만 다르게 표시함.
-  const { data, error } = await sb.from('webrtc_sessions')
-    .select('id, left_message, call_type, created_at, registration_id, owner_read_at, owner_joined_at')
-    .in('registration_id', myRegistrationIds)
-    .order('created_at', { ascending: false })
-    .limit(30);
-  if (error || !data || data.length === 0) return;
+// ── 2026-08-20 (3차) 신설: 사건함 — my_account.html/index.html과 동일 로직 ──
+let showingClosedCases = false;
+async function loadCaseInbox(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const listEl = document.getElementById('caseInboxList');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-list`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ includeClosed: showingClosedCases }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '조회 실패');
 
-  const container = document.getElementById('missedMessages');
-  document.getElementById('emptyWait').style.display = 'none';
-  container.innerHTML = '<div class="page-title" style="font-size:15px; margin-bottom:12px;">📞 연결 기록</div>' +
-    data.map((m) => {
-      let label;
-      if (m.call_type === 'message') {
-        label = '💬 문자 메시지';
-      } else if (m.call_type === 'chat') {
-        label = '💬 문자 채팅'; // 2026-08-20: 'chat' 분기가 없어서 무조건 "음성 통화"로 잘못 찍히던 버그 수정
-      } else {
-        const typeName = m.call_type === 'video' ? '영상' : '음성';
-        label = m.owner_joined_at ? ('☎️ ' + typeName + ' 통화 (연결 후 종료됨)') : ('📵 부재중 ' + typeName + ' 통화');
-      }
+    if (!data.cases || data.cases.length === 0) {
+      listEl.innerHTML = '<div class="case-inbox-empty">' + (showingClosedCases ? '사건이 없어요.' : '진행 중인 사건이 없어요.') + '</div>';
+      return;
+    }
+
+    listEl.innerHTML = data.cases.map((c) => {
+      const emoji = CATEGORY_EMOJI[c.category] || '❓';
+      const preview = c.lastMessage
+        ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? '나: ' : '') + c.lastMessage.preview)
+        : '(메시지 없음)';
+      const time = c.lastActivityAt ? new Date(c.lastActivityAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : '';
+      const closedBadge = c.status === 'closed' ? '<span class="ci-badge">종료됨</span>' : '';
       return `
-      <div class="missed-card">
-        <div class="m-top">${new Date(m.created_at).toLocaleString('ko-KR')} · ${label}</div>
-        ${m.left_message ? '<div class="m-text">' + m.left_message + '</div>' : ''}
-      </div>
-    `;
+        <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}" data-case-id="${c.caseId}">
+          <span class="ci-emoji">${emoji}</span>
+          <span class="ci-body">
+            <span class="ci-title">${c.registrationTitle || '등록물'} ${closedBadge}</span>
+            <span class="ci-preview">${preview}</span>
+          </span>
+          <span class="ci-time">${time}</span>
+        </button>`;
     }).join('');
 
-  // 이 화면을 연 시점 = 읽은 것으로 간주 -> 아직 안읽은 것들 읽음처리 (홈/마이페이지 배지 카운트가 이걸로 줄어듦)
-  const unreadIds = data.filter((m) => !m.owner_read_at).map((m) => m.id);
-  if (unreadIds.length > 0) {
-    await sb.from('webrtc_sessions').update({ owner_read_at: new Date().toISOString() }).in('id', unreadIds);
+    listEl.querySelectorAll('.case-item').forEach((btn) => {
+      btn.addEventListener('click', () => openCaseChat(btn.dataset.caseId)); // 이 화면 안에서는 바로 열기(재이동 필요없음)
+    });
+  } catch (e) {
+    console.error('[case] 사건함 조회 실패', e);
+    listEl.innerHTML = '<div class="case-inbox-empty">불러오지 못했어요.</div>';
   }
 }
+document.getElementById('toggleClosedCasesBtn').addEventListener('click', () => {
+  showingClosedCases = !showingClosedCases;
+  document.getElementById('toggleClosedCasesBtn').textContent = showingClosedCases ? '진행중인 사건만 보기' : '지난 사건 보기';
+  loadCaseInbox();
+});
 
 const CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
 
@@ -650,7 +687,10 @@ async function answerCall(session){
   if (mode === 'video') document.getElementById('callVideoArea').classList.add('show');
   else document.getElementById('voiceAvatar').classList.add('show');
 
-  await sb.from('webrtc_sessions').update({ owner_joined_at: new Date().toISOString(), owner_read_at: new Date().toISOString() }).eq('id', session.id); // 실제로 받은 통화는 그 자체로 '확인함' 처리 -> 배지에 안 뜸
+  // 2026-08-20 (3차): owner_joined_at은 "실제로 통화가 연결됐었는지" 기록용으로 계속 남겨둠
+  // (owner_read_at은 예전 배지 시스템용이었는데, 배지 자체를 없애서 이제 의미 없지만 스키마
+  // 변경까지는 안 하고 그냥 같이 채워둠 — 무해함)
+  await sb.from('webrtc_sessions').update({ owner_joined_at: new Date().toISOString(), owner_read_at: new Date().toISOString() }).eq('id', session.id);
 
   rtChannel = sb.channel('webrtc-' + session.session_token, { config: { broadcast: { self: false } } });
   // ⚠ 상대방 ICE 후보가 setRemoteDescription 끝나기 전에 먼저 도착하면 조용히 유실되던 문제 —
@@ -860,6 +900,16 @@ document.getElementById('chatPhotoInput').addEventListener('change', async (e) =
 });
 
 function appendChatMessage(msg, who){
+  // 2026-08-20 (2차): 통화 시도/종료 기록(call_log)은 시스템 안내 문구로 표시
+  if (msg.message_type === 'call_log') {
+    const sysEl = document.createElement('div');
+    sysEl.className = 'chat-system-note';
+    sysEl.textContent = msg.content;
+    const list = document.getElementById('chatMessages');
+    list.appendChild(sysEl);
+    list.scrollTop = list.scrollHeight;
+    return;
+  }
   const el = document.createElement('div');
   const isPhoto = msg.message_type === 'photo';
   el.className = 'chat-bubble ' + who + (isPhoto ? ' photo' : '');

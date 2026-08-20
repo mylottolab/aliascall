@@ -73,15 +73,8 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .login-status{ text-align:center; padding:6px 24px 0; font-size:11.5px; color:rgba(255,255,255,.55); }
 .login-status a{ color:var(--coral); text-decoration:underline; }
 
-/* ── 부재중 메시지 배지 + 수신대기 안내 배너 (2026-08-17 신규) ── */
-.missed-badge-link{ display:none; margin:14px 24px 0; max-width:360px; margin-left:auto; margin-right:auto; }
-.missed-badge-link a{
-  display:flex; align-items:center; gap:8px; text-decoration:none; color:#fff;
-  background:var(--coral); border-radius:12px; padding:12px 16px; font-size:13px; font-weight:700;
-}
-.missed-badge-link .n{ background:rgba(255,255,255,.25); border-radius:20px; padding:2px 9px; font-size:12px; }
-@keyframes badgePulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
-.missed-badge-link.pulse{ animation: badgePulse .45s ease-in-out 3; }
+/* ── 수신대기 안내 배너 (2026-08-17 신규, 2026-08-20 (3차): "부재중 메시지" 배지는
+   사건함으로 통합되어 제거함) ── */
 .sound-unlock-banner{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(255,255,255,.1); border-radius:12px; padding:11px 14px; margin:10px 24px 0; max-width:360px; margin-left:auto; margin-right:auto; font-size:11.5px; color:rgba(255,255,255,.8); }
 .sound-unlock-banner button{ background:var(--coral); color:#fff; border:none; border-radius:16px; padding:8px 14px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0; }
 .sound-unlock-banner.hide{ display:none; }
@@ -121,13 +114,19 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .ring-btn-mini.accept{ background:var(--found); color:#fff; }
 .ring-btn-mini.decline{ background:var(--danger); color:#fff; }
 
-/* 2026-08-19 (3차) 신설: 실시간 문자메시지 피드 — 메인화면에 열어두고 있으면 새 메시지가
-   흐르듯이 카드로 나타남 (my_account.html에도 동일하게 적용) */
-.live-msg-feed{ margin:10px 24px 0; max-width:360px; margin-left:auto; margin-right:auto; }
-.live-msg-card{ background:rgba(255,255,255,.08); border-radius:12px; padding:12px 14px; margin-bottom:8px; text-align:left; animation:msgSlideIn .3s ease; }
-@keyframes msgSlideIn{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:translateY(0); } }
-.live-msg-card .m-top{ font-size:10.5px; color:rgba(255,255,255,.55); margin-bottom:5px; }
-.live-msg-card .m-text{ font-size:12.5px; color:#fff; line-height:1.5; }
+/* 2026-08-20 (3차) 신설: 사건함 (어두운 홈 배경 톤에 맞춤) */
+.case-inbox-card{ margin:10px 24px 0; max-width:360px; margin-left:auto; margin-right:auto; background:rgba(255,255,255,.08); border-radius:14px; padding:14px 16px; }
+.case-item{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.12); cursor:pointer; text-align:left; background:none; border-left:none; border-right:none; border-top:none; width:100%; color:inherit; }
+.case-item:last-child{ border-bottom:none; }
+.case-item:active{ opacity:.7; }
+.case-item .ci-emoji{ font-size:19px; flex-shrink:0; }
+.case-item .ci-body{ flex:1; min-width:0; }
+.case-item .ci-title{ font-size:12px; font-weight:700; color:#fff; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
+.case-item .ci-badge{ font-size:9px; font-weight:700; padding:1px 5px; border-radius:7px; background:rgba(232,115,74,.25); color:var(--coral); flex-shrink:0; }
+.case-item .ci-preview{ font-size:11px; color:rgba(255,255,255,.6); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.case-item .ci-time{ font-size:9.5px; color:rgba(255,255,255,.45); flex-shrink:0; }
+.case-item.closed{ opacity:.55; }
+.case-inbox-empty{ font-size:11.5px; color:rgba(255,255,255,.5); padding:10px 2px; text-align:center; }
 
 footer{ text-align:center; padding:26px 24px 40px; font-size:11px; color:rgba(255,255,255,.4); line-height:1.7; }
 footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
@@ -184,14 +183,20 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 <div class="login-status" id="loginStatus"></div>
 <!-- 2026-08-19 (2차): "알림음 켜기" 배너를 통합 토글 위젯으로 교체 -->
 <div id="notifySettingsContainer"></div>
-<div class="missed-badge-link" id="missedBadgeLink">
-  <a href="aliascall_incoming_calls.html">📩 <span data-i18n="missedBadgeText">부재중 메시지</span> <span class="n" id="missedBadgeCount">0</span></a>
-</div>
 <div class="listen-reminder" id="listenReminder" data-i18n-html="listenReminderText">
   💡 연결 요청을 놓치지 않으려면 <a href="aliascall_incoming_calls.html">수신 대기 화면</a>을 자주 확인해주세요. 이 화면(홈)을 열어두셔도 연결 요청이 오면 바로 알림이 뜹니다.
 </div>
-<!-- 2026-08-19 (3차) 신설: 실시간 문자메시지 피드 -->
-<div class="live-msg-feed" id="liveMsgFeed"></div>
+
+<!-- 2026-08-20 (3차) 신설: 사건함 — 마이페이지뿐 아니라 메인화면에서도 바로 확인 가능하게.
+     (예전엔 "부재중 메시지" 배지 + 실시간 메시지 피드가 따로 있었는데, 사건함과 내용이
+     겹치고 방향이 갈려서 혼란스럽다는 피드백을 반영 — 사건함 하나로 통일함) -->
+<div class="case-inbox-card" id="caseInboxCard" style="display:none;">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+    <b style="font-size:13px;">📂 진행 중인 사건함</b>
+    <button type="button" id="toggleClosedCasesBtn" style="background:none; border:none; color:rgba(255,255,255,.6); font-size:11px; cursor:pointer; text-decoration:underline;">지난 사건 보기</button>
+  </div>
+  <div id="caseInboxList"></div>
+</div>
 
 <footer>
   <a href="aliascall_guide.html" data-i18n="guide">ℹ️ 사용설명서</a><br><br>
@@ -304,24 +309,6 @@ function stopRingtone(){
   if (ringtoneInterval) { clearInterval(ringtoneInterval); ringtoneInterval = null; }
 }
 
-// ⚠ left_message 유무로 거르지 않음 — 문자 없이 음성/영상통화만 걸었다가 응답 못 받은 것도
-// 이제 배지에 포함시킴(응답한 통화는 incoming_calls.html의 answerCall에서 owner_read_at을 바로 채워서 자동 제외됨)
-async function loadMissedBadge(pulse){
-  const { count } = await sb.from('webrtc_sessions')
-    .select('id', { count: 'exact', head: true })
-    .in('registration_id', myRegistrationIds)
-    .is('owner_read_at', null);
-
-  const el = document.getElementById('missedBadgeLink');
-  if (count && count > 0) {
-    document.getElementById('missedBadgeCount').textContent = count;
-    el.style.display = 'block';
-    if (pulse) { el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
-  } else {
-    el.style.display = 'none';
-  }
-}
-
 function showIncomingCall(row){
   pendingSession = row;
   document.getElementById('ringSub').textContent = row.call_type === 'video' ? I18N[currentLang].ringSubVideo : I18N[currentLang].ringSubVoice;
@@ -373,46 +360,76 @@ document.getElementById('chatOpenBtn').addEventListener('click', () => {
   window.location.href = 'aliascall_incoming_calls.html?autoaccept=' + encodeURIComponent(pendingChatSession.session_token);
 });
 
-// ── 2026-08-19 (3차) 신설: 실시간 문자메시지 피드 — "물 흐르듯이" 새 메시지가 카드로 나타남 ──
-function prependLiveMessage(row){
-  const feed = document.getElementById('liveMsgFeed');
-  if (!feed) return;
-  const card = document.createElement('div');
-  card.className = 'live-msg-card';
-  card.innerHTML = '<div class="m-top">' + new Date(row.created_at || Date.now()).toLocaleString('ko-KR') + ' · 💬 새 문자메시지</div>' +
-    '<div class="m-text">' + (row.left_message || '') + '</div>';
-  feed.prepend(card);
-  // 화면이 너무 길어지지 않도록 최근 5개만 유지
-  while (feed.children.length > 5) feed.removeChild(feed.lastChild);
+// ── 2026-08-20 (3차) 신설: 사건함 — 마이페이지와 동일 로직, 메인화면에서도 바로 확인 가능하게 ──
+let showingClosedCases = false;
+async function loadCaseInbox(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const card = document.getElementById('caseInboxCard');
+  const listEl = document.getElementById('caseInboxList');
+  card.style.display = 'block';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-list`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ includeClosed: showingClosedCases }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '조회 실패');
+
+    if (!data.cases || data.cases.length === 0) {
+      listEl.innerHTML = '<div class="case-inbox-empty">' + (showingClosedCases ? '사건이 없어요.' : '진행 중인 사건이 없어요.') + '</div>';
+      return;
+    }
+
+    listEl.innerHTML = data.cases.map((c) => {
+      const emoji = CATEGORY_EMOJI[c.category] || '❓';
+      const preview = c.lastMessage
+        ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? '나: ' : '') + c.lastMessage.preview)
+        : '(메시지 없음)';
+      const time = c.lastActivityAt ? new Date(c.lastActivityAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : '';
+      const closedBadge = c.status === 'closed' ? '<span class="ci-badge">종료됨</span>' : '';
+      return `
+        <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}" data-case-id="${c.caseId}">
+          <span class="ci-emoji">${emoji}</span>
+          <span class="ci-body">
+            <span class="ci-title">${c.registrationTitle || '등록물'} ${closedBadge}</span>
+            <span class="ci-preview">${preview}</span>
+          </span>
+          <span class="ci-time">${time}</span>
+        </button>`;
+    }).join('');
+
+    listEl.querySelectorAll('.case-item').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        window.location.href = 'aliascall_incoming_calls.html?case=' + encodeURIComponent(btn.dataset.caseId);
+      });
+    });
+  } catch (e) {
+    console.error('[case] 사건함 조회 실패', e);
+    listEl.innerHTML = '<div class="case-inbox-empty">불러오지 못했어요.</div>';
+  }
 }
-async function loadRecentLiveMessages(){
-  const { data } = await sb.from('webrtc_sessions')
-    .select('left_message, created_at')
-    .in('registration_id', myRegistrationIds)
-    .eq('call_type', 'message')
-    .order('created_at', { ascending: false })
-    .limit(3);
-  const feed = document.getElementById('liveMsgFeed');
-  if (!feed || !data) return;
-  feed.innerHTML = '';
-  data.slice().reverse().forEach((row) => prependLiveMessage(row));
-}
+document.getElementById('toggleClosedCasesBtn').addEventListener('click', () => {
+  showingClosedCases = !showingClosedCases;
+  document.getElementById('toggleClosedCasesBtn').textContent = showingClosedCases ? '진행중인 사건만 보기' : '지난 사건 보기';
+  loadCaseInbox();
+});
 
 async function initIncomingWatcher(userId){
   const { data: regs } = await sb.from('registrations').select('id').eq('user_id', userId);
   myRegistrationIds = (regs || []).map((r) => r.id);
   if (myRegistrationIds.length === 0) return;
 
-  loadMissedBadge();
-  loadRecentLiveMessages(); // 2026-08-19 (3차): 최근 문자메시지 몇 개를 미리 피드에 표시
+  loadCaseInbox(); // 2026-08-20 (3차): 사건함
 
   sb.channel('incoming-calls-home')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
       const row = payload.new;
       if (!myRegistrationIds.includes(row.registration_id)) return;
       // ⚠ call_type이 'message'면 "문자만 보내기"로 생성된 행이라 실제 통화 요청이 아님 —
-      // 딩동 소리 + 배지 갱신 + (2026-08-19 3차) 실시간 피드에 카드로 흘러들어오게 함
-      if (row.call_type === 'message') { playDoorbell(); loadMissedBadge(true); prependLiveMessage(row); return; }
+      // 딩동 소리 + 사건함 갱신 (2026-08-20 (3차): 예전엔 별도 배지/피드가 있었는데 사건함으로 통합됨)
+      if (row.call_type === 'message') { playDoorbell(); loadCaseInbox(); return; }
       // 'chat'이면 통화 UI 없이 가벼운 배너만 (수락/거절 없음, 열기/닫기만)
       if (row.call_type === 'chat') { showChatRequest(row); return; }
       showIncomingCall(row);
@@ -421,10 +438,10 @@ async function initIncomingWatcher(userId){
 
   // 2026-08-19 (3차): 탭이 백그라운드였다 다시 보일 때 + 주기적으로 재확인 (Realtime 놓친 이벤트 보완)
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) { loadMissedBadge(); loadRecentLiveMessages(); }
+    if (!document.hidden) loadCaseInbox();
   });
   setInterval(() => {
-    if (!document.hidden) { loadMissedBadge(); loadRecentLiveMessages(); }
+    if (!document.hidden) loadCaseInbox();
   }, 45000);
 }
 // ── 언어 전환 (KR/EN) — data-i18n 속성이 붙은 요소의 텍스트를 그대로 교체 ──

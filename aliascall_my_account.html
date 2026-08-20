@@ -105,12 +105,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .lightbox-box video{ max-width:100%; max-height:60vh; border-radius:10px; }
 .lightbox-close{ display:block; margin:14px auto 0; background:var(--teal); color:#fff; border:none; border-radius:20px; padding:9px 20px; font-size:13px; font-weight:700; cursor:pointer; }
 
-/* ── 부재중 메시지 배지 + 수신대기 안내 배너 (2026-08-17 신규, index.html과 동일) ── */
-.missed-badge-link{ display:none; margin-bottom:14px; }
-.missed-badge-link a{ display:flex; align-items:center; gap:8px; text-decoration:none; color:#fff; background:var(--coral); border-radius:12px; padding:12px 16px; font-size:13px; font-weight:700; }
-.missed-badge-link .n{ background:rgba(255,255,255,.28); border-radius:20px; padding:2px 9px; font-size:12px; }
-@keyframes badgePulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
-.missed-badge-link.pulse{ animation: badgePulse .45s ease-in-out 3; }
+/* ── 수신대기 안내 배너 (2026-08-17 신규, 2026-08-20 (3차): "부재중 메시지" 배지는
+   사건함으로 통합되어 제거함) ── */
 .sound-unlock-banner{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--amber-tint, #FBF1DE); border:1px solid #E9CE94; border-radius:12px; padding:12px 14px; margin-bottom:14px; font-size:12.5px; color:#8a6416; }
 .sound-unlock-banner button{ background:#8a6416; color:#fff; border:none; border-radius:16px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0; }
 .sound-unlock-banner.hide{ display:none; }
@@ -146,13 +142,6 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .ring-btn-mini{ width:34px; height:34px; border-radius:50%; border:none; font-size:14px; cursor:pointer; }
 .ring-btn-mini.accept{ background:var(--found); color:#fff; }
 .ring-btn-mini.decline{ background:var(--danger); color:#fff; }
-
-/* 2026-08-19 (3차) 신설: 실시간 문자메시지 피드 (index.html과 동일, 밝은 배경 톤으로) */
-.live-msg-feed{ margin-bottom:16px; }
-.live-msg-card{ background:var(--teal-tint); border-radius:12px; padding:12px 14px; margin-bottom:8px; animation:msgSlideIn .3s ease; }
-@keyframes msgSlideIn{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:translateY(0); } }
-.live-msg-card .m-top{ font-size:10.5px; color:var(--ink-soft); margin-bottom:5px; }
-.live-msg-card .m-text{ font-size:12.5px; color:var(--ink); line-height:1.5; }
 
 /* 2026-08-20 신설: 사건함 목록 */
 .case-item{ display:flex; align-items:center; gap:11px; padding:11px 4px; border-bottom:1px solid var(--line); cursor:pointer; text-align:left; background:none; border-left:none; border-right:none; border-top:none; width:100%; }
@@ -314,16 +303,12 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     <!-- 2026-08-19 (2차): "알림음 켜기" 배너 + "긴급 알림" 카드를 통합 토글 위젯 하나로 교체, 최상단 배치 -->
     <div id="notifySettingsContainer" style="margin-bottom:18px;"></div>
 
-    <div class="missed-badge-link" id="missedBadgeLink">
-      <a href="aliascall_incoming_calls.html">📩 <span data-i18n="missedBadgeText">부재중 메시지</span> <span class="n" id="missedBadgeCount">0</span></a>
-    </div>
     <div class="listen-reminder" id="listenReminder" data-i18n-html="listenReminderText">
       💡 연결 요청을 놓치지 않으려면 <a href="aliascall_incoming_calls.html">수신 대기 화면</a>을 자주 확인해주세요. 이 화면(마이페이지)을 열어두셔도 연결 요청이 오면 바로 알림이 뜹니다.
     </div>
-    <!-- 2026-08-19 (3차) 신설: 실시간 문자메시지 피드 -->
-    <div class="live-msg-feed" id="liveMsgFeed"></div>
 
-    <!-- 2026-08-20 신설: "사건함" — 발견자와의 대화(문자/채팅/사진)를 나중에라도 이어보고 답장할 수 있음 -->
+    <!-- 2026-08-20 신설: "사건함" — 발견자와의 대화(문자/채팅/사진/통화기록)를 나중에라도 이어보고
+         답장할 수 있음. (2026-08-20 (3차): "부재중 메시지" 배지 + 실시간 피드는 사건함으로 통합되어 제거) -->
     <div class="card" id="caseInboxCard">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
         <b style="font-size:14px;">📂 진행 중인 사건함</b>
@@ -739,24 +724,6 @@ function stopRingtone(){
   if (ringtoneInterval) { clearInterval(ringtoneInterval); ringtoneInterval = null; }
 }
 
-// ⚠ left_message 유무로 거르지 않음 — 문자 없이 음성/영상통화만 걸었다가 응답 못 받은 것도
-// 배지에 포함시킴(응답한 통화는 incoming_calls.html의 answerCall에서 owner_read_at을 바로 채워서 자동 제외됨)
-async function loadMissedBadge(pulse){
-  const { count } = await sb.from('webrtc_sessions')
-    .select('id', { count: 'exact', head: true })
-    .in('registration_id', myWatchedRegIds)
-    .is('owner_read_at', null);
-
-  const el = document.getElementById('missedBadgeLink');
-  if (count && count > 0) {
-    document.getElementById('missedBadgeCount').textContent = count;
-    el.style.display = 'block';
-    if (pulse) { el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
-  } else {
-    el.style.display = 'none';
-  }
-}
-
 function showIncomingCall(row){
   pendingSession = row;
   document.getElementById('ringSub').textContent = row.call_type === 'video' ? '영상으로 연결 요청' : '음성으로 연결 요청';
@@ -803,43 +770,17 @@ document.getElementById('chatOpenBtn').addEventListener('click', () => {
   window.location.href = 'aliascall_incoming_calls.html?autoaccept=' + encodeURIComponent(pendingChatSession.session_token);
 });
 
-// 2026-08-19 (3차) 신설: 실시간 문자메시지 피드
-function prependLiveMessage(row){
-  const feed = document.getElementById('liveMsgFeed');
-  if (!feed) return;
-  const card = document.createElement('div');
-  card.className = 'live-msg-card';
-  card.innerHTML = '<div class="m-top">' + new Date(row.created_at || Date.now()).toLocaleString('ko-KR') + ' · 💬 새 문자메시지</div>' +
-    '<div class="m-text">' + (row.left_message || '') + '</div>';
-  feed.prepend(card);
-  while (feed.children.length > 5) feed.removeChild(feed.lastChild);
-}
-async function loadRecentLiveMessages(){
-  const { data } = await sb.from('webrtc_sessions')
-    .select('left_message, created_at')
-    .in('registration_id', myWatchedRegIds)
-    .eq('call_type', 'message')
-    .order('created_at', { ascending: false })
-    .limit(3);
-  const feed = document.getElementById('liveMsgFeed');
-  if (!feed || !data) return;
-  feed.innerHTML = '';
-  data.slice().reverse().forEach((row) => prependLiveMessage(row));
-}
-
 async function initIncomingWatcher(userId){
   const { data: regs } = await sb.from('registrations').select('id').eq('user_id', userId);
   myWatchedRegIds = (regs || []).map((r) => r.id);
   if (myWatchedRegIds.length === 0) return;
 
-  loadMissedBadge();
-  loadRecentLiveMessages();
-
   sb.channel('incoming-calls-myaccount')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'webrtc_sessions' }, (payload) => {
       const row = payload.new;
       if (!myWatchedRegIds.includes(row.registration_id)) return;
-      if (row.call_type === 'message') { playDoorbell(); loadMissedBadge(true); prependLiveMessage(row); return; }
+      // 2026-08-20 (3차): "부재중 메시지" 배지/피드는 사건함으로 통합되어 제거 — 딩동 + 사건함 갱신만
+      if (row.call_type === 'message') { playDoorbell(); loadCaseInbox(); return; }
       if (row.call_type === 'chat') { showChatRequest(row); return; }
       showIncomingCall(row);
     })
@@ -847,10 +788,10 @@ async function initIncomingWatcher(userId){
 
   // 2026-08-19 (2차): 탭이 백그라운드였다 다시 보일 때 + 주기적으로 재확인
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) { loadMissedBadge(); loadRecentLiveMessages(); }
+    if (!document.hidden) loadCaseInbox();
   });
   setInterval(() => {
-    if (!document.hidden) { loadMissedBadge(); loadRecentLiveMessages(); }
+    if (!document.hidden) loadCaseInbox();
   }, 45000);
 }
 const DELETE_ACCOUNT_URL = SUPABASE_URL + "/functions/v1/self-delete-account";
@@ -907,7 +848,9 @@ async function loadCaseInbox(){
 
     listEl.innerHTML = data.cases.map((c) => {
       const emoji = CASE_CATEGORY_EMOJI[c.category] || '❓';
-      const preview = c.lastMessage ? (c.lastMessage.sender === 'owner' ? '나: ' : '') + c.lastMessage.preview : '(메시지 없음)';
+      const preview = c.lastMessage
+        ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? '나: ' : '') + c.lastMessage.preview)
+        : '(메시지 없음)';
       const time = c.lastActivityAt ? new Date(c.lastActivityAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : '';
       const closedBadge = c.status === 'closed' ? '<span class="ci-badge">종료됨</span>' : '';
       return `
