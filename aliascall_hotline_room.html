@@ -41,6 +41,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .chat-video{ max-width:200px; border-radius:12px; display:block; }
 .chat-doc{ display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; text-decoration:none; color:var(--ink); font-size:12.5px; max-width:220px; }
 .chat-system-note{ align-self:center; font-size:11px; color:var(--ink-soft); background:var(--line); padding:5px 12px; border-radius:12px; margin:4px 0; }
+.chat-system-note.partner-divider{ font-weight:700; color:var(--teal-deep); background:none; margin:14px 0 6px; }
 
 .chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); flex-shrink:0; align-items:center; }
 .chat-input-row input[type="text"]{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
@@ -211,9 +212,23 @@ function subscribeChat(){
     .subscribe();
 }
 
+let currentSegmentIndex = 0; // 2026-08-21: 상대방이 바뀔 때마다 늘어남 — 구간별 배경색 구분에 씀
+const SEGMENT_COLORS = ['#FFFFFF', '#EAF3F1', '#FDEFE7', '#F0EDE3', '#E9EEF6']; // 흰색(기본) 포함 5색 순환
+
 function appendChatMessage(msg){
   const list = document.getElementById('chatMessages');
   const isMe = msg.sender_anon_id === mySenderAnonId;
+
+  // 2026-08-21 신설: 상대방 교체 표시 — 구간 나누는 선 + 색깔이 여기서부터 바뀜
+  if (msg.message_type === 'partner_joined' || msg.message_type === 'partner_left') {
+    if (msg.message_type === 'partner_joined') currentSegmentIndex++;
+    const sysEl = document.createElement('div');
+    sysEl.className = 'chat-system-note partner-divider';
+    sysEl.textContent = (msg.message_type === 'partner_joined' ? '─── ' : '─── ') + msg.content + ' ───';
+    list.appendChild(sysEl);
+    list.scrollTop = list.scrollHeight;
+    return;
+  }
 
   if (msg.message_type === 'call_log') {
     const sysEl = document.createElement('div');
@@ -233,6 +248,8 @@ function appendChatMessage(msg){
 
   const el = document.createElement('div');
   el.className = 'chat-bubble ' + (isMe ? 'me' : 'them') + ' ' + msg.message_type;
+  // 개설자 화면에서만 의미 있음(내 메시지는 항상 같은 색 유지) — 상대방(them) 말풍선만 구간별로 색이 다름
+  if (!isMe) el.style.background = SEGMENT_COLORS[currentSegmentIndex % SEGMENT_COLORS.length];
 
   if (msg.message_type === 'photo') {
     const img = document.createElement('img');
