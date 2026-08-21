@@ -496,6 +496,7 @@ function subscribeFinderIncomingCallWatcher(registrationId){
 async function init(){
   const token = getTokenFromUrl();
   const incomingCallToken = new URLSearchParams(window.location.search).get('incomingCall');
+  const caseParam = new URLSearchParams(window.location.search).get('case');
   const loadingEl = document.getElementById('stateLoading');
   const errorEl = document.getElementById('stateError');
   const foundEl = document.getElementById('stateFound');
@@ -504,6 +505,15 @@ async function init(){
   // 긴급 알림(웹푸시)을 탭해서 들어온 경우. session_token으로 바로 사건/등록물을 찾음.
   if (incomingCallToken) {
     await initIncomingCallFlow(incomingCallToken, loadingEl, errorEl);
+    return;
+  }
+
+  // 2026-08-21 신설: 소유자가 채팅에 답장했을 때 오는 긴급 알림을 탭해서 들어온 경우 —
+  // 예전엔 이 알림이 그냥 connect.html로만 연결돼서 어느 대화인지 알 방법이 없었음
+  // ("채팅 종료" 후 기본화면에 있다가 알림을 눌러도 대화로 못 돌아가던 버그의 원인).
+  // 이제 case_id가 실려오므로, 그 사건을 바로 찾아서 채팅을 자동으로 열어줌.
+  if (caseParam) {
+    await initCaseResumeFlow(caseParam, loadingEl, errorEl);
     return;
   }
 
@@ -558,6 +568,74 @@ async function init(){
 let finderPc = null, finderLocalStream = null, finderRtChannel = null;
 let finderIncomingSession = null;
 let finderCallEnding = false;
+
+// ── 2026-08-21 신설: 긴급 알림(답장 알림)을 탭해서 특정 사건으로 바로 돌아오는 흐름 ──
+async function initCaseResumeFlow(caseId, loadingEl, errorEl){
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caseId, finderAnonId }),
+    });
+    const caseData = await res.json();
+    if (!res.ok || !caseData.registrationId) {
+      loadingEl.style.display = 'none';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const { data: reg, error: regErr } = await sb.from('registrations')
+      .select('id, category, title, search_key, description')
+      .eq('id', caseData.registrationId)
+      .maybeSingle();
+    loadingEl.style.display = 'none';
+    if (regErr || !reg) { errorEl.style.display = 'block'; return; }
+
+    renderFoundRegistration(reg);
+    await loadCategoryDetail(reg.id, reg.category);
+    await loadMedia(reg.id);
+
+    openResumedChat(caseId, caseData); // 등록물 정보 확인되면 바로 채팅을 열어서 이어서 대화 가능하게 함
+  } catch (e) {
+    console.error('[connect] 사건 재개 처리 오류', e);
+    loadingEl.style.display = 'none';
+    errorEl.style.display = 'block';
+  }
+}
+
+// 이미 조회해둔 사건 데이터(이력 포함)를 그대로 써서 채팅을 열어줌 — case-open을 또 호출해서
+// 사건을 새로 만들 필요 없이, 알림에 실려온 그 사건을 곧바로 이어감
+function openResumedChat(caseId, caseData){
+  currentMode = 'chat';
+  currentCaseId = caseId;
+  renderedMsgIds = new Set();
+
+  const overlay = document.getElementById('callingOverlay');
+  overlay.classList.add('show');
+  document.getElementById('callingTopbar').style.display = 'none';
+  document.getElementById('chatOnlyHeader').style.display = 'flex';
+  document.getElementById('chatToggleMiniBtn').style.display = 'none';
+  document.getElementById('chatPanel').classList.add('show');
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('chatClosedNote').classList.remove('show');
+  document.getElementById('chatInput').disabled = false;
+  document.getElementById('chatSendBtn').disabled = false;
+
+  (caseData.messages || []).forEach((m) => { appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'); renderedMsgIds.add(m.id); });
+  if (caseData.status === 'closed') {
+    document.getElementById('chatClosedNote').classList.add('show');
+    document.getElementById('chatInput').disabled = true;
+    document.getElementById('chatSendBtn').disabled = true;
+  }
+
+  subscribeCaseRealtime(currentCaseId);
+  renderFinderPushToggle();
+
+  if (caseMessagePollInterval) clearInterval(caseMessagePollInterval);
+  caseMessagePollInterval = setInterval(() => {
+    if (currentCaseId) refreshCaseMessages(currentCaseId, true);
+  }, 8000);
+}
 
 async function initIncomingCallFlow(sessionToken, loadingEl, errorEl){
   try {
@@ -993,7 +1071,7 @@ async function startCall(mode){
     fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-wakeup-push`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ registrationId, mode, registrationTitle: document.getElementById('foundTitle').textContent }),
+      body: JSON.stringify({ registrationId, mode, registrationTitle: document.getElementById('foundTitle').textContent, caseId: currentCaseId }),
     }).catch((e) => console.warn('[push] 긴급 알림 발송 요청 실패(통화 자체엔 영향 없음)', e));
   }, 15000);
 
@@ -1467,7 +1545,7 @@ async function startLiveChatOnly(){
     fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-wakeup-push`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ registrationId, mode: 'chat', registrationTitle: document.getElementById('foundTitle').textContent }),
+      body: JSON.stringify({ registrationId, mode: 'chat', registrationTitle: document.getElementById('foundTitle').textContent, caseId: currentCaseId }),
     }).catch((e) => console.warn('[push] 긴급 알림 발송 요청 실패(채팅 자체엔 영향 없음)', e));
   }, 15000);
 }
