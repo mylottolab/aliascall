@@ -14,13 +14,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_push.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
   --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
   --coral:#E8734A; --coral-tint:#FDEAE1;
   --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
+  --brass:#C9A24B; --brass-tint:#3A331E; /* 2026-08-21 신설: 핫라인 프리미엄 전용 강조색 */
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 body{
@@ -47,6 +48,42 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .tagline{ font-size:12.5px; color:rgba(255,255,255,.6); margin-top:6px; }
 
 .grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; padding:26px 24px; max-width:360px; margin:0 auto; }
+
+/* ── 2026-08-21 신설: 핫라인 프로모션 — 전화교환대(스위치보드) 콘셉트 ── */
+.hotline-promo{ max-width:360px; margin:6px auto 22px; padding:0 24px; }
+.hotline-promo-head{ text-align:center; margin-bottom:14px; }
+.hotline-eyebrow{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; letter-spacing:.06em; color:var(--coral); background:rgba(232,115,74,.12); padding:4px 10px; border-radius:20px; margin-bottom:8px; }
+.hotline-title{ font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:600; color:#fff; margin:0 0 4px; }
+.hotline-desc{ font-size:12px; color:rgba(255,255,255,.6); margin:0; line-height:1.5; }
+
+.hotline-grid{ display:flex; gap:10px; margin-top:16px; }
+.hotline-stack{ flex:1; display:flex; flex-direction:column; gap:10px; }
+.hotline-card{ display:block; text-decoration:none; border-radius:14px; padding:14px 14px 12px; position:relative; overflow:hidden; transition:transform .15s ease; }
+.hotline-card:active{ transform:scale(.97); }
+
+.hl-callsign{ display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; letter-spacing:.04em; margin-bottom:10px; opacity:.85; }
+.hl-dot{ width:6px; height:6px; border-radius:50%; flex-shrink:0; animation:hlPulse 1.8s ease-in-out infinite; }
+@keyframes hlPulse{ 0%,100%{ opacity:1; box-shadow:0 0 0 0 currentColor; } 50%{ opacity:.5; box-shadow:0 0 0 3px transparent; } }
+
+.hl-name{ font-family:'Space Grotesk',sans-serif; font-weight:600; margin-bottom:2px; }
+.hl-sub{ font-size:11.5px; opacity:.7; margin-bottom:10px; }
+.hl-price{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; opacity:.65; }
+
+/* 2인 핫라인 — 산호색, 세로로 긴 카드(오른쪽 두 카드를 합친 높이) */
+.hl-solo{ flex:0 0 42%; background:linear-gradient(155deg, rgba(232,115,74,.16), rgba(232,115,74,.05)); border:1px solid rgba(232,115,74,.3); color:#fff; display:flex; flex-direction:column; justify-content:center; }
+.hl-solo .hl-name{ font-size:17px; }
+.hl-solo .hl-callsign, .hl-solo .hl-dot{ color:var(--coral); }
+
+/* 이코노미 — 기존 청록색 */
+.hl-eco{ background:linear-gradient(155deg, rgba(31,111,107,.22), rgba(31,111,107,.08)); border:1px solid rgba(94,190,180,.3); color:#fff; }
+.hl-eco .hl-name{ font-size:14.5px; }
+.hl-eco .hl-callsign, .hl-eco .hl-dot{ color:#5ECFC4; }
+
+/* 프리미엄 — 새로 추가한 브라스(황동) 톤, 유일한 신규 강조색 */
+.hl-premium{ background:linear-gradient(155deg, rgba(201,162,75,.22), rgba(201,162,75,.07)); border:1px solid rgba(201,162,75,.35); color:#fff; }
+.hl-premium .hl-name{ font-size:14.5px; }
+.hl-premium .hl-callsign, .hl-premium .hl-dot{ color:var(--brass); }
+
 .icon-btn{ display:flex; flex-direction:column; align-items:center; gap:10px; text-decoration:none; color:#fff; }
 .icon-circle{
   width:74px; height:74px; border-radius:50%;
@@ -192,6 +229,37 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <div class="icon-circle">📋</div>
     <div class="icon-label" data-i18n="board">찾습니다 게시판</div>
   </a>
+</div>
+
+<!-- 2026-08-21 신설: "핫라인"(2부) 소개 — 전화교환대 콘셉트, 상품별 콜사인으로 구분 -->
+<div class="hotline-promo">
+  <div class="hotline-promo-head">
+    <span class="hotline-eyebrow">NEW · 사적인 대화가 필요할 때</span>
+    <h2 class="hotline-title">우리끼리 회선</h2>
+    <p class="hotline-desc">누구나 아는 메신저 말고, 둘 또는 몇 명만 아는 회선을 엽니다.</p>
+  </div>
+  <div class="hotline-grid">
+    <a class="hotline-card hl-solo" href="#">
+      <div class="hl-callsign"><span class="hl-dot"></span>LINE·02</div>
+      <div class="hl-name">핫라인</div>
+      <div class="hl-sub">단둘이, 조용히</div>
+      <div class="hl-price">3개월 3,900원부터</div>
+    </a>
+    <div class="hotline-stack">
+      <a class="hotline-card hl-eco" href="#">
+        <div class="hl-callsign"><span class="hl-dot"></span>LINE·04E</div>
+        <div class="hl-name">이코노미</div>
+        <div class="hl-sub">4인, 가볍게</div>
+        <div class="hl-price">3개월 7,800원부터</div>
+      </a>
+      <a class="hotline-card hl-premium" href="#">
+        <div class="hl-callsign"><span class="hl-dot"></span>LINE·04P</div>
+        <div class="hl-name">프리미엄</div>
+        <div class="hl-sub">4인, 고화질로</div>
+        <div class="hl-price">3개월 15,000원부터</div>
+      </a>
+    </div>
+  </div>
 </div>
 
 <div class="login-status" id="loginStatus"></div>

@@ -105,6 +105,7 @@ tr:hover td{ background:rgba(31,111,107,.03); }
   <div class="nav-tab" data-tab="payments">결제 개요</div>
   <div class="nav-tab" data-tab="deletions">탈퇴 현황</div>
   <div class="nav-tab" data-tab="products">상품 관리</div>
+  <div class="nav-tab" data-tab="hotlinePricing">핫라인 요금정책</div>
 </div>
 
 <main>
@@ -210,6 +211,38 @@ tr:hover td{ background:rgba(31,111,107,.03); }
       <thead><tr><th>이미지</th><th>상품명</th><th>설명</th><th>순서</th><th>노출</th><th>조치</th></tr></thead>
       <tbody id="productsBody"><tr class="empty-row"><td colspan="6">불러오는 중…</td></tr></tbody>
     </table>
+  </div>
+
+  <!-- 2026-08-21 신설: 핫라인(2부) 요금정책 관리 — 마진율/원가 넣으면 사용량 한도가 자동 계산됨 -->
+  <div class="tab-panel" data-panel="hotlinePricing">
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">
+      각 요금제(가격)에 대해 "사용량 한도(GB)"를 자동으로 계산합니다. 계산식: <b>한도(GB) = 가격 × (1 - 마진율) ÷ GB당 원가</b><br>
+      한도를 넘는 순간부터 추가결제가 요청되고, 한도 이하면 사용자에게 따로 표시하지 않습니다.
+    </p>
+
+    <div class="card" style="background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:18px; margin-bottom:20px;">
+      <div style="font-size:13px; font-weight:700; margin-bottom:12px;">기준값 설정</div>
+      <div class="toolbar" style="flex-wrap:wrap; align-items:center;">
+        <label style="font-size:12px; color:var(--ink-soft);">회사 마진율 (%)
+          <input type="number" id="hlMarginRatio" value="40" min="0" max="100" step="1" style="width:80px; margin-left:6px;">
+        </label>
+        <label style="font-size:12px; color:var(--ink-soft);">GB당 원가 (원)
+          <input type="number" id="hlCostPerGb" value="560" min="1" step="1" style="width:100px; margin-left:6px;">
+        </label>
+        <span style="font-size:11px; color:var(--ink-soft);">(참고: Metered Growth 요금제 기준 $0.40/GB × 환율)</span>
+      </div>
+      <div style="font-size:11px; color:var(--ink-soft); margin-top:6px;">
+        아래 표의 "가격"을 바꾸거나 위 기준값을 바꾸면, "계산된 한도" 열이 실시간으로 자동 갱신됩니다. 다 확인하신 후 맨 아래 <b>"이 내용으로 확정"</b> 버튼을 눌러야 실제로 저장되고 요금체계에 반영됩니다.
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>상품</th><th>기간</th><th>가격(원)</th><th>계산된 한도(GB)</th></tr></thead>
+      <tbody id="hlPricingBody"><tr class="empty-row"><td colspan="4">불러오는 중…</td></tr></tbody>
+    </table>
+
+    <button id="hlConfirmBtn" style="margin-top:16px; padding:12px 24px; border:none; border-radius:8px; background:var(--teal); color:#fff; font-weight:700; font-size:13px; cursor:pointer;">✓ 이 내용으로 확정 (저장 + 요금체계 반영)</button>
+    <span id="hlSaveStatus" style="margin-left:12px; font-size:12px; color:var(--ink-soft);"></span>
   </div>
 
 </main>
@@ -444,6 +477,102 @@ async function loadProducts(){
   }));
 }
 
+// =====================================================
+// 2026-08-21 신설: 핫라인(2부) 요금정책 관리 — 마진율/GB당원가 넣으면 사용량 한도 자동 계산
+// =====================================================
+const HL_TIER_LABEL = { hotline_1to1: '핫라인 (2명)', economy_4: '이코노미 (4명)', premium_4: '프리미엄 (4명)' };
+const HL_TIERS = ['hotline_1to1', 'economy_4', 'premium_4'];
+const HL_DURATIONS = [3, 6, 12, 24];
+let hlPlansCache = {}; // key: tier|duration -> { price_krw, usage_cap_gb }
+
+async function loadHotlinePricing(){
+  const tbody = document.getElementById('hlPricingBody');
+
+  const { data: settings } = await sb.from('hotline_pricing_settings').select('*').eq('id', 1).maybeSingle();
+  if (settings) {
+    document.getElementById('hlMarginRatio').value = Math.round(settings.margin_ratio * 100);
+    document.getElementById('hlCostPerGb').value = settings.cost_per_gb_krw;
+  }
+
+  const { data: plans, error } = await sb.from('hotline_pricing_plans').select('*');
+  if (error) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">불러오기 실패: ' + error.message + '</td></tr>'; return; }
+
+  hlPlansCache = {};
+  (plans || []).forEach((p) => { hlPlansCache[p.tier + '|' + p.duration_months] = p; });
+
+  renderHlPricingTable();
+}
+
+function renderHlPricingTable(){
+  const tbody = document.getElementById('hlPricingBody');
+  let rows = '';
+  HL_TIERS.forEach((tier) => {
+    HL_DURATIONS.forEach((dur) => {
+      const key = tier + '|' + dur;
+      const existing = hlPlansCache[key];
+      const price = existing ? existing.price_krw : 0;
+      rows += `
+        <tr data-tier="${tier}" data-duration="${dur}">
+          <td>${HL_TIER_LABEL[tier]}</td>
+          <td>${dur}개월</td>
+          <td><input type="number" class="hl-price-input" value="${price}" style="width:100px;"></td>
+          <td class="hl-cap-cell" style="font-weight:700; color:var(--teal-deep);">-</td>
+        </tr>`;
+    });
+  });
+  tbody.innerHTML = rows;
+  tbody.querySelectorAll('.hl-price-input').forEach((input) => input.addEventListener('input', recalcHlTable));
+  recalcHlTable();
+}
+
+// 화면에 입력된 값으로 즉시 재계산해서 보여줌 (아직 저장 전 — "확정" 눌러야 실제 반영됨)
+function recalcHlTable(){
+  const marginPercent = parseFloat(document.getElementById('hlMarginRatio').value) || 0;
+  const costPerGb = parseFloat(document.getElementById('hlCostPerGb').value) || 1;
+  const costRatio = 1 - (marginPercent / 100); // 마진율 -> 원가율로 환산
+
+  document.querySelectorAll('#hlPricingBody tr').forEach((tr) => {
+    const price = parseFloat(tr.querySelector('.hl-price-input').value) || 0;
+    const cap = (price * costRatio) / costPerGb;
+    tr.querySelector('.hl-cap-cell').textContent = cap.toFixed(1) + 'GB (저장시 ' + Math.floor(cap) + 'GB로 반내림)';
+  });
+}
+document.getElementById('hlMarginRatio').addEventListener('input', recalcHlTable);
+document.getElementById('hlCostPerGb').addEventListener('input', recalcHlTable);
+
+document.getElementById('hlConfirmBtn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('hlSaveStatus');
+  const marginPercent = parseFloat(document.getElementById('hlMarginRatio').value) || 0;
+  const costPerGb = parseFloat(document.getElementById('hlCostPerGb').value) || 1;
+  const costRatio = 1 - (marginPercent / 100);
+
+  if (!confirm('이 내용으로 확정하시겠어요? 저장하는 즉시 실제 요금체계(사용량 한도)에 반영됩니다.')) return;
+
+  statusEl.textContent = '저장 중…';
+
+  // 1) 기준값(마진율/원가) 저장
+  const { error: settingsErr } = await sb.from('hotline_pricing_settings')
+    .update({ margin_ratio: marginPercent / 100, cost_per_gb_krw: costPerGb, updated_at: new Date().toISOString() })
+    .eq('id', 1);
+  if (settingsErr) { statusEl.textContent = '저장 실패: ' + settingsErr.message; return; }
+
+  // 2) 12개 요금제 각각 upsert (가격 + 새로 계산된 한도)
+  const rows = [];
+  document.querySelectorAll('#hlPricingBody tr').forEach((tr) => {
+    const tier = tr.dataset.tier;
+    const duration = parseInt(tr.dataset.duration, 10);
+    const price = parseFloat(tr.querySelector('.hl-price-input').value) || 0;
+    const cap = Math.floor((price * costRatio) / costPerGb); // 반내림 — 회사 마진이 실수로 줄어들지 않게 보수적으로
+    rows.push({ tier, duration_months: duration, price_krw: price, usage_cap_gb: cap, updated_at: new Date().toISOString() });
+  });
+
+  const { error: upsertErr } = await sb.from('hotline_pricing_plans').upsert(rows, { onConflict: 'tier,duration_months' });
+  if (upsertErr) { statusEl.textContent = '저장 실패: ' + upsertErr.message; return; }
+
+  statusEl.textContent = '✓ 저장 완료 (' + new Date().toLocaleTimeString('ko-KR') + ')';
+  loadHotlinePricing();
+});
+
 // ── 상품 추가/수정 폼 (하나로 겸용 — editingProductId가 있으면 수정모드) ──
 let editingProductId = null;
 
@@ -524,6 +653,7 @@ function loadAllTabs(){
   loadPayments();
   loadDeletions();
   loadProducts();
+  loadHotlinePricing(); // 2026-08-21 신설
 }
 
 (async () => {
