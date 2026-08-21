@@ -184,6 +184,9 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .chat-closed-note{ display:none; text-align:center; padding:10px 14px; font-size:11.5px; color:var(--ink-soft); background:var(--paper); border-top:1px solid var(--line); }
 .chat-closed-note.show{ display:block; }
 .chat-system-note{ align-self:center; font-size:11px; color:var(--ink-soft); background:var(--line); padding:5px 12px; border-radius:12px; margin:4px 0; }
+/* 2026-08-21 신설: "마지막으로 받은 메시지" 반짝임 표시 */
+@keyframes chatNewGlow{ 0%,100%{ box-shadow:0 0 0 0 rgba(232,115,74,0); } 50%{ box-shadow:0 0 12px 4px rgba(232,115,74,.55); } }
+.chat-bubble.new-highlight{ background:#FFF4D6 !important; color:var(--ink) !important; animation:chatNewGlow 1s ease-in-out infinite; }
 
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
@@ -621,7 +624,9 @@ function openResumedChat(caseId, caseData){
   document.getElementById('chatInput').disabled = false;
   document.getElementById('chatSendBtn').disabled = false;
 
-  (caseData.messages || []).forEach((m) => { appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'); renderedMsgIds.add(m.id); });
+  let lastEl1 = null, lastMsg1 = null;
+  (caseData.messages || []).forEach((m) => { const el = appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'); renderedMsgIds.add(m.id); lastEl1 = el; lastMsg1 = m; });
+  if (lastMsg1 && lastMsg1.sender !== 'finder') markNewReceivedHighlight(lastEl1);
   if (caseData.status === 'closed') {
     document.getElementById('chatClosedNote').classList.add('show');
     document.getElementById('chatInput').disabled = true;
@@ -1023,7 +1028,9 @@ async function startCall(mode){
     if (openRes.ok) {
       currentCaseId = openData.caseId;
       renderedMsgIds = new Set();
-      (openData.messages || []).forEach((m) => { appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'); renderedMsgIds.add(m.id); });
+      let lastEl2 = null, lastMsg2 = null;
+      (openData.messages || []).forEach((m) => { const el = appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'); renderedMsgIds.add(m.id); lastEl2 = el; lastMsg2 = m; });
+      if (lastMsg2 && lastMsg2.sender !== 'finder') markNewReceivedHighlight(lastEl2);
       subscribeCaseRealtime(currentCaseId);
       renderFinderPushToggle(); // 2026-08-21
 
@@ -1409,8 +1416,8 @@ function subscribeCaseRealtime(caseId){
       if (renderedMsgIds.has(payload.id)) return;
       renderedMsgIds.add(payload.id);
       const who = payload.sender === 'finder' ? 'me' : 'them';
-      appendChatMessage(payload, who);
-      if (who === 'them') playChatPing();
+      const el = appendChatMessage(payload, who);
+      if (who === 'them') { playChatPing(); markNewReceivedHighlight(el); }
     })
     .subscribe();
 }
@@ -1518,7 +1525,9 @@ async function startLiveChatOnly(){
   }
   currentCaseId = openData.caseId;
   renderedMsgIds = new Set();
-  (openData.messages || []).forEach((m) => { appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'); renderedMsgIds.add(m.id); });
+  let lastEl3 = null, lastMsg3 = null;
+  (openData.messages || []).forEach((m) => { const el = appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'); renderedMsgIds.add(m.id); lastEl3 = el; lastMsg3 = m; });
+  if (lastMsg3 && lastMsg3.sender !== 'finder') markNewReceivedHighlight(lastEl3);
 
   // 2) 소유자 알림용 webrtc_sessions 행 생성(기존 전화벨/배너 알림 구조 그대로 재사용) + case_id 연결
   const { error } = await sb.from('webrtc_sessions').insert({
@@ -1562,8 +1571,8 @@ async function refreshCaseMessages(caseId, silent){
     (data.messages || []).forEach((m) => {
       if (renderedMsgIds.has(m.id)) return;
       renderedMsgIds.add(m.id);
-      appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them');
-      if (silent && m.sender !== 'finder') playChatPing();
+      const el = appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them');
+      if (silent && m.sender !== 'finder') { playChatPing(); markNewReceivedHighlight(el); }
     });
     if (data.status === 'closed') {
       document.getElementById('chatClosedNote').classList.add('show');
@@ -1690,7 +1699,7 @@ function appendChatMessage(msg, who){
     const list = document.getElementById('chatMessages');
     list.appendChild(sysEl);
     list.scrollTop = list.scrollHeight;
-    return;
+    return null;
   }
   const el = document.createElement('div');
   const isPhoto = msg.message_type === 'photo';
@@ -1707,7 +1716,24 @@ function appendChatMessage(msg, who){
   const list = document.getElementById('chatMessages');
   list.appendChild(el);
   list.scrollTop = list.scrollHeight;
+  return el; // 2026-08-21: 마지막으로 받은 메시지 반짝임 표시에 쓰기 위해 요소를 반환하도록 수정
 }
+
+// ── 2026-08-21 신설: "마지막으로 받은 메시지" 반짝임 표시 — 상대가 보낸 것 중 가장 최근 것만
+// 눈에 띄게 표시하고, 클릭/포커스하면 원래대로 돌아옴 ──
+let lastHighlightedMsgEl = null;
+function markNewReceivedHighlight(el){
+  if (!el) return;
+  if (lastHighlightedMsgEl) lastHighlightedMsgEl.classList.remove('new-highlight');
+  el.classList.add('new-highlight');
+  lastHighlightedMsgEl = el;
+}
+function clearNewReceivedHighlight(){
+  if (lastHighlightedMsgEl) { lastHighlightedMsgEl.classList.remove('new-highlight'); lastHighlightedMsgEl = null; }
+}
+document.getElementById('chatMessages').addEventListener('click', clearNewReceivedHighlight);
+document.getElementById('chatInput').addEventListener('focus', clearNewReceivedHighlight);
+window.addEventListener('focus', clearNewReceivedHighlight);
 async function sendChatMessage(){
   const input = document.getElementById('chatInput');
   const text = input.value.trim();

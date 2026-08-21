@@ -119,6 +119,9 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .chat-closed-note{ display:none; text-align:center; padding:10px 14px; font-size:11.5px; color:var(--ink-soft); background:var(--paper); border-top:1px solid var(--line); }
 .chat-closed-note.show{ display:block; }
 .chat-system-note{ align-self:center; font-size:11px; color:var(--ink-soft); background:var(--line); padding:5px 12px; border-radius:12px; margin:4px 0; }
+/* 2026-08-21 신설: "마지막으로 받은 메시지" 반짝임 표시 */
+@keyframes chatNewGlow{ 0%,100%{ box-shadow:0 0 0 0 rgba(232,115,74,0); } 50%{ box-shadow:0 0 12px 4px rgba(232,115,74,.55); } }
+.chat-bubble.new-highlight{ background:#FFF4D6 !important; color:var(--ink) !important; animation:chatNewGlow 1s ease-in-out infinite; }
 
 /* 2026-08-20 (3차) 신설: 사건함 (my_account.html과 동일 스타일) */
 .card{ background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px 22px; }
@@ -601,8 +604,8 @@ function subscribeCaseRealtime(caseId){
       if (renderedMsgIds.has(payload.id)) return;
       renderedMsgIds.add(payload.id);
       const who = payload.sender === 'owner' ? 'me' : 'them';
-      appendChatMessage(payload, who);
-      if (who === 'them') playChatPing();
+      const el = appendChatMessage(payload, who);
+      if (who === 'them') { playChatPing(); markNewReceivedHighlight(el); }
     })
     .subscribe();
 }
@@ -658,12 +661,15 @@ async function refreshCaseMessages(caseId, accessToken, silent){
 
     if (!silent) document.getElementById('chatOnlyHeader').querySelector('b').textContent = '💬 ' + (data.registrationTitle || '문자 채팅');
     if (data.registrationId) currentCaseRegistrationId = data.registrationId; // 2026-08-20 (3단계)
+    let lastEl = null, lastMsg = null;
     (data.messages || []).forEach((m) => {
       if (renderedMsgIds.has(m.id)) return;
       renderedMsgIds.add(m.id);
-      appendChatMessage(m, m.sender === 'owner' ? 'me' : 'them');
-      if (silent && m.sender !== 'owner') playChatPing(); // 폴링으로 새로 발견된 상대 메시지엔 알림음
+      const el = appendChatMessage(m, m.sender === 'owner' ? 'me' : 'them');
+      if (silent && m.sender !== 'owner') { playChatPing(); markNewReceivedHighlight(el); } // 폴링으로 새로 발견된 상대 메시지엔 알림음+반짝임
+      lastEl = el; lastMsg = m;
     });
+    if (!silent && lastMsg && lastMsg.sender !== 'owner') markNewReceivedHighlight(lastEl); // 처음 열었을 때 마지막 메시지가 상대 것이면 반짝임
 
     if (data.status === 'closed') {
       document.getElementById('chatClosedNote').classList.add('show');
@@ -1175,7 +1181,7 @@ function appendChatMessage(msg, who){
     const list = document.getElementById('chatMessages');
     list.appendChild(sysEl);
     list.scrollTop = list.scrollHeight;
-    return;
+    return null;
   }
   const el = document.createElement('div');
   const isPhoto = msg.message_type === 'photo';
@@ -1192,7 +1198,23 @@ function appendChatMessage(msg, who){
   const list = document.getElementById('chatMessages');
   list.appendChild(el);
   list.scrollTop = list.scrollHeight;
+  return el; // 2026-08-21: 마지막으로 받은 메시지 반짝임 표시에 쓰기 위해 요소를 반환하도록 수정
 }
+
+// ── 2026-08-21 신설: "마지막으로 받은 메시지" 반짝임 표시 ──
+let lastHighlightedMsgEl = null;
+function markNewReceivedHighlight(el){
+  if (!el) return;
+  if (lastHighlightedMsgEl) lastHighlightedMsgEl.classList.remove('new-highlight');
+  el.classList.add('new-highlight');
+  lastHighlightedMsgEl = el;
+}
+function clearNewReceivedHighlight(){
+  if (lastHighlightedMsgEl) { lastHighlightedMsgEl.classList.remove('new-highlight'); lastHighlightedMsgEl = null; }
+}
+document.getElementById('chatMessages').addEventListener('click', clearNewReceivedHighlight);
+document.getElementById('chatInput').addEventListener('focus', clearNewReceivedHighlight);
+window.addEventListener('focus', clearNewReceivedHighlight);
 async function sendChatMessage(){
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
