@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Aliascall — 핫라인</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_push.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
+  --brass:#C9A24B;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{ height:100%; }
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; word-break:keep-all; display:flex; flex-direction:column; }
+@media (min-width:760px){ body{ align-items:center; } .app-shell{ max-width:430px; width:100%; box-shadow:0 0 60px rgba(0,0,0,.15); height:100vh; background:var(--paper); display:flex; flex-direction:column; } }
+h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+.room-header{ padding:14px 18px; background:var(--card); border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.room-title{ font-size:14.5px; font-weight:700; }
+.room-meta{ font-size:11px; color:var(--ink-soft); }
+
+.state{ display:none; flex:1; overflow:hidden; flex-direction:column; }
+.state.show{ display:flex; }
+.loading-state{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13px; }
+
+.chat-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:6px; }
+.chat-bubble{ max-width:78%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5; }
+.chat-bubble.me{ align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
+.chat-bubble.them{ align-self:flex-start; background:var(--card); border:1px solid var(--line); border-bottom-left-radius:4px; }
+.chat-bubble.photo, .chat-bubble.video, .chat-bubble.document{ padding:4px; background:none !important; border:none !important; }
+.sender-label{ font-size:10.5px; color:var(--ink-soft); margin:2px 4px; align-self:flex-start; }
+.chat-photo{ max-width:180px; max-height:230px; border-radius:12px; display:block; cursor:pointer; object-fit:cover; }
+.chat-video{ max-width:200px; border-radius:12px; display:block; }
+.chat-doc{ display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; text-decoration:none; color:var(--ink); font-size:12.5px; max-width:220px; }
+.chat-system-note{ align-self:center; font-size:11px; color:var(--ink-soft); background:var(--line); padding:5px 12px; border-radius:12px; margin:4px 0; }
+
+.chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); flex-shrink:0; align-items:center; }
+.chat-input-row input[type="text"]{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
+.chat-input-row button{ background:var(--teal); color:#fff; border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; }
+
+.call-area{ flex:1; background:var(--teal-deep); display:flex; flex-direction:column; padding:16px; overflow-y:auto; }
+.call-status{ text-align:center; color:#fff; font-size:12.5px; margin-bottom:14px; }
+.tiles-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.peer-tile{ position:relative; background:rgba(255,255,255,.06); border-radius:12px; overflow:hidden; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; }
+.peer-tile video{ width:100%; height:100%; object-fit:cover; }
+.peer-tile .avatar-fallback{ font-size:28px; color:rgba(255,255,255,.7); }
+.peer-tile .tile-label{ position:absolute; bottom:6px; left:8px; font-size:10.5px; color:#fff; background:rgba(0,0,0,.4); padding:2px 8px; border-radius:10px; }
+.local-tile{ position:fixed; bottom:150px; right:20px; width:80px; height:110px; border-radius:10px; overflow:hidden; z-index:60; box-shadow:0 4px 14px rgba(0,0,0,.3); }
+.local-tile video{ width:100%; height:100%; object-fit:cover; }
+
+.call-controls{ display:flex; justify-content:center; gap:16px; padding:16px 0; }
+.call-btn{ width:52px; height:52px; border-radius:50%; border:none; font-size:20px; cursor:pointer; background:rgba(255,255,255,.15); color:#fff; }
+.call-btn.hangup{ background:var(--danger); }
+.call-btn.active-off{ background:var(--danger); }
+
+.bottom-nav{ display:flex; background:var(--card); border-top:1.5px solid var(--line); box-shadow:0 -2px 12px rgba(18,48,46,.08); flex-shrink:0; }
+.bottom-nav-btn{ flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:9px 2px 8px; font-size:10.5px; font-weight:700; color:var(--ink-soft); cursor:pointer; }
+.bottom-nav-btn .bn-icon{ font-size:19px; line-height:1; }
+.bottom-nav-btn.active{ color:var(--teal); }
+
+.lightbox{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:300; align-items:center; justify-content:center; padding:20px; }
+.lightbox.show{ display:flex; }
+.lightbox img, .lightbox video{ max-width:100%; max-height:85vh; border-radius:8px; }
+.lightbox-close{ position:absolute; top:20px; right:20px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.15); color:#fff; border:none; font-size:18px; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<div class="room-header">
+  <div>
+    <div class="room-title" id="roomTitle">핫라인</div>
+    <div class="room-meta" id="roomMeta"></div>
+  </div>
+</div>
+
+<div class="state show" id="stateLoading"><div class="loading-state">불러오는 중…</div></div>
+<div class="state" id="stateError"><div class="loading-state" id="errorMsg">접근할 수 없습니다.</div></div>
+
+<div class="state" id="stateChat">
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input-row">
+    <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip">
+    <button type="button" id="attachBtn" title="파일 첨부">📎</button>
+    <input type="text" id="chatInput" placeholder="메시지 입력…">
+    <button id="chatSendBtn">➤</button>
+  </div>
+</div>
+
+<div class="state" id="stateCall">
+  <div class="call-area">
+    <div class="call-status" id="callStatus">연결 중…</div>
+    <div class="tiles-grid" id="tilesGrid"></div>
+  </div>
+  <div class="local-tile" id="localTile" style="display:none;"><video id="localVideo" autoplay muted playsinline></video></div>
+  <div class="call-controls">
+    <button class="call-btn" id="muteBtn">🎤</button>
+    <button class="call-btn hangup" id="hangupBtn">📵</button>
+  </div>
+</div>
+
+<div class="bottom-nav" id="bottomNav" style="display:none;">
+  <button class="bottom-nav-btn active" id="navChat"><span class="bn-icon">💬</span><span>채팅</span></button>
+  <button class="bottom-nav-btn" id="navVoice"><span class="bn-icon">🎧</span><span>음성</span></button>
+  <button class="bottom-nav-btn" id="navVideo"><span class="bn-icon">🎥</span><span>화상</span></button>
+  <button class="bottom-nav-btn" id="navUpload"><span class="bn-icon">📎</span><span>업로드</span></button>
+</div>
+
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <div id="lightboxContent"></div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const RTC_CONFIG = { iceServers: [
+  { urls: 'stun:stun.relay.metered.ca:80' },
+  { urls: 'turn:global.relay.metered.ca:80', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turn:global.relay.metered.ca:443', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+  { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
+] };
+
+function getHotlineAnonId(){
+  let id = localStorage.getItem('aliascall_hotline_anon_id');
+  if (!id) {
+    id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    localStorage.setItem('aliascall_hotline_anon_id', id);
+  }
+  return id;
+}
+const hotlineAnonId = getHotlineAnonId();
+
+let hotlineId = null;
+let mySenderAnonId = null;
+let myNickname = null;
+let memberNicknames = {};
+let accessToken = null;
+let renderedMsgIds = new Set();
+let chatChannel = null;
+
+function showState(name){
+  document.querySelectorAll('.state').forEach((el) => el.classList.remove('show'));
+  document.getElementById(name).classList.add('show');
+}
+function authHeaders(){
+  const h = { 'Content-Type': 'application/json' };
+  if (accessToken) h['Authorization'] = 'Bearer ' + accessToken;
+  return h;
+}
+
+async function init(){
+  const params = new URLSearchParams(window.location.search);
+  const inviteToken = params.get('t');
+  const directHotlineId = params.get('hotline');
+  if (!inviteToken && !directHotlineId) { document.getElementById('errorMsg').textContent = '올바르지 않은 접근입니다.'; showState('stateError'); return; }
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) accessToken = session.access_token;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-messages`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ hotlineId: directHotlineId || undefined, inviteToken: inviteToken || undefined, memberAnonId: hotlineAnonId }),
+    });
+    const data = await res.json();
+    if (!res.ok) { document.getElementById('errorMsg').textContent = data.error || '입장할 수 없습니다.'; showState('stateError'); return; }
+
+    hotlineId = data.hotlineId;
+    mySenderAnonId = data.mySenderAnonId;
+    (data.members || []).forEach((m) => { memberNicknames[m.member_anon_id] = m.nickname; });
+    myNickname = memberNicknames[mySenderAnonId] || '나';
+
+    document.getElementById('roomTitle').textContent = data.title;
+    document.getElementById('roomMeta').textContent = `${(data.members || []).length} / ${data.maxParticipants}명`;
+    document.getElementById('bottomNav').style.display = 'flex';
+
+    (data.messages || []).forEach((m) => { appendChatMessage(m); renderedMsgIds.add(m.id); });
+    showState('stateChat');
+    subscribeChat();
+  } catch (e) {
+    console.error('[hotline-room] 초기화 실패', e);
+    document.getElementById('errorMsg').textContent = '불러오지 못했어요. 잠시 후 다시 시도해주세요.';
+    showState('stateError');
+  }
+}
+
+function subscribeChat(){
+  if (chatChannel) { try { sb.removeChannel(chatChannel); } catch (e) {} }
+  chatChannel = sb.channel('hotline-' + hotlineId, { config: { broadcast: { self: false } } });
+  chatChannel
+    .on('broadcast', { event: 'new-message' }, ({ payload }) => {
+      if (renderedMsgIds.has(payload.id)) return;
+      renderedMsgIds.add(payload.id);
+      appendChatMessage(payload);
+      if (payload.sender_anon_id !== mySenderAnonId) playChatPing();
+    })
+    .subscribe();
+}
+
+function appendChatMessage(msg){
+  const list = document.getElementById('chatMessages');
+  const isMe = msg.sender_anon_id === mySenderAnonId;
+
+  if (msg.message_type === 'call_log') {
+    const sysEl = document.createElement('div');
+    sysEl.className = 'chat-system-note';
+    sysEl.textContent = msg.content;
+    list.appendChild(sysEl);
+    list.scrollTop = list.scrollHeight;
+    return;
+  }
+
+  if (!isMe) {
+    const label = document.createElement('div');
+    label.className = 'sender-label';
+    label.textContent = msg.sender_nickname;
+    list.appendChild(label);
+  }
+
+  const el = document.createElement('div');
+  el.className = 'chat-bubble ' + (isMe ? 'me' : 'them') + ' ' + msg.message_type;
+
+  if (msg.message_type === 'photo') {
+    const img = document.createElement('img');
+    img.src = msg.content; img.className = 'chat-photo';
+    img.addEventListener('click', () => openLightbox('<img src="' + msg.content + '" style="max-width:100%;max-height:85vh;border-radius:8px;">'));
+    el.appendChild(img);
+  } else if (msg.message_type === 'video') {
+    const vid = document.createElement('video');
+    vid.src = msg.content; vid.className = 'chat-video'; vid.controls = true;
+    el.appendChild(vid);
+  } else if (msg.message_type === 'document') {
+    const a = document.createElement('a');
+    a.href = msg.content; a.target = '_blank'; a.className = 'chat-doc';
+    a.innerHTML = '📄 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (msg.file_name || '문서 파일') + '</span>';
+    el.appendChild(a);
+  } else {
+    el.textContent = msg.content;
+  }
+
+  list.appendChild(el);
+  list.scrollTop = list.scrollHeight;
+}
+
+function openLightbox(html){
+  document.getElementById('lightboxContent').innerHTML = html;
+  document.getElementById('lightbox').classList.add('show');
+}
+document.getElementById('lightboxClose').addEventListener('click', () => {
+  document.getElementById('lightbox').classList.remove('show');
+  document.getElementById('lightboxContent').innerHTML = '';
+});
+
+async function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !hotlineId) return;
+  input.value = '';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ hotlineId, text, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, message_type: 'text', content: text });
+    renderedMsgIds.add(data.messageId);
+  } catch (e) {
+    console.error('[hotline-room] 메시지 전송 실패', e);
+    alert('메시지를 보내지 못했어요.');
+  }
+}
+document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+
+document.getElementById('attachBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('navUpload').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  await uploadAndSendFile(file);
+});
+
+function detectFileType(mime){
+  if (mime.startsWith('image/')) return 'photo';
+  if (mime.startsWith('video/')) return 'video';
+  return 'document';
+}
+
+async function uploadAndSendFile(file){
+  const fileType = detectFileType(file.type);
+  const limitMb = fileType === 'video' ? 80 : fileType === 'photo' ? 8 : 20;
+  if (file.size > limitMb * 1024 * 1024) { alert(`파일이 너무 커요 (최대 ${limitMb}MB).`); return; }
+
+  try {
+    const base64Data = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const uploadRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-file-upload`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hotlineId, base64Data, contentType: file.type, fileName: file.name, fileType }),
+    });
+    const uploadData = await uploadRes.json();
+    if (!uploadRes.ok) throw new Error(uploadData.error);
+
+    const msgRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ hotlineId, fileUrl: uploadData.url, fileType, fileName: file.name, fileSizeBytes: uploadData.fileSizeBytes, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    });
+    const msgData = await msgRes.json();
+    if (!msgRes.ok) throw new Error(msgData.error);
+
+    appendChatMessage({ id: msgData.messageId, sender_anon_id: mySenderAnonId, message_type: fileType, content: uploadData.url, file_name: file.name });
+    renderedMsgIds.add(msgData.messageId);
+    showState('stateChat'); updateNavActive('navChat');
+  } catch (e) {
+    console.error('[hotline-room] 파일 전송 실패', e);
+    alert('파일을 보내지 못했어요: ' + (e.message || ''));
+  }
+}
+
+function updateNavActive(id){
+  document.querySelectorAll('.bottom-nav-btn').forEach((b) => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+document.getElementById('navChat').addEventListener('click', () => {
+  if (activeCall) endCall();
+  showState('stateChat'); updateNavActive('navChat');
+});
+document.getElementById('navVoice').addEventListener('click', () => { showState('stateCall'); updateNavActive('navVoice'); startCall('voice'); });
+document.getElementById('navVideo').addEventListener('click', () => { showState('stateCall'); updateNavActive('navVideo'); startCall('video'); });
+
+let activeCall = null;
+let localStream = null;
+let callChannel = null;
+let peers = {};
+let isMuted = false;
+
+async function startCall(mode){
+  if (activeCall) return;
+  activeCall = mode;
+  document.getElementById('callStatus').textContent = '연결 중…';
+  document.getElementById('tilesGrid').innerHTML = '';
+  document.getElementById('muteBtn').textContent = '🎤';
+  isMuted = false;
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      video: mode === 'video',
+    });
+  } catch (e) {
+    alert('마이크(또는 카메라) 권한이 필요합니다.');
+    activeCall = null;
+    showState('stateChat'); updateNavActive('navChat');
+    return;
+  }
+
+  if (mode === 'video') {
+    document.getElementById('localVideo').srcObject = localStream;
+    document.getElementById('localTile').style.display = 'block';
+  }
+
+  callChannel = sb.channel('hotline-call-' + hotlineId, { config: { presence: { key: mySenderAnonId } } });
+
+  callChannel
+    .on('presence', { event: 'sync' }, () => {
+      const state = callChannel.presenceState();
+      Object.keys(state).forEach((anonId) => {
+        if (anonId !== mySenderAnonId && !peers[anonId]) connectToPeer(anonId);
+      });
+    })
+    .on('presence', { event: 'leave' }, ({ key }) => { if (key !== mySenderAnonId) removePeer(key); })
+    .on('broadcast', { event: 'signal' }, ({ payload }) => {
+      if (payload.to !== mySenderAnonId) return;
+      handleSignal(payload);
+    })
+    .subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await callChannel.track({ nickname: myNickname, mode });
+        document.getElementById('callStatus').textContent = '통화 중';
+      }
+    });
+
+  fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
+    method: 'POST', headers: authHeaders(),
+    body: JSON.stringify({ hotlineId, callLog: (myNickname) + '님이 ' + (mode === 'video' ? '영상' : '음성') + '통화를 시작했어요', memberAnonId: accessToken ? undefined : hotlineAnonId }),
+  }).catch(() => {});
+}
+
+function connectToPeer(anonId){
+  const pc = new RTCPeerConnection(RTC_CONFIG);
+  peers[anonId] = { pc, pendingCandidates: [] };
+
+  localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+
+  pc.onicecandidate = (e) => {
+    if (e.candidate) callChannel.send({ type: 'broadcast', event: 'signal', payload: { to: anonId, from: mySenderAnonId, kind: 'ice-candidate', candidate: e.candidate } });
+  };
+  pc.ontrack = (e) => renderPeerTile(anonId, e.streams[0]);
+  pc.onconnectionstatechange = () => {
+    if (['failed', 'closed'].includes(pc.connectionState)) removePeer(anonId);
+  };
+
+  if (mySenderAnonId < anonId) {
+    pc.createOffer().then((offer) => pc.setLocalDescription(offer)).then(() => {
+      callChannel.send({ type: 'broadcast', event: 'signal', payload: { to: anonId, from: mySenderAnonId, kind: 'offer', sdp: pc.localDescription } });
+    });
+  }
+
+  ensureTilePlaceholder(anonId);
+}
+
+async function handleSignal(payload){
+  const { from, kind } = payload;
+  if (!peers[from]) {
+    const pc = new RTCPeerConnection(RTC_CONFIG);
+    peers[from] = { pc, pendingCandidates: [] };
+    localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+    pc.onicecandidate = (e) => { if (e.candidate) callChannel.send({ type: 'broadcast', event: 'signal', payload: { to: from, from: mySenderAnonId, kind: 'ice-candidate', candidate: e.candidate } }); };
+    pc.ontrack = (e) => renderPeerTile(from, e.streams[0]);
+    pc.onconnectionstatechange = () => { if (['failed', 'closed'].includes(pc.connectionState)) removePeer(from); };
+    ensureTilePlaceholder(from);
+  }
+
+  const entry = peers[from];
+  const pc = entry.pc;
+
+  if (kind === 'offer') {
+    await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+    for (const c of entry.pendingCandidates) { try { await pc.addIceCandidate(c); } catch (e) {} }
+    entry.pendingCandidates = [];
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    callChannel.send({ type: 'broadcast', event: 'signal', payload: { to: from, from: mySenderAnonId, kind: 'answer', sdp: pc.localDescription } });
+  } else if (kind === 'answer') {
+    if (pc.signalingState === 'have-local-offer') {
+      await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+      for (const c of entry.pendingCandidates) { try { await pc.addIceCandidate(c); } catch (e) {} }
+      entry.pendingCandidates = [];
+    }
+  } else if (kind === 'ice-candidate') {
+    if (pc.remoteDescription) { try { await pc.addIceCandidate(payload.candidate); } catch (e) {} }
+    else entry.pendingCandidates.push(payload.candidate);
+  }
+}
+
+function ensureTilePlaceholder(anonId){
+  if (document.getElementById('tile-' + anonId)) return;
+  const tile = document.createElement('div');
+  tile.className = 'peer-tile';
+  tile.id = 'tile-' + anonId;
+  tile.innerHTML = '<div class="avatar-fallback">🎧</div><div class="tile-label">' + (memberNicknames[anonId] || '참가자') + '</div>';
+  document.getElementById('tilesGrid').appendChild(tile);
+}
+
+function renderPeerTile(anonId, stream){
+  const tile = document.getElementById('tile-' + anonId);
+  if (!tile) return;
+  tile.innerHTML = '';
+  if (activeCall === 'video') {
+    const vid = document.createElement('video');
+    vid.autoplay = true; vid.playsInline = true; vid.srcObject = stream;
+    tile.appendChild(vid);
+  } else {
+    const audioEl = document.createElement('audio');
+    audioEl.autoplay = true; audioEl.srcObject = stream;
+    tile.appendChild(audioEl);
+    const fallback = document.createElement('div');
+    fallback.className = 'avatar-fallback'; fallback.textContent = '🎧';
+    tile.appendChild(fallback);
+  }
+  const label = document.createElement('div');
+  label.className = 'tile-label'; label.textContent = memberNicknames[anonId] || '참가자';
+  tile.appendChild(label);
+}
+
+function removePeer(anonId){
+  if (peers[anonId]) { try { peers[anonId].pc.close(); } catch (e) {} delete peers[anonId]; }
+  const tile = document.getElementById('tile-' + anonId);
+  if (tile) tile.remove();
+}
+
+async function measureRelayBytes(pc){
+  try {
+    const stats = await pc.getStats();
+    let selectedPairId = null;
+    const candidates = {};
+    stats.forEach((r) => {
+      if (r.type === 'candidate-pair' && r.state === 'succeeded' && r.nominated) selectedPairId = r.id;
+      if (r.type === 'local-candidate' || r.type === 'remote-candidate') candidates[r.id] = r;
+    });
+    if (!selectedPairId) return 0;
+    let bytes = 0;
+    stats.forEach((r) => {
+      if (r.id === selectedPairId) {
+        const local = candidates[r.localCandidateId];
+        const remote = candidates[r.remoteCandidateId];
+        const usedRelay = (local && local.candidateType === 'relay') || (remote && remote.candidateType === 'relay');
+        if (usedRelay) bytes = (r.bytesSent || 0) + (r.bytesReceived || 0);
+      }
+    });
+    return bytes;
+  } catch (e) { return 0; }
+}
+
+async function endCall(){
+  if (!activeCall) return;
+  const mode = activeCall;
+
+  let totalBytes = 0;
+  for (const anonId in peers) {
+    totalBytes += await measureRelayBytes(peers[anonId].pc);
+    peers[anonId].pc.close();
+  }
+  peers = {};
+
+  if (totalBytes > 0) {
+    fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-report-usage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hotlineId, reportedByAnonId: mySenderAnonId, bytesRelayed: totalBytes }),
+    }).then((r) => r.json()).then((d) => {
+      if (d.isOverCap) alert('이 핫라인의 이번 결제주기 사용량 한도를 초과했어요. 추가결제가 필요할 수 있습니다.');
+    }).catch(() => {});
+  }
+
+  if (callChannel) { try { callChannel.untrack(); sb.removeChannel(callChannel); } catch (e) {} callChannel = null; }
+  if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
+  document.getElementById('localTile').style.display = 'none';
+  document.getElementById('tilesGrid').innerHTML = '';
+  activeCall = null;
+
+  fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
+    method: 'POST', headers: authHeaders(),
+    body: JSON.stringify({ hotlineId, callLog: (myNickname) + '님이 ' + (mode === 'video' ? '영상' : '음성') + '통화를 종료했어요', memberAnonId: accessToken ? undefined : hotlineAnonId }),
+  }).catch(() => {});
+}
+document.getElementById('hangupBtn').addEventListener('click', async () => {
+  await endCall();
+  showState('stateChat'); updateNavActive('navChat');
+});
+document.getElementById('muteBtn').addEventListener('click', () => {
+  if (!localStream) return;
+  isMuted = !isMuted;
+  localStream.getAudioTracks().forEach((t) => (t.enabled = !isMuted));
+  const btn = document.getElementById('muteBtn');
+  btn.textContent = isMuted ? '🔇' : '🎤';
+  btn.classList.toggle('active-off', isMuted);
+});
+
+init();
+</script>
+</body>
+</html>
