@@ -114,6 +114,15 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .ring-btn-mini.accept{ background:var(--found); color:#fff; }
 .ring-btn-mini.decline{ background:var(--danger); color:#fff; }
 
+/* 2026-08-21 신설: 새 메시지 팝업(토스트) */
+.global-toast{ display:none; position:fixed; left:14px; right:14px; bottom:14px; z-index:200; background:#fff; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.3); padding:12px 40px 12px 14px; max-width:400px; margin:0 auto; }
+.global-toast.show{ display:block; animation:toastSlideUp .25s ease; }
+@keyframes toastSlideUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+.global-toast-body{ cursor:pointer; }
+.global-toast-title{ font-size:12.5px; font-weight:700; color:var(--teal-deep); margin-bottom:3px; }
+.global-toast-preview{ font-size:12px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.global-toast-close{ position:absolute; top:8px; right:10px; background:none; border:none; font-size:14px; color:#999; cursor:pointer; padding:4px; }
+
 /* 2026-08-20 (3차) 신설: 사건함 (어두운 홈 배경 톤에 맞춤) */
 .case-inbox-card{ margin:10px 24px 0; max-width:360px; margin-left:auto; margin-right:auto; background:rgba(255,255,255,.08); border-radius:14px; padding:14px 16px; }
 .case-item{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.12); cursor:pointer; text-align:left; background:none; border-left:none; border-right:none; border-top:none; width:100%; color:inherit; }
@@ -238,6 +247,16 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   </div>
 </div>
 
+<!-- 2026-08-21 신설: 새 메시지 팝업(토스트) — 웹푸시가 모바일에서 안 뜨는 경우를 보완,
+     화면 어디에 있든 이걸로 확실하게 알려줌 -->
+<div class="global-toast" id="globalToast">
+  <button class="global-toast-close" id="globalToastClose">✕</button>
+  <div class="global-toast-body" id="globalToastBody">
+    <div class="global-toast-title" id="globalToastTitle">💬 새 메시지가 왔어요</div>
+    <div class="global-toast-preview" id="globalToastPreview"></div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
@@ -260,6 +279,18 @@ let pendingSession = null;
 function getAudioCtx(){
   return getAliascallAudioCtx();
 }
+// ── 2026-08-21 신설: 새 메시지 팝업(토스트) — 웹푸시가 안 뜨는 환경(특히 모바일)을 보완 ──
+function showGlobalToast(title, preview, onClick){
+  document.getElementById('globalToastTitle').textContent = title;
+  document.getElementById('globalToastPreview').textContent = preview;
+  document.getElementById('globalToast').classList.add('show');
+  document.getElementById('globalToastBody').onclick = () => { hideGlobalToast(); onClick(); };
+}
+function hideGlobalToast(){
+  document.getElementById('globalToast').classList.remove('show');
+}
+document.getElementById('globalToastClose').addEventListener('click', hideGlobalToast);
+
 function playDoorbell(){
   if (!aliascallIsSoundEnabled()) return;
   try {
@@ -456,6 +487,22 @@ async function initIncomingWatcher(userId){
       // 'chat'이면 통화 UI 없이 가벼운 배너만 (수락/거절 없음, 열기/닫기만)
       if (row.call_type === 'chat') { showChatRequest(row); return; }
       showIncomingCall(row);
+    })
+    .subscribe();
+
+  // 2026-08-21 신설: case_messages(문자/채팅 내용) 실시간 감지 — 어디 화면에 있든
+  // 새 메시지가 오면 토스트 팝업으로 알려줌. RLS가 "내 등록물의 사건"만 걸러서 전달해줌
+  // (같은 로그인 사용자라도 남의 대화 내용은 여기로 절대 안 옴).
+  sb.channel('case-messages-toast-home')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'case_messages' }, (payload) => {
+      const m = payload.new;
+      if (m.sender === 'owner' || m.message_type === 'call_log') return; // 내가 보낸 것/통화기록은 토스트 생략
+      const preview = m.message_type === 'photo' ? '📷 사진을 보냈어요' : (m.content || '').slice(0, 60);
+      playDoorbell();
+      loadCaseInbox();
+      showGlobalToast('💬 새 메시지가 왔어요', preview, () => {
+        window.location.href = 'aliascall_incoming_calls.html?case=' + m.case_id;
+      });
     })
     .subscribe();
 

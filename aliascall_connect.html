@@ -99,6 +99,15 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .lightbox.show{ display:flex; }
 .lightbox img, .lightbox video{ max-width:100%; max-height:85vh; border-radius:8px; }
 .lightbox-close{ position:absolute; top:20px; right:20px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.15); color:#fff; border:none; font-size:18px; cursor:pointer; }
+
+/* 2026-08-21 신설: 새 메시지 팝업(토스트) */
+.global-toast{ display:none; position:fixed; left:14px; right:14px; bottom:14px; z-index:200; background:var(--card); border:1.5px solid var(--line); border-radius:14px; box-shadow:0 8px 24px rgba(18,48,46,.22); padding:12px 40px 12px 14px; max-width:400px; margin:0 auto; }
+.global-toast.show{ display:block; animation:toastSlideUp .25s ease; }
+@keyframes toastSlideUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+.global-toast-body{ cursor:pointer; }
+.global-toast-title{ font-size:12.5px; font-weight:700; color:var(--teal-deep); margin-bottom:3px; }
+.global-toast-preview{ font-size:12px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.global-toast-close{ position:absolute; top:8px; right:10px; background:none; border:none; font-size:14px; color:var(--ink-soft); cursor:pointer; padding:4px; }
 .privacy-note{ display:flex; align-items:flex-start; gap:8px; background:var(--teal-tint); border-radius:12px; padding:12px 14px; text-align:left; font-size:12px; color:var(--teal-deep); line-height:1.55; margin-bottom:22px; }
 .privacy-note .icon{ font-size:16px; flex-shrink:0; }
 /* 2026-08-21 신설: "이 화면을 열어두시면 지속적으로 연락 가능" 안내 — 실시간 콜백 수신 기능과 연동됨 */
@@ -269,6 +278,15 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 <div class="lightbox" id="lightbox">
   <button class="lightbox-close" id="lightboxClose">✕</button>
   <div id="lightboxContent"></div>
+</div>
+
+<!-- 2026-08-21 신설: 새 메시지 팝업(토스트) -->
+<div class="global-toast" id="globalToast">
+  <button class="global-toast-close" id="globalToastClose">✕</button>
+  <div class="global-toast-body" id="globalToastBody">
+    <div class="global-toast-title" id="globalToastTitle">💬 소유자가 답장했어요</div>
+    <div class="global-toast-preview" id="globalToastPreview"></div>
+  </div>
 </div>
 
 <div class="calling-overlay" id="callingOverlay">
@@ -475,6 +493,7 @@ function renderFoundRegistration(data){
   foundEl.dataset.registrationId = data.id;
 
   subscribeFinderIncomingCallWatcher(data.id); // 2026-08-21 신설
+  subscribeFinderCaseToast(data.id); // 2026-08-21 신설: 어디 화면에 있든 새 메시지 팝업으로 알려줌
 }
 
 // ── 2026-08-21 신설: 발견자가 이미 이 화면을 열어두고 대기 중일 때, 소유자가 콜백을 걸면
@@ -495,6 +514,49 @@ function subscribeFinderIncomingCallWatcher(registrationId){
     })
     .subscribe();
 }
+
+// ── 2026-08-21 신설: 어디 화면에 있든 소유자 답장을 팝업(토스트)으로 알려줌 ──
+// ⚠ webrtc_sessions와 달리 case_messages엔 익명(anon) 대상 select 권한이 없어서(오늘 겪은
+// 것과 같은 이유로) postgres_changes로 직접 못 들여다봄. 대신 이미 있는 사건의 방송 채널
+// (case-{caseId})을 구독하는 방식으로 우회함 — 채팅창을 열 때 쓰는 것과 같은 방식.
+let finderToastChannel = null;
+async function subscribeFinderCaseToast(registrationId){
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-lookup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ registrationId, finderAnonId }),
+    });
+    const data = await res.json();
+    if (!data.caseId) return; // 아직 연락한 적 없으면 구독할 사건 자체가 없음
+    const toastCaseId = data.caseId;
+
+    if (finderToastChannel) { try { sb.removeChannel(finderToastChannel); } catch (e) {} }
+    finderToastChannel = sb.channel('case-' + toastCaseId, { config: { broadcast: { self: false } } });
+    finderToastChannel
+      .on('broadcast', { event: 'new-message' }, ({ payload }) => {
+        if (payload.sender === 'finder' || payload.message_type === 'call_log') return;
+        if (currentCaseId === toastCaseId) return; // 이미 그 대화를 보고 있으면 토스트 불필요(채팅창 자체에서 이미 반영됨)
+        const preview = payload.message_type === 'photo' ? '📷 사진을 보냈어요' : (payload.content || '').slice(0, 60);
+        showGlobalToast('💬 소유자가 답장했어요', preview, () => {
+          window.location.href = 'aliascall_connect.html?case=' + toastCaseId;
+        });
+      })
+      .subscribe();
+  } catch (e) { console.warn('[toast] 사건 조회 실패(대화 자체엔 영향 없음)', e); }
+}
+
+// ── 새 메시지 팝업(토스트) ──
+function showGlobalToast(title, preview, onClick){
+  document.getElementById('globalToastTitle').textContent = title;
+  document.getElementById('globalToastPreview').textContent = preview;
+  document.getElementById('globalToast').classList.add('show');
+  document.getElementById('globalToastBody').onclick = () => { hideGlobalToast(); onClick(); };
+}
+function hideGlobalToast(){
+  document.getElementById('globalToast').classList.remove('show');
+}
+document.getElementById('globalToastClose').addEventListener('click', hideGlobalToast);
 
 async function init(){
   const token = getTokenFromUrl();

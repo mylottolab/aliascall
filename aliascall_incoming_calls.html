@@ -137,6 +137,15 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .case-item.closed{ opacity:.6; }
 .case-item.new-highlight{ background:#FFF4D6; animation:chatNewGlow 1s ease-in-out infinite; }
 .case-inbox-empty{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:14px; }
+
+/* 2026-08-21 신설: 새 메시지 팝업(토스트) */
+.global-toast{ display:none; position:fixed; left:14px; right:14px; bottom:14px; z-index:200; background:var(--card); border:1.5px solid var(--line); border-radius:14px; box-shadow:0 8px 24px rgba(18,48,46,.22); padding:12px 40px 12px 14px; max-width:400px; margin:0 auto; }
+.global-toast.show{ display:block; animation:toastSlideUp .25s ease; }
+@keyframes toastSlideUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+.global-toast-body{ cursor:pointer; }
+.global-toast-title{ font-size:12.5px; font-weight:700; color:var(--teal-deep); margin-bottom:3px; }
+.global-toast-preview{ font-size:12px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.global-toast-close{ position:absolute; top:8px; right:10px; background:none; border:none; font-size:14px; color:var(--ink-soft); cursor:pointer; padding:4px; }
 .case-inbox-alert-title{ font-style:italic; font-size:12px; color:var(--ink-soft); padding:2px 2px 10px; }
 
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
@@ -201,6 +210,15 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
     </div>
   </div>
 </main>
+
+<!-- 2026-08-21 신설: 새 메시지 팝업(토스트) -->
+<div class="global-toast" id="globalToast">
+  <button class="global-toast-close" id="globalToastClose">✕</button>
+  <div class="global-toast-body" id="globalToastBody">
+    <div class="global-toast-title" id="globalToastTitle">💬 새 메시지가 왔어요</div>
+    <div class="global-toast-preview" id="globalToastPreview"></div>
+  </div>
+</div>
 
 <div class="session-view" id="sessionView">
   <div class="session-topbar" id="sessionTopbar">
@@ -332,6 +350,18 @@ async function logIceCandidatePairs(pcRef){
 // 2026-08-19 (2차): 재생 전 aliascallIsSoundEnabled()로 켜져있는지 확인 (통합 토글, aliascall_push.js)
 // 2026-08-20: 이 화면만의 별도 AudioContext 대신 aliascall_push.js의 공유 컨텍스트를 씀
 // (별개 컨텍스트를 쓰면 "알림음 켜기" 허가가 안 이어져서 소리가 안 나던 버그가 있었음)
+// ── 2026-08-21 신설: 새 메시지 팝업(토스트) ──
+function showGlobalToast(title, preview, onClick){
+  document.getElementById('globalToastTitle').textContent = title;
+  document.getElementById('globalToastPreview').textContent = preview;
+  document.getElementById('globalToast').classList.add('show');
+  document.getElementById('globalToastBody').onclick = () => { hideGlobalToast(); onClick(); };
+}
+function hideGlobalToast(){
+  document.getElementById('globalToast').classList.remove('show');
+}
+document.getElementById('globalToastClose').addEventListener('click', hideGlobalToast);
+
 function getAudioCtx(){
   return getAliascallAudioCtx();
 }
@@ -474,6 +504,20 @@ async function init(){
       // 전화벨 대신 딩동 소리 + 부재중 메시지 목록만 새로고침함
       if (row.call_type === 'message') { playDoorbell(); loadCaseInbox(); return; }
       showIncomingCall(row);
+    })
+    .subscribe();
+
+  // 2026-08-21 신설: case_messages 실시간 감지 — 이미 그 사건을 보고 있으면 채팅창 자체의
+  // 실시간 처리(subscribeCaseRealtime)가 이미 담당하니 토스트는 생략, 다른 사건이면 토스트 표시
+  sb.channel('case-messages-toast-incoming')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'case_messages' }, (payload) => {
+      const m = payload.new;
+      if (m.sender === 'owner' || m.message_type === 'call_log') return;
+      if (currentCaseId === m.case_id) return; // 이미 그 대화를 보고 있으면 토스트 불필요(실시간으로 이미 반영됨)
+      const preview = m.message_type === 'photo' ? '📷 사진을 보냈어요' : (m.content || '').slice(0, 60);
+      playDoorbell();
+      loadCaseInbox();
+      showGlobalToast('💬 새 메시지가 왔어요', preview, () => openCaseChat(m.case_id));
     })
     .subscribe();
 

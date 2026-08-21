@@ -143,6 +143,15 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .ring-btn-mini.accept{ background:var(--found); color:#fff; }
 .ring-btn-mini.decline{ background:var(--danger); color:#fff; }
 
+/* 2026-08-21 신설: 새 메시지 팝업(토스트) */
+.global-toast{ display:none; position:fixed; left:14px; right:14px; bottom:14px; z-index:200; background:var(--card); border:1.5px solid var(--line); border-radius:14px; box-shadow:0 8px 24px rgba(18,48,46,.22); padding:12px 40px 12px 14px; max-width:400px; margin:0 auto; }
+.global-toast.show{ display:block; animation:toastSlideUp .25s ease; }
+@keyframes toastSlideUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+.global-toast-body{ cursor:pointer; }
+.global-toast-title{ font-size:12.5px; font-weight:700; color:var(--teal-deep); margin-bottom:3px; }
+.global-toast-preview{ font-size:12px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.global-toast-close{ position:absolute; top:8px; right:10px; background:none; border:none; font-size:14px; color:var(--ink-soft); cursor:pointer; padding:4px; }
+
 /* 2026-08-20 신설: 사건함 목록 */
 .case-item{ display:flex; align-items:center; gap:11px; padding:11px 4px; border-bottom:1px solid var(--line); cursor:pointer; text-align:left; background:none; border-left:none; border-right:none; border-top:none; width:100%; }
 .case-item:last-child{ border-bottom:none; }
@@ -479,6 +488,15 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
   </div>
 </div>
 
+<!-- 2026-08-21 신설: 새 메시지 팝업(토스트) -->
+<div class="global-toast" id="globalToast">
+  <button class="global-toast-close" id="globalToastClose">✕</button>
+  <div class="global-toast-body" id="globalToastBody">
+    <div class="global-toast-title" id="globalToastTitle">💬 새 메시지가 왔어요</div>
+    <div class="global-toast-preview" id="globalToastPreview"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-box">
     <h3 data-i18n="deleteConfirmTitle">정말 탈퇴하시겠어요?</h3>
@@ -675,6 +693,18 @@ let pendingSession = null;
 function getAudioCtx(){
   return getAliascallAudioCtx();
 }
+// ── 2026-08-21 신설: 새 메시지 팝업(토스트) ──
+function showGlobalToast(title, preview, onClick){
+  document.getElementById('globalToastTitle').textContent = title;
+  document.getElementById('globalToastPreview').textContent = preview;
+  document.getElementById('globalToast').classList.add('show');
+  document.getElementById('globalToastBody').onclick = () => { hideGlobalToast(); onClick(); };
+}
+function hideGlobalToast(){
+  document.getElementById('globalToast').classList.remove('show');
+}
+document.getElementById('globalToastClose').addEventListener('click', hideGlobalToast);
+
 function playDoorbell(){
   if (!aliascallIsSoundEnabled()) return;
   try {
@@ -789,6 +819,20 @@ async function initIncomingWatcher(userId){
       if (row.call_type === 'message') { playDoorbell(); loadCaseInbox(); return; }
       if (row.call_type === 'chat') { showChatRequest(row); return; }
       showIncomingCall(row);
+    })
+    .subscribe();
+
+  // 2026-08-21 신설: case_messages 실시간 감지 — 어디 화면에 있든 새 메시지가 오면 토스트 팝업
+  sb.channel('case-messages-toast-myaccount')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'case_messages' }, (payload) => {
+      const m = payload.new;
+      if (m.sender === 'owner' || m.message_type === 'call_log') return;
+      const preview = m.message_type === 'photo' ? '📷 사진을 보냈어요' : (m.content || '').slice(0, 60);
+      playDoorbell();
+      loadCaseInbox();
+      showGlobalToast('💬 새 메시지가 왔어요', preview, () => {
+        window.location.href = 'aliascall_incoming_calls.html?case=' + m.case_id;
+      });
     })
     .subscribe();
 
