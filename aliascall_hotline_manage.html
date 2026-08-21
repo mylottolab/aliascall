@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Aliascall — 핫라인 관리</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_push.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F; --found-tint:rgba(46,125,79,.1);
+  --brass:#C9A24B;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+@media (min-width:760px){ body{ display:flex; justify-content:center; background:linear-gradient(180deg,#9FC2A6,#B8D3BE); } .app-shell{ max-width:430px; width:100%; box-shadow:0 0 60px rgba(0,0,0,.15); min-height:100vh; background:var(--paper); } }
+h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:20px 24px 6px; display:flex; align-items:center; gap:9px; }
+.back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; }
+.brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:16px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+
+main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
+.page-title{ font-size:22px; margin-bottom:16px; }
+
+.login-needed{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13px; display:none; }
+.empty-state{ text-align:center; color:var(--ink-soft); font-size:13px; padding:40px 10px; }
+
+.hl-item{ background:var(--card); border-radius:16px; padding:18px; margin-bottom:16px; }
+.hl-item-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.hl-item-callsign{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600; color:var(--coral); background:var(--coral-tint); padding:3px 9px; border-radius:14px; }
+.hl-item-expiry{ font-size:10.5px; color:var(--ink-soft); }
+.hl-item-title{ font-size:16px; font-weight:600; margin-bottom:4px; }
+.hl-item-meta{ font-size:12px; color:var(--ink-soft); margin-bottom:12px; }
+
+.invite-row{ display:flex; gap:6px; margin-bottom:14px; }
+.invite-row input{ flex:1; border:1.5px solid var(--line); border-radius:10px; padding:9px 12px; font-size:11.5px; font-family:'IBM Plex Mono',monospace; color:var(--ink-soft); background:var(--teal-tint); }
+.invite-row button{ background:var(--teal); color:#fff; border:none; border-radius:10px; padding:0 16px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+
+.usage-bar-track{ background:var(--line); border-radius:20px; height:6px; overflow:hidden; margin-bottom:4px; }
+.usage-bar-fill{ background:var(--teal); height:100%; border-radius:20px; }
+.usage-label{ font-size:10.5px; color:var(--ink-soft); margin-bottom:14px; }
+
+.section-label{ font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:14px 0 8px; }
+.request-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 0; border-top:1px solid var(--line); }
+.request-nick{ font-size:13px; font-weight:600; }
+.request-btns{ display:flex; gap:6px; flex-shrink:0; }
+.req-btn{ border:none; border-radius:8px; padding:6px 12px; font-size:11.5px; font-weight:700; cursor:pointer; }
+.req-btn.approve{ background:var(--found); color:#fff; }
+.req-btn.reject{ background:var(--danger); color:#fff; }
+
+.member-row{ display:flex; align-items:center; gap:8px; padding:7px 0; border-top:1px solid var(--line); font-size:12.5px; }
+.member-badge{ font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:8px; background:var(--found-tint); color:var(--found); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<header>
+  <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'">←</button>
+  <div class="brand-mark">A</div>
+  <div class="brand-name">Alias<em>call</em></div>
+</header>
+
+<main>
+  <div class="page-title">핫라인 관리</div>
+  <div class="login-needed" id="loginNeeded">로그인이 필요합니다.</div>
+  <div id="content">
+    <div id="hlList"><div class="empty-state">불러오는 중…</div></div>
+  </div>
+</main>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const TIER_LABEL = { hotline_1to1: '핫라인 (2명)', economy_4: '이코노미 (4명)', premium_4: '프리미엄 (4명)' };
+
+async function loadHotlines(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { document.getElementById('loginNeeded').style.display = 'block'; document.getElementById('content').style.display = 'none'; return; }
+
+  const { data: hotlines, error } = await sb.from('hotlines').select('*').eq('owner_user_id', session.user.id).order('created_at', { ascending: false });
+  const listEl = document.getElementById('hlList');
+  if (error) { listEl.innerHTML = '<div class="empty-state">불러오지 못했어요: ' + error.message + '</div>'; return; }
+  if (!hotlines || hotlines.length === 0) { listEl.innerHTML = '<div class="empty-state">아직 개설한 핫라인이 없어요.</div>'; return; }
+
+  const html = await Promise.all(hotlines.map((h) => renderHotlineItem(h)));
+  listEl.innerHTML = html.join('');
+  wireHotlineItems();
+}
+
+async function renderHotlineItem(h){
+  const [{ data: members }, { data: requests }] = await Promise.all([
+    sb.from('hotline_members').select('*').eq('hotline_id', h.id).eq('status', 'approved'),
+    sb.from('hotline_join_requests').select('*').eq('hotline_id', h.id).eq('status', 'pending').order('requested_at', { ascending: true }),
+  ]);
+
+  const usagePercent = h.usage_cap_gb > 0 ? Math.min(100, Math.round((h.usage_used_gb / h.usage_cap_gb) * 100)) : 0;
+  const expiresLabel = new Date(h.expires_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' });
+  const inviteUrl = `${window.location.origin}/aliascall_hotline_join.html?t=${h.invite_token}`;
+
+  const requestsHtml = (requests || []).length === 0 ? '' : `
+    <div class="section-label">📋 대기 중 (${requests.length}명)</div>
+    ${requests.map((r) => `
+      <div class="request-row">
+        <span class="request-nick">${r.nickname}</span>
+        <span class="request-btns">
+          <button class="req-btn approve" data-action="approve" data-req="${r.id}" data-hotline="${h.id}">승인</button>
+          <button class="req-btn reject" data-action="reject" data-req="${r.id}" data-hotline="${h.id}">거절</button>
+        </span>
+      </div>
+    `).join('')}
+  `;
+
+  const membersHtml = (members || []).length === 0 ? '' : `
+    <div class="section-label">참가자 (${members.length}/${h.max_participants})</div>
+    ${members.map((m) => `
+      <div class="member-row">
+        <span>${m.nickname}</span>
+        ${m.role === 'owner' ? '<span class="member-badge">개설자</span>' : ''}
+      </div>
+    `).join('')}
+  `;
+
+  return `
+    <div class="hl-item" data-hotline-id="${h.id}">
+      <div class="hl-item-head">
+        <span class="hl-item-callsign">${TIER_LABEL[h.tier] || h.tier}</span>
+        <span class="hl-item-expiry">~${expiresLabel}</span>
+      </div>
+      <div class="hl-item-title">${h.title || (TIER_LABEL[h.tier] || h.tier)}</div>
+      <div class="hl-item-meta">${(members || []).length} / ${h.max_participants}명 참가 중</div>
+
+      <div class="invite-row">
+        <input type="text" readonly value="${inviteUrl}">
+        <button data-action="copy-invite" data-url="${inviteUrl}">복사</button>
+      </div>
+
+      <div class="usage-bar-track"><div class="usage-bar-fill" style="width:${usagePercent}%;"></div></div>
+      <div class="usage-label">사용량 ${h.usage_used_gb.toFixed(1)}GB / ${h.usage_cap_gb}GB (${usagePercent}%)</div>
+
+      ${requestsHtml}
+      ${membersHtml}
+    </div>
+  `;
+}
+
+function wireHotlineItems(){
+  document.querySelectorAll('[data-action="copy-invite"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.dataset.url).then(() => {
+        const original = btn.textContent;
+        btn.textContent = '복사됨!';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      });
+    });
+  });
+
+  document.querySelectorAll('[data-action="approve"], [data-action="reject"]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const decision = btn.dataset.action === 'approve' ? 'approve' : 'reject';
+      btn.disabled = true;
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-decide-join`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+          body: JSON.stringify({ requestId: btn.dataset.req, decision }),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || '처리에 실패했어요.'); btn.disabled = false; return; }
+        loadHotlines(); // 목록 새로고침
+      } catch (e) {
+        console.error('[hotline] 승인/거절 실패', e);
+        alert('처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+// 새 신청이 들어오면 실시간으로 목록 갱신
+async function subscribeJoinRequests(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  sb.channel('hotline-manage-requests')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hotline_join_requests' }, () => {
+      loadHotlines(); // RLS가 "내 핫라인" 것만 걸러서 전달해줌
+    })
+    .subscribe();
+}
+
+(async () => {
+  await loadHotlines();
+  subscribeJoinRequests();
+})();
+</script>
+</body>
+</html>

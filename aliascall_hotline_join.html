@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Aliascall — 핫라인 참가</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_push.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
+  --brass:#C9A24B;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+@media (min-width:760px){ body{ display:flex; justify-content:center; background:linear-gradient(180deg,#9FC2A6,#B8D3BE); } .app-shell{ max-width:430px; width:100%; box-shadow:0 0 60px rgba(0,0,0,.15); min-height:100vh; background:var(--paper); } }
+h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:20px 24px 6px; display:flex; align-items:center; gap:9px; }
+.brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:16px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+
+main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
+
+.state{ display:none; }
+.state.show{ display:block; }
+
+.hl-card{ background:var(--card); border-radius:18px; padding:26px 22px; text-align:center; }
+.hl-callsign{ display:inline-flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:var(--coral); background:var(--coral-tint); padding:5px 12px; border-radius:20px; margin-bottom:14px; }
+.hl-dot{ width:6px; height:6px; border-radius:50%; background:var(--coral); animation:hlPulse 1.8s ease-in-out infinite; }
+@keyframes hlPulse{ 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+.hl-title{ font-size:20px; margin-bottom:6px; }
+.hl-meta{ font-size:12.5px; color:var(--ink-soft); margin-bottom:22px; }
+
+.nickname-input{ width:100%; border:1.5px solid var(--line); border-radius:12px; padding:14px 16px; font-size:14px; margin-bottom:14px; text-align:center; }
+.join-btn{ width:100%; background:var(--teal); color:#fff; border:none; border-radius:12px; padding:15px; font-weight:700; font-size:14px; cursor:pointer; }
+.join-btn:disabled{ opacity:.5; }
+
+.waiting-spinner{ width:52px; height:52px; border-radius:50%; background:var(--teal-tint); display:flex; align-items:center; justify-content:center; font-size:22px; margin:0 auto 18px; animation:waitPulse 1.6s ease-in-out infinite; }
+@keyframes waitPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(31,111,107,.25); } 50%{ box-shadow:0 0 0 14px rgba(31,111,107,0); } }
+
+.result-icon{ font-size:40px; margin-bottom:12px; }
+.error-box{ background:var(--danger); color:#fff; border-radius:12px; padding:16px; font-size:13px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<header>
+  <div class="brand-mark">A</div>
+  <div class="brand-name">Alias<em>call</em></div>
+</header>
+
+<main>
+  <div class="state show" id="stateLoading">
+    <p style="text-align:center; color:var(--ink-soft); font-size:13px; margin-top:40px;">불러오는 중…</p>
+  </div>
+
+  <div class="state" id="stateError">
+    <div class="error-box" id="errorMsg">유효하지 않은 초대 링크입니다.</div>
+  </div>
+
+  <div class="state" id="stateEntry">
+    <div class="hl-card">
+      <div class="hl-callsign"><span class="hl-dot"></span><span id="hlCallsignText">LINE</span></div>
+      <div class="hl-title" id="hlTitle">핫라인</div>
+      <div class="hl-meta" id="hlMeta">인원 확인 중…</div>
+      <input type="text" class="nickname-input" id="nicknameInput" placeholder="사용하실 별명을 입력하세요" maxlength="20">
+      <button class="join-btn" id="joinBtn">참가 신청하기</button>
+      <p style="font-size:11px; color:var(--ink-soft); margin-top:12px; line-height:1.5;">별명 외 개인정보는 필요 없습니다. 개설자가 승인하면 바로 대화에 참여할 수 있어요.</p>
+    </div>
+  </div>
+
+  <div class="state" id="stateWaiting">
+    <div class="hl-card">
+      <div class="waiting-spinner">⏳</div>
+      <h3 style="margin-bottom:6px;">대기 중이에요</h3>
+      <p style="font-size:13px; color:var(--ink-soft);">개설자가 승인하면 바로 대화가 시작됩니다.<br>이 화면을 닫지 말고 잠시만 기다려주세요.</p>
+    </div>
+  </div>
+
+  <div class="state" id="stateApproved">
+    <div class="hl-card">
+      <div class="result-icon">✓</div>
+      <h3 style="margin-bottom:6px; color:var(--found);">참가가 승인됐어요</h3>
+      <p style="font-size:13px; color:var(--ink-soft); margin-bottom:18px;">이제 대화에 참여할 수 있습니다.</p>
+      <button class="join-btn" id="enterRoomBtn">대화방 입장하기</button>
+    </div>
+  </div>
+
+  <div class="state" id="stateRejected">
+    <div class="hl-card">
+      <div class="result-icon">✕</div>
+      <h3 style="margin-bottom:6px; color:var(--danger);">참가가 거절됐어요</h3>
+      <p style="font-size:13px; color:var(--ink-soft);">개설자에게 직접 문의해주세요.</p>
+    </div>
+  </div>
+</main>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function getInviteToken(){
+  return new URLSearchParams(window.location.search).get('t');
+}
+
+// 참가자 브라우저의 익명 식별값 — 발견자(finderAnonId)와는 별개 네임스페이스로 저장
+function getHotlineAnonId(){
+  let id = localStorage.getItem('aliascall_hotline_anon_id');
+  if (!id) {
+    id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    localStorage.setItem('aliascall_hotline_anon_id', id);
+  }
+  return id;
+}
+const hotlineAnonId = getHotlineAnonId();
+
+function showState(name){
+  document.querySelectorAll('.state').forEach((el) => el.classList.remove('show'));
+  document.getElementById(name).classList.add('show');
+}
+
+let inviteToken = null;
+let decisionChannel = null;
+let pollInterval = null;
+
+async function init(){
+  inviteToken = getInviteToken();
+  if (!inviteToken) {
+    document.getElementById('errorMsg').textContent = '올바르지 않은 접근입니다. 초대 링크를 다시 확인해주세요.';
+    showState('stateError');
+    return;
+  }
+
+  // 먼저 이미 신청/승인된 적 있는지 확인 (재방문 케이스)
+  try {
+    const statusRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-check-join-status`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inviteToken, memberAnonId: hotlineAnonId }),
+    });
+    const statusData = await statusRes.json();
+    if (statusRes.ok) {
+      if (statusData.status === 'approved') { showState('stateApproved'); return; }
+      if (statusData.status === 'pending') { enterWaitingState(); return; }
+      if (statusData.status === 'rejected') { showState('stateRejected'); return; }
+    }
+  } catch (e) { console.warn('[hotline] 상태 확인 실패(계속 진행)', e); }
+
+  // 신규 방문 — 핫라인 정보 조회해서 입력 화면 표시
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-lookup-by-token`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inviteToken }),
+    });
+    const data = await res.json();
+    if (!res.ok) { document.getElementById('errorMsg').textContent = data.error || '유효하지 않은 초대 링크입니다.'; showState('stateError'); return; }
+
+    document.getElementById('hlCallsignText').textContent = data.tierLabel;
+    document.getElementById('hlTitle').textContent = data.title;
+    document.getElementById('hlMeta').textContent = `${data.currentMemberCount} / ${data.maxParticipants}명 참가 중`;
+    if (data.isFull) {
+      document.getElementById('errorMsg').textContent = '정원이 가득 찼습니다.';
+      showState('stateError');
+      return;
+    }
+    showState('stateEntry');
+  } catch (e) {
+    console.error('[hotline] 조회 실패', e);
+    document.getElementById('errorMsg').textContent = '불러오지 못했어요. 잠시 후 다시 시도해주세요.';
+    showState('stateError');
+  }
+}
+
+document.getElementById('joinBtn').addEventListener('click', async () => {
+  const nickname = document.getElementById('nicknameInput').value.trim();
+  if (!nickname) { alert('별명을 입력해주세요.'); return; }
+
+  const btn = document.getElementById('joinBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-request-join`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inviteToken, memberAnonId: hotlineAnonId, nickname }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || '신청에 실패했어요.'); btn.disabled = false; return; }
+
+    if (data.status === 'approved') { showState('stateApproved'); return; }
+    if (data.status === 'rejected') { showState('stateRejected'); return; }
+    enterWaitingState();
+  } catch (e) {
+    console.error('[hotline] 신청 실패', e);
+    alert('신청에 실패했어요. 잠시 후 다시 시도해주세요.');
+    btn.disabled = false;
+  }
+});
+
+function enterWaitingState(){
+  showState('stateWaiting');
+
+  // 실시간 방송으로 승인/거절 결과를 즉시 감지
+  decisionChannel = sb.channel('hotline-join-' + inviteToken + '-' + hotlineAnonId, { config: { broadcast: { self: false } } });
+  decisionChannel
+    .on('broadcast', { event: 'decision' }, ({ payload }) => {
+      if (payload.decision === 'approve') showState('stateApproved');
+      else showState('stateRejected');
+      cleanupWaiting();
+    })
+    .subscribe();
+
+  // 놓쳤을 경우를 대비한 폴링 안전장치
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-check-join-status`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteToken, memberAnonId: hotlineAnonId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.status === 'approved') { showState('stateApproved'); cleanupWaiting(); }
+      else if (res.ok && data.status === 'rejected') { showState('stateRejected'); cleanupWaiting(); }
+    } catch (e) { /* 무시하고 다음 폴링에서 재시도 */ }
+  }, 5000);
+}
+
+function cleanupWaiting(){
+  if (decisionChannel) { try { sb.removeChannel(decisionChannel); } catch (e) {} decisionChannel = null; }
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+}
+
+document.getElementById('enterRoomBtn').addEventListener('click', () => {
+  // 2026-08-21: 실제 대화방 화면(문자/음성/영상/파일공유)은 다음 단계에서 만들 예정
+  window.location.href = 'aliascall_hotline_room.html?t=' + encodeURIComponent(inviteToken);
+});
+
+init();
+</script>
+</body>
+</html>
