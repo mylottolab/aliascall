@@ -154,6 +154,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .case-item .ci-preview{ font-size:12px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .case-item .ci-time{ font-size:10px; color:var(--ink-soft); flex-shrink:0; }
 .case-item.closed{ opacity:.6; }
+.case-item.new-highlight{ background:#FFF4D6; animation:chatNewGlow 1s ease-in-out infinite; }
+@keyframes chatNewGlow{ 0%,100%{ box-shadow:0 0 0 0 rgba(232,115,74,0); } 50%{ box-shadow:0 0 12px 4px rgba(232,115,74,.55); } }
 
 .empty-regs{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:24px; }
 .case-inbox-alert-title{ font-style:italic; font-size:12px; color:var(--ink-soft); padding:2px 2px 10px; }
@@ -831,6 +833,7 @@ async function showMyPage(session){
 // ── 2026-08-20 신설: 사건함 — 발견자와의 대화 목록, 클릭하면 대화 이어보기/답장 화면으로 이동 ──
 const CASE_CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
 let showingClosedCases = false;
+let caseInboxSnapshot = {}; // 2026-08-21 신설: 이전 목록과 비교해서 새 활동이 있으면 반짝임 표시하기 위함
 
 async function loadCaseInbox(){
   const { data: { session } } = await sb.auth.getSession();
@@ -851,11 +854,15 @@ async function loadCaseInbox(){
     }
 
     const alertTitleHtml = !showingClosedCases ? '<div class="case-inbox-alert-title">확인해야 할 알림입니다</div>' : '';
+    const isFirstLoad = Object.keys(caseInboxSnapshot).length === 0;
     listEl.innerHTML = alertTitleHtml + data.cases.map((c) => {
       const emoji = CASE_CATEGORY_EMOJI[c.category] || '❓';
       const preview = c.lastMessage
         ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? '나: ' : '') + c.lastMessage.preview)
         : '(메시지 없음)';
+      const snapKey = c.lastMessage ? c.lastMessage.createdAt + '|' + c.lastMessage.preview : '';
+      const isNewActivity = !isFirstLoad && c.lastMessage && c.lastMessage.sender !== 'owner' && caseInboxSnapshot[c.caseId] !== snapKey;
+      caseInboxSnapshot[c.caseId] = snapKey;
       const time = c.lastActivityAt ? (() => {
         const d = new Date(c.lastActivityAt);
         const now = new Date();
@@ -867,7 +874,7 @@ async function loadCaseInbox(){
       })() : '';
       const closedBadge = c.status === 'closed' ? '<span class="ci-badge">종료됨</span>' : '';
       return `
-        <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}" data-case-id="${c.caseId}">
+        <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}${isNewActivity ? ' new-highlight' : ''}" data-case-id="${c.caseId}">
           <span class="ci-emoji">${emoji}</span>
           <span class="ci-body">
             <span class="ci-title">${c.registrationTitle || '등록물'} ${closedBadge}</span>

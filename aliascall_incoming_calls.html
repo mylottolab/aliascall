@@ -135,6 +135,7 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .case-item .ci-preview{ font-size:12px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .case-item .ci-time{ font-size:10px; color:var(--ink-soft); flex-shrink:0; }
 .case-item.closed{ opacity:.6; }
+.case-item.new-highlight{ background:#FFF4D6; animation:chatNewGlow 1s ease-in-out infinite; }
 .case-inbox-empty{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:14px; }
 .case-inbox-alert-title{ font-style:italic; font-size:12px; color:var(--ink-soft); padding:2px 2px 10px; }
 
@@ -492,6 +493,7 @@ async function init(){
 
 // ── 2026-08-20 (3차) 신설: 사건함 — my_account.html/index.html과 동일 로직 ──
 let showingClosedCases = false;
+let caseInboxSnapshot = {}; // 2026-08-21 신설: 이전 목록과 비교해서 새 활동이 있으면 반짝임 표시하기 위함
 async function loadCaseInbox(){
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
@@ -511,11 +513,16 @@ async function loadCaseInbox(){
     }
 
     const alertTitleHtml = !showingClosedCases ? '<div class="case-inbox-alert-title">확인해야 할 알림입니다</div>' : '';
+    const isFirstLoad = Object.keys(caseInboxSnapshot).length === 0; // 2026-08-21: 첫 로딩 때는 전부 반짝이면 안 되니 구분
     listEl.innerHTML = alertTitleHtml + data.cases.map((c) => {
       const emoji = CATEGORY_EMOJI[c.category] || '❓';
       const preview = c.lastMessage
         ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? '나: ' : '') + c.lastMessage.preview)
         : '(메시지 없음)';
+      // 2026-08-21 신설: 이전에 봤던 내용과 다르고(=새 활동), 내가 보낸 게 아니고, 첫 로딩이 아니면 반짝임
+      const snapKey = c.lastMessage ? c.lastMessage.createdAt + '|' + c.lastMessage.preview : '';
+      const isNewActivity = !isFirstLoad && c.lastMessage && c.lastMessage.sender !== 'owner' && caseInboxSnapshot[c.caseId] !== snapKey;
+      caseInboxSnapshot[c.caseId] = snapKey;
       const time = c.lastActivityAt ? (() => {
         const d = new Date(c.lastActivityAt);
         const now = new Date();
@@ -527,7 +534,7 @@ async function loadCaseInbox(){
       })() : '';
       const closedBadge = c.status === 'closed' ? '<span class="ci-badge">종료됨</span>' : '';
       return `
-        <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}" data-case-id="${c.caseId}">
+        <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}${isNewActivity ? ' new-highlight' : ''}" data-case-id="${c.caseId}">
           <span class="ci-emoji">${emoji}</span>
           <span class="ci-body">
             <span class="ci-title">${c.registrationTitle || '등록물'} ${closedBadge}</span>
@@ -538,7 +545,10 @@ async function loadCaseInbox(){
     }).join('');
 
     listEl.querySelectorAll('.case-item').forEach((btn) => {
-      btn.addEventListener('click', () => openCaseChat(btn.dataset.caseId)); // 이 화면 안에서는 바로 열기(재이동 필요없음)
+      btn.addEventListener('click', () => {
+        btn.classList.remove('new-highlight'); // 2026-08-21: 눌러서 확인했으니 바로 반짝임 해제
+        openCaseChat(btn.dataset.caseId);
+      });
     });
   } catch (e) {
     console.error('[case] 사건함 조회 실패', e);
