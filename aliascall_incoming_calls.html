@@ -139,9 +139,11 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .case-inbox-empty{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:14px; }
 
 /* 2026-08-21 신설: 새 메시지 팝업(토스트) */
-.global-toast{ display:none; position:fixed; left:14px; right:14px; bottom:14px; z-index:200; background:var(--card); border:1.5px solid var(--line); border-radius:14px; box-shadow:0 8px 24px rgba(18,48,46,.22); padding:12px 40px 12px 14px; max-width:400px; margin:0 auto; }
-.global-toast.show{ display:block; animation:toastSlideUp .25s ease; }
-@keyframes toastSlideUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+.global-toast-overlay{ display:none; position:fixed; inset:0; z-index:198; background:rgba(0,0,0,.45); }
+.global-toast-overlay.show{ display:block; }
+.global-toast{ display:none; position:fixed; left:50%; top:58%; transform:translate(-50%,-50%); z-index:200; background:var(--card); border:1.5px solid var(--line); box-shadow:0 8px 24px rgba(18,48,46,.22); border-radius:14px; padding:16px 44px 16px 18px; width:calc(100% - 48px); max-width:360px; }
+.global-toast.show{ display:block; animation:toastPopIn .2s ease; }
+@keyframes toastPopIn{ from{ opacity:0; transform:translate(-50%,-50%) scale(.95); } to{ opacity:1; transform:translate(-50%,-50%) scale(1); } }
 .global-toast-body{ cursor:pointer; }
 .global-toast-title{ font-size:12.5px; font-weight:700; color:var(--teal-deep); margin-bottom:3px; }
 .global-toast-preview{ font-size:12px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -212,6 +214,7 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 </main>
 
 <!-- 2026-08-21 신설: 새 메시지 팝업(토스트) -->
+<div class="global-toast-overlay" id="globalToastOverlay"></div>
 <div class="global-toast" id="globalToast">
   <button class="global-toast-close" id="globalToastClose">✕</button>
   <div class="global-toast-body" id="globalToastBody">
@@ -354,13 +357,16 @@ async function logIceCandidatePairs(pcRef){
 function showGlobalToast(title, preview, onClick){
   document.getElementById('globalToastTitle').textContent = title;
   document.getElementById('globalToastPreview').textContent = preview;
+  document.getElementById('globalToastOverlay').classList.add('show');
   document.getElementById('globalToast').classList.add('show');
   document.getElementById('globalToastBody').onclick = () => { hideGlobalToast(); onClick(); };
 }
 function hideGlobalToast(){
+  document.getElementById('globalToastOverlay').classList.remove('show');
   document.getElementById('globalToast').classList.remove('show');
 }
 document.getElementById('globalToastClose').addEventListener('click', hideGlobalToast);
+document.getElementById('globalToastOverlay').addEventListener('click', hideGlobalToast); // 2026-08-21: 배경(딤 처리 영역) 눌러도 닫힘
 
 function getAudioCtx(){
   return getAliascallAudioCtx();
@@ -517,7 +523,7 @@ async function init(){
       const preview = m.message_type === 'photo' ? '📷 사진을 보냈어요' : (m.content || '').slice(0, 60);
       playDoorbell();
       loadCaseInbox();
-      showGlobalToast('💬 새 메시지가 왔어요', preview, () => openCaseChat(m.case_id));
+      showGlobalToast('👤 발견자가 답장했어요. 응답을 원하시면 여기를 클릭하세요', preview, () => openCaseChat(m.case_id));
     })
     .subscribe();
 
