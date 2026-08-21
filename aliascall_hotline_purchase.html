@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Aliascall — 핫라인 개설</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_hotline_payments.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
+  --brass:#C9A24B;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+@media (min-width:760px){ body{ display:flex; justify-content:center; background:linear-gradient(180deg,#9FC2A6,#B8D3BE); } .app-shell{ max-width:430px; width:100%; box-shadow:0 0 60px rgba(0,0,0,.15); min-height:100vh; background:var(--paper); } }
+h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:20px 24px 6px; display:flex; align-items:center; gap:9px; }
+.back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; }
+.brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:16px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+
+main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
+.page-title{ font-size:21px; margin-bottom:18px; }
+
+.login-needed{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13px; }
+
+.tier-tabs{ display:flex; gap:6px; margin-bottom:16px; }
+.tier-tab{ flex:1; border:1.5px solid var(--line); background:var(--card); border-radius:12px; padding:12px 8px; text-align:center; cursor:pointer; }
+.tier-tab.active{ border-color:var(--teal); background:var(--teal-tint); }
+.tier-tab .t-name{ font-size:12.5px; font-weight:700; margin-bottom:2px; }
+.tier-tab .t-sub{ font-size:10px; color:var(--ink-soft); }
+.tier-tab[data-tier="premium_4"].active{ border-color:var(--brass); background:rgba(201,162,75,.12); }
+
+.duration-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:18px; }
+.duration-card{ border:1.5px solid var(--line); background:var(--card); border-radius:12px; padding:14px 10px; text-align:center; cursor:pointer; }
+.duration-card.active{ border-color:var(--teal); background:var(--teal-tint); }
+.duration-card .d-months{ font-size:14px; font-weight:700; margin-bottom:4px; }
+.duration-card .d-price{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); }
+.duration-card .d-cap{ font-size:10px; color:var(--ink-soft); margin-top:2px; }
+
+.summary-card{ background:var(--card); border-radius:14px; padding:18px; margin-bottom:18px; }
+.summary-row{ display:flex; justify-content:space-between; font-size:13px; padding:6px 0; }
+.summary-row.total{ border-top:1px solid var(--line); margin-top:6px; padding-top:12px; font-weight:700; font-size:15px; }
+
+.pay-method-tabs{ display:flex; gap:8px; margin-bottom:16px; }
+.pay-method-tab{ flex:1; border:1.5px solid var(--line); background:var(--card); border-radius:10px; padding:10px; text-align:center; font-size:12.5px; font-weight:700; cursor:pointer; }
+.pay-method-tab.active{ border-color:var(--teal); background:var(--teal-tint); }
+
+.pay-btn{ width:100%; background:var(--teal); color:#fff; border:none; border-radius:12px; padding:16px; font-weight:700; font-size:14.5px; cursor:pointer; }
+.pay-btn:disabled{ opacity:.5; }
+#paypalButtonContainer{ display:none; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<header>
+  <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'">←</button>
+  <div class="brand-mark">A</div>
+  <div class="brand-name">Alias<em>call</em></div>
+</header>
+
+<main>
+  <div class="page-title">핫라인 개설</div>
+  <div class="login-needed" id="loginNeeded" style="display:none;">
+    로그인이 필요합니다.<br><br>
+    <a href="aliascall_registration_mockup.html" style="color:var(--teal); font-weight:700;">로그인/가입하러 가기</a>
+  </div>
+
+  <div id="content">
+    <div class="tier-tabs" id="tierTabs">
+      <div class="tier-tab" data-tier="hotline_1to1"><div class="t-name">핫라인</div><div class="t-sub">2인</div></div>
+      <div class="tier-tab" data-tier="economy_4"><div class="t-name">이코노미</div><div class="t-sub">4인</div></div>
+      <div class="tier-tab" data-tier="premium_4"><div class="t-name">프리미엄</div><div class="t-sub">4인</div></div>
+    </div>
+
+    <div class="duration-grid" id="durationGrid"><div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px; padding:20px;">불러오는 중…</div></div>
+
+    <div class="summary-card" id="summaryCard" style="display:none;">
+      <div class="summary-row"><span>상품</span><span id="sumTier">-</span></div>
+      <div class="summary-row"><span>기간</span><span id="sumDuration">-</span></div>
+      <div class="summary-row"><span>포함 사용량</span><span id="sumCap">-</span></div>
+      <div class="summary-row total"><span>결제 금액</span><span id="sumPrice">-</span></div>
+    </div>
+
+    <div class="pay-method-tabs">
+      <div class="pay-method-tab active" data-method="inicis">💳 국내카드</div>
+      <div class="pay-method-tab" data-method="paypal">🌐 PayPal</div>
+    </div>
+
+    <button class="pay-btn" id="inicisPayBtn" disabled>결제하고 핫라인 만들기</button>
+    <div id="paypalButtonContainer"></div>
+  </div>
+</main>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const TIER_LABEL = { hotline_1to1: '핫라인 (2인)', economy_4: '이코노미 (4인)', premium_4: '프리미엄 (4인)' };
+let allPlans = [];
+let selectedTier = 'hotline_1to1';
+let selectedDuration = 3;
+let selectedMethod = 'inicis';
+let session = null;
+
+async function init(){
+  const { data: { session: s } } = await sb.auth.getSession();
+  session = s;
+  if (!session) { document.getElementById('loginNeeded').style.display = 'block'; document.getElementById('content').style.display = 'none'; return; }
+
+  const { data: plans, error } = await sb.from('hotline_pricing_plans').select('*');
+  if (error || !plans) { document.getElementById('durationGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--danger); font-size:12.5px;">요금 정보를 불러오지 못했어요.</div>'; return; }
+  allPlans = plans;
+  renderDurations();
+}
+
+document.querySelectorAll('.tier-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tier-tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+    selectedTier = tab.dataset.tier;
+    renderDurations();
+  });
+});
+document.querySelector('.tier-tab[data-tier="hotline_1to1"]').classList.add('active');
+
+function renderDurations(){
+  const grid = document.getElementById('durationGrid');
+  const plansForTier = allPlans.filter((p) => p.tier === selectedTier).sort((a, b) => a.duration_months - b.duration_months);
+  if (plansForTier.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px;">요금 정보가 없어요.</div>'; return; }
+
+  grid.innerHTML = plansForTier.map((p) => `
+    <div class="duration-card${p.duration_months === selectedDuration ? ' active' : ''}" data-duration="${p.duration_months}">
+      <div class="d-months">${p.duration_months}개월</div>
+      <div class="d-price">${p.price_krw.toLocaleString()}원</div>
+      <div class="d-cap">${p.usage_cap_gb}GB 포함</div>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.duration-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      grid.querySelectorAll('.duration-card').forEach((c) => c.classList.remove('active'));
+      card.classList.add('active');
+      selectedDuration = Number(card.dataset.duration);
+      updateSummary();
+    });
+  });
+
+  if (!plansForTier.find((p) => p.duration_months === selectedDuration)) selectedDuration = plansForTier[0].duration_months;
+  updateSummary();
+}
+
+function currentPlan(){
+  return allPlans.find((p) => p.tier === selectedTier && p.duration_months === selectedDuration);
+}
+
+function updateSummary(){
+  const plan = currentPlan();
+  if (!plan) return;
+  document.getElementById('summaryCard').style.display = 'block';
+  document.getElementById('sumTier').textContent = TIER_LABEL[selectedTier];
+  document.getElementById('sumDuration').textContent = selectedDuration + '개월';
+  document.getElementById('sumCap').textContent = plan.usage_cap_gb + 'GB';
+  document.getElementById('sumPrice').textContent = plan.price_krw.toLocaleString() + '원';
+  document.getElementById('inicisPayBtn').disabled = false;
+}
+
+document.querySelectorAll('.pay-method-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.pay-method-tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+    selectedMethod = tab.dataset.method;
+    document.getElementById('inicisPayBtn').style.display = selectedMethod === 'inicis' ? 'block' : 'none';
+    document.getElementById('paypalButtonContainer').style.display = selectedMethod === 'paypal' ? 'block' : 'none';
+    if (selectedMethod === 'paypal') renderPaypalButton();
+  });
+});
+
+document.getElementById('inicisPayBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('inicisPayBtn');
+  btn.disabled = true;
+  btn.textContent = '결제 준비 중…';
+  try {
+    await startHotlineInicisPayment(sb, {
+      tier: selectedTier,
+      durationMonths: selectedDuration,
+      buyername: session.user.user_metadata?.nickname || '회원',
+      buyertel: '',
+      buyeremail: session.user.email || '',
+    });
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '결제하고 핫라인 만들기';
+  }
+});
+
+let paypalRendered = false;
+function renderPaypalButton(){
+  if (paypalRendered) return;
+  paypalRendered = true;
+  renderHotlinePayPalButtons(sb, 'paypalButtonContainer', { tier: selectedTier, durationMonths: selectedDuration }, (data) => {
+    window.location.href = `aliascall_payment_result.html?status=success&purpose=hotline&hotlineId=${data.hotlineId || ''}`;
+  });
+}
+
+init();
+</script>
+</body>
+</html>
