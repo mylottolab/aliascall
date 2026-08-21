@@ -36,8 +36,8 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 .tier-tabs{ display:flex; gap:6px; margin-bottom:16px; }
 .tier-tab{ flex:1; border:1.5px solid var(--line); background:var(--card); border-radius:12px; padding:12px 8px; text-align:center; cursor:pointer; }
 .tier-tab.active{ border-color:var(--teal); background:var(--teal-tint); }
-.tier-tab .t-name{ font-size:12.5px; font-weight:700; margin-bottom:2px; }
-.tier-tab .t-sub{ font-size:10px; color:var(--ink-soft); }
+.tier-tab .t-name{ font-size:11.5px; font-weight:700; margin-bottom:2px; }
+.tier-tab .t-sub{ font-size:9px; color:var(--ink-soft); }
 .tier-tab[data-tier="premium_4"].active{ border-color:var(--brass); background:rgba(201,162,75,.12); }
 
 .duration-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:18px; }
@@ -78,7 +78,8 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 
   <div id="content">
     <div class="tier-tabs" id="tierTabs">
-      <div class="tier-tab" data-tier="hotline_1to1"><div class="t-name">핫라인</div><div class="t-sub">2인</div></div>
+      <div class="tier-tab" data-tier="hotline_1to1"><div class="t-name">핫라인</div><div class="t-sub">2인·고정</div></div>
+      <div class="tier-tab" data-tier="hotline_everybody"><div class="t-name">에브리바디</div><div class="t-sub">2인·교체가능</div></div>
       <div class="tier-tab" data-tier="economy_4"><div class="t-name">이코노미</div><div class="t-sub">4인</div></div>
       <div class="tier-tab" data-tier="premium_4"><div class="t-name">프리미엄</div><div class="t-sub">4인</div></div>
     </div>
@@ -109,7 +110,7 @@ const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const TIER_LABEL = { hotline_1to1: '핫라인 (2인)', economy_4: '이코노미 (4인)', premium_4: '프리미엄 (4인)' };
+const TIER_LABEL = { hotline_1to1: '핫라인 (2인)', hotline_everybody: '핫라인 에브리바디 (2인)', economy_4: '이코노미 (4인)', premium_4: '프리미엄 (4인)' };
 let allPlans = [];
 let selectedTier = 'hotline_1to1';
 let selectedDuration = 3;

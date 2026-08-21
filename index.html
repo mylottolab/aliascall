@@ -70,8 +70,9 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .hl-price{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; opacity:.65; }
 
 /* 2인 핫라인 — 산호색, 세로로 긴 카드(오른쪽 두 카드를 합친 높이) */
-.hl-solo{ flex:0 0 42%; background:linear-gradient(155deg, rgba(232,115,74,.16), rgba(232,115,74,.05)); border:1px solid rgba(232,115,74,.3); color:#fff; display:flex; flex-direction:column; justify-content:center; }
-.hl-solo .hl-name{ font-size:17px; }
+.hl-solo{ background:linear-gradient(155deg, rgba(232,115,74,.16), rgba(232,115,74,.05)); border:1px solid rgba(232,115,74,.3); color:#fff; }
+.hl-solo.hl-everybody{ background:linear-gradient(155deg, rgba(232,115,74,.1), rgba(232,115,74,.03)); border:1px solid rgba(232,115,74,.22); }
+.hl-solo .hl-name{ font-size:14.5px; }
 .hl-solo .hl-callsign, .hl-solo .hl-dot{ color:var(--coral); }
 
 /* 이코노미 — 기존 청록색 */
@@ -239,12 +240,20 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <p class="hotline-desc">누구나 아는 메신저 말고, 둘 또는 몇 명만 아는 회선을 엽니다.</p>
   </div>
   <div class="hotline-grid">
-    <a class="hotline-card hl-solo" href="aliascall_hotline_purchase.html">
-      <div class="hl-callsign"><span class="hl-dot"></span>LINE·02</div>
-      <div class="hl-name">핫라인</div>
-      <div class="hl-sub">단둘이, 조용히</div>
-      <div class="hl-price">3개월 3,900원부터</div>
-    </a>
+    <div class="hotline-stack">
+      <a class="hotline-card hl-solo" href="aliascall_hotline_purchase.html">
+        <div class="hl-callsign"><span class="hl-dot"></span>LINE·02</div>
+        <div class="hl-name">핫라인</div>
+        <div class="hl-sub">단둘이, 고정 상대</div>
+        <div class="hl-price">3개월 3,900원부터</div>
+      </a>
+      <a class="hotline-card hl-solo hl-everybody" href="aliascall_hotline_purchase.html">
+        <div class="hl-callsign"><span class="hl-dot"></span>LINE·02E</div>
+        <div class="hl-name">에브리바디</div>
+        <div class="hl-sub">단둘이, 상대 교체 가능</div>
+        <div class="hl-price">3개월 5,000원부터</div>
+      </a>
+    </div>
     <div class="hotline-stack">
       <a class="hotline-card hl-eco" href="aliascall_hotline_purchase.html">
         <div class="hl-callsign"><span class="hl-dot"></span>LINE·04E</div>

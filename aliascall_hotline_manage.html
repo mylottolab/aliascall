@@ -85,7 +85,7 @@ const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const TIER_LABEL = { hotline_1to1: '핫라인 (2명)', economy_4: '이코노미 (4명)', premium_4: '프리미엄 (4명)' };
+const TIER_LABEL = { hotline_1to1: '핫라인 (2명)', hotline_everybody: '핫라인 에브리바디 (2명)', economy_4: '이코노미 (4명)', premium_4: '프리미엄 (4명)' };
 
 async function loadHotlines(){
   const { data: { session } } = await sb.auth.getSession();
@@ -128,8 +128,8 @@ async function renderHotlineItem(h){
     <div class="section-label">참가자 (${members.length}/${h.max_participants})</div>
     ${members.map((m) => `
       <div class="member-row">
-        <span>${m.nickname}</span>
-        ${m.role === 'owner' ? '<span class="member-badge">개설자</span>' : ''}
+        <span style="flex:1;">${m.nickname}</span>
+        ${m.role === 'owner' ? '<span class="member-badge">개설자</span>' : (h.tier === 'hotline_everybody' ? `<button class="req-btn reject" data-action="remove-member" data-hotline="${h.id}" data-anon="${m.member_anon_id}" data-nick="${m.nickname}">내보내기</button>` : '')}
       </div>
     `).join('')}
   `;
@@ -185,6 +185,31 @@ function wireHotlineItems(){
         loadHotlines(); // 목록 새로고침
       } catch (e) {
         console.error('[hotline] 승인/거절 실패', e);
+        alert('처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+        btn.disabled = false;
+      }
+    });
+  });
+
+  // 2026-08-21 신설: "상대방 내보내기" — 핫라인 에브리바디(상대방 교체) 기능
+  document.querySelectorAll('[data-action="remove-member"]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (!confirm(`${btn.dataset.nick}님을 내보내시겠어요? 초대 링크가 새로 발급되며, 예전 링크는 더 이상 쓸 수 없습니다.`)) return;
+      btn.disabled = true;
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-remove-member`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+          body: JSON.stringify({ hotlineId: btn.dataset.hotline, memberAnonId: btn.dataset.anon }),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || '처리에 실패했어요.'); btn.disabled = false; return; }
+        alert('내보냈습니다. 새 초대 링크가 발급되었어요 — 목록에서 확인해주세요.');
+        loadHotlines();
+      } catch (e) {
+        console.error('[hotline] 상대방 내보내기 실패', e);
         alert('처리에 실패했어요. 잠시 후 다시 시도해주세요.');
         btn.disabled = false;
       }
