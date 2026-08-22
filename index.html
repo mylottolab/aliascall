@@ -38,14 +38,10 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
   .app-shell{ max-width:480px; width:100%; min-height:100vh; }
 }
 
-.hero{ padding:36px 24px 14px; text-align:center; position:relative; }
+.hero{ padding:16px 24px 4px; text-align:center; position:relative; min-height:46px; }
 .lang-toggle{ position:absolute; top:16px; right:16px; display:flex; gap:4px; background:rgba(255,255,255,.1); border-radius:20px; padding:3px; }
 .lang-toggle button{ border:none; background:none; color:rgba(255,255,255,.6); font-size:11px; font-weight:700; padding:5px 10px; border-radius:16px; cursor:pointer; }
 .lang-toggle button.active{ background:var(--coral); color:#fff; }
-.brand-mark{ width:52px; height:52px; border-radius:14px; background:var(--coral); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:26px; font-family:'Space Grotesk',sans-serif; margin:0 auto 14px; }
-.brand-name{ font-size:22px; font-weight:600; }
-.brand-name em{ font-style:normal; color:var(--coral); }
-.tagline{ font-size:12.5px; color:rgba(255,255,255,.6); margin-top:6px; }
 
 .grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; padding:26px 24px; max-width:360px; margin:0 auto; }
 
@@ -208,9 +204,6 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <button data-lang="ko" class="active">KR</button>
     <button data-lang="en">EN</button>
   </div>
-  <div class="brand-mark">A</div>
-  <div class="brand-name">Alias<em>call</em></div>
-  <div class="tagline" data-i18n="tagline">실제 번호 노출 없이, QR 하나로 바로 연결</div>
 </div>
 
 <div class="quick-search">
