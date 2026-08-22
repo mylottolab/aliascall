@@ -726,6 +726,7 @@ function openResumedChat(caseId, caseData){
   currentMode = 'chat';
   currentCaseId = caseId;
   renderedMsgIds = new Set();
+  ownerLastReadAt = caseData.ownerLastReadAt || null; // 2026-08-23 신설
 
   const overlay = document.getElementById('callingOverlay');
   overlay.classList.add('show');
@@ -749,6 +750,7 @@ function openResumedChat(caseId, caseData){
 
   subscribeCaseRealtime(currentCaseId);
   renderFinderPushToggle();
+  markCaseAsRead(); // 2026-08-23 신설
 
   if (caseMessagePollInterval) clearInterval(caseMessagePollInterval);
   caseMessagePollInterval = setInterval(() => {
@@ -1147,6 +1149,7 @@ async function startCall(mode){
     if (openRes.ok) {
       currentCaseId = openData.caseId;
       renderedMsgIds = new Set();
+      ownerLastReadAt = openData.ownerLastReadAt || null; // 2026-08-23 신설
       let lastEl2 = null, lastMsg2 = null;
       (openData.messages || []).forEach((m) => { const el = appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'); renderedMsgIds.add(m.id); lastEl2 = el; lastMsg2 = m; });
       if (lastMsg2 && lastMsg2.sender !== 'finder') markNewReceivedHighlight(lastEl2);
@@ -1536,7 +1539,10 @@ function subscribeCaseRealtime(caseId){
       renderedMsgIds.add(payload.id);
       const who = payload.sender === 'finder' ? 'me' : 'them';
       const el = appendChatMessage(payload, who);
-      if (who === 'them') { playChatPing(); markNewReceivedHighlight(el); }
+      if (who === 'them') { playChatPing(); markNewReceivedHighlight(el); markCaseAsRead(); } // 2026-08-23 수정: 실시간으로 받자마자 읽음 처리
+    })
+    .on('broadcast', { event: 'read-receipt' }, ({ payload }) => { // 2026-08-23 신설
+      if (payload.role === 'owner') { ownerLastReadAt = payload.readAt; refreshReadTags(); }
     })
     .subscribe();
 }
@@ -1644,6 +1650,7 @@ async function startLiveChatOnly(){
   }
   currentCaseId = openData.caseId;
   renderedMsgIds = new Set();
+  ownerLastReadAt = openData.ownerLastReadAt || null; // 2026-08-23 신설
   let lastEl3 = null, lastMsg3 = null;
   (openData.messages || []).forEach((m) => { const el = appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them'); renderedMsgIds.add(m.id); lastEl3 = el; lastMsg3 = m; });
   if (lastMsg3 && lastMsg3.sender !== 'finder') markNewReceivedHighlight(lastEl3);
@@ -1660,6 +1667,7 @@ async function startLiveChatOnly(){
 
   subscribeCaseRealtime(currentCaseId);
   renderFinderPushToggle(); // 2026-08-21
+  markCaseAsRead(); // 2026-08-23 신설
 
   // ⚠ 2026-08-20 신설: 실시간 방송을 놓쳤을 경우의 안전장치 — 채팅창이 열려있는 동안
   // 8초마다 조용히 다시 확인해서, 놓친 메시지가 있으면 자동으로 채워넣음 (새로고침 불필요)
@@ -1687,12 +1695,16 @@ async function refreshCaseMessages(caseId, silent){
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '대화 불러오기 실패');
+    ownerLastReadAt = data.ownerLastReadAt || ownerLastReadAt; // 2026-08-23 신설
+    refreshReadTags();
+    let gotNewFromOwner = false;
     (data.messages || []).forEach((m) => {
       if (renderedMsgIds.has(m.id)) return;
       renderedMsgIds.add(m.id);
       const el = appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them');
-      if (silent && m.sender !== 'finder') { playChatPing(); markNewReceivedHighlight(el); }
+      if (silent && m.sender !== 'finder') { playChatPing(); markNewReceivedHighlight(el); gotNewFromOwner = true; }
     });
+    if (gotNewFromOwner) markCaseAsRead(); // 2026-08-23 신설: 채팅화면을 보고 있는 중이니 바로 읽음 처리
     if (data.status === 'closed') {
       document.getElementById('chatClosedNote').classList.add('show');
       document.getElementById('chatInput').disabled = true;
@@ -1807,7 +1819,7 @@ async function sendChatPhoto(file){
     // 먼저 이 메시지를 발견해서 화면에 붙여버릴 수 있음(네트워크가 느릴 때 랜덤하게 발생) —
     // 이미 붙어있으면 또 붙이지 않도록 renderedMsgIds를 먼저 확인
     if (!msgData.messageId || !renderedMsgIds.has(msgData.messageId)) {
-      appendChatMessage({ message_type: 'photo', content: uploadData.url, created_at: new Date().toISOString() }, 'me');
+      appendChatMessage({ id: msgData.messageId, message_type: 'photo', content: uploadData.url, created_at: new Date().toISOString() }, 'me');
       if (msgData.messageId) renderedMsgIds.add(msgData.messageId);
     }
     attemptFinderPushSubscribe(currentCaseId);
@@ -1863,6 +1875,28 @@ function insertDateDividerIfNeeded(list, createdAt){
   list.appendChild(divider);
 }
 
+// 2026-08-23 신설: 읽음 표시 — 여기(발견자 화면)에서 "상대방"은 소유자
+let ownerLastReadAt = null;
+const messageCreatedAtCache = new Map(); // messageId -> created_at (내가 보낸 메시지만 추적하면 됨)
+function isReadByOtherParty(createdAt){
+  return !!(createdAt && ownerLastReadAt && new Date(ownerLastReadAt) >= new Date(createdAt));
+}
+function refreshReadTags(){
+  messageCreatedAtCache.forEach((createdAt, messageId) => {
+    const statusEl = document.querySelector('.msg-time-row[data-message-id="' + messageId + '"] .msg-read-status');
+    if (statusEl) statusEl.textContent = isReadByOtherParty(createdAt) ? '읽음' : '';
+  });
+}
+async function markCaseAsRead(){
+  if (!currentCaseId) return;
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-mark-read`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caseId: currentCaseId, finderAnonId }),
+    });
+  } catch (e) { /* 읽음표시 실패는 조용히 무시 */ }
+}
+
 function appendChatMessage(msg, who){
   const list = document.getElementById('chatMessages');
   // 2026-08-20 (2차): 통화 시도 기록(call_log)은 대화 상대 말풍선이 아니라, 가운데 정렬된
@@ -1903,12 +1937,15 @@ function appendChatMessage(msg, who){
   }
   list.appendChild(el);
 
-  // 2026-08-23 신설: 시간 표시
+  // 2026-08-23 신설: 시간 표시 + 읽음 상태(내가 보낸 메시지만)
   if (msg.created_at) {
+    if (msg.id) el.dataset.messageId = msg.id;
     const timeRow = document.createElement('div');
     timeRow.className = 'msg-time-row ' + (who === 'me' ? 'me' : 'them');
-    timeRow.textContent = formatKoreanTime(msg.created_at);
+    if (msg.id) timeRow.dataset.messageId = msg.id;
+    timeRow.innerHTML = `<span class="msg-time-text">${formatKoreanTime(msg.created_at)}</span>` + (who === 'me' ? '<span class="msg-read-status"></span>' : '');
     list.appendChild(timeRow);
+    if (who === 'me' && msg.id) { messageCreatedAtCache.set(msg.id, msg.created_at); refreshReadTags(); }
   }
 
   list.scrollTop = list.scrollHeight;
@@ -1946,7 +1983,7 @@ async function sendChatMessage(){
     if (!res.ok) throw new Error(data.error || '전송 실패');
     // ⚠ 2026-08-20 (2차) 수정: 서버 응답 전에 폴링이 먼저 렌더링했을 수 있어 중복 방지 확인
     if (!data.messageId || !renderedMsgIds.has(data.messageId)) {
-      appendChatMessage({ message_type: 'text', content: text, created_at: new Date().toISOString() }, 'me');
+      appendChatMessage({ id: data.messageId, message_type: 'text', content: text, created_at: new Date().toISOString() }, 'me');
       if (data.messageId) renderedMsgIds.add(data.messageId);
     }
     input.value = '';
