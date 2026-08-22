@@ -56,6 +56,16 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 .pay-method-tab.active{ border-color:var(--teal); background:var(--teal-tint); }
 
 .pay-btn{ width:100%; background:var(--teal); color:#fff; border:none; border-radius:12px; padding:16px; font-weight:700; font-size:14.5px; cursor:pointer; }
+
+/* 2026-08-21 신설: 종단간 암호화 토글 + 열쇠(키) 노출 화면 */
+.secure-toggle-row{ display:flex; align-items:center; gap:9px; background:var(--card); border:1.5px solid var(--brass); border-radius:12px; padding:13px 14px; margin-bottom:16px; cursor:pointer; font-size:12.5px; font-weight:600; }
+.secure-toggle-row input{ width:17px; height:17px; accent-color:var(--brass); flex-shrink:0; }
+.secure-toggle-note{ font-weight:400; color:var(--ink-soft); font-size:11px; }
+.key-reveal-card{ background:var(--card); border-radius:16px; padding:26px 22px; text-align:center; }
+.key-reveal-icon{ font-size:36px; margin-bottom:8px; }
+.key-link-row{ display:flex; gap:6px; }
+.key-link-row input{ flex:1; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; font-size:10.5px; font-family:'IBM Plex Mono',monospace; color:var(--ink-soft); background:var(--teal-tint); }
+.key-link-row button{ background:var(--teal); color:#fff; border:none; border-radius:10px; padding:0 16px; font-size:12px; font-weight:700; cursor:pointer; }
 .pay-btn:disabled{ opacity:.5; }
 #paypalButtonContainer{ display:none; }
 </style>
@@ -86,6 +96,12 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 
     <div class="duration-grid" id="durationGrid"><div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px; padding:20px;">불러오는 중…</div></div>
 
+    <!-- 2026-08-21 신설: 종단간 암호화 토글 -->
+    <label class="secure-toggle-row" id="secureToggleRow">
+      <input type="checkbox" id="secureToggle">
+      <span>🔒 종단간 암호화 추가 <span class="secure-toggle-note">(저희도 대화 내용을 못 봅니다 · +50%)</span></span>
+    </label>
+
     <div class="summary-card" id="summaryCard" style="display:none;">
       <div class="summary-row"><span>상품</span><span id="sumTier">-</span></div>
       <div class="summary-row"><span>기간</span><span id="sumDuration">-</span></div>
@@ -101,21 +117,44 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
     <button class="pay-btn" id="inicisPayBtn" disabled>결제하고 핫라인 만들기</button>
     <div id="paypalButtonContainer"></div>
   </div>
+
+  <!-- 2026-08-21 신설: 암호화 상품 결제 성공시(PayPal 경로), 여기서 바로 열쇠(초대링크)를 보여줌 -->
+  <div id="secureKeyReveal" style="display:none;">
+    <div class="key-reveal-card">
+      <div class="key-reveal-icon">🔑</div>
+      <h3 style="margin-bottom:8px;">핫라인이 만들어졌어요</h3>
+      <p style="font-size:12.5px; color:var(--danger); font-weight:700; line-height:1.6; margin-bottom:16px;">
+        아래 링크를 지금 꼭 저장해두세요.<br>이 링크(정확히는 <span class="mono">#k=</span> 뒷부분)를 잃어버리면, 저희도 포함해서 <u>아무도</u> 이 대화를 복구할 수 없습니다.
+      </p>
+      <div class="key-link-row">
+        <input type="text" id="ownerLinkOutput" readonly>
+        <button id="copyOwnerLinkBtn">복사</button>
+      </div>
+      <button class="pay-btn" style="margin-top:16px;" onclick="window.location.href='aliascall_hotline_manage.html'">확인했어요, 관리화면으로</button>
+    </div>
+  </div>
 </main>
 
 </div>
 
+<script src="aliascall_e2ee.js"></script>
 <script>
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+
 const TIER_LABEL = { hotline_1to1: '핫라인 (2인)', hotline_everybody: '핫라인 에브리바디 (2인)', economy_4: '이코노미 (4인)', premium_4: '프리미엄 (4인)' };
 let allPlans = [];
-let selectedTier = 'hotline_1to1';
+let selectedBaseTier = 'hotline_1to1';
 let selectedDuration = 3;
 let selectedMethod = 'inicis';
 let session = null;
+
+// 2026-08-21 신설: 토글이 켜져있으면 실제로 조회/결제할 tier는 "_secure"가 붙은 버전
+function effectiveTier(){
+  return selectedBaseTier + (document.getElementById('secureToggle').checked ? '_secure' : '');
+}
 
 async function init(){
   const { data: { session: s } } = await sb.auth.getSession();
@@ -132,16 +171,17 @@ document.querySelectorAll('.tier-tab').forEach((tab) => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tier-tab').forEach((t) => t.classList.remove('active'));
     tab.classList.add('active');
-    selectedTier = tab.dataset.tier;
+    selectedBaseTier = tab.dataset.tier;
     renderDurations();
   });
 });
 document.querySelector('.tier-tab[data-tier="hotline_1to1"]').classList.add('active');
+document.getElementById('secureToggle').addEventListener('change', renderDurations);
 
 function renderDurations(){
   const grid = document.getElementById('durationGrid');
-  const plansForTier = allPlans.filter((p) => p.tier === selectedTier).sort((a, b) => a.duration_months - b.duration_months);
-  if (plansForTier.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px;">요금 정보가 없어요.</div>'; return; }
+  const plansForTier = allPlans.filter((p) => p.tier === effectiveTier()).sort((a, b) => a.duration_months - b.duration_months);
+  if (plansForTier.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px;">요금 정보가 없어요.</div>'; document.getElementById('summaryCard').style.display = 'none'; document.getElementById('inicisPayBtn').disabled = true; return; }
 
   grid.innerHTML = plansForTier.map((p) => `
     <div class="duration-card${p.duration_months === selectedDuration ? ' active' : ''}" data-duration="${p.duration_months}">
@@ -165,14 +205,14 @@ function renderDurations(){
 }
 
 function currentPlan(){
-  return allPlans.find((p) => p.tier === selectedTier && p.duration_months === selectedDuration);
+  return allPlans.find((p) => p.tier === effectiveTier() && p.duration_months === selectedDuration);
 }
 
 function updateSummary(){
   const plan = currentPlan();
   if (!plan) return;
   document.getElementById('summaryCard').style.display = 'block';
-  document.getElementById('sumTier').textContent = TIER_LABEL[selectedTier];
+  document.getElementById('sumTier').textContent = TIER_LABEL[selectedBaseTier] + (document.getElementById('secureToggle').checked ? ' 🔒Secure' : '');
   document.getElementById('sumDuration').textContent = selectedDuration + '개월';
   document.getElementById('sumCap').textContent = plan.usage_cap_gb + 'GB';
   document.getElementById('sumPrice').textContent = plan.price_krw.toLocaleString() + '원';
@@ -190,13 +230,23 @@ document.querySelectorAll('.pay-method-tab').forEach((tab) => {
   });
 });
 
+// 2026-08-21 신설: 결제 시작 전, 암호화 상품이면 미리 키를 만들어서 세션에 잠깐 보관해둠
+// (서버로는 절대 안 보냄 — 결제 완료 후 이 값을 다시 꺼내서 초대링크의 #뒷부분에 붙임)
+async function prepareSecureKeyIfNeeded(){
+  if (!document.getElementById('secureToggle').checked) return null;
+  const key = await e2eeGenerateKeyBase64();
+  sessionStorage.setItem('aliascall_pending_e2ee_key', key);
+  return key;
+}
+
 document.getElementById('inicisPayBtn').addEventListener('click', async () => {
   const btn = document.getElementById('inicisPayBtn');
   btn.disabled = true;
   btn.textContent = '결제 준비 중…';
   try {
+    await prepareSecureKeyIfNeeded();
     await startHotlineInicisPayment(sb, {
-      tier: selectedTier,
+      tier: effectiveTier(),
       durationMonths: selectedDuration,
       buyername: session.user.user_metadata?.nickname || '회원',
       buyertel: '',
@@ -212,10 +262,31 @@ let paypalRendered = false;
 function renderPaypalButton(){
   if (paypalRendered) return;
   paypalRendered = true;
-  renderHotlinePayPalButtons(sb, 'paypalButtonContainer', { tier: selectedTier, durationMonths: selectedDuration }, (data) => {
-    window.location.href = `aliascall_payment_result.html?status=success&purpose=hotline&hotlineId=${data.hotlineId || ''}`;
+  renderHotlinePayPalButtons(sb, 'paypalButtonContainer', { tier: effectiveTier(), durationMonths: selectedDuration }, async (data) => {
+    const pendingKey = sessionStorage.getItem('aliascall_pending_e2ee_key');
+    if (pendingKey && data.inviteToken) {
+      // 2026-08-21: 암호화 상품 — 결제 성공 즉시 여기서 열쇠(링크) 보여줌 (다른 화면으로 안 넘어감)
+      sessionStorage.removeItem('aliascall_pending_e2ee_key');
+      const ownerLink = `${window.location.origin}/aliascall_hotline_room.html?hotline=${data.hotlineId}#k=${pendingKey}`;
+      document.getElementById('ownerLinkOutput').value = ownerLink;
+      document.getElementById('content').style.display = 'none';
+      document.getElementById('secureKeyReveal').style.display = 'block';
+      try { localStorage.setItem('aliascall_hotline_key_' + data.hotlineId, pendingKey); } catch (e) {}
+    } else {
+      window.location.href = `aliascall_payment_result.html?status=success&purpose=hotline&hotlineId=${data.hotlineId || ''}`;
+    }
   });
 }
+
+document.getElementById('copyOwnerLinkBtn').addEventListener('click', () => {
+  const input = document.getElementById('ownerLinkOutput');
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = document.getElementById('copyOwnerLinkBtn');
+    const original = btn.textContent;
+    btn.textContent = '복사됨!';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  });
+});
 
 init();
 </script>

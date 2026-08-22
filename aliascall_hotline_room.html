@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Aliascall — 핫라인</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_e2ee.js"></script>
 <script src="aliascall_push.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -85,6 +86,16 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 
 <div class="state show" id="stateLoading"><div class="loading-state">불러오는 중…</div></div>
 <div class="state" id="stateError"><div class="loading-state" id="errorMsg">접근할 수 없습니다.</div></div>
+
+<!-- 2026-08-21 신설: 암호화 상품인데 열쇠(키)가 없을 때 — 직접 입력할 수 있게 함 -->
+<div class="state" id="stateKeyNeeded">
+  <div class="loading-state" style="text-align:left;">
+    <div style="font-size:32px; text-align:center; margin-bottom:10px;">🔒</div>
+    <p style="text-align:center; margin-bottom:16px;">이 대화방은 암호화되어 있어요.<br>초대링크에 포함된 열쇠가 필요합니다.</p>
+    <input type="text" id="manualKeyInput" placeholder="열쇠(#k= 뒷부분)를 붙여넣으세요" style="width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:10px; padding:12px; font-size:12.5px; margin-bottom:10px;">
+    <button id="manualKeySubmitBtn" style="width:100%; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; cursor:pointer;">입장하기</button>
+  </div>
+</div>
 
 <div class="state" id="stateChat">
   <div class="chat-messages" id="chatMessages"></div>
@@ -182,14 +193,31 @@ async function init(){
 
     hotlineId = data.hotlineId;
     mySenderAnonId = data.mySenderAnonId;
+    roomIsSecure = isSecureTier(data.tier);
     (data.members || []).forEach((m) => { memberNicknames[m.member_anon_id] = m.nickname; });
     myNickname = memberNicknames[mySenderAnonId] || '나';
 
-    document.getElementById('roomTitle').textContent = data.title;
+    // 2026-08-21 신설: 암호화 상품이면, URL의 #k=(가장 우선) 또는 이 브라우저에 저장된 열쇠를 찾음
+    if (roomIsSecure) {
+      const keyFromUrl = e2eeReadKeyFromUrlFragment();
+      const keyFromCache = localStorage.getItem('aliascall_hotline_key_' + hotlineId);
+      const keyBase64 = keyFromUrl || keyFromCache;
+      if (!keyBase64) { showState('stateKeyNeeded'); return; }
+      try {
+        roomKey = await e2eeImportKey(keyBase64);
+        localStorage.setItem('aliascall_hotline_key_' + hotlineId, keyBase64); // 다음 방문을 위해 이 브라우저에 저장해둠
+      } catch (e) {
+        console.error('[hotline-room] 열쇠 형식이 올바르지 않음', e);
+        showState('stateKeyNeeded');
+        return;
+      }
+    }
+
+    document.getElementById('roomTitle').textContent = data.title + (roomIsSecure ? ' 🔒' : '');
     document.getElementById('roomMeta').textContent = `${(data.members || []).length} / ${data.maxParticipants}명`;
     document.getElementById('bottomNav').style.display = 'flex';
 
-    (data.messages || []).forEach((m) => { appendChatMessage(m); renderedMsgIds.add(m.id); });
+    for (const m of (data.messages || [])) { await appendChatMessage(m); renderedMsgIds.add(m.id); }
     showState('stateChat');
     subscribeChat();
   } catch (e) {
@@ -199,14 +227,23 @@ async function init(){
   }
 }
 
+// 2026-08-21 신설: "열쇠 직접 입력" 화면의 입장 버튼 — URL에 열쇠를 붙인 뒤 처음부터 다시 시도함
+document.getElementById('manualKeySubmitBtn').addEventListener('click', () => {
+  const val = document.getElementById('manualKeyInput').value.trim().replace(/^#?k=/, '');
+  if (!val) { alert('열쇠를 입력해주세요.'); return; }
+  window.location.hash = 'k=' + val;
+  showState('stateLoading');
+  init();
+});
+
 function subscribeChat(){
   if (chatChannel) { try { sb.removeChannel(chatChannel); } catch (e) {} }
   chatChannel = sb.channel('hotline-' + hotlineId, { config: { broadcast: { self: false } } });
   chatChannel
-    .on('broadcast', { event: 'new-message' }, ({ payload }) => {
+    .on('broadcast', { event: 'new-message' }, async ({ payload }) => {
       if (renderedMsgIds.has(payload.id)) return;
       renderedMsgIds.add(payload.id);
-      appendChatMessage(payload);
+      await appendChatMessage(payload);
       if (payload.sender_anon_id !== mySenderAnonId) playChatPing();
     })
     .subscribe();
@@ -215,7 +252,26 @@ function subscribeChat(){
 let currentSegmentIndex = 0; // 2026-08-21: 상대방이 바뀔 때마다 늘어남 — 구간별 배경색 구분에 씀
 const SEGMENT_COLORS = ['#FFFFFF', '#EAF3F1', '#FDEFE7', '#F0EDE3', '#E9EEF6']; // 흰색(기본) 포함 5색 순환
 
-function appendChatMessage(msg){
+let roomIsSecure = false;
+let roomKey = null; // CryptoKey 객체 — 암호화 상품일 때만 채워짐
+
+// 2026-08-21 신설: 암호화 파일(사진/동영상/문서)을 내려받아 복호화한 뒤, 화면에 쓸 수 있는
+// blob: URL로 만들어서 돌려줌. 암호화 상품이 아니면 원래 URL을 그대로 반환.
+async function resolveMediaUrl(url, mimeType){
+  if (!roomIsSecure) return url;
+  try {
+    const res = await fetch(url);
+    const encryptedBytes = new Uint8Array(await res.arrayBuffer());
+    const decryptedBuf = await e2eeDecryptBytes(roomKey, encryptedBytes);
+    const blob = new Blob([decryptedBuf], { type: mimeType || 'application/octet-stream' });
+    return URL.createObjectURL(blob);
+  } catch (e) {
+    console.error('[hotline-room] 파일 복호화 실패', e);
+    return null;
+  }
+}
+
+async function appendChatMessage(msg){
   const list = document.getElementById('chatMessages');
   const isMe = msg.sender_anon_id === mySenderAnonId;
 
@@ -253,24 +309,51 @@ function appendChatMessage(msg){
 
   if (msg.message_type === 'photo') {
     const img = document.createElement('img');
-    img.src = msg.content; img.className = 'chat-photo';
-    img.addEventListener('click', () => openLightbox('<img src="' + msg.content + '" style="max-width:100%;max-height:85vh;border-radius:8px;">'));
-    el.appendChild(img);
+    img.className = 'chat-photo';
+    img.alt = '사진';
+    const src = await resolveMediaUrl(msg.content, msg.original_mime_type);
+    if (!src) { el.textContent = '🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)'; }
+    else {
+      img.src = src;
+      img.addEventListener('click', () => openLightbox('<img src="' + src + '" style="max-width:100%;max-height:85vh;border-radius:8px;">'));
+      el.appendChild(img);
+    }
   } else if (msg.message_type === 'video') {
-    const vid = document.createElement('video');
-    vid.src = msg.content; vid.className = 'chat-video'; vid.controls = true;
-    el.appendChild(vid);
+    const src = await resolveMediaUrl(msg.content, msg.original_mime_type);
+    if (!src) { el.textContent = '🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)'; }
+    else {
+      const vid = document.createElement('video');
+      vid.src = src; vid.className = 'chat-video'; vid.controls = true;
+      el.appendChild(vid);
+    }
   } else if (msg.message_type === 'document') {
+    // 문서는 클릭하는 순간에 복호화(미리 다 받아두면 낭비라서) — 클릭 핸들러 안에서 처리
     const a = document.createElement('a');
-    a.href = msg.content; a.target = '_blank'; a.className = 'chat-doc';
-    a.innerHTML = '📄 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (msg.file_name || '문서 파일') + '</span>';
+    a.href = 'javascript:void(0)'; a.className = 'chat-doc';
+    const fileName = roomIsSecure ? await safeDecryptText(msg.file_name) : (msg.file_name || '문서 파일');
+    a.innerHTML = '📄 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (fileName || '문서 파일') + '</span>';
+    a.addEventListener('click', async () => {
+      a.style.opacity = '.5';
+      const src = await resolveMediaUrl(msg.content, msg.original_mime_type);
+      a.style.opacity = '1';
+      if (!src) { alert('복호화에 실패했어요.'); return; }
+      const dl = document.createElement('a');
+      dl.href = src; dl.download = fileName || '문서파일'; dl.click();
+    });
     el.appendChild(a);
   } else {
-    el.textContent = msg.content;
+    el.textContent = roomIsSecure ? await safeDecryptText(msg.content) : msg.content;
   }
 
   list.appendChild(el);
   list.scrollTop = list.scrollHeight;
+}
+
+// 복호화 실패해도 화면이 안 깨지게 감싸는 헬퍼
+async function safeDecryptText(cipherB64){
+  if (!cipherB64) return cipherB64;
+  try { return await e2eeDecryptText(roomKey, cipherB64); }
+  catch (e) { console.error('[hotline-room] 문자 복호화 실패', e); return '🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)'; }
 }
 
 function openLightbox(html){
@@ -288,13 +371,17 @@ async function sendChatMessage(){
   if (!text || !hotlineId) return;
   input.value = '';
   try {
+    // 2026-08-21 신설: 암호화 상품이면 서버로 보내기 전에 브라우저에서 먼저 암호화함
+    const payloadText = roomIsSecure ? await e2eeEncryptText(roomKey, text) : text;
     const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
       method: 'POST', headers: authHeaders(),
-      body: JSON.stringify({ hotlineId, text, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+      body: JSON.stringify({ hotlineId, text: payloadText, memberAnonId: accessToken ? undefined : hotlineAnonId }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-    appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, message_type: 'text', content: text });
+    // ⚠ 화면에 바로 보여줄 때도 암호문(payloadText)을 넘김 — appendChatMessage가 암호화 상품이면
+    // 항상 복호화를 시도하므로, 평문을 그대로 넘기면 오히려 복호화 실패로 처리됨
+    await appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, message_type: 'text', content: payloadText });
     renderedMsgIds.add(data.messageId);
   } catch (e) {
     console.error('[hotline-room] 메시지 전송 실패', e);
@@ -325,12 +412,20 @@ async function uploadAndSendFile(file){
   if (file.size > limitMb * 1024 * 1024) { alert(`파일이 너무 커요 (최대 ${limitMb}MB).`); return; }
 
   try {
-    const base64Data = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+    let base64Data;
+    if (roomIsSecure) {
+      // 2026-08-21 신설: 암호화 상품이면, 업로드 전에 브라우저에서 파일 자체를 암호화함
+      const arrayBuffer = await file.arrayBuffer();
+      const encryptedBytes = await e2eeEncryptBytes(roomKey, arrayBuffer);
+      base64Data = e2eeBytesToStandardBase64(encryptedBytes);
+    } else {
+      base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
 
     const uploadRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-file-upload`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -339,14 +434,17 @@ async function uploadAndSendFile(file){
     const uploadData = await uploadRes.json();
     if (!uploadRes.ok) throw new Error(uploadData.error);
 
+    // 파일명도 암호화 상품이면 같이 암호화(문서 목록에 원래 파일명이 그대로 노출되지 않게)
+    const fileNamePayload = roomIsSecure ? await e2eeEncryptText(roomKey, file.name) : file.name;
+
     const msgRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
       method: 'POST', headers: authHeaders(),
-      body: JSON.stringify({ hotlineId, fileUrl: uploadData.url, fileType, fileName: file.name, fileSizeBytes: uploadData.fileSizeBytes, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+      body: JSON.stringify({ hotlineId, fileUrl: uploadData.url, fileType, fileName: fileNamePayload, fileSizeBytes: uploadData.fileSizeBytes, originalMimeType: file.type, memberAnonId: accessToken ? undefined : hotlineAnonId }),
     });
     const msgData = await msgRes.json();
     if (!msgRes.ok) throw new Error(msgData.error);
 
-    appendChatMessage({ id: msgData.messageId, sender_anon_id: mySenderAnonId, message_type: fileType, content: uploadData.url, file_name: file.name });
+    await appendChatMessage({ id: msgData.messageId, sender_anon_id: mySenderAnonId, message_type: fileType, content: uploadData.url, file_name: fileNamePayload, original_mime_type: file.type });
     renderedMsgIds.add(msgData.messageId);
     showState('stateChat'); updateNavActive('navChat');
   } catch (e) {

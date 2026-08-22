@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Aliascall — 핫라인 참가</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_e2ee.js"></script>
 <script src="aliascall_push.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -174,6 +175,12 @@ async function init(){
       showState('stateError');
       return;
     }
+    // 2026-08-21 신설: 암호화 상품인데 링크에 열쇠(#k=)가 없으면 대화를 절대 못 여니 미리 안내
+    if (data.tier && data.tier.endsWith('_secure') && !e2eeReadKeyFromUrlFragment()) {
+      document.getElementById('errorMsg').textContent = '이 초대링크에 암호화 열쇠가 빠져있어요. 링크를 보낸 분에게 전체 링크(#로 시작하는 부분까지)를 다시 요청해주세요.';
+      showState('stateError');
+      return;
+    }
     showState('stateEntry');
   } catch (e) {
     console.error('[hotline] 조회 실패', e);
@@ -240,8 +247,9 @@ function cleanupWaiting(){
 }
 
 document.getElementById('enterRoomBtn').addEventListener('click', () => {
-  // 2026-08-21: 실제 대화방 화면(문자/음성/영상/파일공유)은 다음 단계에서 만들 예정
-  window.location.href = 'aliascall_hotline_room.html?t=' + encodeURIComponent(inviteToken);
+  // 2026-08-21: 초대링크의 #k=(암호화 키)가 있으면 그대로 대화방까지 이어서 전달함
+  // (URL의 #뒷부분은 서버로 안 가고 브라우저 안에서만 유지되는 부분이라, 그냥 이어붙이면 됨)
+  window.location.href = 'aliascall_hotline_room.html?t=' + encodeURIComponent(inviteToken) + window.location.hash;
 });
 
 init();
