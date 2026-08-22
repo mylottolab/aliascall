@@ -285,7 +285,9 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
     <div class="emoji-panel" id="emojiPanel"></div>
     <div class="chat-input-row">
       <input type="file" id="chatPhotoInput" accept="image/*" style="display:none;">
+      <input type="file" id="chatCameraInput" accept="image/*" capture="environment" style="display:none;">
       <button type="button" class="chat-attach-btn" id="chatAttachBtn" title="사진 첨부">📎</button>
+      <button type="button" class="chat-attach-btn" id="chatCameraBtn" title="사진 촬영">📷</button>
       <button type="button" id="emojiBtn" title="이모지">😊</button>
       <input type="text" id="chatInput" placeholder="메시지 입력…">
       <button id="chatSendBtn">➤</button>
@@ -1221,7 +1223,21 @@ document.getElementById('emojiBtn').addEventListener('click', () => {
 document.getElementById('chatPhotoInput').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
-  if (!file || !currentCaseId) return;
+  if (!file) return;
+  await sendCasePhoto(file);
+});
+
+// 2026-08-22 신설: "갤러리에서 고르기"와 별개로 "바로 촬영하기" 버튼 — 같은 전송 함수를 재사용함
+document.getElementById('chatCameraBtn').addEventListener('click', () => document.getElementById('chatCameraInput').click());
+document.getElementById('chatCameraInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  await sendCasePhoto(file);
+});
+
+async function sendCasePhoto(file){
+  if (!currentCaseId) return;
   if (file.size > 8 * 1024 * 1024) { alert('사진 용량이 너무 커요 (최대 8MB).'); return; }
 
   const attachBtn = document.getElementById('chatAttachBtn');
@@ -1264,7 +1280,7 @@ document.getElementById('chatPhotoInput').addEventListener('change', async (e) =
   } finally {
     attachBtn.disabled = false;
   }
-});
+}
 
 function appendChatMessage(msg, who){
   // 2026-08-20 (2차): 통화 시도/종료 기록(call_log)은 시스템 안내 문구로 표시

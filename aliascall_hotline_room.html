@@ -119,7 +119,9 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
   <div class="emoji-panel" id="emojiPanel"></div>
   <div class="chat-input-row">
     <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip">
+    <input type="file" id="cameraInput" style="display:none;" accept="image/*" capture="environment">
     <button type="button" id="attachBtn" title="파일 첨부">📎</button>
+    <button type="button" id="cameraBtn" title="사진 촬영">📷</button>
     <button type="button" id="emojiBtn" title="이모지">😊</button>
     <input type="text" id="chatInput" placeholder="메시지 입력…">
     <button id="chatSendBtn">➤</button>
@@ -425,6 +427,14 @@ document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage
 document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
 document.getElementById('attachBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+// 2026-08-22 신설: "갤러리에서 고르기"와 별개로 "바로 촬영하기" 버튼 — 같은 전송 함수(uploadAndSendFile)를 재사용함
+document.getElementById('cameraBtn').addEventListener('click', () => document.getElementById('cameraInput').click());
+document.getElementById('cameraInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  await uploadAndSendFile(file);
+});
 
 // ── 2026-08-22 수정: 이모지 선택 패널 — 공용 함수(아이스콜_emoji.js)로 애니메이션 GIF까지 지원 ──
 const emojiPanel = document.getElementById('emojiPanel');
