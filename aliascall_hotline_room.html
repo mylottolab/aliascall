@@ -7,6 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_e2ee.js"></script>
 <script src="aliascall_emoji.js"></script>
+<script src="aliascall_image_compress.js"></script>
 <script src="aliascall_push.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -466,6 +467,8 @@ function detectFileType(mime){
 
 async function uploadAndSendFile(file){
   const fileType = detectFileType(file.type);
+  // 2026-08-22 신설: 사진이면 업로드 전에 압축(카톡과 비슷한 방식) — 용량 제한에 덜 걸리고 빨라짐
+  if (fileType === 'photo') file = await aliascallCompressImage(file);
   const limitMb = fileType === 'video' ? 80 : fileType === 'photo' ? 8 : 20;
   if (file.size > limitMb * 1024 * 1024) { alert(`파일이 너무 커요 (최대 ${limitMb}MB).`); return; }
 

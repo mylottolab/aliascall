@@ -13,6 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_push.js"></script>
 <script src="aliascall_emoji.js"></script>
+<script src="aliascall_image_compress.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -1742,6 +1743,7 @@ document.getElementById('chatCameraInput').addEventListener('change', async (e) 
 
 async function sendChatPhoto(file){
   if (!currentCaseId) return;
+  file = await aliascallCompressImage(file); // 2026-08-22 신설: 업로드 전 압축(카톡과 비슷한 방식)
   if (file.size > 8 * 1024 * 1024) { alert('사진 용량이 너무 커요 (최대 8MB).'); return; }
   const attachBtn = document.getElementById('chatAttachBtn');
   attachBtn.disabled = true;
