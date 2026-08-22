@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aliascall — 결제 결과</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
@@ -27,14 +27,26 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .result-btn{ display:block; width:100%; border:none; border-radius:12px; padding:14px; font-size:14px; font-weight:700; cursor:pointer; text-decoration:none; box-sizing:border-box; }
 .result-btn.primary{ background:var(--teal); color:#fff; margin-bottom:10px; }
 .result-btn.secondary{ background:var(--teal-tint); color:var(--teal-deep); }
+
+/* 2026-08-21 신설: 암호화(Secure) 핫라인 결제 성공시 — 여기서 바로 열쇠(초대링크)를 보여줌 */
+.key-link-row{ display:flex; gap:6px; margin-bottom:16px; }
+.key-link-row input{ flex:1; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; font-size:10px; font-family:'IBM Plex Mono',monospace; color:var(--ink-soft); background:var(--teal-tint); }
+.key-link-row button{ background:var(--teal); color:#fff; border:none; border-radius:10px; padding:0 14px; font-size:12px; font-weight:700; cursor:pointer; }
 </style>
 </head>
 <body>
 
-<div class="result-card">
+<div class="result-card" id="resultCard">
   <div class="result-icon" id="resultIcon">✓</div>
   <div class="result-title" id="resultTitle">결제가 완료됐어요</div>
   <div class="result-desc" id="resultDesc">잠시 후 자동으로 돌아갑니다.</div>
+  <!-- 2026-08-21 신설: 암호화 상품일 때만 나타남 -->
+  <div id="secureKeyBlock" style="display:none;">
+    <div class="key-link-row">
+      <input type="text" id="ownerLinkOutput" readonly>
+      <button id="copyOwnerLinkBtn">복사</button>
+    </div>
+  </div>
   <a class="result-btn primary" id="primaryBtn" href="index.html">확인</a>
   <a class="result-btn secondary" href="index.html">홈으로</a>
 </div>
@@ -44,25 +56,63 @@ const params = new URLSearchParams(window.location.search);
 const status = params.get('status');
 const purpose = params.get('purpose');
 const msg = params.get('msg');
+const hotlineId = params.get('hotlineId');
 
-const backPage = purpose === 'subscription' ? 'aliascall_my_account.html' : 'aliascall_recharge_mockup.html';
+function backPageFor(p){
+  if (p === 'subscription') return 'aliascall_my_account.html';
+  if (p === 'hotline') return 'aliascall_hotline_purchase.html'; // 2026-08-21 신설
+  return 'aliascall_recharge_mockup.html';
+}
 
 if (status === 'success') {
   document.getElementById('resultIcon').textContent = '✓';
-  document.getElementById('resultTitle').textContent = purpose === 'subscription' ? '구독이 연장됐어요' : '포인트가 충전됐어요';
-  document.getElementById('resultDesc').textContent = purpose === 'subscription'
-    ? '구독 만료일이 갱신됐고, 보너스 포인트도 함께 지급됐어요.'
-    : '충전한 포인트가 계정에 반영됐어요.';
-  document.getElementById('primaryBtn').href = backPage;
-  document.getElementById('primaryBtn').textContent = purpose === 'subscription' ? '내 계정으로 가기' : '충전소로 가기';
+
+  if (purpose === 'hotline') {
+    // 2026-08-21 신설: 핫라인 결제 성공 — 예전엔 이 분기가 없어서 "포인트가 충전됐어요"로
+    // 잘못 표시되던 버그가 있었음(암호화와 무관하게 원래 있던 문제, 같이 고침)
+    document.getElementById('resultTitle').textContent = '핫라인이 만들어졌어요';
+    document.getElementById('resultDesc').textContent = '관리 화면에서 초대 링크를 확인하고 지인에게 공유해보세요.';
+    document.getElementById('primaryBtn').href = 'aliascall_hotline_manage.html';
+    document.getElementById('primaryBtn').textContent = '핫라인 관리로 가기';
+
+    // 암호화 상품이었는지 확인 — hotline_purchase.html에서 결제 시작 전에 미리 만들어서
+    // sessionStorage에 잠깐 넣어뒀던 열쇠가 있으면, 여기서 바로 보여주고 안내함
+    const pendingKey = sessionStorage.getItem('aliascall_pending_e2ee_key');
+    if (pendingKey && hotlineId) {
+      sessionStorage.removeItem('aliascall_pending_e2ee_key');
+      const ownerLink = `${window.location.origin}/aliascall_hotline_room.html?hotline=${hotlineId}#k=${pendingKey}`;
+      document.getElementById('resultTitle').textContent = '핫라인이 만들어졌어요 🔒';
+      document.getElementById('resultDesc').innerHTML = '<b style="color:var(--danger);">아래 링크를 지금 꼭 저장해두세요.</b><br>이 링크(#k= 뒷부분 포함)를 잃어버리면, 저희도 포함해서 아무도 이 대화를 복구할 수 없습니다.';
+      document.getElementById('ownerLinkOutput').value = ownerLink;
+      document.getElementById('secureKeyBlock').style.display = 'block';
+      try { localStorage.setItem('aliascall_hotline_key_' + hotlineId, pendingKey); } catch (e) {}
+    }
+  } else {
+    document.getElementById('resultTitle').textContent = purpose === 'subscription' ? '구독이 연장됐어요' : '포인트가 충전됐어요';
+    document.getElementById('resultDesc').textContent = purpose === 'subscription'
+      ? '구독 만료일이 갱신됐고, 보너스 포인트도 함께 지급됐어요.'
+      : '충전한 포인트가 계정에 반영됐어요.';
+    document.getElementById('primaryBtn').href = backPageFor(purpose);
+    document.getElementById('primaryBtn').textContent = purpose === 'subscription' ? '내 계정으로 가기' : '충전소로 가기';
+  }
 } else {
   document.getElementById('resultIcon').className = 'result-icon fail';
   document.getElementById('resultIcon').textContent = '✕';
   document.getElementById('resultTitle').textContent = '결제가 완료되지 않았어요';
   document.getElementById('resultDesc').textContent = msg || '결제 중 문제가 발생했어요. 다시 시도해주세요.';
-  document.getElementById('primaryBtn').href = backPage;
+  document.getElementById('primaryBtn').href = backPageFor(purpose);
   document.getElementById('primaryBtn').textContent = '다시 시도하기';
 }
+
+document.getElementById('copyOwnerLinkBtn')?.addEventListener('click', () => {
+  const input = document.getElementById('ownerLinkOutput');
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = document.getElementById('copyOwnerLinkBtn');
+    const original = btn.textContent;
+    btn.textContent = '복사됨!';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  });
+});
 </script>
 </body>
 </html>
