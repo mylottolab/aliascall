@@ -183,6 +183,17 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .chat-bubble.photo, .chat-bubble.video, .chat-bubble.document{ padding:4px; background:none !important; border:none !important; }
 .sender-label{ font-size:10.5px; color:var(--ink-soft); margin:2px 4px; align-self:flex-start; }
 .chat-photo{ max-width:180px; max-height:230px; border-radius:12px; display:block; cursor:pointer; object-fit:cover; }
+
+/* 2026-08-23 신설: 연속 사진 묶음(타일) — 카톡 방식 */
+.chat-bubble.photo-group{ padding:4px !important; }
+.photo-group-grid{ display:grid; gap:3px; width:180px; }
+.photo-group-grid.count-1{ grid-template-columns:1fr; }
+.photo-group-grid.count-1 .photo-group-thumb{ width:180px; max-height:230px; aspect-ratio:auto; border-radius:10px; }
+.photo-group-grid.count-2{ grid-template-columns:1fr 1fr; }
+.photo-group-grid.count-3plus{ grid-template-columns:1fr 1fr 1fr; }
+.photo-group-thumb{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:6px; cursor:pointer; display:block; }
+.photo-group-more-overlay{ position:relative; }
+.photo-group-more-overlay::after{ content:attr(data-more); position:absolute; inset:0; background:rgba(0,0,0,.5); color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; border-radius:6px; }
 .chat-video{ max-width:200px; border-radius:12px; display:block; }
 .chat-doc{ display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; text-decoration:none; color:var(--ink); font-size:12.5px; max-width:220px; }
 .chat-system-note{ align-self:center; font-size:11px; color:var(--ink-soft); background:var(--line); padding:5px 12px; border-radius:12px; margin:4px 0; }
@@ -329,7 +340,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
     <button type="button" id="replyBarCancel">✕</button>
   </div>
   <div class="chat-input-row">
-    <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip">
+    <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip" multiple>
     <button type="button" id="plusMenuBtn" title="더보기">➕</button>
     <button type="button" id="emojiBtn" title="이모지">😊</button>
     <button type="button" id="voiceInputBtn" title="음성으로 입력">🎙️</button>
@@ -691,23 +702,62 @@ function formatKoreanDateDivider(dateStr){
   return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + days[d.getDay()] + '요일';
 }
 function insertDateDividerIfNeeded(list, createdAt){
-  if (!createdAt) return;
+  if (!createdAt) return false;
   const dateKey = new Date(createdAt).toISOString().slice(0, 10);
-  if (dateKey === lastRenderedDateKey) return;
+  if (dateKey === lastRenderedDateKey) return false;
   lastRenderedDateKey = dateKey;
   const divider = document.createElement('div');
   divider.className = 'date-divider';
   divider.textContent = formatKoreanDateDivider(createdAt);
   list.appendChild(divider);
+  return true;
+}
+
+// 2026-08-23 신설: 연속으로 보낸 사진을 하나로 묶어 타일(격자)로 보여주는 기능 — 카톡과 같은 방식
+let photoGroupState = null; // { senderAnonId, groupEl, gridEl, items:[{id,url,filename}], lastMessageId }
+const PHOTO_GROUP_MAX_VISIBLE = 6;
+
+function renderPhotoGroupGrid(state){
+  const items = state.items;
+  const grid = state.gridEl;
+  const countClass = items.length === 1 ? 'count-1' : items.length === 2 ? 'count-2' : 'count-3plus';
+  grid.className = 'photo-group-grid ' + countClass;
+  grid.innerHTML = '';
+  const visibleCount = Math.min(items.length, PHOTO_GROUP_MAX_VISIBLE);
+  for (let i = 0; i < visibleCount; i++) {
+    const isLastVisibleWithMore = i === visibleCount - 1 && items.length > PHOTO_GROUP_MAX_VISIBLE;
+    const thumb = document.createElement('img');
+    thumb.className = 'photo-group-thumb';
+    thumb.src = items[i].url;
+    thumb.alt = '사진';
+    thumb.loading = 'lazy';
+    if (isLastVisibleWithMore) {
+      const wrap = document.createElement('div');
+      wrap.className = 'photo-group-more-overlay';
+      wrap.dataset.more = '+' + (items.length - PHOTO_GROUP_MAX_VISIBLE + 1);
+      wrap.appendChild(thumb);
+      wrap.addEventListener('click', () => openPhotoGallery(items, i));
+      grid.appendChild(wrap);
+    } else {
+      thumb.addEventListener('click', () => openPhotoGallery(items, i));
+      grid.appendChild(thumb);
+    }
+  }
+}
+function openPhotoGallery(items, startIndex){
+  document.getElementById('lightbox').classList.add('show');
+  aliascallShowZoomableGallery(document.getElementById('lightboxContent'), items, startIndex);
 }
 
 async function appendChatMessage(msg){
   const list = document.getElementById('chatMessages');
   const isMe = msg.sender_anon_id === mySenderAnonId;
-  insertDateDividerIfNeeded(list, msg.created_at); // 2026-08-23 신설
+  const newDate = insertDateDividerIfNeeded(list, msg.created_at); // 2026-08-23 신설
+  if (newDate) photoGroupState = null; // 날짜가 바뀌면 사진 묶음도 새로 시작
 
   // 2026-08-21 신설: 상대방 교체 표시 — 구간 나누는 선 + 색깔이 여기서부터 바뀜
   if (msg.message_type === 'partner_joined' || msg.message_type === 'partner_left') {
+    photoGroupState = null;
     if (msg.message_type === 'partner_joined') currentSegmentIndex++;
     const sysEl = document.createElement('div');
     sysEl.className = 'chat-system-note partner-divider';
@@ -718,6 +768,7 @@ async function appendChatMessage(msg){
   }
 
   if (msg.message_type === 'call_log') {
+    photoGroupState = null;
     const sysEl = document.createElement('div');
     sysEl.className = 'chat-system-note';
     sysEl.textContent = msg.content;
@@ -725,6 +776,27 @@ async function appendChatMessage(msg){
     list.scrollTop = list.scrollHeight;
     return;
   }
+
+  // 2026-08-23 신설: 사진이면서, 바로 직전 사진과 같은 사람이 보낸 거면 → 새 말풍선 안 만들고 기존 묶음에 타일로 추가
+  if (msg.message_type === 'photo' && !msg.deleted_at && photoGroupState && photoGroupState.senderAnonId === msg.sender_anon_id) {
+    const src = await resolveMediaUrl(msg.content, msg.original_mime_type);
+    if (src) {
+      photoGroupState.items.push({ id: msg.id, url: src, filename: msg.file_name || null });
+      renderPhotoGroupGrid(photoGroupState);
+      const oldTimeRow = list.querySelector('.msg-time-row[data-message-id="' + photoGroupState.lastMessageId + '"]');
+      if (oldTimeRow) {
+        oldTimeRow.dataset.messageId = msg.id;
+        const timeText = oldTimeRow.querySelector('.msg-time-text');
+        if (timeText) timeText.textContent = formatKoreanTime(msg.created_at);
+      }
+      photoGroupState.lastMessageId = msg.id;
+      messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: 'photo', previewText: '📷 사진', deleted: false, createdAt: msg.created_at });
+      if (isMe) refreshReadTags();
+      list.scrollTop = list.scrollHeight;
+      return;
+    }
+  }
+  if (msg.message_type !== 'photo') photoGroupState = null; // 사진이 아닌 게 끼어들면 묶음 스트릭이 끊김
 
   if (!isMe) {
     const label = document.createElement('div');
@@ -762,15 +834,15 @@ async function appendChatMessage(msg){
 
   if (msg.message_type === 'photo') {
     previewText = '📷 사진';
-    const img = document.createElement('img');
-    img.className = 'chat-photo';
-    img.alt = '사진';
     const src = await resolveMediaUrl(msg.content, msg.original_mime_type);
     if (!src) { el.appendChild(document.createTextNode('🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)')); }
     else {
-      img.src = src;
-      img.addEventListener('click', () => openZoomableLightbox(src));
-      el.appendChild(img);
+      // 2026-08-23 수정: 이 사진이 앞으로 더 늘어날 수도 있는 "묶음의 시작"이 됨(1장이면 그냥 사진처럼 보이고, 더 오면 타일로 바뀜)
+      el.classList.add('photo-group');
+      const grid = document.createElement('div');
+      el.appendChild(grid);
+      photoGroupState = { senderAnonId: msg.sender_anon_id, groupEl: el, gridEl: grid, items: [{ id: msg.id, url: src, filename: msg.file_name || null }], lastMessageId: msg.id };
+      renderPhotoGroupGrid(photoGroupState);
     }
   } else if (msg.message_type === 'video') {
     previewText = '🎥 동영상';
@@ -1747,10 +1819,11 @@ setInterval(() => {
 }, 1000);
 
 document.getElementById('fileInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
+  const files = Array.from(e.target.files || []);
   e.target.value = '';
-  if (!file) return;
-  await uploadAndSendFile(file);
+  if (files.length === 0) return;
+  // 2026-08-23 신설: 여러 장 골랐으면 순서대로 하나씩 전송(사진이면 자동으로 타일 묶음이 됨)
+  for (const file of files) { await uploadAndSendFile(file); }
 });
 
 function detectFileType(mime){

@@ -16,6 +16,15 @@
     .azl-img{ max-width:100%; max-height:85vh; border-radius:8px; cursor:zoom-in; user-select:none; -webkit-user-select:none; }
     .azl-img.zoomed{ cursor:grab; }
     .azl-hint{ position:absolute; bottom:14px; left:0; right:0; text-align:center; font-size:11px; color:rgba(255,255,255,.6); pointer-events:none; }
+
+    /* 2026-08-23 신설: 여러 장 사진 넘겨보기(갤러리) UI */
+    .azl-gallery-bar{ position:absolute; top:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; padding:14px 16px; z-index:2; }
+    .azl-counter{ color:#fff; font-size:12px; background:rgba(0,0,0,.4); padding:5px 12px; border-radius:14px; }
+    .azl-download{ width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.15); color:#fff; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:16px; }
+    .azl-nav{ position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.35); color:#fff; border:none; font-size:20px; cursor:pointer; z-index:2; }
+    .azl-nav.azl-prev{ left:10px; }
+    .azl-nav.azl-next{ right:10px; }
+    .azl-nav:disabled{ opacity:.25; cursor:default; }
   `;
   document.head.appendChild(style);
 })();
@@ -111,4 +120,35 @@ function aliascallShowZoomableImage(contentEl, imageUrl){
   }, { passive: false });
 
   applyTransform();
+}
+
+// 2026-08-23 신설: 여러 장을 좌우로 넘기며 볼 수 있는 갤러리 모드 + 다운로드 버튼
+// items: [{ url, filename }, ...] — url은 이미 복호화까지 끝난(암호화 상품이면) blob:/실제 주소
+function aliascallShowZoomableGallery(contentEl, items, startIndex){
+  let idx = Math.min(Math.max(startIndex || 0, 0), items.length - 1);
+
+  function renderCurrent(){
+    aliascallShowZoomableImage(contentEl, items[idx].url);
+    const bar = document.createElement('div');
+    bar.className = 'azl-gallery-bar';
+    bar.innerHTML = `<span class="azl-counter">${idx + 1} / ${items.length}</span>
+      <a class="azl-download" href="${items[idx].url}" download="${items[idx].filename || ('사진_' + (idx + 1) + '.jpg')}" title="다운로드">⬇</a>`;
+    contentEl.appendChild(bar);
+
+    if (items.length > 1) {
+      const prevBtn = document.createElement('button');
+      prevBtn.type = 'button'; prevBtn.className = 'azl-nav azl-prev'; prevBtn.textContent = '‹';
+      prevBtn.disabled = idx === 0;
+      prevBtn.addEventListener('click', (e) => { e.stopPropagation(); if (idx > 0) { idx--; renderCurrent(); } });
+      contentEl.appendChild(prevBtn);
+
+      const nextBtn = document.createElement('button');
+      nextBtn.type = 'button'; nextBtn.className = 'azl-nav azl-next'; nextBtn.textContent = '›';
+      nextBtn.disabled = idx === items.length - 1;
+      nextBtn.addEventListener('click', (e) => { e.stopPropagation(); if (idx < items.length - 1) { idx++; renderCurrent(); } });
+      contentEl.appendChild(nextBtn);
+    }
+  }
+
+  renderCurrent();
 }
