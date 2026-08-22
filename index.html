@@ -39,6 +39,8 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 }
 
 .hero{ padding:16px 24px 4px; text-align:center; position:relative; min-height:46px; }
+.hero-brand{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; color:#fff; padding:6px 0 8px; }
+.hero-brand em{ font-style:normal; color:var(--coral); }
 .lang-toggle{ position:absolute; top:16px; right:16px; display:flex; gap:4px; background:rgba(255,255,255,.1); border-radius:20px; padding:3px; }
 .lang-toggle button{ border:none; background:none; color:rgba(255,255,255,.6); font-size:11px; font-weight:700; padding:5px 10px; border-radius:16px; cursor:pointer; }
 .lang-toggle button.active{ background:var(--coral); color:#fff; }
@@ -107,7 +109,7 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .icon-btn.secondary .icon-circle{ background:linear-gradient(135deg, #4a8f8b, var(--teal)); }
 .icon-label{ font-size:12.5px; font-weight:600; text-align:center; }
 
-.quick-search{ padding:0 24px 8px; max-width:360px; margin:0 auto; }
+.quick-search{ padding:0 24px 8px; max-width:360px; margin:10px auto 0; }
 .quick-search-box{ position:relative; }
 .quick-search-box input{
   width:100%; border:none; border-radius:14px; padding:15px 52px 15px 16px;
@@ -204,6 +206,13 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <button data-lang="ko" class="active">KR</button>
     <button data-lang="en">EN</button>
   </div>
+  <div class="hero-brand">Alias<em>call</em></div>
+</div>
+
+<!-- 2026-08-21 신설: 전체 화면 3구역 구분 헤더 (기존 서비스 / 핫라인 신규 / 연락상황) -->
+<div class="section-header emergency">
+  <div class="section-header-title">🚨 Alias Emergency Call</div>
+  <div class="section-header-sub">양방향 모두 번호노출 없는 비상연락 안심수단</div>
 </div>
 
 <div class="quick-search">
@@ -211,12 +220,6 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <input type="text" id="quickSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="차량번호·이름·코드로 바로 찾기">
     <button id="quickSearchBtn">🔍</button>
   </div>
-</div>
-
-<!-- 2026-08-21 신설: 전체 화면 3구역 구분 헤더 (기존 서비스 / 핫라인 신규 / 연락상황) -->
-<div class="section-header emergency">
-  <div class="section-header-title">🚨 Alias Emergency Call</div>
-  <div class="section-header-sub">양방향 모두 번호노출 없는 비상연락 안심수단</div>
 </div>
 
 <div class="grid">
