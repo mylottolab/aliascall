@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Aliascall — 핫라인</title>
+<script src="https://www.youtube.com/iframe_api"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_e2ee.js"></script>
 <script src="aliascall_emoji.js"></script>
@@ -81,6 +82,23 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .call-btn.hangup{ background:var(--danger); }
 .call-btn.active-off{ background:var(--danger); }
 
+/* 2026-08-22 신설: "같이 듣기" */
+.music-area{ flex:1; background:var(--teal-deep); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+#musicEmptyState{ text-align:center; width:100%; max-width:320px; }
+#musicUrlInput{ width:100%; box-sizing:border-box; border:1.5px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#fff; border-radius:10px; padding:12px 14px; font-size:12.5px; margin-bottom:10px; }
+#musicUrlInput::placeholder{ color:rgba(255,255,255,.4); }
+#musicLoadBtn{ width:100%; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:13px; cursor:pointer; }
+.music-or-divider{ text-align:center; color:rgba(255,255,255,.4); font-size:11px; margin:14px 0; }
+.music-file-btn{ width:100%; background:rgba(255,255,255,.1); color:#fff; border:1.5px dashed rgba(255,255,255,.3); border-radius:10px; padding:12px; font-weight:700; font-size:12.5px; cursor:pointer; }
+#musicAudioVisual{ width:100%; aspect-ratio:16/9; border-radius:12px; background:rgba(255,255,255,.06); display:flex; align-items:center; justify-content:center; font-size:44px; margin-bottom:12px; }
+#musicPlayerWrap{ width:100%; max-width:340px; }
+#musicYoutubePlayer{ width:100%; aspect-ratio:16/9; border-radius:12px; overflow:hidden; margin-bottom:12px; }
+.music-now{ text-align:center; color:#fff; font-size:11.5px; opacity:.7; margin-bottom:14px; }
+.music-controls{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.music-ctrl-btn{ width:44px; height:44px; border-radius:50%; border:none; font-size:16px; cursor:pointer; background:rgba(255,255,255,.15); color:#fff; flex-shrink:0; }
+#musicSeekBar{ flex:1; }
+.music-change-btn{ width:100%; background:rgba(255,255,255,.1); color:#fff; border:none; border-radius:10px; padding:10px; font-size:12px; cursor:pointer; }
+
 .bottom-nav{ display:flex; background:var(--card); border-top:1.5px solid var(--line); box-shadow:0 -2px 12px rgba(18,48,46,.08); flex-shrink:0; }
 .bottom-nav-btn{ flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:9px 2px 8px; font-size:10.5px; font-weight:700; color:var(--ink-soft); cursor:pointer; }
 .bottom-nav-btn .bn-icon{ font-size:19px; line-height:1; }
@@ -142,11 +160,38 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
   </div>
 </div>
 
+<!-- 2026-08-22 신설: "같이 듣기" — 유튜브 링크로 다 같이 재생/일시정지/구간이동 동기화 -->
+<div class="state" id="stateMusic">
+  <div class="music-area">
+    <div id="musicPlayerWrap" style="display:none;">
+      <div id="musicYoutubePlayer"></div>
+      <div id="musicAudioVisual" style="display:none;">🎵</div>
+      <audio id="musicAudioEl" style="display:none;"></audio>
+      <div class="music-now" id="musicNowLabel"></div>
+      <div class="music-controls">
+        <button class="music-ctrl-btn" id="musicPlayPauseBtn">▶️</button>
+        <input type="range" id="musicSeekBar" min="0" max="100" value="0">
+      </div>
+      <button class="music-change-btn" id="musicChangeBtn">🔄 다른 곡으로 바꾸기</button>
+    </div>
+    <div id="musicEmptyState">
+      <div style="font-size:36px; margin-bottom:10px;">🎵</div>
+      <p style="color:#fff; font-size:13px; margin-bottom:18px;">유튜브 링크를 붙여넣거나<br>직접 음원 파일을 올리면 다 같이 동기화되어 재생됩니다</p>
+      <input type="text" id="musicUrlInput" placeholder="유튜브 링크 붙여넣기">
+      <button id="musicLoadBtn">같이 듣기 시작</button>
+      <div class="music-or-divider">또는</div>
+      <input type="file" id="musicFileInput" accept="audio/*" style="display:none;">
+      <button id="musicFileBtn" class="music-file-btn">🎵 내 음원 파일 올리기</button>
+    </div>
+  </div>
+</div>
+
 <div class="bottom-nav" id="bottomNav" style="display:none;">
   <button class="bottom-nav-btn active" id="navChat"><span class="bn-icon">💬</span><span>채팅</span></button>
   <button class="bottom-nav-btn" id="navVoice"><span class="bn-icon">🎧</span><span>음성</span></button>
   <button class="bottom-nav-btn" id="navVideo"><span class="bn-icon">🎥</span><span>화상</span></button>
   <button class="bottom-nav-btn" id="navUpload"><span class="bn-icon">📎</span><span>업로드</span></button>
+  <button class="bottom-nav-btn" id="navMusic"><span class="bn-icon">🎵</span><span>음악</span></button>
 </div>
 
 </div>
@@ -240,6 +285,9 @@ async function init(){
     document.getElementById('roomMeta').textContent = `${(data.members || []).length} / ${data.maxParticipants}명`;
     document.getElementById('bottomNav').style.display = 'flex';
 
+    // 2026-08-22 신설: "같이 듣기" 현재 재생 상태를 화면에 반영해둠(음악 탭 눌렀을 때 바로 이어짐)
+    if (data.music) applyMusicSync({ action: (data.music.youtubeId || data.music.audioUrl) ? 'load-silent' : 'stop', youtubeId: data.music.youtubeId, audioUrl: data.music.audioUrl, positionSeconds: data.music.positionSeconds, isPlaying: data.music.isPlaying, updatedAt: data.music.updatedAt, setByNickname: data.music.setByNickname });
+
     for (const m of (data.messages || [])) { await appendChatMessage(m); renderedMsgIds.add(m.id); }
     showState('stateChat');
     subscribeChat();
@@ -269,6 +317,7 @@ function subscribeChat(){
       await appendChatMessage(payload);
       if (payload.sender_anon_id !== mySenderAnonId) playChatPing();
     })
+    .on('broadcast', { event: 'music-sync' }, ({ payload }) => applyMusicSync(payload)) // 2026-08-22 신설
     .subscribe();
 }
 
@@ -456,6 +505,194 @@ document.getElementById('emojiBtn').addEventListener('click', () => {
   emojiPanel.classList.toggle('show');
 });
 document.getElementById('navUpload').addEventListener('click', () => document.getElementById('fileInput').click());
+
+// =====================================================
+// 2026-08-22 신설: "같이 듣기" — 유튜브 링크 또는 직접 올린 음원 파일로 재생/일시정지/
+// 구간이동을 실시간 동기화함. 로그인이나 별도 음악 계정 필요 없음.
+// 두 소스(유튜브/음원파일) 조작 방식이 달라서, musicSourceType으로 구분해서 공통 함수로 다룸.
+// =====================================================
+let ytPlayer = null;
+let ytPlayerReady = false;
+let pendingMusicState = null;
+let currentMusicYoutubeId = null;
+let currentMusicAudioUrl = null;
+let musicSourceType = null; // 'youtube' | 'audio' | null
+let isMusicPlaying = false;
+let musicSeekBarDragging = false;
+const musicAudioEl = document.getElementById('musicAudioEl');
+
+function onYouTubeIframeAPIReady(){
+  ytPlayer = new YT.Player('musicYoutubePlayer', {
+    height: '100%', width: '100%',
+    playerVars: { controls: 0, disablekb: 1, modestbranding: 1, rel: 0, playsinline: 1 },
+    events: {
+      onReady: () => { ytPlayerReady = true; if (pendingMusicState) applyMusicSync(pendingMusicState); },
+    },
+  });
+}
+
+function extractYoutubeId(url){
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
+}
+
+// ── 유튜브/음원파일 공통으로 다루는 재생 제어 함수들 ──
+function musicGetCurrentTime(){
+  if (musicSourceType === 'youtube') return (ytPlayer && ytPlayer.getCurrentTime) ? ytPlayer.getCurrentTime() : 0;
+  if (musicSourceType === 'audio') return musicAudioEl.currentTime || 0;
+  return 0;
+}
+function musicGetDuration(){
+  if (musicSourceType === 'youtube') return (ytPlayer && ytPlayer.getDuration) ? ytPlayer.getDuration() : 0;
+  if (musicSourceType === 'audio') return musicAudioEl.duration || 0;
+  return 0;
+}
+function musicSeekTo(sec){
+  if (musicSourceType === 'youtube' && ytPlayer) ytPlayer.seekTo(sec, true);
+  else if (musicSourceType === 'audio') musicAudioEl.currentTime = sec;
+}
+function musicPlay(){
+  if (musicSourceType === 'youtube' && ytPlayer) ytPlayer.playVideo();
+  else if (musicSourceType === 'audio') musicAudioEl.play().catch(() => {}); // 브라우저 자동재생 제한 대비
+}
+function musicPause(){
+  if (musicSourceType === 'youtube' && ytPlayer) ytPlayer.pauseVideo();
+  else if (musicSourceType === 'audio') musicAudioEl.pause();
+}
+
+async function applyMusicSync(payload){
+  if (payload.action !== 'stop' && (payload.youtubeId || payload.audioUrl) && musicSourceType === 'youtube' && !ytPlayerReady) {
+    pendingMusicState = payload; return; // 유튜브 플레이어가 아직 준비 안 됐으면, 준비되는 대로 적용
+  }
+  if (payload.action === 'stop' || (!payload.youtubeId && !payload.audioUrl)) {
+    currentMusicYoutubeId = null; currentMusicAudioUrl = null; musicSourceType = null;
+    document.getElementById('musicPlayerWrap').style.display = 'none';
+    document.getElementById('musicEmptyState').style.display = 'block';
+    return;
+  }
+
+  if (payload.youtubeId && payload.youtubeId !== currentMusicYoutubeId) {
+    currentMusicYoutubeId = payload.youtubeId; currentMusicAudioUrl = null; musicSourceType = 'youtube';
+    if (!ytPlayerReady) { pendingMusicState = payload; return; }
+    ytPlayer.loadVideoById(payload.youtubeId);
+    document.getElementById('musicYoutubePlayer').style.display = 'block';
+    document.getElementById('musicAudioVisual').style.display = 'none';
+    document.getElementById('musicPlayerWrap').style.display = 'block';
+    document.getElementById('musicEmptyState').style.display = 'none';
+  } else if (payload.audioUrl && payload.audioUrl !== currentMusicAudioUrl) {
+    currentMusicAudioUrl = payload.audioUrl; currentMusicYoutubeId = null; musicSourceType = 'audio';
+    // 암호화 상품이면 재생 전에 복호화함(사진/동영상 메시지와 같은 방식)
+    const src = await resolveMediaUrl(payload.audioUrl, 'audio/mpeg');
+    if (src) musicAudioEl.src = src;
+    document.getElementById('musicYoutubePlayer').style.display = 'none';
+    document.getElementById('musicAudioVisual').style.display = 'flex';
+    document.getElementById('musicPlayerWrap').style.display = 'block';
+    document.getElementById('musicEmptyState').style.display = 'none';
+  }
+
+  document.getElementById('musicNowLabel').textContent = (payload.setByNickname || '누군가') + '님이 튼 노래';
+
+  // 네트워크 지연 보정: 신호를 보낸 시점 이후로 흐른 시간만큼 위치를 앞으로 당겨줌
+  let targetPosition = payload.positionSeconds || 0;
+  if (payload.isPlaying && payload.updatedAt) {
+    const elapsed = (Date.now() - new Date(payload.updatedAt).getTime()) / 1000;
+    if (elapsed > 0 && elapsed < 30) targetPosition += elapsed;
+  }
+  try { if (Math.abs(musicGetCurrentTime() - targetPosition) > 1.5) musicSeekTo(targetPosition); } catch (e) {}
+
+  if (payload.isPlaying) { musicPlay(); document.getElementById('musicPlayPauseBtn').textContent = '⏸️'; isMusicPlaying = true; }
+  else { musicPause(); document.getElementById('musicPlayPauseBtn').textContent = '▶️'; isMusicPlaying = false; }
+}
+
+async function sendMusicSync(action, extra){
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-music-sync`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ hotlineId, action, memberAnonId: accessToken ? undefined : hotlineAnonId, ...extra }),
+    });
+  } catch (e) { console.error('[hotline-room] 음악 동기화 실패', e); }
+}
+
+document.getElementById('navMusic').addEventListener('click', () => { showState('stateMusic'); updateNavActive('navMusic'); });
+
+document.getElementById('musicLoadBtn').addEventListener('click', async () => {
+  const url = document.getElementById('musicUrlInput').value.trim();
+  const videoId = extractYoutubeId(url);
+  if (!videoId) { alert('올바른 유튜브 링크가 아니에요.'); return; }
+  await sendMusicSync('load', { youtubeId: videoId });
+  document.getElementById('musicUrlInput').value = '';
+});
+
+// 2026-08-22 신설: 음원 파일 직접 올려서 같이 듣기
+document.getElementById('musicFileBtn').addEventListener('click', () => document.getElementById('musicFileInput').click());
+document.getElementById('musicFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  if (file.size > 30 * 1024 * 1024) { alert('음원 파일이 너무 커요 (최대 30MB).'); return; }
+
+  const btn = document.getElementById('musicFileBtn');
+  const original = btn.textContent;
+  btn.textContent = '올리는 중…'; btn.disabled = true;
+  try {
+    let base64Data;
+    if (roomIsSecure) {
+      const arrayBuffer = await file.arrayBuffer();
+      const encryptedBytes = await e2eeEncryptBytes(roomKey, arrayBuffer);
+      base64Data = e2eeBytesToStandardBase64(encryptedBytes);
+    } else {
+      base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+    const uploadRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-file-upload`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hotlineId, base64Data, contentType: file.type || 'audio/mpeg', fileName: file.name, fileType: 'audio' }),
+    });
+    const uploadData = await uploadRes.json();
+    if (!uploadRes.ok) throw new Error(uploadData.error);
+    await sendMusicSync('load', { audioUrl: uploadData.url });
+  } catch (e) {
+    console.error('[hotline-room] 음원 업로드 실패', e);
+    alert('음원 파일을 올리지 못했어요: ' + (e.message || ''));
+  } finally {
+    btn.textContent = original; btn.disabled = false;
+  }
+});
+
+document.getElementById('musicChangeBtn').addEventListener('click', async () => {
+  await sendMusicSync('stop', {});
+  document.getElementById('musicPlayerWrap').style.display = 'none';
+  document.getElementById('musicEmptyState').style.display = 'block';
+});
+
+document.getElementById('musicPlayPauseBtn').addEventListener('click', async () => {
+  const pos = musicGetCurrentTime();
+  await sendMusicSync(isMusicPlaying ? 'pause' : 'play', { positionSeconds: pos });
+});
+
+document.getElementById('musicSeekBar').addEventListener('mousedown', () => { musicSeekBarDragging = true; });
+document.getElementById('musicSeekBar').addEventListener('touchstart', () => { musicSeekBarDragging = true; });
+document.getElementById('musicSeekBar').addEventListener('change', async () => {
+  musicSeekBarDragging = false;
+  const duration = musicGetDuration() || 100;
+  const pos = (document.getElementById('musicSeekBar').value / 100) * duration;
+  await sendMusicSync('seek', { positionSeconds: pos });
+});
+
+// 재생 중인 사람의 화면에서, 다른 사람이 조작 안 해도 진행바가 자연스럽게 흘러가도록
+setInterval(() => {
+  if (!musicSourceType || musicSeekBarDragging) return;
+  try {
+    const cur = musicGetCurrentTime();
+    const dur = musicGetDuration();
+    if (dur > 0) document.getElementById('musicSeekBar').value = (cur / dur) * 100;
+  } catch (e) {}
+}, 1000);
+
 document.getElementById('fileInput').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
