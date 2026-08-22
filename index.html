@@ -51,19 +51,23 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 /* 2026-08-21 신설: 화면 3구역 구분 헤더 */
 .section-header{ max-width:360px; margin:22px auto 4px; padding:0 24px; text-align:center; }
 .section-header-title{ font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:#fff; letter-spacing:.02em; margin-bottom:3px; }
+.section-header:not(.status) .section-header-title::before{ content:''; display:block; width:30px; height:3px; margin:0 auto 10px; border-radius:3px; background:linear-gradient(90deg, var(--coral), transparent); }
+.section-header.secure .section-header-title::before{ background:linear-gradient(90deg, var(--brass), transparent); }
 .section-header-sub{ font-size:11px; color:rgba(255,255,255,.55); }
 .section-header.secure{ margin-top:30px; }
 .section-header.status{ margin-top:26px; margin-bottom:10px; text-align:left; }
 .section-header.status .section-header-title{ font-size:14.5px; }
 
 /* 2026-08-21 신설: 핫라인 소그룹 라벨(보안강화 상품 / E2EE 상품 구분) */
-.hotline-subgroup-label{ font-size:11px; font-weight:700; color:rgba(255,255,255,.55); margin:16px 2px 8px; display:flex; align-items:center; gap:6px; }
-.coming-soon-badge{ font-size:9px; font-weight:700; color:var(--brass); background:rgba(201,162,75,.18); padding:2px 7px; border-radius:8px; }
+.hotline-subgroup-label{ font-size:11px; font-weight:700; color:rgba(255,255,255,.55); margin:16px 2px 8px; display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.hotline-subgroup-label.secure{ color:var(--brass); }
+.subgroup-link{ font-size:10px; font-weight:700; color:var(--coral); text-decoration:none; }
+.subgroup-link.secure{ color:var(--brass); }
 
 /* 2026-08-21 신설: Secure(E2EE) 카드 — 아직 준비중이라 살짝 흐리고 점선 테두리로 구분 */
-.hotline-card.hl-secure{ opacity:.6; border-style:dashed !important; cursor:pointer; }
+.hotline-card.hl-secure{ border-style:dashed !important; }
 
-.hotline-promo{ max-width:360px; margin:6px auto 22px; padding:0 24px; }
+.hotline-promo{ max-width:360px; margin:14px auto 22px; padding:20px 18px 22px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.07); border-radius:20px; box-sizing:border-box; }
 .hotline-promo-head{ text-align:center; margin-bottom:14px; }
 .hotline-eyebrow{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; letter-spacing:.06em; color:var(--coral); background:rgba(232,115,74,.12); padding:4px 10px; border-radius:20px; margin-bottom:8px; }
 .hotline-title{ font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:600; color:#fff; margin:0 0 4px; }
@@ -71,8 +75,8 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 
 .hotline-grid{ display:flex; gap:10px; margin-top:16px; }
 .hotline-stack{ flex:1; display:flex; flex-direction:column; gap:10px; }
-.hotline-card{ display:block; text-decoration:none; border-radius:14px; padding:14px 14px 12px; position:relative; overflow:hidden; transition:transform .15s ease; }
-.hotline-card:active{ transform:scale(.97); }
+.hotline-card{ display:block; text-decoration:none; border-radius:14px; padding:14px 14px 12px; position:relative; overflow:hidden; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 5px 16px -6px rgba(0,0,0,.35); }
+.hotline-card:active{ transform:scale(.97); box-shadow:0 2px 8px -4px rgba(0,0,0,.3); }
 
 .hl-callsign{ display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; letter-spacing:.04em; margin-bottom:10px; opacity:.85; }
 .hl-dot{ width:6px; height:6px; border-radius:50%; flex-shrink:0; animation:hlPulse 1.8s ease-in-out infinite; }
@@ -262,7 +266,10 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <p class="hotline-desc">누구나 아는 메신저 말고, 둘 또는 몇 명만 아는 회선을 엽니다.</p>
   </div>
 
-  <div class="hotline-subgroup-label">보안이 강화된 핫라인 상품</div>
+  <div class="hotline-subgroup-label">
+    <span>보안이 강화된 핫라인 상품</span>
+    <a class="subgroup-link" href="aliascall_hotline_guide.html#regular">상품설명 ▷</a>
+  </div>
   <div class="hotline-grid">
     <div class="hotline-stack">
       <a class="hotline-card hl-solo" href="aliascall_hotline_purchase.html">
@@ -294,18 +301,20 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     </div>
   </div>
 
-  <!-- 2026-08-21 신설: "다자간 종단간 암호화(E2EE)" 상품 거푸집 — 아직 실제 기능은 준비중.
-       가격표(백엔드)는 미리 만들어뒀지만, 실제 구매/사용은 암호화 기능 완성 후 열림 -->
-  <div class="hotline-subgroup-label">다자간 종단간 암호화(E2EE) 상품 <span class="coming-soon-badge">준비중</span></div>
+  <!-- 2026-08-21: E2EE 완성되어 정식 판매로 전환 — "준비중" 표시/알림 제거, 실제 구매로 연결 -->
+  <div class="hotline-subgroup-label secure">
+    <span>다자간 종단간 암호화(E2EE) 상품</span>
+    <a class="subgroup-link secure" href="aliascall_hotline_guide.html#secure">상품설명 ▷</a>
+  </div>
   <div class="hotline-grid">
     <div class="hotline-stack">
-      <a class="hotline-card hl-solo hl-secure" href="javascript:void(0)" onclick="alert('종단간 암호화 상품은 준비 중입니다. 완성되는 대로 열어드릴게요!')">
+      <a class="hotline-card hl-solo hl-secure" href="aliascall_hotline_purchase.html">
         <div class="hl-callsign"><span class="hl-dot"></span>LINE·02S</div>
         <div class="hl-name">핫라인 Secure</div>
         <div class="hl-sub">단둘이, 저희도 못 봄</div>
         <div class="hl-price">3개월 5,800원부터</div>
       </a>
-      <a class="hotline-card hl-solo hl-secure" href="javascript:void(0)" onclick="alert('종단간 암호화 상품은 준비 중입니다. 완성되는 대로 열어드릴게요!')">
+      <a class="hotline-card hl-solo hl-secure" href="aliascall_hotline_purchase.html">
         <div class="hl-callsign"><span class="hl-dot"></span>LINE·02ES</div>
         <div class="hl-name">에브리바디 Secure</div>
         <div class="hl-sub">단둘이, 상대 교체+암호화</div>
@@ -313,13 +322,13 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
       </a>
     </div>
     <div class="hotline-stack">
-      <a class="hotline-card hl-eco hl-secure" href="javascript:void(0)" onclick="alert('종단간 암호화 상품은 준비 중입니다. 완성되는 대로 열어드릴게요!')">
+      <a class="hotline-card hl-eco hl-secure" href="aliascall_hotline_purchase.html">
         <div class="hl-callsign"><span class="hl-dot"></span>LINE·04ES</div>
         <div class="hl-name">이코노미 Secure</div>
         <div class="hl-sub">4인, 암호화</div>
         <div class="hl-price">3개월 11,700원부터</div>
       </a>
-      <a class="hotline-card hl-premium hl-secure" href="javascript:void(0)" onclick="alert('종단간 암호화 상품은 준비 중입니다. 완성되는 대로 열어드릴게요!')">
+      <a class="hotline-card hl-premium hl-secure" href="aliascall_hotline_purchase.html">
         <div class="hl-callsign"><span class="hl-dot"></span>LINE·04PS</div>
         <div class="hl-name">프리미엄 Secure</div>
         <div class="hl-sub">4인, 고화질+암호화</div>
