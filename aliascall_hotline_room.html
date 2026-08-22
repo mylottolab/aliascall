@@ -49,6 +49,21 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .goal-chip .goal-del{ background:none; border:none; color:var(--ink-soft); font-size:11px; cursor:pointer; padding:0 0 0 2px; }
 .goal-add-chip{ flex-shrink:0; background:none; border:1.5px dashed var(--line); border-radius:20px; padding:7px 14px; font-size:11.5px; color:var(--ink-soft); cursor:pointer; }
 
+/* 2026-08-22 신설: 오늘의 질문 카드 */
+.daily-question-card{ margin:10px 14px; background:var(--coral-tint); border-radius:12px; padding:12px 14px; }
+.dq-label{ font-size:10.5px; font-weight:700; color:var(--coral); margin-bottom:4px; }
+.dq-text{ font-size:12.5px; line-height:1.5; margin-bottom:10px; }
+.dq-actions{ display:flex; gap:8px; }
+.dq-actions button{ border:none; border-radius:8px; padding:7px 12px; font-size:11px; font-weight:700; cursor:pointer; }
+#dqSendBtn{ background:var(--coral); color:#fff; }
+#dqDismissBtn{ background:none; color:var(--ink-soft); }
+
+/* 2026-08-22 신설: 입력 중 표시 */
+.typing-indicator{ padding:2px 16px 6px; font-size:11px; color:var(--ink-soft); font-style:italic; }
+
+/* 2026-08-22 신설: 읽음 표시 */
+.bubble-read-tag{ font-size:9.5px; color:var(--ink-soft); align-self:flex-end; margin:-4px 4px 4px; }
+
 /* 2026-08-22 신설: 답장 미리보기 바 */
 .reply-bar{ display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--teal-tint); border-top:1px solid var(--line); }
 .reply-bar-content{ flex:1; overflow:hidden; }
@@ -218,7 +233,18 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 <div class="state" id="stateChat">
   <!-- 2026-08-22 신설: 목표(D-DAY) 스트립 — 여행/기념일 등 참가자 누구나 등록 가능 -->
   <div class="goals-strip" id="goalsStrip"></div>
+  <!-- 2026-08-22 신설: 오늘의 질문 — 조용해진 대화방에 화제를 던져줌 -->
+  <div class="daily-question-card" id="dailyQuestionCard" style="display:none;">
+    <div class="dq-label">💬 오늘의 질문</div>
+    <div class="dq-text" id="dailyQuestionText"></div>
+    <div class="dq-actions">
+      <button type="button" id="dqSendBtn">대화 시작하기</button>
+      <button type="button" id="dqDismissBtn">닫기</button>
+    </div>
+  </div>
   <div class="chat-messages" id="chatMessages"></div>
+  <!-- 2026-08-22 신설: 입력 중 표시 -->
+  <div class="typing-indicator" id="typingIndicator" style="display:none;"></div>
   <!-- 2026-08-22 신설: 이모지 선택 패널 (무료 유니코드 이모지만 씀 — 카톡 캐릭터 이모티콘 같은
        저작권 있는 건 안 씀) -->
   <div class="emoji-panel" id="emojiPanel"></div>
@@ -431,9 +457,15 @@ async function init(){
     renderGoalsStrip();
     myFavoriteMessageIds = new Set(data.myFavoriteMessageIds || []);
 
+    // 2026-08-22 신설: 읽음 표시 초기 상태 + 오늘의 질문
+    memberLastReadAt = {};
+    (data.members || []).forEach((m) => { memberLastReadAt[m.member_anon_id] = m.last_read_at; });
+    initDailyQuestion();
+
     for (const m of (data.messages || [])) { await appendChatMessage(m); renderedMsgIds.add(m.id); }
     showState('stateChat');
     subscribeChat();
+    markAsRead(); // 2026-08-22 신설: 방에 들어온 시점 = 여기까지 다 읽은 것으로 처리
   } catch (e) {
     console.error('[hotline-room] 초기화 실패', e);
     document.getElementById('errorMsg').textContent = '불러오지 못했어요. 잠시 후 다시 시도해주세요.';
@@ -458,13 +490,18 @@ function subscribeChat(){
       if (renderedMsgIds.has(payload.id)) return;
       renderedMsgIds.add(payload.id);
       await appendChatMessage(payload);
-      if (payload.sender_anon_id !== mySenderAnonId) playChatPing();
+      if (payload.sender_anon_id !== mySenderAnonId) {
+        playChatPing();
+        if (document.getElementById('stateChat').classList.contains('show') && !document.hidden) markAsRead(); // 2026-08-22 신설: 채팅화면을 보고 있는 중이면 바로 읽음 처리
+      }
     })
     .on('broadcast', { event: 'music-sync' }, ({ payload }) => applyMusicSync(payload)) // 2026-08-22 신설
     .on('broadcast', { event: 'message-edited' }, ({ payload }) => applyMessageEdited(payload)) // 2026-08-22 신설
     .on('broadcast', { event: 'message-deleted' }, ({ payload }) => applyMessageDeleted(payload)) // 2026-08-22 신설
     .on('broadcast', { event: 'goal-created' }, ({ payload }) => { currentGoals.push(payload); renderGoalsStrip(); }) // 2026-08-22 신설
     .on('broadcast', { event: 'goal-deleted' }, ({ payload }) => { currentGoals = currentGoals.filter((g) => g.id !== payload.id); renderGoalsStrip(); }) // 2026-08-22 신설
+    .on('broadcast', { event: 'typing' }, ({ payload }) => showTypingIndicator(payload.nickname)) // 2026-08-22 신설
+    .on('broadcast', { event: 'read-receipt' }, ({ payload }) => { memberLastReadAt[payload.anonId] = payload.readAt; refreshReadTags(); }) // 2026-08-22 신설
     .subscribe();
 }
 
@@ -537,7 +574,7 @@ async function appendChatMessage(msg){
   if (msg.deleted_at) {
     el.classList.add('deleted');
     el.textContent = '삭제된 메시지입니다';
-    messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: msg.message_type, previewText: '삭제된 메시지', deleted: true });
+    messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: msg.message_type, previewText: '삭제된 메시지', deleted: true, createdAt: msg.created_at });
     list.appendChild(el);
     list.scrollTop = list.scrollHeight;
     return;
@@ -637,7 +674,10 @@ async function appendChatMessage(msg){
   list.appendChild(el);
   list.scrollTop = list.scrollHeight;
 
-  messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: msg.message_type, previewText, deleted: false });
+  messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: msg.message_type, previewText, deleted: false, createdAt: msg.created_at });
+
+  // 2026-08-22 신설: 내가 보낸 메시지면 "읽음" 표시 상태를 바로 반영
+  if (isMe) refreshReadTags();
 }
 
 // 복호화 실패해도 화면이 안 깨지게 감싸는 헬퍼
@@ -701,7 +741,7 @@ async function sendChatMessage(){
     if (!res.ok) throw new Error(data.error);
     // ⚠ 화면에 바로 보여줄 때도 암호문(payloadText)을 넘김 — appendChatMessage가 암호화 상품이면
     // 항상 복호화를 시도하므로, 평문을 그대로 넘기면 오히려 복호화 실패로 처리됨
-    await appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: 'text', content: payloadText, reply_to_message_id: replyToMessageId });
+    await appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: 'text', content: payloadText, reply_to_message_id: replyToMessageId, created_at: data.createdAt });
     renderedMsgIds.add(data.messageId);
   } catch (e) {
     console.error('[hotline-room] 메시지 전송 실패', e);
@@ -1020,6 +1060,99 @@ document.getElementById('goalSaveBtn').addEventListener('click', async () => {
   });
 })();
 
+// =====================================================
+// 2026-08-22 신설 (2단계): 입력 중 표시 / 읽음 표시 / 오늘의 질문
+// =====================================================
+
+// ── 입력 중 표시 ──
+let lastTypingSentAt = 0;
+let typingIndicatorTimeout = null;
+document.getElementById('chatInput').addEventListener('input', () => {
+  if (!chatChannel) return;
+  const now = Date.now();
+  if (now - lastTypingSentAt < 2000) return; // 2초에 한 번만 신호 보냄(스팸 방지)
+  lastTypingSentAt = now;
+  chatChannel.send({ type: 'broadcast', event: 'typing', payload: { nickname: myNickname } });
+});
+function showTypingIndicator(nickname){
+  const el = document.getElementById('typingIndicator');
+  el.textContent = nickname + '님이 입력 중…';
+  el.style.display = 'block';
+  clearTimeout(typingIndicatorTimeout);
+  typingIndicatorTimeout = setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// ── 읽음 표시 ──
+let memberLastReadAt = {}; // anonId -> ISO 문자열
+
+function isReadByOthers(createdAt){
+  if (!createdAt) return false;
+  return Object.entries(memberLastReadAt).some(([anonId, readAt]) => anonId !== mySenderAnonId && readAt && new Date(readAt) >= new Date(createdAt));
+}
+function refreshReadTags(){
+  document.querySelectorAll('.chat-bubble.me[data-message-id]').forEach((el) => {
+    const cached = messageCache.get(el.dataset.messageId);
+    if (!cached || !cached.createdAt) return;
+    const nextSibling = el.nextElementSibling;
+    const hasTag = nextSibling && nextSibling.classList && nextSibling.classList.contains('bubble-read-tag');
+    if (isReadByOthers(cached.createdAt)) {
+      if (!hasTag) {
+        const tag = document.createElement('div');
+        tag.className = 'bubble-read-tag';
+        tag.textContent = '읽음';
+        el.after(tag);
+      }
+    } else if (hasTag) {
+      nextSibling.remove();
+    }
+  });
+}
+async function markAsRead(){
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-mark-read`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ hotlineId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    });
+  } catch (e) { /* 읽음표시 실패는 조용히 무시 — 대화 자체엔 지장 없음 */ }
+}
+
+// ── 오늘의 질문 ──
+const DAILY_QUESTIONS = [
+  '오늘 가장 웃겼던 일은?', '요즘 가장 듣고 싶은 노래는?', '이번 주말에 하고 싶은 것 한 가지는?',
+  '최근에 감동받았던 순간은?', '요즘 가장 자주 먹는 음식은?', '어릴 때 꿈꿨던 직업은?',
+  '지금 가장 가고 싶은 여행지는?', '오늘 하루를 색깔로 표현한다면?', '최근에 산 물건 중 가장 만족스러운 건?',
+  '스트레스 풀 때 뭐 해?', '요즘 빠져있는 취미가 있다면?', '기억에 남는 선물은?',
+  '오늘 점심(저녁)엔 뭐 먹었어?', '최근에 본 영화나 드라마 추천해줄래?', '지금 날씨 어때? 뭐 하고 싶어져?',
+  '어릴 때 별명이 뭐였어?', '요즘 잠은 잘 자?', '오늘 컨디션 1~10점 중 몇 점이야?',
+  '최근에 새로 배운 것이 있다면?', '지금 당장 떠날 수 있다면 어디로 가고 싶어?',
+  '오늘 하루 중 가장 좋았던 순간은?', '요즘 고민이 있다면 뭐야?', '최근에 웃참했던 순간이 있어?',
+  '만약 하루 휴가가 생긴다면 뭐 할래?', '지금 듣고 있는 노래(또는 최근 애청곡)는?',
+  '오늘 날씨처럼 기분도 그래?', '최근에 다녀온 곳 중 좋았던 곳은?', '요즘 관심있는 뉴스나 화제가 있어?',
+  '지금 제일 먹고 싶은 음식은?', '오늘 나한테 칭찬 한마디 해줄래?',
+];
+function getTodayQuestion(){
+  const dayIndex = Math.floor(Date.now() / 86400000);
+  return DAILY_QUESTIONS[dayIndex % DAILY_QUESTIONS.length];
+}
+function initDailyQuestion(){
+  const dateKey = new Date().toISOString().slice(0, 10);
+  const dismissKey = 'aliascall_dq_dismissed_' + hotlineId + '_' + dateKey;
+  if (localStorage.getItem(dismissKey)) return;
+  document.getElementById('dailyQuestionText').textContent = getTodayQuestion();
+  document.getElementById('dailyQuestionCard').style.display = 'block';
+}
+function dismissDailyQuestion(){
+  const dateKey = new Date().toISOString().slice(0, 10);
+  localStorage.setItem('aliascall_dq_dismissed_' + hotlineId + '_' + dateKey, '1');
+  document.getElementById('dailyQuestionCard').style.display = 'none';
+}
+document.getElementById('dqDismissBtn').addEventListener('click', dismissDailyQuestion);
+document.getElementById('dqSendBtn').addEventListener('click', () => {
+  document.getElementById('chatInput').value = document.getElementById('dailyQuestionText').textContent;
+  dismissDailyQuestion();
+  document.getElementById('chatInput').focus();
+});
+
 document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
 document.getElementById('attachBtn').addEventListener('click', () => document.getElementById('fileInput').click());
@@ -1286,7 +1419,7 @@ async function uploadAndSendFile(file){
     const msgData = await msgRes.json();
     if (!msgRes.ok) throw new Error(msgData.error);
 
-    await appendChatMessage({ id: msgData.messageId, sender_anon_id: mySenderAnonId, message_type: fileType, content: uploadData.url, file_name: fileNamePayload, original_mime_type: file.type });
+    await appendChatMessage({ id: msgData.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: fileType, content: uploadData.url, file_name: fileNamePayload, original_mime_type: file.type, created_at: msgData.createdAt });
     renderedMsgIds.add(msgData.messageId);
     showState('stateChat'); updateNavActive('navChat');
   } catch (e) {
@@ -1302,6 +1435,7 @@ function updateNavActive(id){
 document.getElementById('navChat').addEventListener('click', () => {
   if (activeCall) endCall();
   showState('stateChat'); updateNavActive('navChat');
+  markAsRead(); // 2026-08-22 신설
 });
 document.getElementById('navVoice').addEventListener('click', () => { showState('stateCall'); updateNavActive('navVoice'); startCall('voice'); });
 document.getElementById('navVideo').addEventListener('click', () => { showState('stateCall'); updateNavActive('navVideo'); startCall('video'); });
