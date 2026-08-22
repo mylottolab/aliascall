@@ -6,6 +6,7 @@
 <title>Aliascall — 핫라인</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_e2ee.js"></script>
+<script src="aliascall_emoji.js"></script>
 <script src="aliascall_push.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -47,7 +48,17 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); flex-shrink:0; align-items:center; }
 .chat-input-row input[type="text"]{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
 .chat-input-row button{ background:var(--teal); color:#fff; border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; }
+#emojiBtn{ background:var(--teal-tint); }
 
+/* 2026-08-22 신설: 이모지 선택 패널 — 애니메이션 GIF 이미지 그리드 */
+.emoji-panel{ display:none; grid-template-columns:repeat(8,1fr); gap:2px; padding:10px 8px 4px; background:var(--card); border-top:1px solid var(--line); max-height:220px; overflow-y:auto; flex-shrink:0; }
+.emoji-panel.show{ display:grid; }
+.aliascall-emoji-btn{ background:none; border:none; padding:5px; cursor:pointer; border-radius:8px; line-height:1; font-size:20px; }
+.aliascall-emoji-btn img{ width:26px; height:26px; display:block; margin:0 auto; }
+.aliascall-emoji-btn:active{ background:var(--teal-tint); }
+.aliascall-emoji-credit{ grid-column:1/-1; text-align:center; font-size:9px; color:var(--ink-soft); padding:6px 0 2px; }
+.emoji-sticker-bubble{ padding:4px !important; display:flex; gap:2px; }
+.emoji-sticker{ width:52px; height:52px; }
 .call-area{ flex:1; background:var(--teal-deep); display:flex; flex-direction:column; padding:16px; overflow-y:auto; }
 .call-status{ text-align:center; color:#fff; font-size:12.5px; margin-bottom:14px; }
 .tiles-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
@@ -99,9 +110,13 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 
 <div class="state" id="stateChat">
   <div class="chat-messages" id="chatMessages"></div>
+  <!-- 2026-08-22 신설: 이모지 선택 패널 (무료 유니코드 이모지만 씀 — 카톡 캐릭터 이모티콘 같은
+       저작권 있는 건 안 씀) -->
+  <div class="emoji-panel" id="emojiPanel"></div>
   <div class="chat-input-row">
     <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip">
     <button type="button" id="attachBtn" title="파일 첨부">📎</button>
+    <button type="button" id="emojiBtn" title="이모지">😊</button>
     <input type="text" id="chatInput" placeholder="메시지 입력…">
     <button id="chatSendBtn">➤</button>
   </div>
@@ -342,7 +357,21 @@ async function appendChatMessage(msg){
     });
     el.appendChild(a);
   } else {
-    el.textContent = roomIsSecure ? await safeDecryptText(msg.content) : msg.content;
+    const text = roomIsSecure ? await safeDecryptText(msg.content) : msg.content;
+    // 2026-08-22 신설: 메시지가 이모지 1~3개로만 이루어져 있으면 큰 애니메이션 스티커로 표시
+    const emojiOnly = aliascallExtractEmojiOnly(text);
+    if (emojiOnly) {
+      el.classList.add('emoji-sticker-bubble');
+      el.style.background = 'none';
+      emojiOnly.forEach((item) => {
+        const img = document.createElement('img');
+        img.src = item.url; img.alt = item.char; img.className = 'emoji-sticker';
+        img.onerror = () => { img.replaceWith(document.createTextNode(item.char)); };
+        el.appendChild(img);
+      });
+    } else {
+      el.textContent = text;
+    }
   }
 
   list.appendChild(el);
@@ -392,6 +421,21 @@ document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage
 document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
 document.getElementById('attachBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+
+// ── 2026-08-22 수정: 이모지 선택 패널 — 공용 함수(아이스콜_emoji.js)로 애니메이션 GIF까지 지원 ──
+const emojiPanel = document.getElementById('emojiPanel');
+renderAliascallEmojiPanel(emojiPanel, (char) => {
+  const input = document.getElementById('chatInput');
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  input.value = input.value.slice(0, start) + char + input.value.slice(end);
+  const newPos = start + char.length;
+  input.focus();
+  input.setSelectionRange(newPos, newPos);
+});
+document.getElementById('emojiBtn').addEventListener('click', () => {
+  emojiPanel.classList.toggle('show');
+});
 document.getElementById('navUpload').addEventListener('click', () => document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change', async (e) => {
   const file = e.target.files[0];
