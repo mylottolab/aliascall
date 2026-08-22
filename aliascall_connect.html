@@ -15,6 +15,7 @@
 <script src="aliascall_emoji.js"></script>
 <script src="aliascall_image_compress.js"></script>
 <script src="aliascall_zoom_lightbox.js"></script>
+<script src="aliascall_camera_capture.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -365,7 +366,6 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
     <div class="emoji-panel" id="emojiPanel"></div>
     <div class="chat-input-row">
       <input type="file" id="chatPhotoInput" accept="image/*" style="display:none;">
-      <input type="file" id="chatCameraInput" accept="image/*" capture="environment" style="display:none;">
       <button type="button" class="chat-attach-btn" id="chatAttachBtn" title="사진 첨부">📎</button>
       <button type="button" class="chat-attach-btn" id="chatCameraBtn" title="사진 촬영">📷</button>
       <button type="button" id="emojiBtn" title="이모지">😊</button>
@@ -1738,13 +1738,10 @@ document.getElementById('chatPhotoInput').addEventListener('change', async (e) =
   await sendChatPhoto(file);
 });
 
-// 2026-08-22 신설: "갤러리에서 고르기"와 별개로 "바로 촬영하기" 버튼 — 같은 전송 함수를 재사용함
-document.getElementById('chatCameraBtn').addEventListener('click', () => document.getElementById('chatCameraInput').click());
-document.getElementById('chatCameraInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  await sendChatPhoto(file);
+// 2026-08-22 수정: 노트북 웹캠에서도 실제로 카메라가 열리도록, 브라우저 내장 카메라 촬영
+// 모듈을 씀 (<input capture>는 데스크톱에서 대부분 무시되고 파일탐색기가 뜨는 문제가 있었음)
+document.getElementById('chatCameraBtn').addEventListener('click', () => {
+  aliascallOpenCameraCapture((file) => sendChatPhoto(file));
 });
 
 async function sendChatPhoto(file){
