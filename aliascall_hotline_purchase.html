@@ -33,12 +33,16 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 
 .login-needed{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13px; }
 
-.tier-tabs{ display:flex; gap:6px; margin-bottom:16px; }
+.tier-tabs{ display:flex; gap:6px; margin-bottom:10px; }
 .tier-tab{ flex:1; border:1.5px solid var(--line); background:var(--card); border-radius:12px; padding:12px 8px; text-align:center; cursor:pointer; }
 .tier-tab.active{ border-color:var(--teal); background:var(--teal-tint); }
 .tier-tab .t-name{ font-size:11.5px; font-weight:700; margin-bottom:2px; }
 .tier-tab .t-sub{ font-size:9px; color:var(--ink-soft); }
 .tier-tab[data-tier="premium_4"].active{ border-color:var(--brass); background:rgba(201,162,75,.12); }
+/* 2026-08-22 수정: Secure 4종 — 이제 별도 상품 탭이지, "+50%" 같은 계산식 표시는 없앰 */
+.tier-tabs.secure-row{ margin-bottom:18px; }
+.tier-tab.secure{ border-style:dashed; }
+.tier-tab.secure.active{ border-color:var(--brass); border-style:solid; background:rgba(201,162,75,.14); }
 
 .duration-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:18px; }
 .duration-card{ border:1.5px solid var(--line); background:var(--card); border-radius:12px; padding:14px 10px; text-align:center; cursor:pointer; }
@@ -57,10 +61,7 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 
 .pay-btn{ width:100%; background:var(--teal); color:#fff; border:none; border-radius:12px; padding:16px; font-weight:700; font-size:14.5px; cursor:pointer; }
 
-/* 2026-08-21 신설: 종단간 암호화 토글 + 열쇠(키) 노출 화면 */
-.secure-toggle-row{ display:flex; align-items:center; gap:9px; background:var(--card); border:1.5px solid var(--brass); border-radius:12px; padding:13px 14px; margin-bottom:16px; cursor:pointer; font-size:12.5px; font-weight:600; }
-.secure-toggle-row input{ width:17px; height:17px; accent-color:var(--brass); flex-shrink:0; }
-.secure-toggle-note{ font-weight:400; color:var(--ink-soft); font-size:11px; }
+/* 2026-08-21 신설: 열쇠(키) 노출 화면 */
 .key-reveal-card{ background:var(--card); border-radius:16px; padding:26px 22px; text-align:center; }
 .key-reveal-icon{ font-size:36px; margin-bottom:8px; }
 .key-link-row{ display:flex; gap:6px; }
@@ -93,14 +94,16 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
       <div class="tier-tab" data-tier="economy_4"><div class="t-name">이코노미</div><div class="t-sub">4인</div></div>
       <div class="tier-tab" data-tier="premium_4"><div class="t-name">프리미엄</div><div class="t-sub">4인</div></div>
     </div>
+    <!-- 2026-08-22 수정: "암호화 추가(+50%)" 체크박스를 없애고, 8개 상품 전부 독립된 별개
+         상품 탭으로 분리함 — 계산식이 아니라 그 자체로 이름과 가격이 있는 상품임을 명확히 함 -->
+    <div class="tier-tabs secure-row" id="tierTabsSecure">
+      <div class="tier-tab secure" data-tier="hotline_1to1_secure"><div class="t-name">핫라인🔒</div><div class="t-sub">2인·암호화</div></div>
+      <div class="tier-tab secure" data-tier="hotline_everybody_secure"><div class="t-name">에브리바디🔒</div><div class="t-sub">2인·교체+암호화</div></div>
+      <div class="tier-tab secure" data-tier="economy_4_secure"><div class="t-name">이코노미🔒</div><div class="t-sub">4인·암호화</div></div>
+      <div class="tier-tab secure" data-tier="premium_4_secure"><div class="t-name">프리미엄🔒</div><div class="t-sub">4인·암호화</div></div>
+    </div>
 
     <div class="duration-grid" id="durationGrid"><div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px; padding:20px;">불러오는 중…</div></div>
-
-    <!-- 2026-08-21 신설: 종단간 암호화 토글 -->
-    <label class="secure-toggle-row" id="secureToggleRow">
-      <input type="checkbox" id="secureToggle">
-      <span>🔒 종단간 암호화 추가 <span class="secure-toggle-note">(저희도 대화 내용을 못 봅니다 · +50%)</span></span>
-    </label>
 
     <div class="summary-card" id="summaryCard" style="display:none;">
       <div class="summary-row"><span>상품</span><span id="sumTier">-</span></div>
@@ -144,17 +147,15 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 
-const TIER_LABEL = { hotline_1to1: '핫라인 (2인)', hotline_everybody: '핫라인 에브리바디 (2인)', economy_4: '이코노미 (4인)', premium_4: '프리미엄 (4인)' };
+const TIER_LABEL = {
+  hotline_1to1: '핫라인 (2인)', hotline_everybody: '핫라인 에브리바디 (2인)', economy_4: '이코노미 (4인)', premium_4: '프리미엄 (4인)',
+  hotline_1to1_secure: '핫라인 Secure (2인)', hotline_everybody_secure: '핫라인 에브리바디 Secure (2인)', economy_4_secure: '이코노미 Secure (4인)', premium_4_secure: '프리미엄 Secure (4인)',
+};
 let allPlans = [];
-let selectedBaseTier = 'hotline_1to1';
+let selectedTier = 'hotline_1to1'; // 2026-08-22 수정: 8개 상품 중 하나를 직접 고름(더 이상 "기본+토글" 조합이 아님)
 let selectedDuration = 3;
 let selectedMethod = 'inicis';
 let session = null;
-
-// 2026-08-21 신설: 토글이 켜져있으면 실제로 조회/결제할 tier는 "_secure"가 붙은 버전
-function effectiveTier(){
-  return selectedBaseTier + (document.getElementById('secureToggle').checked ? '_secure' : '');
-}
 
 async function init(){
   const { data: { session: s } } = await sb.auth.getSession();
@@ -167,20 +168,20 @@ async function init(){
   renderDurations();
 }
 
+// 2026-08-22 수정: 두 줄(일반4 + Secure4)을 합쳐서 하나의 선택 그룹으로 다룸
 document.querySelectorAll('.tier-tab').forEach((tab) => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tier-tab').forEach((t) => t.classList.remove('active'));
     tab.classList.add('active');
-    selectedBaseTier = tab.dataset.tier;
+    selectedTier = tab.dataset.tier;
     renderDurations();
   });
 });
 document.querySelector('.tier-tab[data-tier="hotline_1to1"]').classList.add('active');
-document.getElementById('secureToggle').addEventListener('change', renderDurations);
 
 function renderDurations(){
   const grid = document.getElementById('durationGrid');
-  const plansForTier = allPlans.filter((p) => p.tier === effectiveTier()).sort((a, b) => a.duration_months - b.duration_months);
+  const plansForTier = allPlans.filter((p) => p.tier === selectedTier).sort((a, b) => a.duration_months - b.duration_months);
   if (plansForTier.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px;">요금 정보가 없어요.</div>'; document.getElementById('summaryCard').style.display = 'none'; document.getElementById('inicisPayBtn').disabled = true; return; }
 
   grid.innerHTML = plansForTier.map((p) => `
@@ -205,14 +206,14 @@ function renderDurations(){
 }
 
 function currentPlan(){
-  return allPlans.find((p) => p.tier === effectiveTier() && p.duration_months === selectedDuration);
+  return allPlans.find((p) => p.tier === selectedTier && p.duration_months === selectedDuration);
 }
 
 function updateSummary(){
   const plan = currentPlan();
   if (!plan) return;
   document.getElementById('summaryCard').style.display = 'block';
-  document.getElementById('sumTier').textContent = TIER_LABEL[selectedBaseTier] + (document.getElementById('secureToggle').checked ? ' 🔒Secure' : '');
+  document.getElementById('sumTier').textContent = TIER_LABEL[selectedTier];
   document.getElementById('sumDuration').textContent = selectedDuration + '개월';
   document.getElementById('sumCap').textContent = plan.usage_cap_gb + 'GB';
   document.getElementById('sumPrice').textContent = plan.price_krw.toLocaleString() + '원';
@@ -233,7 +234,7 @@ document.querySelectorAll('.pay-method-tab').forEach((tab) => {
 // 2026-08-21 신설: 결제 시작 전, 암호화 상품이면 미리 키를 만들어서 세션에 잠깐 보관해둠
 // (서버로는 절대 안 보냄 — 결제 완료 후 이 값을 다시 꺼내서 초대링크의 #뒷부분에 붙임)
 async function prepareSecureKeyIfNeeded(){
-  if (!document.getElementById('secureToggle').checked) return null;
+  if (!isSecureTier(selectedTier)) return null;
   const key = await e2eeGenerateKeyBase64();
   sessionStorage.setItem('aliascall_pending_e2ee_key', key);
   return key;
@@ -246,7 +247,7 @@ document.getElementById('inicisPayBtn').addEventListener('click', async () => {
   try {
     await prepareSecureKeyIfNeeded();
     await startHotlineInicisPayment(sb, {
-      tier: effectiveTier(),
+      tier: selectedTier,
       durationMonths: selectedDuration,
       buyername: session.user.user_metadata?.nickname || '회원',
       buyertel: '',
@@ -262,7 +263,7 @@ let paypalRendered = false;
 function renderPaypalButton(){
   if (paypalRendered) return;
   paypalRendered = true;
-  renderHotlinePayPalButtons(sb, 'paypalButtonContainer', { tier: effectiveTier(), durationMonths: selectedDuration }, async (data) => {
+  renderHotlinePayPalButtons(sb, 'paypalButtonContainer', { tier: selectedTier, durationMonths: selectedDuration }, async (data) => {
     const pendingKey = sessionStorage.getItem('aliascall_pending_e2ee_key');
     if (pendingKey && data.inviteToken) {
       // 2026-08-21: 암호화 상품 — 결제 성공 즉시 여기서 열쇠(링크) 보여줌 (다른 화면으로 안 넘어감)
