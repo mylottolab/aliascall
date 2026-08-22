@@ -32,6 +32,78 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .room-header{ padding:14px 18px; background:var(--card); border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
 .room-title{ font-size:14.5px; font-weight:700; }
 .room-meta{ font-size:11px; color:var(--ink-soft); }
+#moreMenuBtn{ background:none; border:none; font-size:20px; color:var(--ink-soft); cursor:pointer; padding:4px 8px; }
+
+/* 2026-08-22 신설: 더보기 메뉴 */
+.more-menu-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; }
+.more-menu-overlay.show{ display:block; }
+.more-menu-sheet{ position:absolute; top:56px; right:14px; background:var(--card); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.2); overflow:hidden; min-width:170px; }
+.more-menu-item{ display:block; width:100%; text-align:left; background:none; border:none; padding:13px 16px; font-size:13px; cursor:pointer; border-bottom:1px solid var(--line); }
+.more-menu-item:last-child{ border-bottom:none; }
+.more-menu-item.close{ color:var(--ink-soft); }
+
+/* 2026-08-22 신설: 목표(D-DAY) 스트립 */
+.goals-strip{ display:flex; gap:8px; padding:10px 14px; overflow-x:auto; background:var(--paper); border-bottom:1px solid var(--line); flex-shrink:0; }
+.goal-chip{ flex-shrink:0; background:var(--card); border:1.5px solid var(--teal); border-radius:20px; padding:7px 13px; font-size:11.5px; font-weight:700; color:var(--teal-deep); white-space:nowrap; display:flex; align-items:center; gap:6px; }
+.goal-chip .goal-days{ font-family:'IBM Plex Mono',monospace; }
+.goal-chip .goal-del{ background:none; border:none; color:var(--ink-soft); font-size:11px; cursor:pointer; padding:0 0 0 2px; }
+.goal-add-chip{ flex-shrink:0; background:none; border:1.5px dashed var(--line); border-radius:20px; padding:7px 14px; font-size:11.5px; color:var(--ink-soft); cursor:pointer; }
+
+/* 2026-08-22 신설: 답장 미리보기 바 */
+.reply-bar{ display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--teal-tint); border-top:1px solid var(--line); }
+.reply-bar-content{ flex:1; overflow:hidden; }
+.reply-bar-label{ font-size:10.5px; font-weight:700; color:var(--teal-deep); }
+.reply-bar-text{ font-size:11.5px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#replyBarCancel{ background:none; border:none; font-size:14px; color:var(--ink-soft); cursor:pointer; flex-shrink:0; }
+
+#voiceInputBtn{ background:var(--teal-tint); }
+#voiceInputBtn.listening{ background:var(--danger); color:#fff; animation:voicePulse 1s ease-in-out infinite; }
+@keyframes voicePulse{ 0%,100%{ opacity:1; } 50%{ opacity:.5; } }
+
+/* 2026-08-22 신설: 메시지 작업 메뉴(답장/즐겨찾기/메모/수정/삭제) */
+.action-sheet-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:210; align-items:flex-end; }
+.action-sheet-overlay.show{ display:flex; }
+.action-sheet{ background:var(--card); width:100%; border-radius:16px 16px 0 0; overflow:hidden; padding-bottom:env(safe-area-inset-bottom,0); }
+.action-sheet-item{ display:block; width:100%; text-align:left; background:none; border:none; padding:15px 20px; font-size:13.5px; cursor:pointer; border-bottom:1px solid var(--line); }
+.action-sheet-item.danger{ color:var(--danger); }
+.action-sheet-item.close{ color:var(--ink-soft); border-bottom:none; }
+
+/* 2026-08-22 신설: 목표 추가 모달 */
+.modal-overlay-hl{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:220; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay-hl.show{ display:flex; }
+.modal-box-hl{ background:var(--card); border-radius:16px; padding:22px; width:100%; max-width:340px; }
+.modal-box-hl input{ width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:10px; padding:11px 13px; font-size:13px; margin-bottom:10px; }
+.goal-mode-tabs{ display:flex; gap:6px; margin-bottom:16px; }
+.goal-mode-tab{ flex:1; border:1.5px solid var(--line); background:var(--card); border-radius:8px; padding:9px 4px; font-size:11px; font-weight:700; cursor:pointer; color:var(--ink-soft); }
+.goal-mode-tab.active{ border-color:var(--teal); background:var(--teal-tint); color:var(--teal-deep); }
+#goalSaveBtn{ width:100%; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:13px; cursor:pointer; margin-bottom:8px; }
+.modal-cancel-btn{ width:100%; background:none; border:none; color:var(--ink-soft); padding:8px; font-size:12.5px; cursor:pointer; }
+
+/* 2026-08-22 신설: 즐겨찾기/메모함 패널 */
+.panel-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:220; align-items:flex-end; }
+.panel-overlay.show{ display:flex; }
+.panel-sheet{ background:var(--card); width:100%; max-height:75vh; border-radius:16px 16px 0 0; display:flex; flex-direction:column; }
+.panel-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; font-weight:700; font-size:14px; border-bottom:1px solid var(--line); }
+.panel-close{ background:none; border:none; font-size:16px; color:var(--ink-soft); cursor:pointer; }
+.panel-list{ overflow-y:auto; padding:10px 14px; flex:1; }
+.panel-empty{ text-align:center; color:var(--ink-soft); font-size:12px; padding:30px 10px; }
+.panel-item{ display:flex; align-items:flex-start; gap:8px; padding:10px 0; border-bottom:1px solid var(--line); }
+.panel-item-text{ flex:1; font-size:12.5px; }
+.panel-item-meta{ font-size:10px; color:var(--ink-soft); margin-top:3px; }
+.panel-item-del{ background:none; border:none; color:var(--ink-soft); font-size:13px; cursor:pointer; flex-shrink:0; }
+.keep-add-row{ display:flex; gap:6px; padding:10px 14px; border-top:1px solid var(--line); }
+.keep-add-row input{ flex:1; border:1.5px solid var(--line); border-radius:10px; padding:9px 12px; font-size:12px; }
+.keep-add-row button{ background:var(--teal); color:#fff; border:none; border-radius:10px; padding:0 14px; font-size:12px; font-weight:700; cursor:pointer; }
+
+/* 2026-08-22 신설: 말풍선 안의 답장 인용 미리보기 / 수정됨·삭제됨 표시 / 즐겨찾기 별 */
+.bubble-reply-quote{ font-size:10.5px; opacity:.75; border-left:2px solid currentColor; padding:3px 8px; margin-bottom:5px; border-radius:4px; background:rgba(0,0,0,.06); }
+.bubble-edited-tag{ font-size:9.5px; opacity:.6; margin-left:4px; }
+.bubble-favorite-star{ position:absolute; top:-6px; right:-6px; font-size:11px; }
+.chat-bubble{ position:relative; }
+.chat-bubble.deleted{ font-style:italic; opacity:.5; }
+.bubble-action-trigger{ position:absolute; top:-8px; background:var(--card); border:1px solid var(--line); border-radius:50%; width:22px; height:22px; font-size:12px; cursor:pointer; color:var(--ink-soft); line-height:1; box-shadow:0 1px 4px rgba(0,0,0,.12); }
+.chat-bubble.me .bubble-action-trigger{ left:-8px; }
+.chat-bubble.them .bubble-action-trigger{ right:-8px; }
 
 .state{ display:none; flex:1; overflow:hidden; flex-direction:column; }
 .state.show{ display:flex; }
@@ -118,6 +190,16 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
     <div class="room-title" id="roomTitle">핫라인</div>
     <div class="room-meta" id="roomMeta"></div>
   </div>
+  <button type="button" id="moreMenuBtn" title="더보기">⋯</button>
+</div>
+
+<!-- 2026-08-22 신설: 더보기 메뉴(즐겨찾기/메모함) -->
+<div class="more-menu-overlay" id="moreMenuOverlay">
+  <div class="more-menu-sheet">
+    <button type="button" class="more-menu-item" id="openFavoritesBtn">⭐ 즐겨찾기 보기</button>
+    <button type="button" class="more-menu-item" id="openKeepBtn">📌 내 메모함</button>
+    <button type="button" class="more-menu-item close" id="moreMenuCloseBtn">닫기</button>
+  </div>
 </div>
 
 <div class="state show" id="stateLoading"><div class="loading-state">불러오는 중…</div></div>
@@ -134,17 +216,73 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 </div>
 
 <div class="state" id="stateChat">
+  <!-- 2026-08-22 신설: 목표(D-DAY) 스트립 — 여행/기념일 등 참가자 누구나 등록 가능 -->
+  <div class="goals-strip" id="goalsStrip"></div>
   <div class="chat-messages" id="chatMessages"></div>
   <!-- 2026-08-22 신설: 이모지 선택 패널 (무료 유니코드 이모지만 씀 — 카톡 캐릭터 이모티콘 같은
        저작권 있는 건 안 씀) -->
   <div class="emoji-panel" id="emojiPanel"></div>
+  <!-- 2026-08-22 신설: 답장/수정 중일 때 보이는 미리보기 바 -->
+  <div class="reply-bar" id="replyBar" style="display:none;">
+    <div class="reply-bar-content">
+      <div class="reply-bar-label" id="replyBarLabel"></div>
+      <div class="reply-bar-text" id="replyBarText"></div>
+    </div>
+    <button type="button" id="replyBarCancel">✕</button>
+  </div>
   <div class="chat-input-row">
     <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip">
     <button type="button" id="attachBtn" title="파일 첨부">📎</button>
     <button type="button" id="cameraBtn" title="사진 촬영">📷</button>
     <button type="button" id="emojiBtn" title="이모지">😊</button>
+    <button type="button" id="voiceInputBtn" title="음성으로 입력">🎙️</button>
     <input type="text" id="chatInput" placeholder="메시지 입력…">
     <button id="chatSendBtn">➤</button>
+  </div>
+</div>
+
+<!-- 2026-08-22 신설: 메시지를 눌렀을 때 나오는 작업 메뉴(답장/즐겨찾기/메모/수정/삭제) -->
+<div class="action-sheet-overlay" id="actionSheetOverlay">
+  <div class="action-sheet">
+    <button type="button" class="action-sheet-item" id="actionReply">↩️ 답장</button>
+    <button type="button" class="action-sheet-item" id="actionFavorite">⭐ 즐겨찾기</button>
+    <button type="button" class="action-sheet-item" id="actionKeep">📌 메모함에 저장</button>
+    <button type="button" class="action-sheet-item" id="actionEdit" style="display:none;">✏️ 수정</button>
+    <button type="button" class="action-sheet-item danger" id="actionDelete" style="display:none;">🗑️ 삭제</button>
+    <button type="button" class="action-sheet-item close" id="actionSheetClose">닫기</button>
+  </div>
+</div>
+
+<!-- 2026-08-22 신설: 목표(D-DAY) 추가 모달 -->
+<div class="modal-overlay-hl" id="goalModalOverlay">
+  <div class="modal-box-hl">
+    <h3 style="margin-bottom:14px;">🎯 목표 추가</h3>
+    <input type="text" id="goalTitleInput" placeholder="예: 제주여행, 만난 날" maxlength="30">
+    <input type="date" id="goalDateInput">
+    <div class="goal-mode-tabs">
+      <button type="button" class="goal-mode-tab active" data-mode="countdown">D-day (목표일까지)</button>
+      <button type="button" class="goal-mode-tab" data-mode="countup">D+day (그날부터)</button>
+    </div>
+    <button id="goalSaveBtn">추가하기</button>
+    <button id="goalCancelBtn" class="modal-cancel-btn">취소</button>
+  </div>
+</div>
+
+<!-- 2026-08-22 신설: 즐겨찾기 / 내 메모함 패널 (공용 레이아웃) -->
+<div class="panel-overlay" id="favoritesPanelOverlay">
+  <div class="panel-sheet">
+    <div class="panel-header"><span>⭐ 즐겨찾기</span><button type="button" class="panel-close" data-close="favoritesPanelOverlay">✕</button></div>
+    <div class="panel-list" id="favoritesList"></div>
+  </div>
+</div>
+<div class="panel-overlay" id="keepPanelOverlay">
+  <div class="panel-sheet">
+    <div class="panel-header"><span>📌 내 메모함</span><button type="button" class="panel-close" data-close="keepPanelOverlay">✕</button></div>
+    <div class="panel-list" id="keepList"></div>
+    <div class="keep-add-row">
+      <input type="text" id="keepFreeNoteInput" placeholder="직접 메모 남기기…">
+      <button id="keepFreeNoteSaveBtn">저장</button>
+    </div>
   </div>
 </div>
 
@@ -288,6 +426,11 @@ async function init(){
     // 2026-08-22 신설: "같이 듣기" 현재 재생 상태를 화면에 반영해둠(음악 탭 눌렀을 때 바로 이어짐)
     if (data.music) applyMusicSync({ action: (data.music.youtubeId || data.music.audioUrl) ? 'load-silent' : 'stop', youtubeId: data.music.youtubeId, audioUrl: data.music.audioUrl, positionSeconds: data.music.positionSeconds, isPlaying: data.music.isPlaying, updatedAt: data.music.updatedAt, setByNickname: data.music.setByNickname });
 
+    // 2026-08-22 신설: 목표(D-DAY)·내 즐겨찾기 초기 상태 반영
+    currentGoals = data.goals || [];
+    renderGoalsStrip();
+    myFavoriteMessageIds = new Set(data.myFavoriteMessageIds || []);
+
     for (const m of (data.messages || [])) { await appendChatMessage(m); renderedMsgIds.add(m.id); }
     showState('stateChat');
     subscribeChat();
@@ -318,6 +461,10 @@ function subscribeChat(){
       if (payload.sender_anon_id !== mySenderAnonId) playChatPing();
     })
     .on('broadcast', { event: 'music-sync' }, ({ payload }) => applyMusicSync(payload)) // 2026-08-22 신설
+    .on('broadcast', { event: 'message-edited' }, ({ payload }) => applyMessageEdited(payload)) // 2026-08-22 신설
+    .on('broadcast', { event: 'message-deleted' }, ({ payload }) => applyMessageDeleted(payload)) // 2026-08-22 신설
+    .on('broadcast', { event: 'goal-created' }, ({ payload }) => { currentGoals.push(payload); renderGoalsStrip(); }) // 2026-08-22 신설
+    .on('broadcast', { event: 'goal-deleted' }, ({ payload }) => { currentGoals = currentGoals.filter((g) => g.id !== payload.id); renderGoalsStrip(); }) // 2026-08-22 신설
     .subscribe();
 }
 
@@ -342,6 +489,12 @@ async function resolveMediaUrl(url, mimeType){
     return null;
   }
 }
+
+let messageCache = new Map(); // 2026-08-22 신설: id -> { sender_nickname, sender_anon_id, message_type, previewText, deleted } — 답장 인용에 씀
+let myFavoriteMessageIds = new Set();
+let replyingToMessageInfo = null; // { id, sender_nickname, previewText } | null
+let editingMessageId = null;
+let currentActionMessageId = null;
 
 async function appendChatMessage(msg){
   const list = document.getElementById('chatMessages');
@@ -376,33 +529,58 @@ async function appendChatMessage(msg){
 
   const el = document.createElement('div');
   el.className = 'chat-bubble ' + (isMe ? 'me' : 'them') + ' ' + msg.message_type;
+  el.dataset.messageId = msg.id;
   // 개설자 화면에서만 의미 있음(내 메시지는 항상 같은 색 유지) — 상대방(them) 말풍선만 구간별로 색이 다름
   if (!isMe) el.style.background = SEGMENT_COLORS[currentSegmentIndex % SEGMENT_COLORS.length];
 
+  // 2026-08-22 신설: 삭제된 메시지 — 내용은 안 보여주고 자리만 남겨둠
+  if (msg.deleted_at) {
+    el.classList.add('deleted');
+    el.textContent = '삭제된 메시지입니다';
+    messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: msg.message_type, previewText: '삭제된 메시지', deleted: true });
+    list.appendChild(el);
+    list.scrollTop = list.scrollHeight;
+    return;
+  }
+
+  // 2026-08-22 신설: 답장(꼬리물기) 인용 미리보기
+  if (msg.reply_to_message_id) {
+    const quoted = messageCache.get(msg.reply_to_message_id);
+    const quoteEl = document.createElement('div');
+    quoteEl.className = 'bubble-reply-quote';
+    quoteEl.textContent = quoted ? (quoted.sender_nickname + ': ' + quoted.previewText) : '(원본 메시지)';
+    el.appendChild(quoteEl);
+  }
+
+  let previewText = '';
+
   if (msg.message_type === 'photo') {
+    previewText = '📷 사진';
     const img = document.createElement('img');
     img.className = 'chat-photo';
     img.alt = '사진';
     const src = await resolveMediaUrl(msg.content, msg.original_mime_type);
-    if (!src) { el.textContent = '🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)'; }
+    if (!src) { el.appendChild(document.createTextNode('🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)')); }
     else {
       img.src = src;
       img.addEventListener('click', () => openZoomableLightbox(src));
       el.appendChild(img);
     }
   } else if (msg.message_type === 'video') {
+    previewText = '🎥 동영상';
     const src = await resolveMediaUrl(msg.content, msg.original_mime_type);
-    if (!src) { el.textContent = '🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)'; }
+    if (!src) { el.appendChild(document.createTextNode('🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)')); }
     else {
       const vid = document.createElement('video');
       vid.src = src; vid.className = 'chat-video'; vid.controls = true;
       el.appendChild(vid);
     }
   } else if (msg.message_type === 'document') {
+    const fileName = roomIsSecure ? await safeDecryptText(msg.file_name) : (msg.file_name || '문서 파일');
+    previewText = '📄 ' + (fileName || '문서');
     // 문서는 클릭하는 순간에 복호화(미리 다 받아두면 낭비라서) — 클릭 핸들러 안에서 처리
     const a = document.createElement('a');
     a.href = 'javascript:void(0)'; a.className = 'chat-doc';
-    const fileName = roomIsSecure ? await safeDecryptText(msg.file_name) : (msg.file_name || '문서 파일');
     a.innerHTML = '📄 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (fileName || '문서 파일') + '</span>';
     a.addEventListener('click', async () => {
       a.style.opacity = '.5';
@@ -415,6 +593,7 @@ async function appendChatMessage(msg){
     el.appendChild(a);
   } else {
     const text = roomIsSecure ? await safeDecryptText(msg.content) : msg.content;
+    previewText = (text || '').slice(0, 40);
     // 2026-08-22 신설: 메시지가 이모지 1~3개로만 이루어져 있으면 큰 애니메이션 스티커로 표시
     const emojiOnly = aliascallExtractEmojiOnly(text);
     if (emojiOnly) {
@@ -427,12 +606,38 @@ async function appendChatMessage(msg){
         el.appendChild(img);
       });
     } else {
-      el.textContent = text;
+      const textSpan = document.createElement('span');
+      textSpan.textContent = text;
+      el.appendChild(textSpan);
+    }
+    if (msg.edited_at) {
+      const editTag = document.createElement('span');
+      editTag.className = 'bubble-edited-tag';
+      editTag.textContent = '(수정됨)';
+      el.appendChild(editTag);
     }
   }
 
+  // 2026-08-22 신설: 즐겨찾기 별 표시
+  if (myFavoriteMessageIds.has(msg.id)) {
+    const star = document.createElement('span');
+    star.className = 'bubble-favorite-star';
+    star.textContent = '⭐';
+    el.appendChild(star);
+  }
+
+  // 2026-08-22 신설: 메시지 작업 메뉴(답장/즐겨찾기/메모/수정/삭제) 여는 버튼
+  const actionBtn = document.createElement('button');
+  actionBtn.type = 'button';
+  actionBtn.className = 'bubble-action-trigger';
+  actionBtn.textContent = '⋯';
+  actionBtn.addEventListener('click', (e) => { e.stopPropagation(); openActionSheet(msg.id); });
+  el.appendChild(actionBtn);
+
   list.appendChild(el);
   list.scrollTop = list.scrollHeight;
+
+  messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: msg.message_type, previewText, deleted: false });
 }
 
 // 복호화 실패해도 화면이 안 깨지게 감싸는 헬퍼
@@ -461,18 +666,42 @@ async function sendChatMessage(){
   const text = input.value.trim();
   if (!text || !hotlineId) return;
   input.value = '';
+
+  // 2026-08-22 신설: 수정 모드였으면 새 메시지가 아니라 "수정" API를 호출함
+  if (editingMessageId) {
+    const targetId = editingMessageId;
+    cancelEdit();
+    try {
+      const payloadText = roomIsSecure ? await e2eeEncryptText(roomKey, text) : text;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message-edit`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ messageId: targetId, newContent: payloadText, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      applyMessageEdited({ id: targetId, content: payloadText, edited_at: data.editedAt });
+    } catch (e) {
+      console.error('[hotline-room] 수정 실패', e);
+      alert('수정하지 못했어요.');
+    }
+    return;
+  }
+
+  const replyToMessageId = replyingToMessageInfo ? replyingToMessageInfo.id : undefined;
+  if (replyingToMessageInfo) cancelReply();
+
   try {
     // 2026-08-21 신설: 암호화 상품이면 서버로 보내기 전에 브라우저에서 먼저 암호화함
     const payloadText = roomIsSecure ? await e2eeEncryptText(roomKey, text) : text;
     const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
       method: 'POST', headers: authHeaders(),
-      body: JSON.stringify({ hotlineId, text: payloadText, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+      body: JSON.stringify({ hotlineId, text: payloadText, replyToMessageId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     // ⚠ 화면에 바로 보여줄 때도 암호문(payloadText)을 넘김 — appendChatMessage가 암호화 상품이면
     // 항상 복호화를 시도하므로, 평문을 그대로 넘기면 오히려 복호화 실패로 처리됨
-    await appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, message_type: 'text', content: payloadText });
+    await appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: 'text', content: payloadText, reply_to_message_id: replyToMessageId });
     renderedMsgIds.add(data.messageId);
   } catch (e) {
     console.error('[hotline-room] 메시지 전송 실패', e);
@@ -480,6 +709,317 @@ async function sendChatMessage(){
   }
 }
 document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+
+// =====================================================
+// 2026-08-22 신설 (1단계): 답장 / 수정·삭제 / 즐겨찾기 / 나만의 메모함 / 목표(D-DAY) / 음성입력
+// =====================================================
+
+// ── 답장 ──
+function startReply(messageId){
+  const cached = messageCache.get(messageId);
+  if (!cached) return;
+  replyingToMessageInfo = { id: messageId, sender_nickname: cached.sender_nickname, previewText: cached.previewText };
+  document.getElementById('replyBarLabel').textContent = '↩️ ' + cached.sender_nickname + '님에게 답장';
+  document.getElementById('replyBarText').textContent = cached.previewText;
+  document.getElementById('replyBar').style.display = 'flex';
+  document.getElementById('chatInput').focus();
+}
+function cancelReply(){
+  replyingToMessageInfo = null;
+  document.getElementById('replyBar').style.display = 'none';
+}
+document.getElementById('replyBarCancel').addEventListener('click', () => { cancelReply(); cancelEdit(); });
+
+// ── 수정 ──
+async function startEdit(messageId){
+  const el = document.querySelector('[data-message-id="' + messageId + '"]');
+  if (!el) return;
+  // 화면에 이미 복호화되어 보이는 텍스트를 그대로 가져옴(edited-tag 문구는 제외)
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll('.bubble-edited-tag, .bubble-reply-quote, .bubble-favorite-star, .bubble-action-trigger').forEach((n) => n.remove());
+  const currentText = clone.textContent.trim();
+  editingMessageId = messageId;
+  document.getElementById('replyBarLabel').textContent = '✏️ 메시지 수정 중';
+  document.getElementById('replyBarText').textContent = currentText;
+  document.getElementById('replyBar').style.display = 'flex';
+  const input = document.getElementById('chatInput');
+  input.value = currentText;
+  input.focus();
+}
+function cancelEdit(){
+  if (!editingMessageId) return;
+  editingMessageId = null;
+  document.getElementById('chatInput').value = '';
+  document.getElementById('replyBar').style.display = 'none';
+}
+
+function applyMessageEdited(payload){
+  const el = document.querySelector('[data-message-id="' + payload.id + '"]');
+  const cached = messageCache.get(payload.id);
+  if (!el || !cached) return;
+  (async () => {
+    const text = roomIsSecure ? await safeDecryptText(payload.content) : payload.content;
+    // 기존 텍스트 span만 갈아끼움(다른 요소는 그대로 둠)
+    el.querySelectorAll('.bubble-reply-quote, .bubble-favorite-star, .bubble-action-trigger').forEach((n) => n.dataset.keep = '1');
+    Array.from(el.childNodes).forEach((n) => { if (!(n.nodeType === 1 && n.dataset && n.dataset.keep)) n.remove(); });
+    const textSpan = document.createElement('span');
+    textSpan.textContent = text;
+    const editTag = document.createElement('span');
+    editTag.className = 'bubble-edited-tag';
+    editTag.textContent = '(수정됨)';
+    const star = el.querySelector('.bubble-favorite-star');
+    const actionBtn = el.querySelector('.bubble-action-trigger');
+    if (star) el.insertBefore(textSpan, star); else if (actionBtn) el.insertBefore(textSpan, actionBtn); else el.appendChild(textSpan);
+    textSpan.after(editTag);
+    cached.previewText = (text || '').slice(0, 40);
+  })();
+}
+
+function applyMessageDeleted(payload){
+  const el = document.querySelector('[data-message-id="' + payload.id + '"]');
+  const cached = messageCache.get(payload.id);
+  if (el) { el.className = el.className.split(' ')[0] + ' ' + (el.classList.contains('me') ? 'me' : 'them') + ' deleted'; el.innerHTML = ''; el.textContent = '삭제된 메시지입니다'; }
+  if (cached) { cached.deleted = true; cached.previewText = '삭제된 메시지'; }
+}
+
+// ── 즐겨찾기 ──
+async function toggleFavorite(messageId){
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-favorite-toggle`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ messageId, hotlineId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    const el = document.querySelector('[data-message-id="' + messageId + '"]');
+    if (data.favorited) {
+      myFavoriteMessageIds.add(messageId);
+      if (el && !el.querySelector('.bubble-favorite-star')) {
+        const star = document.createElement('span'); star.className = 'bubble-favorite-star'; star.textContent = '⭐';
+        const actionBtn = el.querySelector('.bubble-action-trigger');
+        if (actionBtn) el.insertBefore(star, actionBtn); else el.appendChild(star);
+      }
+    } else {
+      myFavoriteMessageIds.delete(messageId);
+      const star = el && el.querySelector('.bubble-favorite-star');
+      if (star) star.remove();
+    }
+  } catch (e) { console.error('[hotline-room] 즐겨찾기 처리 실패', e); alert('즐겨찾기 처리에 실패했어요.'); }
+}
+
+// ── 나만의 메모함(Keep) ──
+async function saveMessageToKeep(messageId){
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-keep-add`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ hotlineId, sourceMessageId: messageId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    alert('메모함에 저장했어요.');
+  } catch (e) { console.error('[hotline-room] 메모 저장 실패', e); alert('저장에 실패했어요.'); }
+}
+
+// ── 메시지 작업 메뉴(⋯ 눌렀을 때) ──
+function openActionSheet(messageId){
+  currentActionMessageId = messageId;
+  const cached = messageCache.get(messageId);
+  const isMe = cached && cached.sender_anon_id === mySenderAnonId;
+  const isText = cached && cached.message_type === 'text';
+  document.getElementById('actionEdit').style.display = (isMe && isText) ? 'block' : 'none';
+  document.getElementById('actionDelete').style.display = isMe ? 'block' : 'none';
+  document.getElementById('actionSheetOverlay').classList.add('show');
+}
+function closeActionSheet(){
+  document.getElementById('actionSheetOverlay').classList.remove('show');
+  currentActionMessageId = null;
+}
+document.getElementById('actionSheetClose').addEventListener('click', closeActionSheet);
+document.getElementById('actionSheetOverlay').addEventListener('click', (e) => { if (e.target.id === 'actionSheetOverlay') closeActionSheet(); });
+document.getElementById('actionReply').addEventListener('click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) startReply(id); });
+document.getElementById('actionFavorite').addEventListener('click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) toggleFavorite(id); });
+document.getElementById('actionKeep').addEventListener('click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) saveMessageToKeep(id); });
+document.getElementById('actionEdit').addEventListener('click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) startEdit(id); });
+document.getElementById('actionDelete').addEventListener('click', async () => {
+  const id = currentActionMessageId; closeActionSheet();
+  if (!id) return;
+  if (!confirm('이 메시지를 삭제할까요?')) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message-delete`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ messageId: id, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    applyMessageDeleted({ id });
+  } catch (e) { console.error('[hotline-room] 삭제 실패', e); alert('삭제하지 못했어요.'); }
+});
+
+// ── 더보기 메뉴 ──
+document.getElementById('moreMenuBtn').addEventListener('click', () => document.getElementById('moreMenuOverlay').classList.add('show'));
+document.getElementById('moreMenuCloseBtn').addEventListener('click', () => document.getElementById('moreMenuOverlay').classList.remove('show'));
+document.getElementById('moreMenuOverlay').addEventListener('click', (e) => { if (e.target.id === 'moreMenuOverlay') document.getElementById('moreMenuOverlay').classList.remove('show'); });
+
+// ── 즐겨찾기 패널 ──
+document.getElementById('openFavoritesBtn').addEventListener('click', () => {
+  document.getElementById('moreMenuOverlay').classList.remove('show');
+  renderFavoritesPanel();
+  document.getElementById('favoritesPanelOverlay').classList.add('show');
+});
+function renderFavoritesPanel(){
+  const list = document.getElementById('favoritesList');
+  const ids = Array.from(myFavoriteMessageIds);
+  if (ids.length === 0) { list.innerHTML = '<div class="panel-empty">즐겨찾기한 메시지가 없어요.</div>'; return; }
+  list.innerHTML = ids.map((id) => {
+    const c = messageCache.get(id);
+    if (!c) return '';
+    return `<div class="panel-item"><div class="panel-item-text">${c.sender_nickname}: ${c.previewText}</div></div>`;
+  }).join('') || '<div class="panel-empty">즐겨찾기한 메시지가 없어요.</div>';
+}
+
+// ── 내 메모함 패널 ──
+document.getElementById('openKeepBtn').addEventListener('click', async () => {
+  document.getElementById('moreMenuOverlay').classList.remove('show');
+  await loadKeepNotes();
+  document.getElementById('keepPanelOverlay').classList.add('show');
+});
+async function loadKeepNotes(){
+  const list = document.getElementById('keepList');
+  list.innerHTML = '<div class="panel-empty">불러오는 중…</div>';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-keep-list`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ hotlineId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    if (!data.notes || data.notes.length === 0) { list.innerHTML = '<div class="panel-empty">저장한 메모가 없어요.</div>'; return; }
+    const rows = await Promise.all(data.notes.map(async (n) => {
+      let text;
+      if (n.note_text) text = roomIsSecure ? await safeDecryptText(n.note_text) : n.note_text;
+      else if (n.hotline_messages) text = n.hotline_messages.sender_nickname + ': ' + (n.hotline_messages.message_type === 'text' ? (roomIsSecure ? await safeDecryptText(n.hotline_messages.content) : n.hotline_messages.content) : '(' + n.hotline_messages.message_type + ')');
+      else text = '(삭제된 메시지)';
+      return `<div class="panel-item"><div class="panel-item-text">${text}<div class="panel-item-meta">${new Date(n.created_at).toLocaleDateString('ko-KR')}</div></div><button class="panel-item-del" data-note-id="${n.id}">✕</button></div>`;
+    }));
+    list.innerHTML = rows.join('');
+    list.querySelectorAll('.panel-item-del').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-keep-delete`, {
+          method: 'POST', headers: authHeaders(),
+          body: JSON.stringify({ noteId: btn.dataset.noteId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+        });
+        loadKeepNotes();
+      });
+    });
+  } catch (e) { console.error('[hotline-room] 메모함 조회 실패', e); list.innerHTML = '<div class="panel-empty">불러오지 못했어요.</div>'; }
+}
+document.getElementById('keepFreeNoteSaveBtn').addEventListener('click', async () => {
+  const input = document.getElementById('keepFreeNoteInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  try {
+    const payloadText = roomIsSecure ? await e2eeEncryptText(roomKey, text) : text;
+    await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-keep-add`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ hotlineId, noteText: payloadText, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    });
+    loadKeepNotes();
+  } catch (e) { console.error('[hotline-room] 메모 저장 실패', e); alert('저장에 실패했어요.'); }
+});
+
+// 패널 공통 닫기 버튼
+document.querySelectorAll('.panel-close').forEach((btn) => {
+  btn.addEventListener('click', () => document.getElementById(btn.dataset.close).classList.remove('show'));
+});
+document.querySelectorAll('.panel-overlay').forEach((overlay) => {
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('show'); });
+});
+
+// ── 목표(D-DAY) ──
+let currentGoals = [];
+function renderGoalsStrip(){
+  const strip = document.getElementById('goalsStrip');
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const chips = currentGoals.map((g) => {
+    const target = new Date(g.target_date); target.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((target - today) / 86400000);
+    let label;
+    if (g.mode === 'countdown') label = diffDays >= 0 ? ('D-' + diffDays) : ('D+' + Math.abs(diffDays));
+    else label = diffDays <= 0 ? ('D+' + Math.abs(diffDays)) : ('D-' + diffDays); // countup인데 아직 그날 전이면 역시 D- 로 보여줌
+    return `<div class="goal-chip"><span class="goal-days">${label}</span><span>${g.title}</span><button class="goal-del" data-goal-id="${g.id}">✕</button></div>`;
+  }).join('');
+  strip.innerHTML = chips + '<button type="button" class="goal-add-chip" id="goalAddChip">+ 목표추가</button>';
+  document.getElementById('goalAddChip').addEventListener('click', openGoalModal);
+  strip.querySelectorAll('.goal-del').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('이 목표를 삭제할까요?')) return;
+      try {
+        await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-goal-delete`, {
+          method: 'POST', headers: authHeaders(),
+          body: JSON.stringify({ goalId: btn.dataset.goalId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+        });
+        currentGoals = currentGoals.filter((g) => g.id !== btn.dataset.goalId);
+        renderGoalsStrip();
+      } catch (e) { console.error('[hotline-room] 목표 삭제 실패', e); }
+    });
+  });
+}
+function openGoalModal(){
+  document.getElementById('goalTitleInput').value = '';
+  document.getElementById('goalDateInput').value = '';
+  document.querySelectorAll('.goal-mode-tab').forEach((t) => t.classList.remove('active'));
+  document.querySelector('.goal-mode-tab[data-mode="countdown"]').classList.add('active');
+  document.getElementById('goalModalOverlay').classList.add('show');
+}
+document.getElementById('goalCancelBtn').addEventListener('click', () => document.getElementById('goalModalOverlay').classList.remove('show'));
+document.querySelectorAll('.goal-mode-tab').forEach((tab) => {
+  tab.addEventListener('click', () => { document.querySelectorAll('.goal-mode-tab').forEach((t) => t.classList.remove('active')); tab.classList.add('active'); });
+});
+document.getElementById('goalSaveBtn').addEventListener('click', async () => {
+  const title = document.getElementById('goalTitleInput').value.trim();
+  const targetDate = document.getElementById('goalDateInput').value;
+  const mode = document.querySelector('.goal-mode-tab.active').dataset.mode;
+  if (!title || !targetDate) { alert('제목과 날짜를 모두 입력해주세요.'); return; }
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-goal-create`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ hotlineId, title, targetDate, mode, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    currentGoals.push(data.goal);
+    renderGoalsStrip();
+    document.getElementById('goalModalOverlay').classList.remove('show');
+  } catch (e) { console.error('[hotline-room] 목표 추가 실패', e); alert('추가하지 못했어요: ' + (e.message || '')); }
+});
+
+// ── 음성입력(받아쓰기) — 브라우저 내장 Web Speech API, 서버 필요 없음 ──
+(function setupVoiceInput(){
+  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = document.getElementById('voiceInputBtn');
+  if (!SpeechRecognitionCtor) { btn.style.display = 'none'; return; } // 지원 안 하는 브라우저(주로 구형 Safari)는 버튼 자체를 숨김
+  const recognition = new SpeechRecognitionCtor();
+  recognition.lang = 'ko-KR';
+  recognition.interimResults = false;
+  recognition.continuous = false;
+  let listening = false;
+
+  recognition.addEventListener('result', (e) => {
+    const transcript = e.results[0][0].transcript;
+    const input = document.getElementById('chatInput');
+    input.value = (input.value ? input.value + ' ' : '') + transcript;
+  });
+  recognition.addEventListener('end', () => { listening = false; btn.classList.remove('listening'); });
+  recognition.addEventListener('error', () => { listening = false; btn.classList.remove('listening'); });
+
+  btn.addEventListener('click', () => {
+    if (listening) { recognition.stop(); return; }
+    try { recognition.start(); listening = true; btn.classList.add('listening'); }
+    catch (e) { console.error('[hotline-room] 음성입력 시작 실패', e); }
+  });
+})();
+
 document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
 document.getElementById('attachBtn').addEventListener('click', () => document.getElementById('fileInput').click());
