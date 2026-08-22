@@ -59,10 +59,10 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .section-header.status .section-header-title{ font-size:14.5px; }
 
 /* 2026-08-21 신설: 핫라인 소그룹 라벨(보안강화 상품 / E2EE 상품 구분) */
-.hotline-subgroup-label{ font-size:11px; font-weight:700; color:rgba(255,255,255,.55); margin:16px 2px 8px; display:flex; align-items:center; justify-content:space-between; gap:6px; }
-.hotline-subgroup-label.secure{ color:var(--brass); }
-.subgroup-link{ font-size:10px; font-weight:700; color:var(--coral); text-decoration:none; }
-.subgroup-link.secure{ color:var(--brass); }
+.hotline-subgroup-label{ font-size:13px; font-weight:800; letter-spacing:.01em; color:#fff; margin:22px 2px 10px; padding:10px 13px; background:rgba(232,115,74,.18); border-left:3px solid var(--coral); border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.hotline-subgroup-label.secure{ background:rgba(201,162,75,.2); border-left-color:var(--brass); }
+.subgroup-link{ font-size:10.5px; font-weight:700; color:#fff; text-decoration:underline; text-underline-offset:2px; white-space:nowrap; }
+.subgroup-link.secure{ color:#fff; }
 
 /* 2026-08-21 신설: Secure(E2EE) 카드 — 아직 준비중이라 살짝 흐리고 점선 테두리로 구분 */
 .hotline-card.hl-secure{ border-style:dashed !important; }
@@ -303,7 +303,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 
   <!-- 2026-08-21: E2EE 완성되어 정식 판매로 전환 — "준비중" 표시/알림 제거, 실제 구매로 연결 -->
   <div class="hotline-subgroup-label secure">
-    <span>다자간 종단간 암호화(E2EE) 상품</span>
+    <span>현존 최강 보안 다자간 종단간 암호화(E2EE) 상품</span>
     <a class="subgroup-link secure" href="aliascall_hotline_guide.html#secure">상품설명 ▷</a>
   </div>
   <div class="hotline-grid">
