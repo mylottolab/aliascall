@@ -62,7 +62,51 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .typing-indicator{ padding:2px 16px 6px; font-size:11px; color:var(--ink-soft); font-style:italic; }
 
 /* 2026-08-22 신설: 읽음 표시 */
-.bubble-read-tag{ font-size:9.5px; color:var(--ink-soft); align-self:flex-end; margin:-4px 4px 4px; }
+/* 2026-08-23 신설: 날짜 구분선 + 메시지 시간/읽음 표시 (카톡 방식 참고) */
+.date-divider{ text-align:center; font-size:11px; color:var(--ink-soft); background:rgba(0,0,0,.06); border-radius:12px; padding:5px 14px; margin:14px auto; width:fit-content; }
+.msg-time-row{ font-size:9.5px; color:var(--ink-soft); margin:-4px 4px 8px; display:flex; gap:4px; }
+.msg-time-row.me{ justify-content:flex-end; }
+.msg-time-row.them{ justify-content:flex-start; }
+.msg-read-status{ color:var(--teal); font-weight:700; }
+
+/* 2026-08-22 신설: 대화 검색 바 */
+.search-bar{ display:flex; align-items:center; gap:6px; padding:8px 12px; background:var(--card); border-bottom:1px solid var(--line); }
+.search-bar input{ flex:1; border:1.5px solid var(--line); border-radius:8px; padding:8px 12px; font-size:12.5px; }
+.search-count{ font-size:10.5px; color:var(--ink-soft); white-space:nowrap; flex-shrink:0; }
+.search-bar button{ background:none; border:none; font-size:13px; color:var(--ink-soft); cursor:pointer; padding:4px 6px; flex-shrink:0; }
+.chat-bubble.search-match{ outline:2px solid var(--coral); }
+.chat-bubble.search-current{ outline:2px solid var(--coral); background:var(--coral-tint) !important; }
+
+/* 2026-08-22 신설: 타이머 메시지 선택 */
+.timer-option-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
+.timer-option{ border:1.5px solid var(--line); background:var(--card); border-radius:10px; padding:12px 4px; font-size:12px; font-weight:700; cursor:pointer; color:var(--ink-soft); }
+.timer-option.active{ border-color:var(--coral); background:var(--coral-tint); color:var(--coral); }
+.bubble-timer-badge{ font-size:9.5px; color:var(--coral); font-weight:700; margin-left:4px; }
+
+/* 2026-08-22 신설: 음성메시지 녹음 오버레이 */
+.voice-record-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:300; align-items:center; justify-content:center; padding:20px; }
+.voice-record-overlay.show{ display:flex; }
+.voice-record-box{ background:var(--card); border-radius:16px; padding:26px 22px; width:100%; max-width:320px; text-align:center; }
+.voice-record-status{ font-size:14px; font-weight:700; margin-bottom:10px; }
+.voice-record-timer{ font-family:'IBM Plex Mono',monospace; font-size:26px; margin-bottom:20px; }
+.voice-record-controls{ display:flex; gap:10px; justify-content:center; }
+.voice-record-controls button{ border:none; border-radius:10px; padding:11px 18px; font-size:12.5px; font-weight:700; cursor:pointer; }
+#voiceRecordCancelBtn, #voiceRecordRetakeBtn{ background:var(--teal-tint); color:var(--teal-deep); }
+#voiceRecordStopBtn, #voiceRecordSendBtn{ background:var(--teal); color:#fff; }
+.voice-record-preview{ margin-top:10px; }
+.voice-record-preview audio{ width:100%; margin-bottom:14px; }
+
+/* 2026-08-22 신설: 음성메시지 말풍선 */
+.chat-bubble.voice{ padding:8px 12px; }
+.chat-bubble.voice audio{ width:200px; height:36px; }
+
+/* 2026-08-22 신설: 링크 미리보기 카드 */
+.link-preview-card{ display:block; margin-top:8px; border:1px solid rgba(0,0,0,.1); border-radius:10px; overflow:hidden; text-decoration:none; color:inherit; background:rgba(255,255,255,.5); }
+.link-preview-img{ width:100%; max-height:120px; object-fit:cover; display:block; }
+.link-preview-body{ padding:8px 10px; }
+.link-preview-title{ font-size:11.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.link-preview-desc{ font-size:10.5px; opacity:.75; margin-top:2px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.link-preview-domain{ font-size:9.5px; opacity:.55; margin-top:4px; }
 
 /* 2026-08-22 신설: 답장 미리보기 바 */
 .reply-bar{ display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--teal-tint); border-top:1px solid var(--line); }
@@ -137,9 +181,20 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .chat-system-note.partner-divider{ font-weight:700; color:var(--teal-deep); background:none; margin:14px 0 6px; }
 
 .chat-input-row{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card); flex-shrink:0; align-items:center; }
-.chat-input-row input[type="text"]{ flex:1; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
+.chat-input-row input[type="text"]{ flex:1; min-width:80px; border:1.5px solid var(--line); border-radius:20px; padding:11px 16px; font-size:13.5px; }
 .chat-input-row button{ background:var(--teal); color:#fff; border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; }
+#chatSendBtn{ width:42px; height:42px; }
 #emojiBtn{ background:var(--teal-tint); }
+#plusMenuBtn{ background:var(--teal-tint); color:var(--teal-deep); font-size:18px; }
+#timerBtn.active{ background:var(--coral); color:#fff; }
+
+/* 2026-08-23 신설: "+" 팝업(파일첨부/사진촬영/타이머/음성메시지) */
+.plus-menu-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; align-items:flex-end; }
+.plus-menu-overlay.show{ display:flex; }
+.plus-menu-sheet{ background:var(--card); width:100%; border-radius:16px 16px 0 0; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:20px 14px calc(20px + env(safe-area-inset-bottom,0)); }
+.plus-menu-item{ background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:10px; }
+.plus-menu-item span:first-child{ width:46px; height:46px; border-radius:50%; background:var(--teal-tint); display:flex; align-items:center; justify-content:center; font-size:20px; }
+.plus-menu-item span:last-child{ font-size:10.5px; color:var(--ink-soft); }
 
 /* 2026-08-22 신설: 이모지 선택 패널 — 애니메이션 GIF 이미지 그리드 */
 .emoji-panel{ display:none; flex-direction:column; padding:8px 8px 4px; background:var(--card); border-top:1px solid var(--line); max-height:270px; flex-shrink:0; }
@@ -213,6 +268,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
   <div class="more-menu-sheet">
     <button type="button" class="more-menu-item" id="openFavoritesBtn">⭐ 즐겨찾기 보기</button>
     <button type="button" class="more-menu-item" id="openKeepBtn">📌 내 메모함</button>
+    <button type="button" class="more-menu-item" id="openSearchBtn">🔍 대화 검색</button>
     <button type="button" class="more-menu-item close" id="moreMenuCloseBtn">닫기</button>
   </div>
 </div>
@@ -234,6 +290,14 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
   <!-- 2026-08-22 신설: 목표(D-DAY) 스트립 — 여행/기념일 등 참가자 누구나 등록 가능 -->
   <div class="goals-strip" id="goalsStrip"></div>
   <!-- 2026-08-22 신설: 오늘의 질문 — 조용해진 대화방에 화제를 던져줌 -->
+  <!-- 2026-08-22 신설: 대화 검색 바 -->
+  <div class="search-bar" id="searchBar" style="display:none;">
+    <input type="text" id="searchInput" placeholder="대화 내용 검색…">
+    <span class="search-count" id="searchCount"></span>
+    <button type="button" id="searchPrevBtn">▲</button>
+    <button type="button" id="searchNextBtn">▼</button>
+    <button type="button" id="searchCloseBtn">✕</button>
+  </div>
   <div class="daily-question-card" id="dailyQuestionCard" style="display:none;">
     <div class="dq-label">💬 오늘의 질문</div>
     <div class="dq-text" id="dailyQuestionText"></div>
@@ -258,14 +322,61 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
   </div>
   <div class="chat-input-row">
     <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip">
-    <button type="button" id="attachBtn" title="파일 첨부">📎</button>
-    <button type="button" id="cameraBtn" title="사진 촬영">📷</button>
+    <button type="button" id="plusMenuBtn" title="더보기">➕</button>
     <button type="button" id="emojiBtn" title="이모지">😊</button>
     <button type="button" id="voiceInputBtn" title="음성으로 입력">🎙️</button>
     <input type="text" id="chatInput" placeholder="메시지 입력…">
     <button id="chatSendBtn">➤</button>
   </div>
 </div>
+
+<!-- 2026-08-23 신설: 입력창이 버튼으로 너무 붐벼서(전송 버튼이 화면 밖으로 밀려나던 문제),
+     자주 안 쓰는 것들을 "+" 팝업으로 정리함 -->
+<div class="plus-menu-overlay" id="plusMenuOverlay">
+  <div class="plus-menu-sheet">
+    <button type="button" class="plus-menu-item" id="attachBtn"><span>📎</span><span>파일 첨부</span></button>
+    <button type="button" class="plus-menu-item" id="cameraBtn"><span>📷</span><span>사진 촬영</span></button>
+    <button type="button" class="plus-menu-item" id="timerBtn"><span>⏱️</span><span>타이머 메시지</span></button>
+    <button type="button" class="plus-menu-item" id="voiceMsgBtn"><span>🎤</span><span>음성메시지</span></button>
+  </div>
+</div>
+
+<!-- 2026-08-22 신설: 타이머 메시지 선택 -->
+<div class="modal-overlay-hl" id="timerModalOverlay">
+  <div class="modal-box-hl">
+    <h3 style="margin-bottom:14px;">⏱️ 타이머 메시지</h3>
+    <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">선택한 시간이 지나면 대화방에서 자동으로 사라집니다.</p>
+    <div class="timer-option-grid">
+      <button type="button" class="timer-option" data-seconds="0">끄기</button>
+      <button type="button" class="timer-option" data-seconds="5">5초</button>
+      <button type="button" class="timer-option" data-seconds="10">10초</button>
+      <button type="button" class="timer-option" data-seconds="30">30초</button>
+      <button type="button" class="timer-option" data-seconds="60">1분</button>
+      <button type="button" class="timer-option" data-seconds="300">5분</button>
+    </div>
+    <button id="timerModalCloseBtn" class="modal-cancel-btn">닫기</button>
+  </div>
+</div>
+
+<!-- 2026-08-22 신설: 음성메시지 녹음 -->
+<div class="voice-record-overlay" id="voiceRecordOverlay">
+  <div class="voice-record-box">
+    <div class="voice-record-status" id="voiceRecordStatus">🎤 녹음 중…</div>
+    <div class="voice-record-timer" id="voiceRecordTimer">0:00</div>
+    <div class="voice-record-controls" id="voiceRecordLiveControls">
+      <button type="button" id="voiceRecordCancelBtn">✕ 취소</button>
+      <button type="button" id="voiceRecordStopBtn">⏹ 정지</button>
+    </div>
+    <div class="voice-record-preview" id="voiceRecordPreview" style="display:none;">
+      <audio id="voiceRecordPreviewAudio" controls></audio>
+      <div class="voice-record-controls">
+        <button type="button" id="voiceRecordRetakeBtn">다시 녹음</button>
+        <button type="button" id="voiceRecordSendBtn">보내기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- 2026-08-22 신설: 메시지를 눌렀을 때 나오는 작업 메뉴(답장/즐겨찾기/메모/수정/삭제) -->
 <div class="action-sheet-overlay" id="actionSheetOverlay">
@@ -533,9 +644,37 @@ let replyingToMessageInfo = null; // { id, sender_nickname, previewText } | null
 let editingMessageId = null;
 let currentActionMessageId = null;
 
+// 2026-08-23 신설: 날짜 구분선 + 메시지 시간 표시
+let lastRenderedDateKey = null;
+function formatKoreanTime(dateStr){
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  let h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const ampm = h < 12 ? '오전' : '오후';
+  h = h % 12; if (h === 0) h = 12;
+  return ampm + ' ' + h + ':' + m;
+}
+function formatKoreanDateDivider(dateStr){
+  const d = new Date(dateStr);
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + days[d.getDay()] + '요일';
+}
+function insertDateDividerIfNeeded(list, createdAt){
+  if (!createdAt) return;
+  const dateKey = new Date(createdAt).toISOString().slice(0, 10);
+  if (dateKey === lastRenderedDateKey) return;
+  lastRenderedDateKey = dateKey;
+  const divider = document.createElement('div');
+  divider.className = 'date-divider';
+  divider.textContent = formatKoreanDateDivider(createdAt);
+  list.appendChild(divider);
+}
+
 async function appendChatMessage(msg){
   const list = document.getElementById('chatMessages');
   const isMe = msg.sender_anon_id === mySenderAnonId;
+  insertDateDividerIfNeeded(list, msg.created_at); // 2026-08-23 신설
 
   // 2026-08-21 신설: 상대방 교체 표시 — 구간 나누는 선 + 색깔이 여기서부터 바뀜
   if (msg.message_type === 'partner_joined' || msg.message_type === 'partner_left') {
@@ -628,6 +767,15 @@ async function appendChatMessage(msg){
       dl.href = src; dl.download = fileName || '문서파일'; dl.click();
     });
     el.appendChild(a);
+  } else if (msg.message_type === 'voice') {
+    previewText = '🎤 음성메시지';
+    const src = await resolveMediaUrl(msg.content, msg.original_mime_type || 'audio/webm');
+    if (!src) { el.appendChild(document.createTextNode('🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)')); }
+    else {
+      const audioEl = document.createElement('audio');
+      audioEl.src = src; audioEl.controls = true;
+      el.appendChild(audioEl);
+    }
   } else {
     const text = roomIsSecure ? await safeDecryptText(msg.content) : msg.content;
     previewText = (text || '').slice(0, 40);
@@ -646,12 +794,26 @@ async function appendChatMessage(msg){
       const textSpan = document.createElement('span');
       textSpan.textContent = text;
       el.appendChild(textSpan);
+      attachLinkPreview(el, text); // 2026-08-22 신설: 링크 미리보기(비동기, 완료되는 대로 카드 추가됨)
     }
     if (msg.edited_at) {
       const editTag = document.createElement('span');
       editTag.className = 'bubble-edited-tag';
       editTag.textContent = '(수정됨)';
       el.appendChild(editTag);
+    }
+  }
+
+  // 2026-08-22 신설: 타이머 메시지 — 시간 되면 자동으로 삭제 처리(이 화면이 열려있는 클라이언트가 트리거함)
+  if (msg.expires_at && !msg.deleted_at) {
+    const remainingMs = new Date(msg.expires_at).getTime() - Date.now();
+    if (remainingMs <= 0) { triggerTimerExpiry(msg.id); }
+    else {
+      const badge = document.createElement('span');
+      badge.className = 'bubble-timer-badge';
+      badge.textContent = '⏱️';
+      el.appendChild(badge);
+      setTimeout(() => triggerTimerExpiry(msg.id), remainingMs);
     }
   }
 
@@ -672,6 +834,14 @@ async function appendChatMessage(msg){
   el.appendChild(actionBtn);
 
   list.appendChild(el);
+
+  // 2026-08-23 신설: 시간 표시 행(+ 읽음 상태는 refreshReadTags가 채워 넣음)
+  const timeRow = document.createElement('div');
+  timeRow.className = 'msg-time-row ' + (isMe ? 'me' : 'them');
+  timeRow.dataset.messageId = msg.id;
+  timeRow.innerHTML = `<span class="msg-time-text">${formatKoreanTime(msg.created_at)}</span><span class="msg-read-status"></span>`;
+  list.appendChild(timeRow);
+
   list.scrollTop = list.scrollHeight;
 
   messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: msg.message_type, previewText, deleted: false, createdAt: msg.created_at });
@@ -729,19 +899,22 @@ async function sendChatMessage(){
 
   const replyToMessageId = replyingToMessageInfo ? replyingToMessageInfo.id : undefined;
   if (replyingToMessageInfo) cancelReply();
+  const timerSecondsToSend = selectedTimerSeconds > 0 ? selectedTimerSeconds : undefined;
+  selectedTimerSeconds = 0;
+  document.getElementById('timerBtn').classList.remove('active'); // 2026-08-22 신설: 한 번 쓰면 초기화(다음 메시지엔 다시 안 켜짐)
 
   try {
     // 2026-08-21 신설: 암호화 상품이면 서버로 보내기 전에 브라우저에서 먼저 암호화함
     const payloadText = roomIsSecure ? await e2eeEncryptText(roomKey, text) : text;
     const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
       method: 'POST', headers: authHeaders(),
-      body: JSON.stringify({ hotlineId, text: payloadText, replyToMessageId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+      body: JSON.stringify({ hotlineId, text: payloadText, replyToMessageId, timerSeconds: timerSecondsToSend, memberAnonId: accessToken ? undefined : hotlineAnonId }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     // ⚠ 화면에 바로 보여줄 때도 암호문(payloadText)을 넘김 — appendChatMessage가 암호화 상품이면
     // 항상 복호화를 시도하므로, 평문을 그대로 넘기면 오히려 복호화 실패로 처리됨
-    await appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: 'text', content: payloadText, reply_to_message_id: replyToMessageId, created_at: data.createdAt });
+    await appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: 'text', content: payloadText, reply_to_message_id: replyToMessageId, expires_at: data.expiresAt, created_at: data.createdAt });
     renderedMsgIds.add(data.messageId);
   } catch (e) {
     console.error('[hotline-room] 메시지 전송 실패', e);
@@ -772,7 +945,7 @@ document.getElementById('replyBarCancel').addEventListener('click', () => { canc
 
 // ── 수정 ──
 async function startEdit(messageId){
-  const el = document.querySelector('[data-message-id="' + messageId + '"]');
+  const el = document.querySelector('.chat-bubble[data-message-id="' + messageId + '"]');
   if (!el) return;
   // 화면에 이미 복호화되어 보이는 텍스트를 그대로 가져옴(edited-tag 문구는 제외)
   const clone = el.cloneNode(true);
@@ -794,7 +967,7 @@ function cancelEdit(){
 }
 
 function applyMessageEdited(payload){
-  const el = document.querySelector('[data-message-id="' + payload.id + '"]');
+  const el = document.querySelector('.chat-bubble[data-message-id="' + payload.id + '"]');
   const cached = messageCache.get(payload.id);
   if (!el || !cached) return;
   (async () => {
@@ -816,7 +989,7 @@ function applyMessageEdited(payload){
 }
 
 function applyMessageDeleted(payload){
-  const el = document.querySelector('[data-message-id="' + payload.id + '"]');
+  const el = document.querySelector('.chat-bubble[data-message-id="' + payload.id + '"]');
   const cached = messageCache.get(payload.id);
   if (el) { el.className = el.className.split(' ')[0] + ' ' + (el.classList.contains('me') ? 'me' : 'them') + ' deleted'; el.innerHTML = ''; el.textContent = '삭제된 메시지입니다'; }
   if (cached) { cached.deleted = true; cached.previewText = '삭제된 메시지'; }
@@ -831,7 +1004,7 @@ async function toggleFavorite(messageId){
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-    const el = document.querySelector('[data-message-id="' + messageId + '"]');
+    const el = document.querySelector('.chat-bubble[data-message-id="' + messageId + '"]');
     if (data.favorited) {
       myFavoriteMessageIds.add(messageId);
       if (el && !el.querySelector('.bubble-favorite-star')) {
@@ -1093,18 +1266,10 @@ function refreshReadTags(){
   document.querySelectorAll('.chat-bubble.me[data-message-id]').forEach((el) => {
     const cached = messageCache.get(el.dataset.messageId);
     if (!cached || !cached.createdAt) return;
-    const nextSibling = el.nextElementSibling;
-    const hasTag = nextSibling && nextSibling.classList && nextSibling.classList.contains('bubble-read-tag');
-    if (isReadByOthers(cached.createdAt)) {
-      if (!hasTag) {
-        const tag = document.createElement('div');
-        tag.className = 'bubble-read-tag';
-        tag.textContent = '읽음';
-        el.after(tag);
-      }
-    } else if (hasTag) {
-      nextSibling.remove();
-    }
+    // 2026-08-23 수정: 시간 표시 행 안의 읽음상태 칸에 채워 넣음(이제 시간과 같은 줄에 표시됨)
+    const statusEl = document.querySelector('.msg-time-row[data-message-id="' + el.dataset.messageId + '"] .msg-read-status');
+    if (!statusEl) return;
+    statusEl.textContent = isReadByOthers(cached.createdAt) ? '읽음' : '';
   });
 }
 async function markAsRead(){
@@ -1155,11 +1320,190 @@ document.getElementById('dqSendBtn').addEventListener('click', () => {
 
 document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
-document.getElementById('attachBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+// =====================================================
+// 2026-08-22 신설 (3단계): 대화 검색 / 링크 미리보기
+// =====================================================
+
+// ── 대화 검색 ──
+let searchMatches = [];
+let searchCurrentIndex = -1;
+document.getElementById('openSearchBtn').addEventListener('click', () => {
+  document.getElementById('moreMenuOverlay').classList.remove('show');
+  document.getElementById('searchBar').style.display = 'flex';
+  document.getElementById('searchInput').focus();
+});
+function closeSearch(){
+  document.getElementById('searchBar').style.display = 'none';
+  document.getElementById('searchInput').value = '';
+  clearSearchHighlights();
+}
+document.getElementById('searchCloseBtn').addEventListener('click', closeSearch);
+function clearSearchHighlights(){
+  document.querySelectorAll('.chat-bubble.search-match, .chat-bubble.search-current').forEach((el) => el.classList.remove('search-match', 'search-current'));
+  searchMatches = []; searchCurrentIndex = -1;
+  document.getElementById('searchCount').textContent = '';
+}
+document.getElementById('searchInput').addEventListener('input', () => {
+  const query = document.getElementById('searchInput').value.trim().toLowerCase();
+  clearSearchHighlights();
+  if (!query) return;
+  document.querySelectorAll('.chat-bubble').forEach((el) => {
+    if (el.classList.contains('deleted')) return;
+    if (el.textContent.toLowerCase().includes(query)) { el.classList.add('search-match'); searchMatches.push(el); }
+  });
+  if (searchMatches.length > 0) { searchCurrentIndex = 0; focusSearchMatch(); }
+  else document.getElementById('searchCount').textContent = '0건';
+});
+function focusSearchMatch(){
+  document.querySelectorAll('.search-current').forEach((el) => el.classList.remove('search-current'));
+  const el = searchMatches[searchCurrentIndex];
+  if (el) { el.classList.add('search-current'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  document.getElementById('searchCount').textContent = searchMatches.length > 0 ? (searchCurrentIndex + 1) + '/' + searchMatches.length : '0건';
+}
+document.getElementById('searchNextBtn').addEventListener('click', () => {
+  if (searchMatches.length === 0) return;
+  searchCurrentIndex = (searchCurrentIndex + 1) % searchMatches.length;
+  focusSearchMatch();
+});
+document.getElementById('searchPrevBtn').addEventListener('click', () => {
+  if (searchMatches.length === 0) return;
+  searchCurrentIndex = (searchCurrentIndex - 1 + searchMatches.length) % searchMatches.length;
+  focusSearchMatch();
+});
+
+// ── 링크 미리보기 ──
+const linkPreviewCache = new Map();
+function extractFirstUrl(text){
+  if (!text) return null;
+  const match = text.match(/https?:\/\/[^\s]+/);
+  return match ? match[0] : null;
+}
+async function attachLinkPreview(bubbleEl, text){
+  const url = extractFirstUrl(text);
+  if (!url) return;
+  let data = linkPreviewCache.get(url);
+  if (data === undefined) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-link-preview`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      data = await res.json();
+    } catch (e) { data = null; }
+    linkPreviewCache.set(url, data);
+  }
+  if (!data || !data.ok || (!data.title && !data.image)) return;
+  if (!document.body.contains(bubbleEl)) return; // 그 사이 화면에서 사라졌으면(예: 삭제) 건너뜀
+  const card = document.createElement('a');
+  card.href = url; card.target = '_blank'; card.rel = 'noopener'; card.className = 'link-preview-card';
+  card.innerHTML =
+    (data.image ? `<img src="${data.image}" class="link-preview-img" onerror="this.remove()">` : '') +
+    `<div class="link-preview-body"><div class="link-preview-title">${(data.title || data.domain || '').replace(/</g, '&lt;')}</div>` +
+    (data.description ? `<div class="link-preview-desc">${data.description.replace(/</g, '&lt;')}</div>` : '') +
+    `<div class="link-preview-domain">${data.domain || ''}</div></div>`;
+  bubbleEl.appendChild(card);
+}
+
+// =====================================================
+// 2026-08-22 신설 (4단계): 타이머 메시지(자동삭제) / 음성메시지
+// =====================================================
+
+// ── 타이머 메시지 ──
+let selectedTimerSeconds = 0;
+document.getElementById('timerBtn').addEventListener('click', () => {
+  closePlusMenu();
+  document.querySelectorAll('.timer-option').forEach((btn) => btn.classList.toggle('active', Number(btn.dataset.seconds) === selectedTimerSeconds));
+  document.getElementById('timerModalOverlay').classList.add('show');
+});
+document.getElementById('timerModalCloseBtn').addEventListener('click', () => document.getElementById('timerModalOverlay').classList.remove('show'));
+document.querySelectorAll('.timer-option').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    selectedTimerSeconds = Number(btn.dataset.seconds);
+    document.getElementById('timerBtn').classList.toggle('active', selectedTimerSeconds > 0);
+    document.getElementById('timerModalOverlay').classList.remove('show');
+  });
+});
+async function triggerTimerExpiry(messageId){
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message-delete`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ messageId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    });
+    applyMessageDeleted({ id: messageId });
+  } catch (e) { console.error('[hotline-room] 타이머 메시지 삭제 실패', e); }
+}
+
+// ── 음성메시지 녹음 ──
+let voiceMediaRecorder = null;
+let voiceRecordedChunks = [];
+let voiceRecordedBlob = null;
+let voiceRecordingStartTime = 0;
+let voiceRecordingTimerInterval = null;
+
+async function startVoiceRecording(){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    voiceRecordedChunks = [];
+    voiceMediaRecorder = new MediaRecorder(stream);
+    voiceMediaRecorder.addEventListener('dataavailable', (e) => { if (e.data.size > 0) voiceRecordedChunks.push(e.data); });
+    voiceMediaRecorder.addEventListener('stop', () => {
+      stream.getTracks().forEach((t) => t.stop());
+      voiceRecordedBlob = new Blob(voiceRecordedChunks, { type: 'audio/webm' });
+      document.getElementById('voiceRecordPreviewAudio').src = URL.createObjectURL(voiceRecordedBlob);
+      document.getElementById('voiceRecordStatus').style.display = 'none';
+      document.getElementById('voiceRecordTimer').style.display = 'none';
+      document.getElementById('voiceRecordLiveControls').style.display = 'none';
+      document.getElementById('voiceRecordPreview').style.display = 'block';
+    });
+    voiceMediaRecorder.start();
+    voiceRecordingStartTime = Date.now();
+    document.getElementById('voiceRecordOverlay').classList.add('show');
+    document.getElementById('voiceRecordStatus').style.display = 'block';
+    document.getElementById('voiceRecordTimer').style.display = 'block';
+    document.getElementById('voiceRecordLiveControls').style.display = 'flex';
+    document.getElementById('voiceRecordPreview').style.display = 'none';
+    document.getElementById('voiceRecordTimer').textContent = '0:00';
+    voiceRecordingTimerInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - voiceRecordingStartTime) / 1000);
+      document.getElementById('voiceRecordTimer').textContent = Math.floor(elapsed / 60) + ':' + String(elapsed % 60).padStart(2, '0');
+    }, 500);
+  } catch (e) {
+    console.error('[hotline-room] 녹음 시작 실패', e);
+    alert('마이크 권한이 필요해요.');
+  }
+}
+document.getElementById('voiceMsgBtn').addEventListener('click', () => { closePlusMenu(); startVoiceRecording(); });
+document.getElementById('voiceRecordStopBtn').addEventListener('click', () => {
+  if (voiceMediaRecorder && voiceMediaRecorder.state === 'recording') voiceMediaRecorder.stop();
+  clearInterval(voiceRecordingTimerInterval);
+});
+document.getElementById('voiceRecordCancelBtn').addEventListener('click', () => {
+  if (voiceMediaRecorder && voiceMediaRecorder.state === 'recording') voiceMediaRecorder.stop();
+  clearInterval(voiceRecordingTimerInterval);
+  document.getElementById('voiceRecordOverlay').classList.remove('show');
+  voiceRecordedBlob = null;
+});
+document.getElementById('voiceRecordRetakeBtn').addEventListener('click', () => { startVoiceRecording(); });
+document.getElementById('voiceRecordSendBtn').addEventListener('click', async () => {
+  document.getElementById('voiceRecordOverlay').classList.remove('show');
+  if (!voiceRecordedBlob) return;
+  const file = new File([voiceRecordedBlob], 'voice_' + Date.now() + '.webm', { type: 'audio/webm' });
+  voiceRecordedBlob = null;
+  await uploadAndSendFile(file);
+});
+
+
+// 2026-08-23 신설: "+" 팝업 — 파일첨부/사진촬영/타이머/음성메시지를 여기 모아둠(입력창이 안 붐비게)
+document.getElementById('plusMenuBtn').addEventListener('click', () => document.getElementById('plusMenuOverlay').classList.add('show'));
+document.getElementById('plusMenuOverlay').addEventListener('click', (e) => { if (e.target.id === 'plusMenuOverlay') document.getElementById('plusMenuOverlay').classList.remove('show'); });
+function closePlusMenu(){ document.getElementById('plusMenuOverlay').classList.remove('show'); }
+
+document.getElementById('attachBtn').addEventListener('click', () => { closePlusMenu(); document.getElementById('fileInput').click(); });
 // 2026-08-22 수정: 노트북 웹캠에서도 실제로 카메라가 열리도록, 브라우저 내장 카메라 촬영
 // 모듈(aliascall_camera_capture.js)을 씀 — <input capture>는 데스크톱에서 대부분 무시되고
 // 파일탐색기가 뜨는 문제가 있었음
 document.getElementById('cameraBtn').addEventListener('click', () => {
+  closePlusMenu();
   aliascallOpenCameraCapture((file) => uploadAndSendFile(file));
 });
 
@@ -1376,6 +1720,7 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
 function detectFileType(mime){
   if (mime.startsWith('image/')) return 'photo';
   if (mime.startsWith('video/')) return 'video';
+  if (mime.startsWith('audio/')) return 'voice'; // 2026-08-22 신설: 채팅 중 음성메시지
   return 'document';
 }
 
@@ -1383,7 +1728,7 @@ async function uploadAndSendFile(file){
   const fileType = detectFileType(file.type);
   // 2026-08-22 신설: 사진이면 업로드 전에 압축(카톡과 비슷한 방식) — 용량 제한에 덜 걸리고 빨라짐
   if (fileType === 'photo') file = await aliascallCompressImage(file);
-  const limitMb = fileType === 'video' ? 80 : fileType === 'photo' ? 8 : 20;
+  const limitMb = fileType === 'video' ? 80 : fileType === 'photo' ? 8 : fileType === 'voice' ? 15 : 20;
   if (file.size > limitMb * 1024 * 1024) { alert(`파일이 너무 커요 (최대 ${limitMb}MB).`); return; }
 
   try {

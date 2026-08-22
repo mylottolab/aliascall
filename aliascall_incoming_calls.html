@@ -143,6 +143,12 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .chat-closed-note{ display:none; text-align:center; padding:10px 14px; font-size:11.5px; color:var(--ink-soft); background:var(--paper); border-top:1px solid var(--line); }
 .chat-closed-note.show{ display:block; }
 .chat-system-note{ align-self:center; font-size:11px; color:var(--ink-soft); background:var(--line); padding:5px 12px; border-radius:12px; margin:4px 0; }
+
+/* 2026-08-23 신설: 날짜 구분선 + 메시지 시간 표시 */
+.date-divider{ align-self:center; text-align:center; font-size:11px; color:var(--ink-soft); background:rgba(0,0,0,.06); border-radius:12px; padding:5px 14px; margin:14px auto; width:fit-content; }
+.msg-time-row{ font-size:9.5px; color:var(--ink-soft); margin:-4px 4px 8px; }
+.msg-time-row.me{ align-self:flex-end; }
+.msg-time-row.them{ align-self:flex-start; }
 /* 2026-08-21 신설: "마지막으로 받은 메시지" 반짝임 표시 */
 @keyframes chatNewGlow{ 0%,100%{ box-shadow:0 0 0 0 rgba(232,115,74,0); } 50%{ box-shadow:0 0 12px 4px rgba(232,115,74,.55); } }
 .chat-bubble.new-highlight{ background:#FFF4D6 !important; color:var(--ink) !important; animation:chatNewGlow 1s ease-in-out infinite; }
@@ -1282,7 +1288,7 @@ async function sendCasePhoto(file){
 
     // ⚠ 2026-08-20 (2차) 수정: 서버 응답 전에 폴링이 먼저 렌더링했을 수 있어 중복 방지 확인
     if (!msgData.messageId || !renderedMsgIds.has(msgData.messageId)) {
-      appendChatMessage({ message_type: 'photo', content: uploadData.url }, 'me');
+      appendChatMessage({ message_type: 'photo', content: uploadData.url, created_at: new Date().toISOString() }, 'me');
       if (msgData.messageId) renderedMsgIds.add(msgData.messageId);
     }
   } catch (e) {
@@ -1303,17 +1309,45 @@ document.getElementById('lightboxClose').addEventListener('click', () => {
   document.getElementById('lightboxContent').innerHTML = '';
 });
 
+// 2026-08-23 신설: 날짜 구분선 + 메시지 시간 표시
+let lastRenderedDateKey = null;
+function formatKoreanTime(dateStr){
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  let h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const ampm = h < 12 ? '오전' : '오후';
+  h = h % 12; if (h === 0) h = 12;
+  return ampm + ' ' + h + ':' + m;
+}
+function formatKoreanDateDivider(dateStr){
+  const d = new Date(dateStr);
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + days[d.getDay()] + '요일';
+}
+function insertDateDividerIfNeeded(list, createdAt){
+  if (!createdAt) return;
+  const dateKey = new Date(createdAt).toISOString().slice(0, 10);
+  if (dateKey === lastRenderedDateKey) return;
+  lastRenderedDateKey = dateKey;
+  const divider = document.createElement('div');
+  divider.className = 'date-divider';
+  divider.textContent = formatKoreanDateDivider(createdAt);
+  list.appendChild(divider);
+}
+
 function appendChatMessage(msg, who){
+  const list = document.getElementById('chatMessages');
   // 2026-08-20 (2차): 통화 시도/종료 기록(call_log)은 시스템 안내 문구로 표시
   if (msg.message_type === 'call_log') {
     const sysEl = document.createElement('div');
     sysEl.className = 'chat-system-note';
     sysEl.textContent = msg.content;
-    const list = document.getElementById('chatMessages');
     list.appendChild(sysEl);
     list.scrollTop = list.scrollHeight;
     return null;
   }
+  insertDateDividerIfNeeded(list, msg.created_at); // 2026-08-23 신설
   const el = document.createElement('div');
   const isPhoto = msg.message_type === 'photo';
   el.className = 'chat-bubble ' + who + (isPhoto ? ' photo' : '');
@@ -1339,8 +1373,16 @@ function appendChatMessage(msg, who){
       el.textContent = msg.content;
     }
   }
-  const list = document.getElementById('chatMessages');
   list.appendChild(el);
+
+  // 2026-08-23 신설: 시간 표시
+  if (msg.created_at) {
+    const timeRow = document.createElement('div');
+    timeRow.className = 'msg-time-row ' + (who === 'me' ? 'me' : 'them');
+    timeRow.textContent = formatKoreanTime(msg.created_at);
+    list.appendChild(timeRow);
+  }
+
   list.scrollTop = list.scrollHeight;
   return el; // 2026-08-21: 마지막으로 받은 메시지 반짝임 표시에 쓰기 위해 요소를 반환하도록 수정
 }
@@ -1377,7 +1419,7 @@ async function sendChatMessage(){
     if (!res.ok) throw new Error(data.error || '전송 실패');
     // ⚠ 2026-08-20 (2차) 수정: 서버 응답 전에 폴링이 먼저 렌더링했을 수 있어 중복 방지 확인
     if (!data.messageId || !renderedMsgIds.has(data.messageId)) {
-      appendChatMessage({ message_type: 'text', content: text }, 'me');
+      appendChatMessage({ message_type: 'text', content: text, created_at: new Date().toISOString() }, 'me');
       if (data.messageId) renderedMsgIds.add(data.messageId);
     }
     input.value = '';
