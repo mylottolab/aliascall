@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliascall — 안심보안회선(Alias Secure Call) 사용설명서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --brass:#C9A24B; --brass-tint:#FBF3E1;
+  --amber:#D9A441; --amber-tint:#FBF1DE;
+  --line:#DCE3DE; --danger:#C1483A; --danger-tint:#FBEAE6; --found:#2E7D4F; --found-tint:rgba(46,125,79,.1);
+}
+*{box-sizing:border-box;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:20px 24px; border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:10; }
+.brand-row{ display:flex; align-items:center; gap:9px; }
+.brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:16px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+
+main{ max-width:640px; margin:0 auto; padding:28px 20px 70px; }
+.page-title{ font-size:26px; margin-bottom:6px; }
+.page-desc{ font-size:13.5px; color:var(--ink-soft); margin-bottom:24px; line-height:1.6; }
+
+.toc{ display:flex; gap:8px; overflow-x:auto; margin-bottom:30px; padding-bottom:4px; }
+.toc a{ flex:0 0 auto; text-decoration:none; padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-size:12.5px; font-weight:600; white-space:nowrap; }
+.toc a:hover{ border-color:var(--brass); color:#8a6416; }
+
+section{ margin-bottom:38px; scroll-margin-top:90px; }
+.sec-num{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--brass); color:#fff; font-size:12.5px; font-weight:700; font-family:'Space Grotesk',sans-serif; margin-right:8px; }
+.sec-title{ font-size:19px; display:flex; align-items:center; margin-bottom:14px; }
+
+.step-list{ display:flex; flex-direction:column; gap:10px; }
+.step-item{ display:flex; gap:12px; background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px 16px; }
+.step-item .n{ flex:0 0 auto; font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--brass); font-size:13px; }
+.step-item .t{ font-size:13.5px; line-height:1.6; }
+.step-item .t b{ display:block; font-size:14px; margin-bottom:2px; }
+
+.category-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.category-card{ background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px; }
+.category-card .h{ font-size:13px; font-weight:700; margin-bottom:5px; }
+.category-card .d{ font-size:11.5px; color:var(--ink-soft); line-height:1.5; }
+
+.highlight-box{ background:var(--teal-deep); color:#fff; border-radius:18px; padding:24px 22px; margin-bottom:20px; }
+.highlight-box .tag{ display:inline-block; font-size:10.5px; font-weight:700; background:var(--brass); padding:3px 10px; border-radius:8px; margin-bottom:10px; }
+.highlight-box h3{ font-size:18px; margin-bottom:8px; }
+.highlight-box p{ font-size:13px; color:rgba(255,255,255,.8); line-height:1.6; margin:0; }
+
+.dodont-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0; }
+.dodont-col .head{ display:flex; align-items:center; gap:6px; font-weight:700; font-size:14px; margin-bottom:10px; }
+.dodont-col.do .head{ color:var(--found); }
+.dodont-col.dont .head{ color:var(--danger); }
+.dodont-item{ display:flex; gap:9px; align-items:flex-start; padding:10px 12px; border-radius:10px; margin-bottom:8px; font-size:12.5px; line-height:1.5; }
+.dodont-col.do .dodont-item{ background:var(--found-tint); }
+.dodont-col.dont .dodont-item{ background:var(--danger-tint); }
+.dodont-item .icon{ flex-shrink:0; font-size:14px; }
+
+.tip-callout{ background:var(--amber-tint); border-left:4px solid var(--amber); border-radius:0 10px 10px 0; padding:14px 16px; font-size:12.5px; line-height:1.6; margin-top:14px; }
+.tip-callout b{ color:#8a6416; }
+
+.faq-item{ border-bottom:1px solid var(--line); padding:16px 0; }
+.faq-item:last-child{ border-bottom:none; }
+.faq-q{ font-size:13.5px; font-weight:700; margin-bottom:6px; display:flex; gap:8px; }
+.faq-q span{ color:var(--brass); }
+.faq-a{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; padding-left:22px; }
+
+.back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
+.brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+    <a href="index.html" class="brand-home-link">
+      <div class="brand-mark">A</div>
+      <div class="brand-name">Alias<em>call</em></div>
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">안심보안회선(Alias Secure Call) 사용설명서</div>
+  <div class="page-desc">둘 또는 몇 명만 아는 우리끼리의 회선, 핫라인을 처음 쓰시는 분들을 위한 안내입니다. 궁금한 항목을 눌러 바로 이동하세요.</div>
+
+  <div class="toc">
+    <a href="#sec-overview">① 전체 흐름</a>
+    <a href="#sec-products">② 상품 고르기</a>
+    <a href="#sec-invite">③ 초대·참가하기</a>
+    <a href="#sec-chat">④ 대화방 기능 ⭐</a>
+    <a href="#sec-secure">⑤ 암호화(Secure) 주의사항 ⭐</a>
+    <a href="#sec-faq">⑥ 자주 묻는 질문</a>
+  </div>
+
+  <section id="sec-overview">
+    <div class="sec-title"><span class="sec-num">1</span>전체 흐름</div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t"><b>상품 선택·결제</b>2인용부터 4인용까지, 일반 상품과 암호화(Secure) 상품 중 원하는 걸 고릅니다.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t"><b>초대링크 발급</b>결제가 끝나면 관리 화면에서 초대링크가 만들어집니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t"><b>공유·승인</b>초대링크를 상대에게 보내면, 상대가 별명을 입력하고 대기실에서 기다립니다. 개설자가 승인하면 입장 완료.</span></div>
+      <div class="step-item"><span class="n">4</span><span class="t"><b>대화 시작</b>문자·사진·동영상·음성메시지·음성통화·영상통화·같이 듣기까지, 우리끼리만 쓰는 회선이 열립니다.</span></div>
+    </div>
+  </section>
+
+  <section id="sec-products">
+    <div class="sec-title"><span class="sec-num">2</span>상품 고르기</div>
+    <div class="category-grid">
+      <div class="category-card"><div class="h">📌 핫라인 (2인)</div><div class="d">단둘이, 정해진 상대와 고정으로 씁니다.</div></div>
+      <div class="category-card"><div class="h">🔄 에브리바디 (2인)</div><div class="d">단둘이 쓰되, 개설자가 언제든 상대를 교체할 수 있습니다.</div></div>
+      <div class="category-card"><div class="h">👥 이코노미 (4인)</div><div class="d">최대 4명이 함께 쓰는 가벼운 모임용입니다.</div></div>
+      <div class="category-card"><div class="h">✨ 프리미엄 (4인)</div><div class="d">이코노미와 인원은 같지만 고화질 영상통화가 가능합니다.</div></div>
+    </div>
+    <div class="tip-callout"><b>Secure 버전이 궁금하다면?</b> 위 4종 모두 "🔒 Secure" 버전이 따로 있습니다 — 인원·기능은 동일하고, 문자·사진·음성 등 모든 내용을 저희(Aliascall)조차 볼 수 없게 암호화됩니다. 자세한 가격은 <a href="aliascall_hotline_guide.html" style="color:var(--brass); font-weight:700;">상품 안내 페이지</a>에서 확인하실 수 있어요.</div>
+  </section>
+
+  <section id="sec-invite">
+    <div class="sec-title"><span class="sec-num">3</span>초대·참가하기</div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t"><b>초대링크 복사</b>관리 화면의 "복사" 버튼으로 초대링크를 가져옵니다.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t"><b>상대에게 전달</b>카톡·문자 등 어떤 방법으로 보내셔도 됩니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t"><b>대기실에서 대기</b>상대가 링크를 열고 별명을 입력하면 대기실에서 승인을 기다립니다.</span></div>
+      <div class="step-item"><span class="n">4</span><span class="t"><b>개설자가 승인</b>관리 화면에서 "승인"을 누르면 바로 입장되어 대화가 시작됩니다.</span></div>
+    </div>
+    <div class="tip-callout"><b>에브리바디 상품이라면?</b> 관리 화면에서 "내보내기"를 누르면 그 상대는 나가고, 새 초대링크가 자동으로 발급됩니다. 대화 기록은 상대가 바뀐 구간마다 색깔로 구분되어 계속 보여요.</div>
+  </section>
+
+  <section id="sec-chat">
+    <div class="sec-title"><span class="sec-num">4</span>대화방 기능 총정리</div>
+
+    <div class="highlight-box">
+      <div class="tag">오늘 가장 많이 쓰게 될 기능들</div>
+      <h3>기본을 넘어선, 진짜 채팅다운 채팅</h3>
+      <p>단순한 문자 주고받기를 넘어, 흔적을 남기지 않는 대화부터 함께 듣는 음악까지 — 다른 메신저에서도 보기 드문 기능들을 담았습니다.</p>
+    </div>
+
+    <div class="category-grid">
+      <div class="category-card"><div class="h">💬 문자·사진·동영상·문서</div><div class="d">기본적인 파일 공유는 물론, 이모지 584개(움직이는 것 포함)까지 다양하게 보낼 수 있어요.</div></div>
+      <div class="category-card"><div class="h">🎤 음성메시지 · 🎙️ 음성입력</div><div class="d">녹음해서 보내거나, 말하면 자동으로 글자가 되는 받아쓰기도 지원해요.</div></div>
+      <div class="category-card"><div class="h">↩️ 답장 · ✏️ 수정·삭제</div><div class="d">특정 메시지에 답장하거나, 내가 보낸 메시지를 나중에 고치거나 지울 수 있어요.</div></div>
+      <div class="category-card"><div class="h">⭐ 즐겨찾기 · 📌 나만의 메모함</div><div class="d">중요한 메시지를 저장해두거나, 상대는 절대 못 보는 나만의 메모를 남길 수 있어요.</div></div>
+      <div class="category-card"><div class="h">⏱️ 타이머 메시지</div><div class="d">시간을 정해두면, 그 시간이 지난 뒤 대화방에서 자동으로 사라져요.</div></div>
+      <div class="category-card"><div class="h">🎯 목표(D-DAY)</div><div class="d">여행·기념일 등 둘만의 목표를 채팅 상단에 D-day로 표시해둘 수 있어요.</div></div>
+      <div class="category-card"><div class="h">🔍 대화 검색 · 🔗 링크 미리보기</div><div class="d">지난 대화를 찾아보거나, URL을 보내면 자동으로 미리보기 카드가 붙어요.</div></div>
+      <div class="category-card"><div class="h">✓ 읽음 표시</div><div class="d">내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.</div></div>
+      <div class="category-card"><div class="h">🎵 같이 듣기</div><div class="d">유튜브 링크나 음원 파일을 올리면, 방에 있는 모두가 같은 지점에서 동시에 들을 수 있어요.</div></div>
+      <div class="category-card"><div class="h">🎧 음성통화 · 🎥 영상통화</div><div class="d">최대 4인까지 다자간 통화가 가능해요.</div></div>
+    </div>
+  </section>
+
+  <section id="sec-secure">
+    <div class="sec-title"><span class="sec-num">5</span>암호화(Secure) 상품 주의사항</div>
+
+    <div class="dodont-grid">
+      <div class="dodont-col do">
+        <div class="head">✅ Secure 상품이 좋은 점</div>
+        <div class="dodont-item"><span class="icon">🔒</span><span>문자·사진·동영상·음성 등 모든 내용을 저희 서버조차 볼 수 없게 암호화됩니다.</span></div>
+        <div class="dodont-item"><span class="icon">🔑</span><span>암호화 열쇠는 브라우저에서 직접 만들어지고, 초대링크 안에만 담깁니다.</span></div>
+        <div class="dodont-item"><span class="icon">💰</span><span>추가 비용은 일반 상품 대비 약 1.5배 수준으로, 인원·기능은 완전히 동일합니다.</span></div>
+      </div>
+      <div class="dodont-col dont">
+        <div class="head">⚠️ 꼭 알아두셔야 할 점</div>
+        <div class="dodont-item"><span class="icon">❌</span><span>초대링크(정확히는 <span class="mono">#k=</span> 뒷부분)를 잃어버리면, 그 대화는 저희를 포함해서 <b>아무도</b> 복구할 수 없습니다.</span></div>
+        <div class="dodont-item"><span class="icon">❌</span><span>링크를 캡처만 해두거나 메모장에 저장해두시길 권해드립니다. 문자·메일로 전달하다가 유실되지 않도록 주의해주세요.</span></div>
+        <div class="dodont-item"><span class="icon">❌</span><span>새 기기·브라우저에서 접속하실 땐 저장해둔 열쇠를 직접 붙여넣어야 다시 열립니다.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-faq">
+    <div class="sec-title"><span class="sec-num">6</span>자주 묻는 질문</div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>사용량 한도를 넘으면 어떻게 되나요?</div>
+      <div class="faq-a">한도를 넘는 시점에 추가결제 안내가 뜹니다. 한도 이하로 쓰시면 별도 알림 없이 그대로 이용하실 수 있어요.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>Secure 상품의 열쇠를 잃어버렸어요. 복구할 수 있나요?</div>
+      <div class="faq-a">안타깝지만 불가능합니다. 종단간 암호화의 특성상, 저희도 그 열쇠를 갖고 있지 않기 때문입니다. 열쇠(초대링크)는 반드시 안전한 곳에 따로 저장해두세요.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>타이머 메시지가 정확한 시간에 안 지워져요.</div>
+      <div class="faq-a">타이머 메시지는 방을 실제로 열어보고 있는 쪽 화면이 삭제를 처리합니다. 양쪽 다 탭을 닫아버리면, 다음에 누군가 다시 들어올 때 정리됩니다.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>기간이 만료되면 대화 내용은 어떻게 되나요?</div>
+      <div class="faq-a">결제하신 기간이 끝나면 회선이 종료됩니다. 연장하시려면 만료 전에 재결제해주세요.</div>
+    </div>
+  </section>
+</main>
+
+</body>
+</html>
