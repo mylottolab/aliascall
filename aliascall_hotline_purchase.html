@@ -177,7 +177,15 @@ document.querySelectorAll('.tier-tab').forEach((tab) => {
     renderDurations();
   });
 });
-document.querySelector('.tier-tab[data-tier="hotline_1to1"]').classList.add('active');
+// 2026-08-22 신설: 메인화면/상품안내 페이지에서 특정 상품 카드를 눌러 들어온 경우, 그
+// 상품이 처음부터 선택되어 있도록 함 (예전엔 항상 "핫라인" 3,900원짜리로 초기화되던 버그)
+const urlTier = new URLSearchParams(window.location.search).get('tier');
+if (urlTier && document.querySelector(`.tier-tab[data-tier="${urlTier}"]`)) {
+  selectedTier = urlTier;
+  document.querySelector(`.tier-tab[data-tier="${urlTier}"]`).classList.add('active');
+} else {
+  document.querySelector('.tier-tab[data-tier="hotline_1to1"]').classList.add('active');
+}
 
 function renderDurations(){
   const grid = document.getElementById('durationGrid');
