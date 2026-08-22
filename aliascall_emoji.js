@@ -14,20 +14,27 @@
 //      스티커처럼 다시 보여줌 (카톡 이모티콘 전용 메시지처럼)
 // =====================================================
 
-const ALIASCALL_EMOJI_MAP = {
-  '😀':'1f600', '😃':'1f603', '😄':'1f604', '😁':'1f601', '😆':'1f606', '😅':'1f605', '😂':'1f602', '🤣':'1f923',
-  '😊':'1f60a', '😇':'1f607', '🙂':'1f642', '🙃':'1f643', '😉':'1f609', '😌':'1f60c', '😍':'1f60d', '🥰':'1f970',
-  '😘':'1f618', '😗':'1f617', '😙':'1f619', '😚':'1f61a', '😋':'1f60b', '😛':'1f61b', '😝':'1f61d', '😜':'1f61c',
-  '🤪':'1f92a', '🤔':'1f914', '🤨':'1f928', '😐':'1f610', '😑':'1f611', '😶':'1f636', '🙄':'1f644', '😏':'1f60f',
-  '😣':'1f623', '😥':'1f625', '😮':'1f62e', '🤐':'1f910', '😯':'1f62f', '😪':'1f62a', '😫':'1f62b', '🥱':'1f971',
-  '😴':'1f634', '😔':'1f614', '😢':'1f622', '😭':'1f62d', '😤':'1f624', '😠':'1f620', '😡':'1f621', '🤯':'1f92f',
-  '😱':'1f631', '😨':'1f628', '😰':'1f630', '😓':'1f613', '🤗':'1f917', '🤭':'1f92d', '🤫':'1f92b', '🤥':'1f925',
-  '😷':'1f637', '🥳':'1f973', '😎':'1f60e', '🤓':'1f913', '🧐':'1f9d0', '👍':'1f44d', '👎':'1f44e', '👏':'1f44f',
-  '🙌':'1f64c', '🙏':'1f64f', '💪':'1f4aa', '🤝':'1f91d', '✌️':'270c', '🤞':'1f91e', '👌':'1f44c', '👋':'1f44b',
-  '❤️':'2764', '🧡':'1f9e1', '💛':'1f49b', '💚':'1f49a', '💙':'1f499', '💜':'1f49c', '🖤':'1f5a4', '🤍':'1f90d',
-  '💔':'1f494', '💯':'1f4af', '🔥':'1f525', '✨':'2728', '🎉':'1f389', '🎊':'1f38a', '⭐':'2b50', '🌟':'1f31f',
-  '💤':'1f4a4', '☕':'2615', '🍀':'1f340', '🌸':'1f338', '🌈':'1f308', '🐶':'1f436', '🐱':'1f431', '🐰':'1f430', '🎂':'1f382',
-};
+// 카테고리 구분(픽커에서 탭으로 넘나들 수 있게) — 이모지 자체는 위 ALIASCALL_EMOJI_MAP과 동일
+const ALIASCALL_EMOJI_CATEGORIES = [
+  { name: '표정', icon: '😀', chars: ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤔','🤨','😐','😑','😶','🙄','😏','😣','😥','😮','🤐','😯','😪','😫','🥱','😴','😔','😢','😭','😤','😠','😡','🤯','😱','😨','😰','😓','🤗','🤭','🤫','🤥','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😲','😳','🥺','😬','🤤','😈','👿','💀','☠️','👻','👽','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾'] },
+  { name: '손·사람', icon: '👋', chars: ['👍','👎','👏','🙌','🙏','💪','🤝','✌️','🤞','👌','🤟','🤘','👊','✊','👋','🤙','👈','👉','👆','👇','☝️','✋','🖐️','🖖','👀','👶','🧒','👦','👧','🧑','👨','👩','🧓','👴','👵','👮','🕵️','👷','💂','👨‍⚕️','👩‍⚕️','👨‍🏫','👩‍🏫','👨‍💻','👩‍💻','🧑‍🎓','🧑‍🍳','🤴','👸','🤵','👰','🤰','🤱'] },
+  { name: '마음', icon: '❤️', chars: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❤️‍🔥','❤️‍🩹','💕','💞','💓','💗','💖','💘','💝','💟','💯','💢','💥','💫','💦','💨','🕳️','💬','🗨️','🗯️','💭','💤'] },
+  { name: '동물', icon: '🐶', chars: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐢','🐍','🦎','🐙','🦑','🦀','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐆','🦓','🦍','🐘','🦛','🦒','🐫','🦘','🐕','🐈','🐓','🦃','🦚','🦜','🐇','🐿️'] },
+  { name: '자연', icon: '🌸', chars: ['🌸','💐','🌷','🌹','🌻','🌼','🌱','🌲','🌳','🌴','🌵','🌾','🍀','🍁','🍂','🍃','🌿','☘️','🌊','🔥','💧','☀️','🌤️','⛅','🌥️','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️','🌪️','🌈','☔','⚡','🌙','⭐','🌟','✨','☄️','🌍','🌎','🌏'] },
+  { name: '음식', icon: '🍔', chars: ['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🌽','🥕','🧄','🧅','🥔','🍠','🥐','🥯','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🌭','🍔','🍟','🍕','🥪','🌮','🌯','🥗','🍿','🧂','🥫','🍝','🍜','🍲','🍛','🍣','🍱','🍤','🍙','🍚','🍘','🍥','🥟','🍡','🍧','🍨','🍦','🥧','🍰','🎂','🧁','🍮','🍭','🍬','🍫','🍩','🍪','🌰','🥜','🍯','🥛','🍼','☕','🍵','🧃','🥤','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🍾'] },
+  { name: '활동', icon: '⚽', chars: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥅','⛳','🏹','🎣','🥊','🥋','🎽','🛹','🛼','🎿','⛷️','🏂','🏋️','🤼','🤸','⛹️','🤾','🏄','🏊','🤽','🚣','🧗','🚴','🚵','🏆','🥇','🥈','🥉','🎖️','🏅','🎗️','🎫','🎟️','🎪','🤹','🎨','🎬','🎤','🎧','🎼','🎹','🥁','🎷','🎺','🎸','🪕','🎻','🎲','🧩','🚗','🚕','🚙','🚌','🚓','🚑','🚒','🚚','🚲','🛵','🏍️','✈️','🚀','🛸','🚁','⛵','🚤','🛳️','⚓','🏝️','🏔️','🗽','🗼','🏰','🎡','🎢','🎠'] },
+  { name: '사물', icon: '💡', chars: ['💡','🔦','🕯️','📱','💻','⌨️','🖥️','🖨️','🖱️','📷','📸','📹','🎥','📺','📻','⏰','⏱️','⏲️','🕰️','⌚','📚','📖','📕','📗','📘','📙','📔','📓','📒','📝','✏️','🖊️','🖋️','🖌️','📌','📍','✂️','🔒','🔓','🔑','🗝️','🔨','🛠️','🔧','⚙️','⛏️','⚗️','🧪','🔬','🔭','📡','💊','💉','🩹','🚪','🪑','🛏️','🛋️','🚿','🛁','🧴','🧼','🧻','🎁','🎈','🎀','🎊','🎉','🎄','🎃','🧧','💌','📩','📮','📦','📫','🕐','💰','💵','💳','💎','⚖️','🔔','🔕','📢','📣','📯','🚩','🏳️','🏴','🏁','🚦','⛔','🔞','📵','🚭','♻️','✅','❌','❓','❗','⚠️','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪'] },
+];
+
+const ALIASCALL_EMOJI_MAP = {};
+ALIASCALL_EMOJI_CATEGORIES.forEach((cat) => {
+  cat.chars.forEach((e) => {
+    if (ALIASCALL_EMOJI_MAP[e]) return; // 중복 방지
+    const cps = Array.from(e).filter((c) => c.codePointAt(0) !== 0xFE0F && c.codePointAt(0) !== 0x200D);
+    const hexcode = cps.map((c) => c.codePointAt(0).toString(16)).join('_');
+    ALIASCALL_EMOJI_MAP[e] = hexcode;
+  });
+});
 // 긴 시퀀스(변형선택자 포함)를 먼저 매칭해야 하므로 길이 내림차순으로 정렬해둠
 const ALIASCALL_EMOJI_KEYS_BY_LENGTH = Object.keys(ALIASCALL_EMOJI_MAP).sort((a, b) => b.length - a.length);
 
@@ -36,19 +43,41 @@ function aliascallEmojiGifUrl(char){
   return code ? `https://fonts.gstatic.com/s/e/notoemoji/latest/${code}/512.gif` : null;
 }
 
-// 선택 패널을 컨테이너에 채워 넣고, 이모지를 누르면 onPick(문자)를 호출함
+// 선택 패널을 컨테이너에 채워 넣음 — 카테고리 탭 + 그 카테고리의 이모지 그리드.
+// 이모지를 누르면 onPick(문자)를 호출함
 function renderAliascallEmojiPanel(containerEl, onPick){
-  const items = Object.keys(ALIASCALL_EMOJI_MAP).map((char) => {
-    const url = aliascallEmojiGifUrl(char);
-    return `<button type="button" data-char="${char}" class="aliascall-emoji-btn"><img src="${url}" alt="${char}" loading="lazy"></button>`;
-  }).join('');
-  containerEl.innerHTML = items + '<div class="aliascall-emoji-credit">이모지: Google Noto Emoji · CC BY 4.0</div>';
+  let activeCategoryIdx = 0;
 
-  containerEl.querySelectorAll('.aliascall-emoji-btn').forEach((btn) => {
-    const img = btn.querySelector('img');
-    img.addEventListener('error', () => { btn.innerHTML = btn.dataset.char; }, { once: true }); // 혹시 특정 이모지 GIF가 없으면 글자로 대체
-    btn.addEventListener('click', () => onPick(btn.dataset.char));
+  function renderGrid(){
+    const cat = ALIASCALL_EMOJI_CATEGORIES[activeCategoryIdx];
+    const grid = containerEl.querySelector('.aliascall-emoji-grid');
+    grid.innerHTML = cat.chars.map((char) => {
+      const url = aliascallEmojiGifUrl(char);
+      return `<button type="button" data-char="${char}" class="aliascall-emoji-btn"><img src="${url}" alt="${char}" loading="lazy"></button>`;
+    }).join('');
+    grid.querySelectorAll('.aliascall-emoji-btn').forEach((btn) => {
+      const img = btn.querySelector('img');
+      img.addEventListener('error', () => { btn.innerHTML = btn.dataset.char; }, { once: true }); // 혹시 특정 이모지 GIF가 없으면 글자로 대체
+      btn.addEventListener('click', () => onPick(btn.dataset.char));
+    });
+  }
+
+  const tabsHtml = ALIASCALL_EMOJI_CATEGORIES.map((cat, i) => `<button type="button" class="aliascall-emoji-tab${i === 0 ? ' active' : ''}" data-idx="${i}">${cat.icon}</button>`).join('');
+  containerEl.innerHTML =
+    `<div class="aliascall-emoji-tabs">${tabsHtml}</div>` +
+    `<div class="aliascall-emoji-grid"></div>` +
+    `<div class="aliascall-emoji-credit">이모지: Google Noto Emoji · CC BY 4.0</div>`;
+
+  containerEl.querySelectorAll('.aliascall-emoji-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      containerEl.querySelectorAll('.aliascall-emoji-tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeCategoryIdx = Number(tab.dataset.idx);
+      renderGrid();
+    });
   });
+
+  renderGrid();
 }
 
 // 메시지가 "이모지 1~3개로만" 이루어져 있으면, 각 이모지의 { char, url } 배열을 반환하고,

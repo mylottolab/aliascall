@@ -119,12 +119,16 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 #emojiBtn{ background:var(--teal-tint); }
 
 /* 2026-08-22 신설: 이모지 선택 패널 — 애니메이션 GIF 이미지 그리드 */
-.emoji-panel{ display:none; grid-template-columns:repeat(8,1fr); gap:2px; padding:10px 8px 4px; background:var(--card); border-top:1px solid var(--line); max-height:220px; overflow-y:auto; flex-shrink:0; }
-.emoji-panel.show{ display:grid; }
+.emoji-panel{ display:none; flex-direction:column; padding:8px 8px 4px; background:var(--card); border-top:1px solid var(--line); max-height:270px; flex-shrink:0; }
+.emoji-panel.show{ display:flex; }
+.aliascall-emoji-tabs{ display:flex; gap:2px; overflow-x:auto; padding-bottom:6px; margin-bottom:6px; border-bottom:1px solid var(--line); flex-shrink:0; }
+.aliascall-emoji-tab{ background:none; border:none; font-size:17px; padding:5px 9px; border-radius:8px; cursor:pointer; opacity:.45; flex-shrink:0; }
+.aliascall-emoji-tab.active{ opacity:1; background:var(--teal-tint); }
+.aliascall-emoji-grid{ display:grid; grid-template-columns:repeat(8,1fr); gap:2px; overflow-y:auto; max-height:190px; }
 .aliascall-emoji-btn{ background:none; border:none; padding:5px; cursor:pointer; border-radius:8px; line-height:1; font-size:20px; }
 .aliascall-emoji-btn img{ width:26px; height:26px; display:block; margin:0 auto; }
 .aliascall-emoji-btn:active{ background:var(--teal-tint); }
-.aliascall-emoji-credit{ grid-column:1/-1; text-align:center; font-size:9px; color:var(--ink-soft); padding:6px 0 2px; }
+.aliascall-emoji-credit{ text-align:center; font-size:9px; color:var(--ink-soft); padding:6px 0 2px; flex-shrink:0; }
 .emoji-sticker-bubble{ padding:4px !important; display:flex; gap:2px; }
 .emoji-sticker{ width:52px; height:52px; }
 .chat-attach-btn{ background:var(--teal-tint) !important; color:var(--teal-deep) !important; font-size:18px !important; }
