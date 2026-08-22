@@ -199,6 +199,9 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 
 footer{ text-align:center; padding:26px 24px 40px; font-size:11px; color:rgba(255,255,255,.4); line-height:1.7; }
 footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
+/* 2026-08-23 신설: 통신판매업자 기본 표시사항 */
+.biz-info{ margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,.1); font-size:10px; color:rgba(255,255,255,.35); line-height:1.8; }
+.biz-info a{ color:rgba(255,255,255,.45); text-decoration:underline; }
 </style>
 </head>
 <body>
@@ -362,9 +365,17 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 </div>
 
 <footer>
-  <a href="aliascall_guide.html" data-i18n="guide">ℹ️ 사용설명서</a><br><br>
+  <a href="aliascall_guide.html" data-i18n="guideEmergency">ℹ️ 안심비상연락 사용설명서</a><br>
+  <a href="aliascall_secure_guide.html" data-i18n="guideSecure">ℹ️ 안심보안회선 사용설명서</a><br><br>
   <span data-i18n="footerNote1">Aliascall은 실제 번호를 노출하지 않는 안전한 연결 서비스입니다.</span><br>
   <span data-i18n="footerNote2">실시간 위치추적 기능은 없습니다.</span>
+
+  <!-- 2026-08-23 신설: 통신판매업자 기본 표시사항(전자상거래법) -->
+  <div class="biz-info">
+    위브앱솔루션 · 대표 이미화 · 사업자등록번호 206-08-71754 · 경기도 수원시 권선구 수성로47 10동 501호 · 010-9237-9042 · 통신판매업신고 2022-수원권선-1701
+    <br>
+    <a href="aliascall_terms.html">이용약관</a> · <a href="aliascall_privacy.html">개인정보보호방침</a>
+  </div>
 </footer>
 
 </div>
@@ -680,7 +691,8 @@ const I18N = {
     incomingCalls: '수신 대기',
     charge: '충전소 · 관련상품',
     board: '찾습니다 게시판',
-    guide: 'ℹ️ 사용설명서',
+    guideEmergency: 'ℹ️ 안심비상연락 사용설명서',
+    guideSecure: 'ℹ️ 안심보안회선 사용설명서',
     footerNote1: 'Aliascall은 실제 번호를 노출하지 않는 안전한 연결 서비스입니다.',
     footerNote2: '실시간 위치추적 기능은 없습니다.',
     loginPrompt: '아직 로그인하지 않으셨어요 — ',
@@ -702,7 +714,8 @@ const I18N = {
     incomingCalls: 'Incoming Calls',
     charge: 'Top Up · Products',
     board: 'Lost & Found Board',
-    guide: 'ℹ️ User Guide',
+    guideEmergency: 'ℹ️ Alias Emergency Call User Guide',
+    guideSecure: 'ℹ️ Alias Secure Call User Guide',
     footerNote1: 'Aliascall is a safe connection service that never exposes real phone numbers.',
     footerNote2: 'There is no real-time location tracking.',
     loginPrompt: "You're not logged in yet — ",
