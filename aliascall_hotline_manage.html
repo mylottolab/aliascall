@@ -43,6 +43,12 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 
 .invite-row{ display:flex; gap:6px; margin-bottom:14px; }
 .key-missing-box{ background:rgba(201,162,75,.12); border:1px dashed var(--brass); border-radius:10px; padding:11px 12px; font-size:11.5px; color:var(--ink-soft); margin-bottom:14px; line-height:1.5; }
+
+/* 2026-08-23 신설: 만료 후 파일삭제 예정 경고 배너 */
+.expiry-warning{ background:rgba(193,72,58,.1); border:1.5px solid var(--danger); border-radius:12px; padding:13px 14px; margin-bottom:14px; }
+.expiry-warning-stage{ font-size:10.5px; font-weight:700; color:var(--danger); margin-bottom:5px; }
+.expiry-warning-msg{ font-size:12px; color:var(--ink); line-height:1.5; margin-bottom:10px; }
+.expiry-warning-btn{ width:100%; background:var(--danger); color:#fff; border:none; border-radius:8px; padding:9px; font-size:12px; font-weight:700; cursor:pointer; }
 .invite-row input{ flex:1; border:1.5px solid var(--line); border-radius:10px; padding:9px 12px; font-size:11.5px; font-family:'IBM Plex Mono',monospace; color:var(--ink-soft); background:var(--teal-tint); }
 .invite-row button{ background:var(--teal); color:#fff; border:none; border-radius:10px; padding:0 16px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
 
@@ -112,6 +118,24 @@ async function renderHotlineItem(h){
   const usagePercent = h.usage_cap_gb > 0 ? Math.min(100, Math.round((h.usage_used_gb / h.usage_cap_gb) * 100)) : 0;
   const expiresLabel = new Date(h.expires_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' });
 
+  // 2026-08-23 신설: 만료됐는데 아직 연장 안 한 핫라인 — 30일 뒤 파일 자동삭제 예정 안내
+  // (3단계로 나눠서, 시간이 갈수록 더 급하게 알림 — 카톡 "구독 3회 알림"과 비슷한 취지)
+  const daysSinceExpiry = Math.floor((Date.now() - new Date(h.expires_at).getTime()) / 86400000);
+  let expiryWarningHtml = '';
+  if (daysSinceExpiry >= 0 && daysSinceExpiry < 30) {
+    const daysLeft = 30 - daysSinceExpiry;
+    let stage, message;
+    if (daysSinceExpiry < 10) { stage = '1차 안내'; message = `핫라인이 만료됐어요. ${daysLeft}일 안에 연장하지 않으면 그동안의 사진·동영상·음성 파일이 삭제됩니다.`; }
+    else if (daysSinceExpiry < 20) { stage = '2차 안내'; message = `아직 연장하지 않으셨어요. ${daysLeft}일 후 파일이 삭제됩니다.`; }
+    else { stage = '마지막 안내 ⚠️'; message = `${daysLeft}일 후 파일이 영구 삭제됩니다. 보관하고 싶으시면 지금 연장해주세요.`; }
+    expiryWarningHtml = `
+      <div class="expiry-warning">
+        <div class="expiry-warning-stage">${stage}</div>
+        <div class="expiry-warning-msg">${message}</div>
+        <button class="expiry-warning-btn" onclick="location.href='aliascall_hotline_purchase.html?tier=${h.tier}'">지금 연장하기</button>
+      </div>`;
+  }
+
   // 2026-08-21 신설: 암호화(Secure) 상품 여부에 따라 링크 구성이 달라짐 — 암호화 상품은
   // 이 브라우저에 저장해둔 열쇠(localStorage)가 있어야 완전한 링크를 만들 수 있음
   const secure = h.tier.endsWith('_secure');
@@ -171,6 +195,8 @@ async function renderHotlineItem(h){
       </div>
       <div class="hl-item-title">${h.title || (TIER_LABEL[h.tier] || h.tier)}</div>
       <div class="hl-item-meta">${(members || []).length} / ${h.max_participants}명 참가 중</div>
+
+      ${expiryWarningHtml}
 
       ${linkSectionHtml}
 
