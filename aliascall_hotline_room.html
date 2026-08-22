@@ -154,6 +154,14 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .keep-add-row input{ flex:1; border:1.5px solid var(--line); border-radius:10px; padding:9px 12px; font-size:12px; }
 .keep-add-row button{ background:var(--teal); color:#fff; border:none; border-radius:10px; padding:0 14px; font-size:12px; font-weight:700; cursor:pointer; }
 
+/* 2026-08-23 신설: 채팅 사용법 안내 패널 */
+.guide-list{ padding:6px 14px 16px; }
+.guide-item{ display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
+.guide-item:last-child{ border-bottom:none; }
+.guide-icon{ font-size:20px; width:32px; text-align:center; flex-shrink:0; }
+.guide-title{ font-size:12.5px; font-weight:700; margin-bottom:3px; }
+.guide-desc{ font-size:11.5px; color:var(--ink-soft); line-height:1.5; }
+
 /* 2026-08-22 신설: 말풍선 안의 답장 인용 미리보기 / 수정됨·삭제됨 표시 / 즐겨찾기 별 */
 .bubble-reply-quote{ font-size:10.5px; opacity:.75; border-left:2px solid currentColor; padding:3px 8px; margin-bottom:5px; border-radius:4px; background:rgba(0,0,0,.06); }
 .bubble-edited-tag{ font-size:9.5px; opacity:.6; margin-left:4px; }
@@ -338,6 +346,28 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
     <button type="button" class="plus-menu-item" id="cameraBtn"><span>📷</span><span>사진 촬영</span></button>
     <button type="button" class="plus-menu-item" id="timerBtn"><span>⏱️</span><span>타이머 메시지</span></button>
     <button type="button" class="plus-menu-item" id="voiceMsgBtn"><span>🎤</span><span>음성메시지</span></button>
+    <button type="button" class="plus-menu-item" id="guideMenuBtn"><span>❓</span><span>사용법</span></button>
+  </div>
+</div>
+
+<!-- 2026-08-23 신설: 채팅 사용법 안내 -->
+<div class="panel-overlay" id="guidePanelOverlay">
+  <div class="panel-sheet">
+    <div class="panel-header"><span>❓ 채팅 사용법</span><button type="button" class="panel-close" data-close="guidePanelOverlay">✕</button></div>
+    <div class="panel-list guide-list">
+      <div class="guide-item"><div class="guide-icon">💬</div><div><div class="guide-title">기본 채팅</div><div class="guide-desc">문자·이모지·사진·동영상·문서·음성메시지를 주고받을 수 있어요. 사진·동영상·문서는 📎, 촬영은 📷, 음성메시지는 🎤(➕ 안에 있어요).</div></div></div>
+      <div class="guide-item"><div class="guide-icon">🎙️</div><div><div class="guide-title">음성으로 입력</div><div class="guide-desc">입력창 옆 마이크를 누르고 말하면 자동으로 글자로 바뀌어요. (일부 구형 브라우저는 지원 안 할 수 있어요)</div></div></div>
+      <div class="guide-item"><div class="guide-icon">↩️</div><div><div class="guide-title">답장</div><div class="guide-desc">메시지의 "⋯"를 눌러 답장을 선택하면, 어떤 메시지에 대한 답인지 인용되어 표시돼요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">✏️</div><div><div class="guide-title">수정·삭제</div><div class="guide-desc">내가 보낸 메시지의 "⋯"에서 수정하거나 삭제할 수 있어요. 삭제하면 "삭제된 메시지입니다"로 표시돼요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">⭐</div><div><div class="guide-title">즐겨찾기</div><div class="guide-desc">중요한 메시지를 "⋯" → 즐겨찾기로 저장해두고, 우측 상단 "⋯" 메뉴에서 모아볼 수 있어요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">📌</div><div><div class="guide-title">나만의 메모함</div><div class="guide-desc">메시지를 저장하거나 직접 메모를 남길 수 있어요. 철저히 나만 보는 개인 공간이라 상대방은 절대 못 봐요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">⏱️</div><div><div class="guide-title">타이머 메시지</div><div class="guide-desc">➕ → 타이머 메시지로 시간을 정하면, 그 시간이 지난 뒤 자동으로 사라져요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">🎯</div><div><div class="guide-title">목표(D-DAY)</div><div class="guide-desc">여행·기념일 등 둘만의 목표를 등록하면 채팅 상단에 D-day/D+day로 표시돼요. 참가자 누구나 등록할 수 있어요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">🔍</div><div><div class="guide-title">대화 검색</div><div class="guide-desc">우측 상단 "⋯" → 대화 검색으로 지난 대화 내용을 찾을 수 있어요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">✓</div><div><div class="guide-title">읽음 표시</div><div class="guide-desc">내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">🎵</div><div><div class="guide-title">같이 듣기</div><div class="guide-desc">하단 "음악" 탭에서 유튜브 링크나 음원 파일을 올리면, 방에 있는 모두가 같은 지점에서 동시에 들을 수 있어요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">🔒</div><div><div class="guide-title">종단간 암호화(Secure 상품)</div><div class="guide-desc">Secure 상품은 문자·사진·음성 등 모든 내용이 저희 서버조차 볼 수 없게 암호화돼요. 단, 초대링크(#k= 포함)를 잃어버리면 대화도 영구히 복구할 수 없어요.</div></div></div>
+    </div>
   </div>
 </div>
 
@@ -1497,6 +1527,12 @@ document.getElementById('voiceRecordSendBtn').addEventListener('click', async ()
 document.getElementById('plusMenuBtn').addEventListener('click', () => document.getElementById('plusMenuOverlay').classList.add('show'));
 document.getElementById('plusMenuOverlay').addEventListener('click', (e) => { if (e.target.id === 'plusMenuOverlay') document.getElementById('plusMenuOverlay').classList.remove('show'); });
 function closePlusMenu(){ document.getElementById('plusMenuOverlay').classList.remove('show'); }
+
+// 2026-08-23 신설: 사용법 안내 패널
+document.getElementById('guideMenuBtn').addEventListener('click', () => {
+  closePlusMenu();
+  document.getElementById('guidePanelOverlay').classList.add('show');
+});
 
 document.getElementById('attachBtn').addEventListener('click', () => { closePlusMenu(); document.getElementById('fileInput').click(); });
 // 2026-08-22 수정: 노트북 웹캠에서도 실제로 카메라가 열리도록, 브라우저 내장 카메라 촬영
