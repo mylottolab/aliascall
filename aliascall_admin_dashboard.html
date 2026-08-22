@@ -480,8 +480,9 @@ async function loadProducts(){
 // =====================================================
 // 2026-08-21 신설: 핫라인(2부) 요금정책 관리 — 마진율/GB당원가 넣으면 사용량 한도 자동 계산
 // =====================================================
-const HL_TIER_LABEL = { hotline_1to1: '핫라인 (2명)', hotline_everybody: '핫라인 에브리바디 (2명)', economy_4: '이코노미 (4명)', premium_4: '프리미엄 (4명)' };
-const HL_TIERS = ['hotline_1to1', 'hotline_everybody', 'economy_4', 'premium_4'];
+const HL_TIER_LABEL = { hotline_1to1: '핫라인 (2명)', hotline_everybody: '핫라인 에브리바디 (2명)', economy_4: '이코노미 (4명)', premium_4: '프리미엄 (4명)',
+  hotline_1to1_secure: '핫라인 Secure (2명·준비중)', hotline_everybody_secure: '에브리바디 Secure (2명·준비중)', economy_4_secure: '이코노미 Secure (4명·준비중)', premium_4_secure: '프리미엄 Secure (4명·준비중)' };
+const HL_TIERS = ['hotline_1to1', 'hotline_everybody', 'economy_4', 'premium_4', 'hotline_1to1_secure', 'hotline_everybody_secure', 'economy_4_secure', 'premium_4_secure'];
 const HL_DURATIONS = [3, 6, 12, 24];
 let hlPlansCache = {}; // key: tier|duration -> { price_krw, usage_cap_gb }
 
