@@ -94,6 +94,44 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
 /* 2026-08-23 신설: 마이페이지 바로 인쇄(100P 차감) */
 .reg-qr-print{ font-size:10px; font-weight:700; color:#8a6416; background:rgba(201,162,75,.15); border:none; border-radius:12px; padding:4px 9px; cursor:pointer; white-space:nowrap; margin-top:5px; }
+
+/* 2026-08-23 신설: 인쇄 모달(사이즈 선택 + 가득채우기/견본섞기) */
+.section-label{ font-size:12.5px; font-weight:700; color:var(--ink-soft); }
+.size-card{ text-align:center; padding:12px 4px; border-radius:10px; border:1.5px solid var(--line); background:var(--card); cursor:pointer; font-size:12px; font-weight:600; }
+.size-card.selected{ border-color:var(--teal); background:var(--teal-tint); color:var(--teal-deep); }
+.print-modal-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:300; align-items:center; justify-content:center; padding:20px; }
+.print-modal-overlay.show{ display:flex; }
+.print-modal-box{ background:var(--card); border-radius:16px; padding:22px; width:100%; max-width:360px; max-height:85vh; overflow-y:auto; }
+.print-modal-title{ font-size:16px; font-weight:700; }
+.print-modal-box .size-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:10px; margin-bottom:14px; }
+.print-modal-box .print-mode-tabs{ display:flex; gap:8px; margin-bottom:12px; }
+.print-modal-box .print-mode-tab{ flex:1; text-align:center; padding:9px 4px; border-radius:10px; border:1.5px solid var(--line); background:var(--card); cursor:pointer; font-size:11.5px; font-weight:600; color:var(--ink-soft); }
+.print-modal-box .print-mode-tab.selected{ border-color:var(--teal); background:var(--teal-tint); color:var(--teal-deep); }
+.print-modal-box .hint{ font-size:11px; color:var(--ink-soft); line-height:1.5; }
+.modal-cancel-btn-pm{ width:100%; background:none; border:none; color:var(--ink-soft); padding:10px; font-size:12.5px; cursor:pointer; margin-top:6px; }
+
+/* 인쇄될 때만 보이는 A4 시트 */
+.print-sheet{ display:none; }
+@media print{
+  body > *:not(#printSheet){ display:none !important; }
+  #printSheet{ display:block !important; padding:8mm; }
+  #printSheet:not(.sample-mode){
+    display:grid !important;
+    grid-template-columns:repeat(auto-fill, minmax(var(--tag-mm, 45mm), 1fr));
+    gap:4mm;
+  }
+  .print-tag{
+    width:var(--this-tag-mm, var(--tag-mm, 45mm)); height:var(--this-tag-mm, var(--tag-mm, 45mm));
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border:0.4mm dashed #999; break-inside:avoid; padding:2mm; box-sizing:border-box;
+  }
+  .print-qr{ width:100%; }
+  .print-qr img, .print-qr canvas{ width:100% !important; height:auto !important; }
+  .print-label{ font-size:7pt; font-family:monospace; margin-top:1mm; color:#333; }
+  .print-section-title{ font-size:11pt; font-weight:700; margin:6mm 0 3mm; font-family:sans-serif; }
+  .print-sample-row{ display:flex; gap:5mm; flex-wrap:wrap; }
+  @page{ size:A4; margin:8mm; }
+}
 .reg-qr-token{ font-size:9.5px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; cursor:pointer; white-space:nowrap; }
 .reg-qr-token:hover{ color:var(--teal-deep); text-decoration:underline; }
 .reg-media-thumbs{ flex:1; display:flex; flex-wrap:wrap; gap:6px; align-content:flex-start; }
@@ -462,6 +500,30 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     <button type="button" class="lightbox-close" id="mediaLightboxCloseBtn" data-i18n="mediaLightboxClose">닫기</button>
   </div>
 </div>
+
+<!-- 2026-08-23 신설: QR 인쇄 — 사이즈 선택 + 가득채우기/견본섞기 (등록화면과 동일한 기능) -->
+<div class="print-modal-overlay" id="printModalOverlay">
+  <div class="print-modal-box">
+    <div class="print-modal-title">🖨️ QR 인쇄</div>
+    <div class="section-label" style="margin-top:14px;">인쇄 사이즈 선택</div>
+    <div class="size-grid" id="printSizeGrid">
+      <div class="size-card selected" data-size="3x3">3×3cm</div>
+      <div class="size-card" data-size="4.5x4.5">4.5×4.5cm</div>
+      <div class="size-card" data-size="5.5x5.5">5.5×5.5cm</div>
+      <div class="size-card" data-size="6x6">6×6cm</div>
+    </div>
+    <div class="print-mode-tabs">
+      <div class="print-mode-tab selected" id="printModeFillBtn">📄 이 사이즈로 가득채우기</div>
+      <div class="print-mode-tab" id="printModeSampleBtn">🔀 4개 사이즈 견본으로 섞어찍기</div>
+    </div>
+    <div class="hint" id="printModalHint">A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. 인쇄 확정 시 100P가 차감됩니다.</div>
+    <button type="button" id="printModalConfirmBtn" style="width:100%; margin-top:14px; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px; font-size:13px; font-weight:700; cursor:pointer;">인쇄하기(100P)</button>
+    <button type="button" class="modal-cancel-btn-pm" id="printModalCloseBtn">취소</button>
+  </div>
+</div>
+
+<!-- 인쇄될 때만 보이는 A4 시트 (화면에서는 항상 숨김) -->
+<div id="printSheet" class="print-sheet"></div>
 
 <!-- 전화벨 팝업 / 통화중 오버레이 / 채팅 (2026-08-17 신규 — index.html과 동일 로직) -->
 <!-- 2026-08-19 (3차): 가벼운 배너로만 알리고, 실제 연결은 incoming_calls.html로 넘김 -->
@@ -1198,7 +1260,7 @@ async function loadMyRegistrations(userId){
             <div class="reg-qr-box" id="qr-${r.id}"></div>
             <div class="reg-qr-token" title="${r.qr_code_token || ''}">${I18N[currentLang].tokenLabel} ${(r.qr_code_token || '').slice(0, 8)}…</div>
             <button type="button" class="reg-qr-download" data-id="${r.id}" data-name="${label}">${I18N[currentLang].qrDownloadBtn}</button>
-            <button type="button" class="reg-qr-print" data-id="${r.id}" data-name="${label}">${I18N[currentLang].qrPrintBtn}</button>
+            <button type="button" class="reg-qr-print" data-id="${r.id}" data-name="${label}" data-token="${r.qr_code_token || ''}">${I18N[currentLang].qrPrintBtn}</button>
           </div>
           <div class="reg-media-thumbs" id="media-${r.id}"></div>
         </div>
@@ -1220,7 +1282,7 @@ async function loadMyRegistrations(userId){
     btn.addEventListener('click', () => downloadQr(btn.dataset.id, btn.dataset.name));
   });
   container.querySelectorAll('.reg-qr-print').forEach((btn) => {
-    btn.addEventListener('click', () => printQrWithPointCharge(btn.dataset.id, btn.dataset.name));
+    btn.addEventListener('click', () => openPrintModal(btn.dataset.id, btn.dataset.name, btn.dataset.token));
   });
   container.querySelectorAll('.reg-qr-token').forEach((el) => {
     el.addEventListener('click', async () => {
@@ -1286,24 +1348,133 @@ function downloadQr(regId, name){
   a.click();
 }
 
-// 2026-08-23 신설: 마이페이지에서 바로 인쇄 — 등록화면의 "100P 차감 다운로드"와 동일한
-// 과금 방식(apply_point_transaction RPC)을 그대로 재사용함
-async function printQrWithPointCharge(regId, name){
-  const box = document.getElementById('qr-' + regId);
-  const canvas = box?.querySelector('canvas');
-  const img = box?.querySelector('img');
-  const dataUrl = canvas ? canvas.toDataURL('image/png') : img?.src;
-  if (!dataUrl) { alert('QR을 아직 못 불러왔어요. 잠시 후 다시 시도해주세요.'); return; }
+// =====================================================
+// 2026-08-23 신설: 마이페이지 인쇄 — 등록화면과 동일하게 사이즈 선택(3x3/4.5x4.5/5.5x5.5/6x6cm)
+// + "가득채우기/견본섞기" 모드 지원. 인쇄 확정 시 100P 차감(기존 100P 다운로드와 동일한 과금 방식).
+// =====================================================
+const PRINT_COUNTS = { '3x3': 54, '4.5x4.5': 24, '5.5x5.5': 16, '6x6': 12 };
+const PRINT_MM = { '3x3': 30, '4.5x4.5': 45, '5.5x5.5': 55, '6x6': 60 };
+const SAMPLE_SIZES = ['3x3', '4.5x4.5', '5.5x5.5', '6x6'];
+const SAMPLE_COUNT_PER_SIZE = 3;
+
+let printModalSize = '3x3';
+let printModalMode = 'fill';
+let printModalTarget = null; // { regId, name, token }
+
+function openPrintModal(regId, name, token){
+  if (!token) { alert('QR 정보를 아직 못 불러왔어요. 잠시 후 다시 시도해주세요.'); return; }
+  printModalTarget = { regId, name, token };
+  printModalSize = '3x3';
+  printModalMode = 'fill';
+  document.querySelectorAll('#printSizeGrid .size-card').forEach((c) => c.classList.toggle('selected', c.dataset.size === printModalSize));
+  document.getElementById('printModeFillBtn').classList.add('selected');
+  document.getElementById('printModeSampleBtn').classList.remove('selected');
+  document.getElementById('printModalHint').textContent = 'A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. 인쇄 확정 시 100P가 차감됩니다.';
+  document.getElementById('printModalOverlay').classList.add('show');
+}
+function closePrintModal(){
+  document.getElementById('printModalOverlay').classList.remove('show');
+  printModalTarget = null;
+}
+document.getElementById('printModalCloseBtn').addEventListener('click', closePrintModal);
+document.getElementById('printModalOverlay').addEventListener('click', (e) => { if (e.target.id === 'printModalOverlay') closePrintModal(); });
+
+document.querySelectorAll('#printSizeGrid .size-card').forEach((card) => {
+  card.addEventListener('click', () => {
+    printModalSize = card.dataset.size;
+    document.querySelectorAll('#printSizeGrid .size-card').forEach((c) => c.classList.remove('selected'));
+    card.classList.add('selected');
+  });
+});
+document.getElementById('printModeFillBtn').addEventListener('click', () => {
+  printModalMode = 'fill';
+  document.getElementById('printModeFillBtn').classList.add('selected');
+  document.getElementById('printModeSampleBtn').classList.remove('selected');
+  document.getElementById('printModalHint').textContent = 'A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. 인쇄 확정 시 100P가 차감됩니다.';
+});
+document.getElementById('printModeSampleBtn').addEventListener('click', () => {
+  printModalMode = 'sample';
+  document.getElementById('printModeSampleBtn').classList.add('selected');
+  document.getElementById('printModeFillBtn').classList.remove('selected');
+  document.getElementById('printModalHint').textContent = '4개 사이즈를 한 장에 소량씩 섞어 찍어서, 잘라보고 어느 사이즈가 맞는지 먼저 확인하실 수 있어요. 인쇄 확정 시 100P가 차감됩니다.';
+});
+
+function buildPrintCell(mm){
+  const cell = document.createElement('div');
+  cell.className = 'print-tag';
+  cell.style.setProperty('--this-tag-mm', mm + 'mm');
+  const qrEl = document.createElement('div');
+  qrEl.className = 'print-qr';
+  cell.appendChild(qrEl);
+  const label = document.createElement('div');
+  label.className = 'print-label';
+  label.textContent = 'ALIASCALL.COM';
+  cell.appendChild(label);
+  return { cell, qrEl };
+}
+
+function renderPrintSheetAndPrint(token){
+  const sheet = document.getElementById('printSheet');
+  sheet.innerHTML = '';
+  const qrCells = [];
+
+  if (printModalMode === 'fill') {
+    const count = PRINT_COUNTS[printModalSize] || 24;
+    const mm = PRINT_MM[printModalSize] || 45;
+    sheet.style.setProperty('--tag-mm', mm + 'mm');
+    sheet.classList.remove('sample-mode');
+    for (let i = 0; i < count; i++) {
+      const { cell, qrEl } = buildPrintCell(mm);
+      sheet.appendChild(cell);
+      qrCells.push(qrEl);
+    }
+  } else {
+    sheet.classList.add('sample-mode');
+    SAMPLE_SIZES.forEach((sizeKey) => {
+      const mm = PRINT_MM[sizeKey];
+      const sectionTitle = document.createElement('div');
+      sectionTitle.className = 'print-section-title';
+      sectionTitle.textContent = sizeKey.replace('x', '×') + 'cm';
+      sheet.appendChild(sectionTitle);
+      const row = document.createElement('div');
+      row.className = 'print-sample-row';
+      for (let i = 0; i < SAMPLE_COUNT_PER_SIZE; i++) {
+        const { cell, qrEl } = buildPrintCell(mm);
+        row.appendChild(cell);
+        qrCells.push(qrEl);
+      }
+      sheet.appendChild(row);
+    });
+  }
+
+  qrCells.forEach((el) => {
+    new QRCode(el, {
+      text: CONNECT_BASE_URL + token,
+      width: 300, height: 300,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+  });
+
+  window.print();
+}
+
+document.getElementById('printModalConfirmBtn').addEventListener('click', async () => {
+  if (!printModalTarget) return;
+  const { regId, token } = printModalTarget;
+  const btn = document.getElementById('printModalConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = '처리 중…';
 
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { alert('로그인이 필요합니다.'); return; }
+  if (!session) { alert('로그인이 필요합니다.'); btn.disabled = false; btn.textContent = '인쇄하기(100P)'; return; }
 
   try {
     const { data, error } = await sb.rpc('apply_point_transaction', {
       p_user_id: session.user.id,
       p_amount: -100,
       p_txn_type: 'spend',
-      p_action_key: 'qr_a4_download', // 기존 등록화면 다운로드와 같은 액션키로 통일 — 포인트 사용내역에서 같은 항목으로 묶여 보임
+      p_action_key: 'qr_a4_download',
       p_ref_id: regId,
     });
     if (error) throw error;
@@ -1311,44 +1482,27 @@ async function printQrWithPointCharge(regId, name){
     await sb.from('qr_download_logs').insert({
       registration_id: regId,
       user_id: session.user.id,
-      label_size: 'print',
+      label_size: printModalSize,
       point_transaction_id: data.id,
     });
 
     document.getElementById('pointsVal').textContent = Number(data.balance_after).toLocaleString() + 'P';
-    openQrPrintWindow(dataUrl, name);
-    alert('100P가 차감되었습니다. (남은 포인트: ' + Number(data.balance_after).toLocaleString() + 'P)');
+    closePrintModal();
+    renderPrintSheetAndPrint(token);
   } catch (e) {
     console.error('[my-account] QR 인쇄 포인트 차감 실패', e);
     const msg = String(e.message || '');
     if (msg.toLowerCase().includes('insufficient') || (msg.includes('포인트') && msg.includes('부족'))) {
+      closePrintModal();
       if (confirm('포인트가 부족합니다. 충전하러 가시겠어요?')) window.location.href = 'aliascall_recharge_mockup.html';
     } else {
       alert('인쇄 준비 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.');
     }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '인쇄하기(100P)';
   }
-}
-
-// 새 창을 띄워 QR 하나만 깔끔하게 인쇄(마이페이지는 등록화면과 달리 사이즈 선택 없이 1장 인쇄)
-function openQrPrintWindow(dataUrl, name){
-  const win = window.open('', '_blank', 'width=420,height=520');
-  if (!win) { alert('팝업이 차단되었어요. 브라우저의 팝업 차단을 해제한 뒤 다시 시도해주세요.'); return; }
-  win.document.write(`
-    <!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR 인쇄 — ${name}</title>
-    <style>
-      body{ margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; }
-      img{ width:80mm; height:80mm; }
-      .label{ margin-top:8px; font-size:12px; color:#333; }
-      @media print{ .no-print{ display:none; } }
-    </style>
-    </head><body>
-      <img src="${dataUrl}" alt="QR">
-      <div class="label">${name}</div>
-      <script>window.onload = () => { window.print(); };<${''}/script>
-    </body></html>
-  `);
-  win.document.close();
-}
+});
 
 // ── 등록물 미디어(사진/동영상/음성/문서) 확대보기·재생·열기 ──
 function openMediaLightbox(url, mediaType){
