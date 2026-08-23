@@ -522,9 +522,6 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
   </div>
 </div>
 
-<!-- 인쇄될 때만 보이는 A4 시트 (화면에서는 항상 숨김) -->
-<div id="printSheet" class="print-sheet"></div>
-
 <!-- 전화벨 팝업 / 통화중 오버레이 / 채팅 (2026-08-17 신규 — index.html과 동일 로직) -->
 <!-- 2026-08-19 (3차): 가벼운 배너로만 알리고, 실제 연결은 incoming_calls.html로 넘김 -->
 <div class="ring-banner" id="ringBanner">
@@ -1845,6 +1842,11 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
 });
 </script>
 </div><!-- /app-shell -->
+
+<!-- 2026-08-23 신설: 인쇄될 때만 보이는 A4 시트(화면에서는 항상 숨김) — 반드시 body의
+     직계자식이어야 함(인쇄 CSS가 "body > *:not(#printSheet)"로 나머지를 숨기는 방식이라,
+     감싸는 div 안에 있으면 그 div째로 같이 숨겨져서 백지 인쇄가 됨) -->
+<div id="printSheet" class="print-sheet"></div>
 
 </body>
 </html>
