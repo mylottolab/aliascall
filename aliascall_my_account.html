@@ -1259,7 +1259,7 @@ async function loadMyRegistrations(userId){
           <div class="reg-qr-wrap">
             <div class="reg-qr-box" id="qr-${r.id}"></div>
             <div class="reg-qr-token" title="${r.qr_code_token || ''}">${I18N[currentLang].tokenLabel} ${(r.qr_code_token || '').slice(0, 8)}…</div>
-            <button type="button" class="reg-qr-download" data-id="${r.id}" data-name="${label}">${I18N[currentLang].qrDownloadBtn}</button>
+            <button type="button" class="reg-qr-download" data-id="${r.id}" data-name="${label}" data-token="${r.qr_code_token || ''}">${I18N[currentLang].qrDownloadBtn}</button>
             <button type="button" class="reg-qr-print" data-id="${r.id}" data-name="${label}" data-token="${r.qr_code_token || ''}">${I18N[currentLang].qrPrintBtn}</button>
           </div>
           <div class="reg-media-thumbs" id="media-${r.id}"></div>
@@ -1279,7 +1279,7 @@ async function loadMyRegistrations(userId){
     btn.addEventListener('click', () => deleteRegistration(btn.dataset.id, userId));
   });
   container.querySelectorAll('.reg-qr-download').forEach((btn) => {
-    btn.addEventListener('click', () => downloadQr(btn.dataset.id, btn.dataset.name));
+    btn.addEventListener('click', () => downloadQr(btn.dataset.name, btn.dataset.token));
   });
   container.querySelectorAll('.reg-qr-print').forEach((btn) => {
     btn.addEventListener('click', () => openPrintModal(btn.dataset.id, btn.dataset.name, btn.dataset.token));
@@ -1336,16 +1336,31 @@ async function loadMyRegistrations(userId){
   });
 }
 
-function downloadQr(regId, name){
-  const box = document.getElementById('qr-' + regId);
-  const canvas = box?.querySelector('canvas');
-  const img = box?.querySelector('img');
-  const dataUrl = canvas ? canvas.toDataURL('image/png') : img?.src;
-  if (!dataUrl) return;
-  const a = document.createElement('a');
-  a.href = dataUrl;
-  a.download = 'aliascall-qr-' + name.replace(/[^\w가-힣-]/g, '') + '.png';
-  a.click();
+// 2026-08-23 개선: 화면의 작은 QR(64px)을 그대로 쓰면 화질이 낮아서, 다운로드 전용으로
+// 고화질 QR을 별도로 새로 만들어 저장하도록 개선
+function downloadQr(name, token){
+  if (!token) return;
+  const tempBox = document.createElement('div');
+  tempBox.style.cssText = 'position:fixed; left:-9999px; top:-9999px;';
+  document.body.appendChild(tempBox);
+  try {
+    new QRCode(tempBox, {
+      text: CONNECT_BASE_URL + token,
+      width: 600, height: 600,
+      colorDark: '#12302E', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+    const canvas = tempBox.querySelector('canvas');
+    const img = tempBox.querySelector('img');
+    const dataUrl = canvas ? canvas.toDataURL('image/png') : img?.src;
+    if (!dataUrl) return;
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'aliascall-qr-' + name.replace(/[^\w가-힣-]/g, '') + '.png';
+    a.click();
+  } finally {
+    document.body.removeChild(tempBox);
+  }
 }
 
 // =====================================================
@@ -1360,6 +1375,7 @@ const SAMPLE_COUNT_PER_SIZE = 3;
 let printModalSize = '3x3';
 let printModalMode = 'fill';
 let printModalTarget = null; // { regId, name, token }
+const PENDING_PRINT_KEY = 'aliascall_pending_print'; // 2026-08-23 신설: 충전화면 다녀온 뒤 복귀용 저장키
 
 function openPrintModal(regId, name, token){
   if (!token) { alert('QR 정보를 아직 못 불러왔어요. 잠시 후 다시 시도해주세요.'); return; }
@@ -1464,15 +1480,17 @@ function renderPrintSheetAndPrint(token){
   window.print();
 }
 
-document.getElementById('printModalConfirmBtn').addEventListener('click', async () => {
+async function confirmPrintAndCharge({ silent } = {}){
   if (!printModalTarget) return;
   const { regId, token } = printModalTarget;
   const btn = document.getElementById('printModalConfirmBtn');
-  btn.disabled = true;
-  btn.textContent = '처리 중…';
+  if (!silent) { btn.disabled = true; btn.textContent = '처리 중…'; }
 
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { alert('로그인이 필요합니다.'); btn.disabled = false; btn.textContent = '인쇄하기(100P)'; return; }
+  if (!session) {
+    if (!silent) { alert('로그인이 필요합니다.'); btn.disabled = false; btn.textContent = '인쇄하기(100P)'; }
+    return;
+  }
 
   try {
     const { data, error } = await sb.rpc('apply_point_transaction', {
@@ -1498,16 +1516,48 @@ document.getElementById('printModalConfirmBtn').addEventListener('click', async 
     console.error('[my-account] QR 인쇄 포인트 차감 실패', e);
     const msg = String(e.message || '');
     if (msg.toLowerCase().includes('insufficient') || (msg.includes('포인트') && msg.includes('부족'))) {
-      closePrintModal();
-      if (confirm('포인트가 부족합니다. 충전하러 가시겠어요?')) window.location.href = 'aliascall_recharge_mockup.html';
-    } else {
+      if (silent) {
+        // 2026-08-23 신설: 충전 후 자동복귀했는데도 여전히 부족한 경우(반영 지연 등) — 조용히
+        // 실패시키지 않고 모달을 다시 열어서 손님이 상황을 알 수 있게 함
+        alert('충전이 아직 반영되지 않았을 수 있어요. 잠시 후 "인쇄하기" 버튼을 다시 눌러주세요.');
+        document.getElementById('printModalOverlay').classList.add('show');
+      } else if (confirm('포인트가 부족합니다. 충전하러 가시겠어요?')) {
+        // 2026-08-23 신설: 충전화면 다녀온 뒤 이 인쇄 작업으로 자동 복귀하도록 상태 저장(등록화면의
+        // "충전 후 복귀" 패턴과 동일한 방식) — 이걸 안 하면 결제하고 돌아왔을 때 손님이 이 화면을
+        // 다시 못 찾고 이탈할 수 있음
+        localStorage.setItem(PENDING_PRINT_KEY, JSON.stringify({
+          registrationId: regId, name: printModalTarget.name, token, size: printModalSize, mode: printModalMode,
+        }));
+        const returnUrl = window.location.origin + window.location.pathname + '?resume_print=1';
+        window.location.href = 'aliascall_recharge_mockup.html?return=' + encodeURIComponent(returnUrl);
+        return; // 페이지 이동하므로 아래 finally에서 버튼 복구 불필요
+      } else {
+        closePrintModal();
+      }
+    } else if (!silent) {
       alert('인쇄 준비 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.');
     }
   } finally {
-    btn.disabled = false;
-    btn.textContent = '인쇄하기(100P)';
+    if (!silent) { btn.disabled = false; btn.textContent = '인쇄하기(100P)'; }
   }
-});
+}
+
+document.getElementById('printModalConfirmBtn').addEventListener('click', () => confirmPrintAndCharge());
+
+// 2026-08-23 신설: 충전화면 다녀온 뒤, 하던 인쇄 작업으로 자동 복귀 + 결제(차감)까지 조용히 재시도
+(async function resumePendingPrintAfterRecharge(){
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('resume_print') !== '1') return;
+  const saved = localStorage.getItem(PENDING_PRINT_KEY);
+  if (!saved) return;
+  localStorage.removeItem(PENDING_PRINT_KEY);
+
+  const pending = JSON.parse(saved);
+  printModalTarget = { regId: pending.registrationId, name: pending.name, token: pending.token };
+  printModalSize = pending.size;
+  printModalMode = pending.mode;
+  await confirmPrintAndCharge({ silent: true });
+})();
 
 // ── 등록물 미디어(사진/동영상/음성/문서) 확대보기·재생·열기 ──
 function openMediaLightbox(url, mediaType){

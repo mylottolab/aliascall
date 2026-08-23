@@ -994,6 +994,7 @@ async function attemptDownload({ silent } = {}){
     });
 
     document.getElementById('balanceInline').textContent = Number(data.balance_after).toLocaleString();
+    triggerQrFileDownload(selectedSize); // 2026-08-23 신설: 그동안 빠져있던 실제 파일 다운로드 — 포인트만 차감되고 파일은 안 내려가던 버그 수정
     alert(I18N[currentLang].downloadSuccess(selectedSize, Number(data.balance_after).toLocaleString()));
   } catch (e) {
     console.error('[download] apply_point_transaction 호출 오류', e);
@@ -1269,6 +1270,34 @@ function generateRealQrCode(token){
   } catch (e) {
     console.error('[qr] QR 생성 실패', e);
     box.innerHTML = '<div style="font-size:11px;color:#c1483a;padding:8px;text-align:center;">QR 생성 실패</div>';
+  }
+}
+
+// 2026-08-23 신설: "100P 다운로드" 버튼이 그동안 포인트만 차감하고 실제 파일은 저장 안 해주던
+// 버그를 고침 — 화면의 작은 QR(78px)을 그대로 쓰면 화질이 너무 낮아서, 다운로드 전용으로
+// 고화질 QR을 별도로 새로 만들어 저장함
+function triggerQrFileDownload(size){
+  if (!createdRegistration) return;
+  const tempBox = document.createElement('div');
+  tempBox.style.cssText = 'position:fixed; left:-9999px; top:-9999px;';
+  document.body.appendChild(tempBox);
+  try {
+    new QRCode(tempBox, {
+      text: CONNECT_BASE_URL + createdRegistration.qr_code_token,
+      width: 600, height: 600,
+      colorDark: '#12302E', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+    const canvas = tempBox.querySelector('canvas');
+    const img = tempBox.querySelector('img');
+    const dataUrl = canvas ? canvas.toDataURL('image/png') : img?.src;
+    if (!dataUrl) { console.error('[download] QR 이미지를 만들지 못해 파일을 저장하지 못했습니다.'); return; }
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'aliascall-qr-' + size + '.png';
+    a.click();
+  } finally {
+    document.body.removeChild(tempBox);
   }
 }
 
