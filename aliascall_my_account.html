@@ -114,7 +114,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .print-sheet{ display:none; }
 @media print{
   body > *:not(#printSheet){ display:none !important; }
-  #printSheet{ display:block !important; padding:8mm; }
+  #printSheet{ display:block !important; padding:0; }
   #printSheet:not(.sample-mode){
     display:grid !important;
     grid-template-columns:repeat(auto-fill, minmax(var(--tag-mm, 45mm), 1fr));
