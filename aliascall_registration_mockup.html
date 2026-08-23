@@ -283,6 +283,7 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 .print-mode-tab.selected{ border-color:var(--teal); background:var(--teal-tint); color:var(--teal-deep); }
 .size-card{ text-align:center; padding:12px 4px; border-radius:10px; border:1.5px solid var(--line); background:var(--card); cursor:pointer; font-size:12px; font-weight:600; }
 .size-card.selected{ border-color:var(--teal); background:var(--teal-tint); color:var(--teal-deep); }
+.size-grid.disabled .size-card{ opacity:.4; cursor:not-allowed; }
 .download-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:16px 18px; margin-top:6px; }
 
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
@@ -942,6 +943,7 @@ const PENDING_DOWNLOAD_KEY = 'aliascall_pending_download';  // 충전화면 다�
 
 document.querySelectorAll('.size-card').forEach(card => {
   card.addEventListener('click', () => {
+    if (printMode !== 'fill') return; // 2026-08-23 신설: 4종혼합 모드에선 사이즈 선택이 의미 없음
     document.querySelectorAll('.size-card').forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
     selectedSize = card.dataset.size;
@@ -1493,12 +1495,16 @@ document.getElementById('printModeFill').addEventListener('click', () => {
   printMode = 'fill';
   document.getElementById('printModeFill').classList.add('selected');
   document.getElementById('printModeSample').classList.remove('selected');
+  document.getElementById('sizeGrid').classList.remove('disabled'); // 2026-08-23 신설
+  document.querySelectorAll('.size-card').forEach((c) => c.classList.toggle('selected', c.dataset.size === selectedSize));
   document.getElementById('printHint').textContent = 'A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다.';
 });
 document.getElementById('printModeSample').addEventListener('click', () => {
   printMode = 'sample';
   document.getElementById('printModeSample').classList.add('selected');
   document.getElementById('printModeFill').classList.remove('selected');
+  document.getElementById('sizeGrid').classList.add('disabled'); // 2026-08-23 신설: 4종혼합에선 사이즈 선택이 무의미하므로 흐리게 처리
+  document.querySelectorAll('.size-card').forEach((c) => c.classList.remove('selected')); // 2026-08-23 신설: 선택 표시 해제
   document.getElementById('printHint').textContent = '4개 사이즈를 한 장에 소량씩 섞어 찍어서, 잘라보고 어느 사이즈가 맞는지 먼저 확인하실 수 있어요.';
 });
 
@@ -1644,8 +1650,9 @@ function initPetAiUpsell(registrationId){
 <style>
 .print-sheet{ display:none; }
 @media print{
+  html, body{ margin:0 !important; padding:0 !important; height:auto !important; }
   body > *:not(#printSheet){ display:none !important; }
-  #printSheet{ display:block !important; padding:0; }
+  #printSheet{ display:block !important; padding:0; margin:0; }
   #printSheet:not(.sample-mode){
     display:grid !important;
     grid-template-columns:repeat(auto-fill, minmax(var(--tag-mm, 45mm), 1fr));
@@ -1659,7 +1666,8 @@ function initPetAiUpsell(registrationId){
   .print-qr{ width:100%; }
   .print-qr img, .print-qr canvas{ width:100% !important; height:auto !important; }
   .print-label{ font-size:7pt; font-family:monospace; margin-top:1mm; color:#333; }
-  .print-section-title{ font-size:11pt; font-weight:700; margin:6mm 0 3mm; font-family:sans-serif; }
+  .print-section-title{ font-size:11pt; font-weight:700; margin:3mm 0 2mm; font-family:sans-serif; }
+  .print-section-title:first-child{ margin-top:0; }
   .print-sample-row{ display:flex; gap:5mm; flex-wrap:wrap; }
   @page{ size:A4; margin:8mm; }
 }
