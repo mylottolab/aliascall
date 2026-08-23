@@ -91,6 +91,9 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .reg-qr-wrap{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:6px; }
 .reg-qr-box{ width:64px; height:64px; background:#fff; border-radius:8px; border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; overflow:hidden; }
 .reg-qr-download{ font-size:10px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border:none; border-radius:12px; padding:4px 9px; cursor:pointer; white-space:nowrap; }
+
+/* 2026-08-23 신설: 마이페이지 바로 인쇄(100P 차감) */
+.reg-qr-print{ font-size:10px; font-weight:700; color:#8a6416; background:rgba(201,162,75,.15); border:none; border-radius:12px; padding:4px 9px; cursor:pointer; white-space:nowrap; margin-top:5px; }
 .reg-qr-token{ font-size:9.5px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; cursor:pointer; white-space:nowrap; }
 .reg-qr-token:hover{ color:var(--teal-deep); text-decoration:underline; }
 .reg-media-thumbs{ flex:1; display:flex; flex-wrap:wrap; gap:6px; align-content:flex-start; }
@@ -532,6 +535,7 @@ const I18N = {
     period6mo: '6개월', period1yr: '1년', period2yr: '2년', period3yr: '3년', krwLabel: 'KRW (카드결제)',
     cancel: '취소', payNow: '결제하기',
     qrDownloadBtn: 'QR 다운로드', mediaLightboxOpenDoc: '새 탭에서 문서 열기', mediaLightboxClose: '닫기',
+    qrPrintBtn: '🖨️ 인쇄(100P)',
     tokenLabel: 'TOKEN ·', tokenCopied: '✓ 복사됨',
     missedBadgeText: '부재중 메시지',
     soundUnlockText: '🔔 알림음을 받으려면 탭 한 번만 해주세요', soundUnlockBtn: '알림음 켜기',
@@ -599,6 +603,7 @@ const I18N = {
     period6mo: '6 months', period1yr: '1 year', period2yr: '2 years', period3yr: '3 years', krwLabel: 'KRW (Card)',
     cancel: 'Cancel', payNow: 'Pay now',
     qrDownloadBtn: 'Download QR', mediaLightboxOpenDoc: 'Open document in new tab', mediaLightboxClose: 'Close',
+    qrPrintBtn: '🖨️ Print (100P)',
     tokenLabel: 'TOKEN ·', tokenCopied: '✓ Copied',
     missedBadgeText: 'Missed messages',
     soundUnlockText: '🔔 Tap once to enable notification sounds', soundUnlockBtn: 'Enable sound',
@@ -1193,6 +1198,7 @@ async function loadMyRegistrations(userId){
             <div class="reg-qr-box" id="qr-${r.id}"></div>
             <div class="reg-qr-token" title="${r.qr_code_token || ''}">${I18N[currentLang].tokenLabel} ${(r.qr_code_token || '').slice(0, 8)}…</div>
             <button type="button" class="reg-qr-download" data-id="${r.id}" data-name="${label}">${I18N[currentLang].qrDownloadBtn}</button>
+            <button type="button" class="reg-qr-print" data-id="${r.id}" data-name="${label}">${I18N[currentLang].qrPrintBtn}</button>
           </div>
           <div class="reg-media-thumbs" id="media-${r.id}"></div>
         </div>
@@ -1212,6 +1218,9 @@ async function loadMyRegistrations(userId){
   });
   container.querySelectorAll('.reg-qr-download').forEach((btn) => {
     btn.addEventListener('click', () => downloadQr(btn.dataset.id, btn.dataset.name));
+  });
+  container.querySelectorAll('.reg-qr-print').forEach((btn) => {
+    btn.addEventListener('click', () => printQrWithPointCharge(btn.dataset.id, btn.dataset.name));
   });
   container.querySelectorAll('.reg-qr-token').forEach((el) => {
     el.addEventListener('click', async () => {
@@ -1275,6 +1284,69 @@ function downloadQr(regId, name){
   a.href = dataUrl;
   a.download = 'aliascall-qr-' + name.replace(/[^\w가-힣-]/g, '') + '.png';
   a.click();
+}
+
+// 2026-08-23 신설: 마이페이지에서 바로 인쇄 — 등록화면의 "100P 차감 다운로드"와 동일한
+// 과금 방식(apply_point_transaction RPC)을 그대로 재사용함
+async function printQrWithPointCharge(regId, name){
+  const box = document.getElementById('qr-' + regId);
+  const canvas = box?.querySelector('canvas');
+  const img = box?.querySelector('img');
+  const dataUrl = canvas ? canvas.toDataURL('image/png') : img?.src;
+  if (!dataUrl) { alert('QR을 아직 못 불러왔어요. 잠시 후 다시 시도해주세요.'); return; }
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { alert('로그인이 필요합니다.'); return; }
+
+  try {
+    const { data, error } = await sb.rpc('apply_point_transaction', {
+      p_user_id: session.user.id,
+      p_amount: -100,
+      p_txn_type: 'spend',
+      p_action_key: 'qr_a4_download', // 기존 등록화면 다운로드와 같은 액션키로 통일 — 포인트 사용내역에서 같은 항목으로 묶여 보임
+      p_ref_id: regId,
+    });
+    if (error) throw error;
+
+    await sb.from('qr_download_logs').insert({
+      registration_id: regId,
+      user_id: session.user.id,
+      label_size: 'print',
+      point_transaction_id: data.id,
+    });
+
+    document.getElementById('pointsVal').textContent = Number(data.balance_after).toLocaleString() + 'P';
+    openQrPrintWindow(dataUrl, name);
+    alert('100P가 차감되었습니다. (남은 포인트: ' + Number(data.balance_after).toLocaleString() + 'P)');
+  } catch (e) {
+    console.error('[my-account] QR 인쇄 포인트 차감 실패', e);
+    if (String(e.message || '').toLowerCase().includes('insufficient') || String(e.message || '').includes('포인트가 부족')) {
+      if (confirm('포인트가 부족합니다. 충전하러 가시겠어요?')) window.location.href = 'aliascall_recharge_mockup.html';
+    } else {
+      alert('인쇄 준비 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.');
+    }
+  }
+}
+
+// 새 창을 띄워 QR 하나만 깔끔하게 인쇄(마이페이지는 등록화면과 달리 사이즈 선택 없이 1장 인쇄)
+function openQrPrintWindow(dataUrl, name){
+  const win = window.open('', '_blank', 'width=420,height=520');
+  if (!win) { alert('팝업이 차단되었어요. 브라우저의 팝업 차단을 해제한 뒤 다시 시도해주세요.'); return; }
+  win.document.write(`
+    <!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR 인쇄 — ${name}</title>
+    <style>
+      body{ margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; }
+      img{ width:80mm; height:80mm; }
+      .label{ margin-top:8px; font-size:12px; color:#333; }
+      @media print{ .no-print{ display:none; } }
+    </style>
+    </head><body>
+      <img src="${dataUrl}" alt="QR">
+      <div class="label">${name}</div>
+      <script>window.onload = () => { window.print(); };</script>
+    </body></html>
+  `);
+  win.document.close();
 }
 
 // ── 등록물 미디어(사진/동영상/음성/문서) 확대보기·재생·열기 ──
