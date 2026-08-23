@@ -1320,7 +1320,8 @@ async function printQrWithPointCharge(regId, name){
     alert('100P가 차감되었습니다. (남은 포인트: ' + Number(data.balance_after).toLocaleString() + 'P)');
   } catch (e) {
     console.error('[my-account] QR 인쇄 포인트 차감 실패', e);
-    if (String(e.message || '').toLowerCase().includes('insufficient') || String(e.message || '').includes('포인트가 부족')) {
+    const msg = String(e.message || '');
+    if (msg.toLowerCase().includes('insufficient') || (msg.includes('포인트') && msg.includes('부족'))) {
       if (confirm('포인트가 부족합니다. 충전하러 가시겠어요?')) window.location.href = 'aliascall_recharge_mockup.html';
     } else {
       alert('인쇄 준비 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.');
