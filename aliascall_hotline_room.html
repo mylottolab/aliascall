@@ -135,6 +135,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .goal-mode-tabs{ display:flex; gap:6px; margin-bottom:16px; }
 .goal-mode-tab{ flex:1; border:1.5px solid var(--line); background:var(--card); border-radius:8px; padding:9px 4px; font-size:11px; font-weight:700; cursor:pointer; color:var(--ink-soft); }
 .goal-mode-tab.active{ border-color:var(--teal); background:var(--teal-tint); color:var(--teal-deep); }
+.goal-mode-hint{ font-size:11px; color:var(--ink-soft); line-height:1.5; margin-bottom:14px; }
 #goalSaveBtn{ width:100%; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:13px; cursor:pointer; margin-bottom:8px; }
 .modal-cancel-btn{ width:100%; background:none; border:none; color:var(--ink-soft); padding:8px; font-size:12.5px; cursor:pointer; }
 
@@ -373,7 +374,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
       <div class="guide-item"><div class="guide-icon">⭐</div><div><div class="guide-title">즐겨찾기</div><div class="guide-desc">중요한 메시지를 "⋯" → 즐겨찾기로 저장해두고, 우측 상단 "⋯" 메뉴에서 모아볼 수 있어요.</div></div></div>
       <div class="guide-item"><div class="guide-icon">📌</div><div><div class="guide-title">나만의 메모함</div><div class="guide-desc">메시지를 저장하거나 직접 메모를 남길 수 있어요. 철저히 나만 보는 개인 공간이라 상대방은 절대 못 봐요.</div></div></div>
       <div class="guide-item"><div class="guide-icon">⏱️</div><div><div class="guide-title">타이머 메시지</div><div class="guide-desc">➕ → 타이머 메시지로 시간을 정하면, 그 시간이 지난 뒤 자동으로 사라져요.</div></div></div>
-      <div class="guide-item"><div class="guide-icon">🎯</div><div><div class="guide-title">목표(D-DAY)</div><div class="guide-desc">여행·기념일 등 둘만의 목표를 등록하면 채팅 상단에 D-day/D+day로 표시돼요. 참가자 누구나 등록할 수 있어요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">🎯</div><div><div class="guide-title">목표(D-DAY)</div><div class="guide-desc">"⏳ D-day(목표일까지)"와 "📅 D+day(그날부터)" 두 방식이 있어요. 여행처럼 앞으로 다가올 날은 D-day로, "우리 사귄 날"처럼 이미 지난 날부터 며칠째인지 세고 싶으면 D+day로 등록하세요(예: "우리" D+100). 참가자 누구나 등록할 수 있어요.</div></div></div>
       <div class="guide-item"><div class="guide-icon">🔍</div><div><div class="guide-title">대화 검색</div><div class="guide-desc">우측 상단 "⋯" → 대화 검색으로 지난 대화 내용을 찾을 수 있어요.</div></div></div>
       <div class="guide-item"><div class="guide-icon">✓</div><div><div class="guide-title">읽음 표시</div><div class="guide-desc">내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.</div></div></div>
       <div class="guide-item"><div class="guide-icon">🎵</div><div><div class="guide-title">같이 듣기</div><div class="guide-desc">하단 "음악" 탭에서 유튜브 링크나 음원 파일을 올리면, 방에 있는 모두가 같은 지점에서 동시에 들을 수 있어요.</div></div></div>
@@ -435,12 +436,13 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 <div class="modal-overlay-hl" id="goalModalOverlay">
   <div class="modal-box-hl">
     <h3 style="margin-bottom:14px;">🎯 목표 추가</h3>
-    <input type="text" id="goalTitleInput" placeholder="예: 제주여행, 만난 날" maxlength="30">
+    <input type="text" id="goalTitleInput" placeholder="예: 제주여행, 우리 만난 날" maxlength="30">
     <input type="date" id="goalDateInput">
     <div class="goal-mode-tabs">
-      <button type="button" class="goal-mode-tab active" data-mode="countdown">D-day (목표일까지)</button>
-      <button type="button" class="goal-mode-tab" data-mode="countup">D+day (그날부터)</button>
+      <button type="button" class="goal-mode-tab active" data-mode="countdown">⏳ D-day (다가올 날까지)</button>
+      <button type="button" class="goal-mode-tab" data-mode="countup">📅 D+day (지난 날부터 세기)</button>
     </div>
+    <div class="goal-mode-hint" id="goalModeHint">여행처럼 앞으로 다가올 날짜를 선택하세요. "며칠 남았는지" 보여줘요.</div>
     <button id="goalSaveBtn">추가하기</button>
     <button id="goalCancelBtn" class="modal-cancel-btn">취소</button>
   </div>
@@ -1285,11 +1287,19 @@ function openGoalModal(){
   document.getElementById('goalDateInput').value = '';
   document.querySelectorAll('.goal-mode-tab').forEach((t) => t.classList.remove('active'));
   document.querySelector('.goal-mode-tab[data-mode="countdown"]').classList.add('active');
+  document.getElementById('goalModeHint').textContent = '여행처럼 앞으로 다가올 날짜를 선택하세요. "며칠 남았는지" 보여줘요.'; // 2026-08-23 신설: 모달 새로 열 때 힌트도 초기화
   document.getElementById('goalModalOverlay').classList.add('show');
 }
 document.getElementById('goalCancelBtn').addEventListener('click', () => document.getElementById('goalModalOverlay').classList.remove('show'));
 document.querySelectorAll('.goal-mode-tab').forEach((tab) => {
-  tab.addEventListener('click', () => { document.querySelectorAll('.goal-mode-tab').forEach((t) => t.classList.remove('active')); tab.classList.add('active'); });
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.goal-mode-tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+    // 2026-08-23 신설: 방식에 따라 안내문구도 같이 바뀌도록 — 헷갈리기 쉬운 부분이라 명확히 함
+    document.getElementById('goalModeHint').textContent = tab.dataset.mode === 'countdown'
+      ? '여행처럼 앞으로 다가올 날짜를 선택하세요. "며칠 남았는지" 보여줘요.'
+      : '"우리 만난 날"처럼 이미 지난 날짜를 선택하세요. "그날부터 며칠째"인지(우리 1일, 2일…) 보여줘요.';
+  });
 });
 document.getElementById('goalSaveBtn').addEventListener('click', async () => {
   const title = document.getElementById('goalTitleInput').value.trim();
