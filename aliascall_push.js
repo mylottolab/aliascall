@@ -1,14 +1,25 @@
 // =====================================================
-// Aliascall — 웹푸시 구독 공용 헬퍼
+// Aliascall — 푸시 구독 공용 헬퍼
 // 2026-08-19 신설. "60초 무응답시 긴급 알림"을 전화번호 없이 웹푸시로 구현.
 // aliascall_my_account.html / aliascall_registration_mockup.html / aliascall_incoming_calls.html
 // 에서 <script src="aliascall_push.js">로 불러다 씀.
+//
+// ⚠ 2026-08-23 수정 (안드로이드 앱 대응)
+// 안드로이드 WebView는 Push API(웹푸시)를 지원하지 않음. 브라우저에서는 되는데
+// 앱 안에서는 오류도 없이 조용히 알림이 안 오는 상태가 됨.
+// 그래서 앱 안에서는 FCM 네이티브 푸시를, 브라우저에서는 기존 웹푸시(VAPID)를 쓰도록
+// _subscribeCore / _unsubscribeCore 안에서 분기함.
+// UI 함수(renderPushOptIn / renderNotifySettings)는 이 두 함수를 공유하므로
+// 카드형·토글형 UI 모두 자동으로 앱에서도 동작함.
 // =====================================================
 
 const PUSH_FN_BASE = 'https://qmwaraittiurkynszjts.supabase.co/functions/v1';
 
 // VAPID 공개키 (비밀키 아님 — 클라이언트에 노출돼도 안전. 서버의 VAPID_PRIVATE_KEY와 짝을 이룸)
 const VAPID_PUBLIC_KEY = 'BJxWgI0hDS1z_PoTu5T5VRkHl5Rti38Dih4Vx4vHryduNlgeuBCRQP1-Y8LiyeV9k4mOLCbZyMn3I_Ac-HnkpGA';
+
+// 앱에서 발급받은 FCM 토큰을 기억해둠 (알림 켜짐/꺼짐 상태 판별 + 해제 시 사용)
+const FCM_TOKEN_KEY = 'aliascall_fcm_token';
 
 function _urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -25,18 +36,45 @@ function _isStandalone(){
   // iOS Safari: navigator.standalone / 그 외: display-mode 미디어쿼리
   return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 }
+
+// ── 안드로이드 앱(Capacitor) 안에서 돌아가고 있는지 ──
+function aliascallIsNativeApp(){
+  return !!(window.Capacitor
+    && typeof window.Capacitor.isNativePlatform === 'function'
+    && window.Capacitor.isNativePlatform());
+}
+function _nativePush(){
+  return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications;
+}
+
 function pushIsSupported(){
+  // 앱 안이면 웹푸시 지원 여부와 무관하게 FCM으로 알림을 받을 수 있음
+  if (aliascallIsNativeApp()) return !!_nativePush();
   return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 }
 
 // ── 서비스워커 등록 (알림을 실제로 받아야 하는 페이지에서 호출) ──
 async function registerAliascallServiceWorker(){
+  if (aliascallIsNativeApp()) return null; // 앱에서는 서비스워커를 쓰지 않음
   if (!('serviceWorker' in navigator)) return null;
   try {
     return await navigator.serviceWorker.register('/sw.js');
   } catch (e) {
     console.error('[push] 서비스워커 등록 실패', e);
     return null;
+  }
+}
+
+// ── 앱: 현재 알림이 켜져 있는지 확인 ──
+async function _nativePushIsOn(){
+  try {
+    const P = _nativePush();
+    if (!P) return false;
+    const perm = await P.checkPermissions();
+    return perm.receive === 'granted' && !!localStorage.getItem(FCM_TOKEN_KEY);
+  } catch (e) {
+    console.warn('[push] 앱 알림 상태 확인 실패', e);
+    return false;
   }
 }
 
@@ -55,30 +93,38 @@ async function renderPushOptIn(sb, containerId){
     return;
   }
 
-  // iOS는 홈화면에 추가(PWA 설치)해야만 웹푸시가 동작함 (iOS 16.4+ 제약사항)
-  if (_isIOS() && !_isStandalone()) {
-    el.innerHTML = `
-      <div class="push-optin-card push-optin-ios-guide">
-        <div class="push-optin-title">📲 긴급 알림을 받으시려면</div>
-        <div class="push-optin-desc">
-          아이폰(사파리)은 <b>홈 화면에 추가</b>한 뒤에만 알림을 받을 수 있어요.<br><br>
-          1. 하단의 <b>공유 버튼(⬆️)</b>을 눌러주세요<br>
-          2. <b>"홈 화면에 추가"</b>를 선택해주세요<br>
-          3. 홈 화면의 Aliascall 아이콘으로 다시 접속한 뒤, 이 화면에서 "긴급 알림 켜기"를 눌러주세요
-        </div>
-      </div>`;
-    return;
+  let isOn = false;
+
+  if (aliascallIsNativeApp()) {
+    // 앱: iOS PWA 안내와 서비스워커 과정이 필요 없음
+    isOn = await _nativePushIsOn();
+  } else {
+    // iOS는 홈화면에 추가(PWA 설치)해야만 웹푸시가 동작함 (iOS 16.4+ 제약사항)
+    if (_isIOS() && !_isStandalone()) {
+      el.innerHTML = `
+        <div class="push-optin-card push-optin-ios-guide">
+          <div class="push-optin-title">📲 긴급 알림을 받으시려면</div>
+          <div class="push-optin-desc">
+            아이폰(사파리)은 <b>홈 화면에 추가</b>한 뒤에만 알림을 받을 수 있어요.<br><br>
+            1. 하단의 <b>공유 버튼(⬆️)</b>을 눌러주세요<br>
+            2. <b>"홈 화면에 추가"</b>를 선택해주세요<br>
+            3. 홈 화면의 Aliascall 아이콘으로 다시 접속한 뒤, 이 화면에서 "긴급 알림 켜기"를 눌러주세요
+          </div>
+        </div>`;
+      return;
+    }
+
+    const reg = await registerAliascallServiceWorker();
+    if (!reg) {
+      el.innerHTML = '<div class="push-optin-note">알림 모듈을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</div>';
+      return;
+    }
+
+    const existingSub = await reg.pushManager.getSubscription();
+    isOn = !!(existingSub && Notification.permission === 'granted');
   }
 
-  const reg = await registerAliascallServiceWorker();
-  if (!reg) {
-    el.innerHTML = '<div class="push-optin-note">알림 모듈을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</div>';
-    return;
-  }
-
-  const existingSub = await reg.pushManager.getSubscription();
-
-  if (existingSub && Notification.permission === 'granted') {
+  if (isOn) {
     el.innerHTML = `
       <div class="push-optin-card push-optin-active">
         <div class="push-optin-title">🔔 긴급 알림이 켜져 있어요</div>
@@ -109,8 +155,100 @@ async function subscribeAliascallPush(sb, containerId){
   }
 }
 
-// ── 구독 등록/해제 핵심 로직 (DOM 렌더링과 분리 — 카드형 UI/토글형 UI 둘 다 이걸 공유해서 씀) ──
+// =====================================================
+// 구독 등록/해제 핵심 로직 (DOM 렌더링과 분리 — 카드형 UI/토글형 UI 둘 다 이걸 공유해서 씀)
+// 2026-08-23: 여기서 앱(FCM) / 브라우저(웹푸시)를 갈라줌
+// =====================================================
+
 async function _subscribeCore(sb){
+  if (aliascallIsNativeApp()) return await _subscribeCoreNative(sb);
+  return await _subscribeCoreWeb(sb);
+}
+
+async function _unsubscribeCore(sb){
+  if (aliascallIsNativeApp()) return await _unsubscribeCoreNative(sb);
+  return await _unsubscribeCoreWeb(sb);
+}
+
+// ── 앱: FCM 토큰 발급 후 서버에 등록 ──
+async function _subscribeCoreNative(sb){
+  try {
+    const P = _nativePush();
+    if (!P) { alert('알림 모듈을 불러오지 못했어요.'); return false; }
+
+    let perm = await P.checkPermissions();
+    if (perm.receive !== 'granted') {
+      perm = await P.requestPermissions();
+    }
+    if (perm.receive !== 'granted') {
+      alert('알림을 허용해주셔야 긴급 알림을 받을 수 있어요. 휴대폰 설정 → 앱 → Aliascall → 알림에서 다시 허용할 수 있어요.');
+      return false;
+    }
+
+    // register()를 부르면 잠시 뒤 'registration' 이벤트로 토큰이 날아옴.
+    // 리스너를 먼저 걸어두고 register()를 호출해야 토큰을 놓치지 않음.
+    const token = await new Promise((resolve, reject) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) { settled = true; reject(new Error('토큰 발급 시간 초과')); }
+      }, 15000);
+
+      P.addListener('registration', (t) => {
+        if (!settled) { settled = true; clearTimeout(timer); resolve(t.value); }
+      });
+      P.addListener('registrationError', (err) => {
+        if (!settled) { settled = true; clearTimeout(timer); reject(new Error(JSON.stringify(err))); }
+      });
+
+      P.register();
+    });
+
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { alert('로그인이 필요합니다.'); return false; }
+
+    const res = await fetch(`${PUSH_FN_BASE}/aliascall-push-subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({
+        platform: 'android_fcm',
+        token,
+        user_agent: navigator.userAgent,
+      }),
+    });
+    if (!res.ok) throw new Error('토큰 저장 실패');
+
+    localStorage.setItem(FCM_TOKEN_KEY, token);
+    return true;
+  } catch (e) {
+    console.error('[push] 앱 알림 등록 실패', e);
+    alert('긴급 알림 설정 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.');
+    return false;
+  }
+}
+
+async function _unsubscribeCoreNative(sb){
+  try {
+    const token = localStorage.getItem(FCM_TOKEN_KEY);
+    if (token) {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        await fetch(`${PUSH_FN_BASE}/aliascall-push-subscribe`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+          body: JSON.stringify({ platform: 'android_fcm', token }),
+        });
+      }
+      localStorage.removeItem(FCM_TOKEN_KEY);
+    }
+    return true;
+  } catch (e) {
+    console.error('[push] 앱 알림 해제 실패', e);
+    return false;
+  }
+}
+
+// ── 브라우저: 기존 웹푸시(VAPID) 로직 그대로 ──
+async function _subscribeCoreWeb(sb){
   try {
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
@@ -147,7 +285,7 @@ async function _subscribeCore(sb){
   }
 }
 
-async function _unsubscribeCore(sb){
+async function _unsubscribeCoreWeb(sb){
   try {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
@@ -173,6 +311,43 @@ async function _unsubscribeCore(sb){
 async function unsubscribeAliascallPush(sb, containerId){
   await _unsubscribeCore(sb);
   if (containerId) await renderPushOptIn(sb, containerId);
+}
+
+// =====================================================
+// 2026-08-23 신설: 앱에서 알림을 눌렀을 때 해당 화면으로 이동
+// 페이지 로드 시 한 번만 호출하면 됨. (브라우저에서는 아무 일도 안 함)
+// =====================================================
+let _nativeHandlersReady = false;
+
+async function aliascallInitNativePush(){
+  if (!aliascallIsNativeApp() || _nativeHandlersReady) return;
+  const P = _nativePush();
+  if (!P) return;
+  _nativeHandlersReady = true;
+
+  // 알림을 탭했을 때
+  P.addListener('pushNotificationActionPerformed', (action) => {
+    const d = (action && action.notification && action.notification.data) || {};
+    if (d.case_id) {
+      location.href = 'aliascall_incoming_calls.html?case=' + encodeURIComponent(d.case_id);
+    } else if (d.url) {
+      location.href = d.url;
+    }
+  });
+
+  // 앱이 켜져 있는 상태에서 알림이 도착했을 때 (필요하면 화면 갱신 등에 활용)
+  P.addListener('pushNotificationReceived', (notification) => {
+    console.log('[push] 앱 사용 중 알림 수신', notification);
+  });
+}
+
+// 페이지가 열리면 자동으로 준비
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', aliascallInitNativePush);
+  } else {
+    aliascallInitNativePush();
+  }
 }
 
 // =====================================================
@@ -230,11 +405,17 @@ async function renderNotifySettings(sb, containerId){
   if (!el) return;
 
   const soundOn = aliascallIsSoundEnabled();
+  const isApp = aliascallIsNativeApp();
   let pushOn = false, pushDisabled = false, pushNote = '화면을 안 보고 있어도 알림이 와요';
 
   if (!pushIsSupported()) {
     pushDisabled = true;
-    pushNote = '이 브라우저는 긴급 알림을 지원하지 않아요.';
+    pushNote = isApp
+      ? '알림 모듈을 불러오지 못했어요. 앱을 다시 실행해주세요.'
+      : '이 브라우저는 긴급 알림을 지원하지 않아요.';
+  } else if (isApp) {
+    // ── 앱: FCM ──
+    pushOn = await _nativePushIsOn();
   } else if (_isIOS() && !_isStandalone()) {
     pushDisabled = true;
     pushNote = '아이폰은 홈 화면에 추가한 뒤 켤 수 있어요 (공유 버튼 → "홈 화면에 추가")';
@@ -249,6 +430,10 @@ async function renderNotifySettings(sb, containerId){
     }
   }
 
+  // PC 안내문은 앱에서는 의미가 없으므로 숨김
+  const pcNote = isApp ? '' :
+    '<div class="notify-pc-note">💻 PC에서도 확실히 알림통지를 받으시려면 크롬의 백그라운드 실행 옵션을 켜두세요.</div>';
+
   el.innerHTML = `
     <div class="notify-settings">
       <div class="notify-row">
@@ -259,7 +444,7 @@ async function renderNotifySettings(sb, containerId){
         <div class="notify-label"><b>🚨 긴급 알림 (푸시)</b><span class="notify-sub">${pushNote}</span></div>
         <button type="button" class="toggle-switch${pushOn ? ' on' : ''}" id="pushToggleBtn" role="switch" aria-checked="${pushOn}"${pushDisabled ? ' disabled' : ''}><span class="toggle-knob"></span></button>
       </div>
-      <div class="notify-pc-note">💻 PC에서도 확실히 알림통지를 받으시려면 크롬의 백그라운드 실행 옵션을 켜두세요.</div>
+      ${pcNote}
     </div>`;
 
   document.getElementById('soundToggleBtn').addEventListener('click', async function(){
