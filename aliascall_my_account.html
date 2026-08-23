@@ -1343,7 +1343,7 @@ function openQrPrintWindow(dataUrl, name){
     </head><body>
       <img src="${dataUrl}" alt="QR">
       <div class="label">${name}</div>
-      <script>window.onload = () => { window.print(); };</script>
+      <script>window.onload = () => { window.print(); };<${''}/script>
     </body></html>
   `);
   win.document.close();
