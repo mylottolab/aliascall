@@ -13,6 +13,7 @@
 <meta name="theme-color" content="#1F6F6B">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_payments.js"></script>
+<script src="aliascall_pet_ai_payments.js"></script>
 <script src="aliascall_push.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -128,6 +129,24 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 .optional-badge{ font-size:10px; font-weight:600; color:var(--ink-soft); background:var(--line); border-radius:5px; padding:2px 7px; margin-left:6px; }
 .recommend-badge{ font-size:10px; font-weight:600; color:var(--coral); background:var(--coral-tint); border-radius:5px; padding:2px 7px; margin-left:6px; }
 .guide-link{ display:inline-flex; align-items:center; gap:5px; margin-top:9px; font-size:12px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:8px; padding:8px 12px; text-decoration:none; }
+
+/* 2026-08-23 신설: 비문 등록 시 웹/앱 차이 안내 */
+.noseprint-web-note{ font-size:11px; color:var(--ink-soft); background:rgba(201,162,75,.12); border-left:3px solid #C9A24B; border-radius:0 6px 6px 0; padding:8px 10px; margin-top:8px; line-height:1.5; }
+
+/* 2026-08-23 신설: AI 비문인식 옵션 업셀 */
+.pet-ai-upsell{ background:var(--card); border:1.5px solid #C9A24B; border-radius:14px; padding:16px; margin-top:22px; }
+.pet-ai-upsell-title{ font-size:14px; font-weight:700; margin-bottom:6px; }
+.pet-ai-upsell-desc{ font-size:11.5px; color:var(--ink-soft); line-height:1.6; margin-bottom:14px; }
+.pet-ai-duration-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+.pet-ai-duration-card{ border:1.5px solid var(--line); border-radius:10px; padding:10px 4px; text-align:center; cursor:pointer; }
+.pet-ai-duration-card.selected{ border-color:#C9A24B; background:rgba(201,162,75,.1); }
+.pet-ai-duration-card .m{ font-size:12px; font-weight:700; }
+.pet-ai-duration-card .p{ font-size:10.5px; color:var(--ink-soft); margin-top:2px; }
+.pet-ai-pay-tabs{ display:flex; gap:8px; margin-bottom:12px; }
+.pet-ai-pay-tab{ flex:1; text-align:center; padding:9px; border:1.5px solid var(--line); border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; }
+.pet-ai-pay-tab.active{ border-color:#C9A24B; background:rgba(201,162,75,.1); }
+.pet-ai-pay-btn{ width:100%; background:#C9A24B; color:#fff; border:none; border-radius:10px; padding:12px; font-size:13px; font-weight:700; cursor:pointer; }
+.pet-ai-skip-note{ text-align:center; font-size:10.5px; color:var(--ink-soft); margin-top:10px; }
 .guide-link:hover{ background:var(--teal); color:#fff; }
 
 /* ── 공통 설명칸 + 마이크 버튼 ── */
@@ -429,6 +448,7 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
       <div class="field">
         <label><span data-i18n="noseprintLabel">비문(코 무늬) 사진</span> <span class="recommend-badge" data-i18n="recommendBadge">권장</span></label>
         <div class="dropzone" id="noseprintDropzone"><b data-i18n="noseprintUpload">코 정면 사진 업로드</b><span data-i18n="noseprintDesc">사람 지문처럼 개체마다 고유해, 발견 시 신원 확인에 쓰입니다</span><input type="file" id="noseprintFile" accept="image/*" style="display:none;"></div>
+        <div class="noseprint-web-note" data-i18n="noseprintWebNote">🔒 지금(웹)은 비공개로 안전하게 보관되어 대조용으로만 쓰여요. AI 자동 인식은 Aliascall 앱(출시 예정)에서 지원됩니다.</div>
         <a href="aliascall_guide.html#sec-noseprint" target="_blank" class="guide-link" data-i18n="noseprintGuideLink">📖 촬영 가이드 보기 — 실패 없이 찍는 법</a>
       </div>
     </div>
@@ -521,6 +541,20 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     </div>
     <div class="hint" style="margin-top:10px; text-align:center;" data-i18n="qrCameraHint">💡 폰 기본 카메라로 이 QR을 비추면 자동으로 열립니다</div>
 
+    <!-- 2026-08-23 신설: 반려동물 + 비문사진 등록한 경우에만, AI 자동 비문인식 옵션 안내 -->
+    <div class="pet-ai-upsell" id="petAiUpsell" style="display:none;">
+      <div class="pet-ai-upsell-title">🤖 AI 자동 비문인식 켜기 (선택)</div>
+      <div class="pet-ai-upsell-desc">지금은 사진이 비공개로 안전하게 보관되어 대조용으로만 쓰입니다. 이 옵션을 켜면 (Aliascall 앱에서) AI가 자동으로 비문을 인식·대조해줍니다.</div>
+      <div class="pet-ai-duration-grid" id="petAiDurationGrid"></div>
+      <div class="pet-ai-pay-tabs">
+        <div class="pet-ai-pay-tab active" data-method="inicis">💳 국내카드</div>
+        <div class="pet-ai-pay-tab" data-method="paypal">🌐 PayPal</div>
+      </div>
+      <button class="pet-ai-pay-btn" id="petAiInicisBtn">결제하고 AI 인식 켜기</button>
+      <div id="petAiPaypalContainer" style="display:none;"></div>
+      <div class="pet-ai-skip-note">지금 안 켜셔도 나중에 마이페이지에서 언제든 추가하실 수 있어요.</div>
+    </div>
+
     <!-- 2026-08-19 신설: 예전엔 여기서 전화번호를 받아 SMS로 긴급알림을 보내려 했으나,
          Aliascall은 전화번호를 아예 수집하지 않는 정책이라 웹푸시로 대체함.
          계정이 이미 만들어진 이 완료 단계에서 켜야 로그인 세션으로 구독을 저장할 수 있음. -->
@@ -589,6 +623,7 @@ const I18N = {
     speciesLabel: '종류', petNameLabel: '이름',
     noseprintLabel: '비문(코 무늬) 사진', recommendBadge: '권장',
     noseprintUpload: '코 정면 사진 업로드', noseprintDesc: '사람 지문처럼 개체마다 고유해, 발견 시 신원 확인에 쓰입니다',
+    noseprintWebNote: '🔒 지금(웹)은 비공개로 안전하게 보관되어 대조용으로만 쓰여요. AI 자동 인식은 Aliascall 앱(출시 예정)에서 지원됩니다.',
     noseprintGuideLink: '📖 촬영 가이드 보기 — 실패 없이 찍는 법',
     reasonLabel: '사유', locationLabel: '부착·게시 장소',
     callbackHint: '이 카테고리는 실시간 응답보다 나중에 연락이 닿는 게 중요해서, 다음 화면의 백업 알림용 전화번호를 등록해두시길 특히 권해드려요.',
@@ -683,6 +718,7 @@ const I18N = {
     speciesLabel: 'Species', petNameLabel: 'Name',
     noseprintLabel: 'Nose print photo', recommendBadge: 'Recommended',
     noseprintUpload: 'Upload a straight-on nose photo', noseprintDesc: 'Unique to each pet like a human fingerprint — helps confirm identity when found',
+    noseprintWebNote: '🔒 On the web (now), this photo is stored privately for manual comparison only. Automatic AI recognition will be available in the Aliascall app (coming soon).',
     noseprintGuideLink: '📖 See the photo guide — get it right the first time',
     reasonLabel: 'Reason', locationLabel: 'Posted location',
     callbackHint: "For this category, being reachable later matters more than an instant answer — we especially recommend adding a backup alert phone number on the next screen.",
@@ -1252,7 +1288,9 @@ async function submitRegistration(){
     generateRealQrCode(createdRegistration.qr_code_token);
 
     // 등록 성공 -> 이제 registration_id가 생겼으니 그동안 메모리에 담아뒀던 파일들을 실제 업로드
+    const hadNoseprint = !!stagedNoseprint; // 2026-08-23 신설: 업로드 과정에서 null로 초기화되기 전에 미리 기억해둠
     await uploadStagedFiles(createdRegistration.id);
+    if (selectedCategory === 'pet' && hadNoseprint) initPetAiUpsell(createdRegistration.id); // 2026-08-23 신설
 
     return true;
   } catch (e) {
@@ -1529,6 +1567,73 @@ document.getElementById('printNowBtn').addEventListener('click', () => {
 
   window.print();
 });
+
+// =====================================================
+// 2026-08-23 신설: AI 비문인식 옵션 업셀(반려동물 + 비문사진 등록한 경우에만 표시)
+// =====================================================
+const PET_AI_DURATION_PLANS = [
+  { months: 3, priceKrw: 5460 },
+  { months: 6, priceKrw: 10920 },
+  { months: 12, priceKrw: 21840 },
+];
+let petAiSelectedDuration = 3;
+let petAiSelectedMethod = 'inicis';
+let petAiPaypalRendered = false;
+
+function initPetAiUpsell(registrationId){
+  const box = document.getElementById('petAiUpsell');
+  box.style.display = 'block';
+
+  const grid = document.getElementById('petAiDurationGrid');
+  grid.innerHTML = PET_AI_DURATION_PLANS.map((p) => `
+    <div class="pet-ai-duration-card ${p.months === petAiSelectedDuration ? 'selected' : ''}" data-months="${p.months}">
+      <div class="m">${p.months}개월</div>
+      <div class="p">${p.priceKrw.toLocaleString()}원</div>
+    </div>
+  `).join('');
+  grid.querySelectorAll('.pet-ai-duration-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      petAiSelectedDuration = Number(card.dataset.months);
+      grid.querySelectorAll('.pet-ai-duration-card').forEach((c) => c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+  });
+
+  document.querySelectorAll('.pet-ai-pay-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.pet-ai-pay-tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      petAiSelectedMethod = tab.dataset.method;
+      document.getElementById('petAiInicisBtn').style.display = petAiSelectedMethod === 'inicis' ? 'block' : 'none';
+      document.getElementById('petAiPaypalContainer').style.display = petAiSelectedMethod === 'paypal' ? 'block' : 'none';
+      if (petAiSelectedMethod === 'paypal' && !petAiPaypalRendered) {
+        petAiPaypalRendered = true;
+        renderPetAiPayPalButtons(sb, 'petAiPaypalContainer', { registrationId, durationMonths: petAiSelectedDuration }, (data) => {
+          document.getElementById('petAiUpsell').innerHTML = '<div style="text-align:center; padding:16px; font-size:13px; font-weight:700; color:#8a6416;">✅ AI 비문인식 옵션이 켜졌어요! (Aliascall 앱 출시 후 자동 인식이 시작됩니다)</div>';
+        });
+      }
+    });
+  });
+
+  document.getElementById('petAiInicisBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('petAiInicisBtn');
+    btn.disabled = true;
+    btn.textContent = '결제 준비 중…';
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      await startPetAiInicisPayment(sb, {
+        registrationId,
+        durationMonths: petAiSelectedDuration,
+        buyername: session?.user?.user_metadata?.nickname || '회원',
+        buyertel: '',
+        buyeremail: session?.user?.email || '',
+      });
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '결제하고 AI 인식 켜기';
+    }
+  });
+}
 </script>
 
 </div><!-- /app-shell -->
