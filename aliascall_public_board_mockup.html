@@ -149,6 +149,12 @@ main{ max-width:600px; margin:0 auto; padding:24px 20px 60px; }
       <p>여기서 연락하면 실제 전화번호는 보이지 않습니다. 브라우저에서 바로 음성·영상으로 연결됩니다.</p>
       <button id="contactBtn">제보하기 · 지금 연결하기</button>
     </div>
+
+    <!-- 2026-08-24 신설: 신고 버튼 -->
+    <div style="text-align:center; margin-top:14px;">
+      <button type="button" id="acReportBtn"
+        style="background:none; border:none; color:var(--danger); font-size:12.5px; cursor:pointer; padding:6px 10px;">🚩 이 게시물 신고하기</button>
+    </div>
   </div>
 </div>
 
@@ -218,9 +224,13 @@ async function renderPosts(){
   });
 }
 
+// 2026-08-24 신설: 신고 시 어느 게시물인지 알아야 해서 현재 열린 글의 id를 기억함
+let currentDetailPostId = null;
+
 function openDetail(id){
   const p = currentPosts.find(x => String(x.id) === String(id));
   if (!p) return;
+  currentDetailPostId = p.id;
   document.getElementById('dEmoji').textContent = CATEGORY_EMOJI[p.category] || '❓';
   document.getElementById('dTitle').textContent = (p.registrations && p.registrations.title) || CATEGORY_TITLE_FALLBACK[p.category] || '게시물';
   document.getElementById('dStatus').textContent = p.status === 'searching' ? '찾는 중' : '발견됨';
@@ -260,6 +270,13 @@ document.getElementById('countrySelect').addEventListener('change', (e) => {
 });
 
 renderPosts();
+
+// 2026-08-24 신설: 신고 버튼
+document.getElementById('acReportBtn').addEventListener('click', () => {
+  if (!currentDetailPostId) return;
+  aliascallOpenReport({ context: 'board', targetId: currentDetailPostId });
+});
 </script>
+<script src="aliascall_report.js"></script>
 </body>
 </html>

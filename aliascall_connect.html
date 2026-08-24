@@ -394,6 +394,8 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
         <!-- 2026-08-21 신설: 발견자용 긴급 알림 토글 — 예전엔 첫 메시지 보낼 때 조용히 한 번만
              물어봐서 "안 보인다"는 피드백이 있었음. 이제 채팅창 상단에 항상 눈에 보이게 둠. -->
         <button type="button" id="finderPushToggleBtn" class="finder-push-toggle" title="긴급 알림">🔔</button>
+        <!-- 2026-08-24 신설: 신고 버튼 -->
+        <button type="button" id="acReportBtn" class="finder-push-toggle" title="신고하기">🚩</button>
         <button id="chatOnlyEndBtn" data-i18n="chatOnlyEnd">채팅 종료</button>
       </div>
     </div>
@@ -2225,8 +2227,15 @@ window.addEventListener('pagehide', () => {
 
 init();
 applyLang(currentLang);
+
+// 2026-08-24 신설: 신고 버튼 — 발견자도 소유자를 신고할 수 있어야 함(악용은 양방향)
+document.getElementById('acReportBtn').addEventListener('click', () => {
+  if (!currentCaseId) { alert('대화가 시작된 뒤에 신고할 수 있어요.'); return; }
+  aliascallOpenReport({ context: 'case', targetId: currentCaseId });
+});
 </script>
 </div><!-- /app-shell -->
 
+<script src="aliascall_report.js"></script>
 </body>
 </html>

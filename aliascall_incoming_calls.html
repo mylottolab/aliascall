@@ -322,7 +322,13 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
   <div class="session-chat" id="chatPanel">
     <div class="chat-only-header" id="chatOnlyHeader">
       <b>💬 문자 채팅</b>
-      <button id="chatOnlyEndBtn">채팅 종료</button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <!-- 2026-08-24 신설: 신고 버튼.
+             .chat-only-header button 규칙이 빨간 배경을 강제하므로 !important로 덮어씀 -->
+        <button type="button" id="acReportBtn" title="신고하기"
+          style="background:none !important; color:var(--danger) !important; font-size:16px; padding:4px 8px !important;">🚩</button>
+        <button id="chatOnlyEndBtn">채팅 종료</button>
+      </div>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-closed-note" id="chatClosedNote">
@@ -1599,8 +1605,15 @@ document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage
 document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
 init();
+
+// 2026-08-24 신설: 신고 버튼 — 낯선 발견자가 부적절한 사진·메시지를 보낼 수 있으므로
+document.getElementById('acReportBtn').addEventListener('click', () => {
+  if (!currentCaseId) { alert('대화를 연 뒤에 신고할 수 있어요.'); return; }
+  aliascallOpenReport({ context: 'case', targetId: currentCaseId });
+});
 </script>
 </div><!-- /app-shell -->
 
+<script src="aliascall_report.js"></script>
 </body>
 </html>

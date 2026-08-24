@@ -289,6 +289,8 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
     <button type="button" class="more-menu-item" id="openFavoritesBtn">⭐ 즐겨찾기 보기</button>
     <button type="button" class="more-menu-item" id="openKeepBtn">📌 내 메모함</button>
     <button type="button" class="more-menu-item" id="openSearchBtn">🔍 대화 검색</button>
+    <!-- 2026-08-24 신설: 신고 -->
+    <button type="button" class="more-menu-item" id="openReportBtn">🚩 신고하기</button>
     <button type="button" class="more-menu-item close" id="moreMenuCloseBtn">닫기</button>
   </div>
 </div>
@@ -2122,7 +2124,15 @@ document.getElementById('muteBtn').addEventListener('click', () => {
   btn.classList.toggle('active-off', isMuted);
 });
 
+// 2026-08-24 신설: 신고 — 더보기(⋯) 메뉴에서 열림
+document.getElementById('openReportBtn').addEventListener('click', () => {
+  document.getElementById('moreMenuOverlay').classList.remove('show');
+  if (!hotlineId) { alert('잠시 후 다시 시도해주세요.'); return; }
+  aliascallOpenReport({ context: 'hotline', targetId: hotlineId });
+});
+
 init();
 </script>
+<script src="aliascall_report.js"></script>
 </body>
 </html>
