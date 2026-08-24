@@ -833,6 +833,12 @@ function applyLang(lang){
     loadCaseInbox();
   }
 
+  // 2026-08-25 신설: 알림 설정 위젯(aliascall_push.js)도 자체 사전을 쓰므로 다시 그림.
+  // localStorage의 언어값을 위에서 이미 갱신했으므로 그대로 호출하면 새 언어로 그려짐.
+  if (typeof renderNotifySettings === 'function' && document.getElementById('notifySettingsContainer')) {
+    renderNotifySettings(sb, 'notifySettingsContainer');
+  }
+
   document.querySelectorAll('.lang-toggle button').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.lang === lang);
   });
