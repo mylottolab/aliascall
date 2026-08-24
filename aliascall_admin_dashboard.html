@@ -102,6 +102,7 @@ tr:hover td{ background:rgba(31,111,107,.03); }
   <div class="nav-tab" data-tab="members">회원 관리</div>
   <div class="nav-tab" data-tab="registrations">등록물 관리</div>
   <div class="nav-tab" data-tab="reports">신고 처리</div>
+  <div class="nav-tab" data-tab="contentReports">대화·게시물 신고</div>
   <div class="nav-tab" data-tab="payments">결제 개요</div>
   <div class="nav-tab" data-tab="deletions">탈퇴 현황</div>
   <div class="nav-tab" data-tab="products">상품 관리</div>
@@ -115,6 +116,7 @@ tr:hover td{ background:rgba(31,111,107,.03); }
       <div class="stat-card"><div class="n" id="statMembers">-</div><div class="l">전체 회원</div></div>
       <div class="stat-card"><div class="n" id="statRegistrations">-</div><div class="l">활성 등록물</div></div>
       <div class="stat-card"><div class="n" id="statReportsOpen">-</div><div class="l">처리 대기 신고</div></div>
+      <div class="stat-card"><div class="n" id="statContentReportsOpen">-</div><div class="l">대화·게시물 신고</div></div>
       <div class="stat-card"><div class="n" id="statDeletions">-</div><div class="l">누적 탈퇴</div></div>
     </div>
     <p style="font-size:12.5px; color:var(--ink-soft);">각 탭에서 상세 목록과 조치를 진행하세요.</p>
@@ -163,6 +165,35 @@ tr:hover td{ background:rgba(31,111,107,.03); }
     <table>
       <thead><tr><th>사유</th><th>대상 등록물</th><th>신고일</th><th>상태</th><th>조치</th></tr></thead>
       <tbody id="reportsBody"><tr class="empty-row"><td colspan="5">불러오는 중…</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- 2026-08-24 신설: 대화·게시물 내용 신고 (content_reports)
+       위의 "신고 처리" 탭은 등록물(QR 태그) 자체에 대한 신고(reports 테이블)이고,
+       이 탭은 사건함 대화 / 핫라인 / 게시판에서 올라온 내용 신고를 다룸. 서로 다른 테이블. -->
+  <div class="tab-panel" data-panel="contentReports">
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">
+      사건함 대화, 핫라인, 찾습니다 게시판에서 접수된 신고입니다.
+      신고 대상 ID를 눌러 복사한 뒤 해당 화면에서 확인하세요.
+    </p>
+    <div class="toolbar">
+      <select id="cReportStatusFilter">
+        <option value="pending">접수됨</option>
+        <option value="reviewing">확인 중</option>
+        <option value="resolved">조치 완료</option>
+        <option value="dismissed">문제없음</option>
+      </select>
+      <select id="cReportContextFilter">
+        <option value="">전체 위치</option>
+        <option value="case">사건함 대화</option>
+        <option value="hotline">핫라인</option>
+        <option value="board">게시판</option>
+      </select>
+      <button id="cReportFilterBtn">조회</button>
+    </div>
+    <table>
+      <thead><tr><th>위치</th><th>사유</th><th>상세 내용</th><th>대상 ID</th><th>신고일</th><th>상태</th><th>조치</th></tr></thead>
+      <tbody id="contentReportsBody"><tr class="empty-row"><td colspan="7">불러오는 중…</td></tr></tbody>
     </table>
   </div>
 
@@ -305,16 +336,19 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
 });
 
 async function loadOverview(){
-  const [{ count: memberCount }, { count: regCount }, { count: reportCount }, { count: delCount }] = await Promise.all([
+  const [{ count: memberCount }, { count: regCount }, { count: reportCount }, { count: delCount }, { count: cReportCount }] = await Promise.all([
     sb.from('profiles').select('id', { count: 'exact', head: true }),
     sb.from('registrations').select('id', { count: 'exact', head: true }).eq('status', 'active'),
     sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
     sb.from('account_deletions').select('id', { count: 'exact', head: true }),
+    // 2026-08-24 신설: 대화·게시물 신고(content_reports) 미처리 건수
+    sb.from('content_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
   ]);
   document.getElementById('statMembers').textContent = memberCount ?? '-';
   document.getElementById('statRegistrations').textContent = regCount ?? '-';
   document.getElementById('statReportsOpen').textContent = reportCount ?? '-';
   document.getElementById('statDeletions').textContent = delCount ?? '-';
+  document.getElementById('statContentReportsOpen').textContent = cReportCount ?? '-';
 }
 
 async function loadMembers(keyword){
@@ -412,6 +446,125 @@ async function loadReports(status){
   }));
 }
 document.getElementById('reportFilterBtn').addEventListener('click', () => loadReports(document.getElementById('reportStatusFilter').value));
+
+// =====================================================
+// 2026-08-24 신설: 대화·게시물 신고 (content_reports)
+// 위의 loadReports는 등록물 신고(reports 테이블)이고, 이건 별개의 테이블임.
+// =====================================================
+const CREPORT_CONTEXT_LABEL = { case: '💬 사건함', hotline: '🔒 핫라인', board: '📋 게시판' };
+const CREPORT_REASON_LABEL = {
+  sexual: '음란물·성적', violence: '폭력·위협', abuse: '욕설·괴롭힘',
+  spam: '스팸·광고', fraud: '사기·금전요구', privacy: '개인정보 노출', other: '기타',
+};
+const CREPORT_STATUS_LABEL = {
+  pending: '접수됨', reviewing: '확인 중', resolved: '조치 완료', dismissed: '문제없음',
+};
+// chip 색상 재사용: pending/open은 주의색, resolved는 완료색
+const CREPORT_STATUS_CHIP = {
+  pending: 'open', reviewing: 'pending', resolved: 'resolved', dismissed: 'active',
+};
+
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => (
+    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+  ));
+}
+
+async function loadContentReports(status, context){
+  const tbody = document.getElementById('contentReportsBody');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="7">불러오는 중…</td></tr>';
+
+  let q = sb.from('content_reports')
+    .select('id, context, target_id, message_id, reason, detail, status, admin_note, source_url, created_at')
+    .eq('status', status)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (context) q = q.eq('context', context);
+
+  const { data, error } = await q;
+
+  if (error) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">불러오기 실패: ' + escapeHtml(error.message) + '</td></tr>';
+    return;
+  }
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">해당하는 신고가 없습니다.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(r => {
+    const shortId = String(r.target_id).slice(0, 8) + '…';
+    const detail = r.detail
+      ? escapeHtml(r.detail).slice(0, 120)
+      : '<span style="color:var(--ink-soft);">-</span>';
+    const note = r.admin_note
+      ? '<div style="font-size:10.5px; color:var(--ink-soft); margin-top:4px;">📝 ' + escapeHtml(r.admin_note) + '</div>'
+      : '';
+    return `
+    <tr>
+      <td>${CREPORT_CONTEXT_LABEL[r.context] || r.context}</td>
+      <td><b>${CREPORT_REASON_LABEL[r.reason] || r.reason}</b></td>
+      <td style="max-width:260px; word-break:break-all;">${detail}${note}</td>
+      <td>
+        <button class="small-btn view" data-action="creport-copy" data-target="${escapeHtml(r.target_id)}"
+          title="${escapeHtml(r.target_id)}">${shortId}</button>
+      </td>
+      <td>${fmtDate(r.created_at)}</td>
+      <td><span class="chip ${CREPORT_STATUS_CHIP[r.status] || 'pending'}">${CREPORT_STATUS_LABEL[r.status] || r.status}</span></td>
+      <td>
+        ${r.status === 'pending' || r.status === 'reviewing' ? `
+          <button class="small-btn view" data-action="creport-set" data-id="${r.id}" data-status="reviewing">확인 중</button>
+          <button class="small-btn del" data-action="creport-set" data-id="${r.id}" data-status="resolved">조치 완료</button>
+          <button class="small-btn view" data-action="creport-set" data-id="${r.id}" data-status="dismissed">문제없음</button>
+        ` : `
+          <button class="small-btn view" data-action="creport-set" data-id="${r.id}" data-status="pending">되돌리기</button>
+        `}
+      </td>
+    </tr>`;
+  }).join('');
+
+  // 대상 ID 복사 — 해당 화면에서 찾아볼 때 씀
+  tbody.querySelectorAll('[data-action="creport-copy"]').forEach(btn => btn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(btn.dataset.target);
+      const old = btn.textContent;
+      btn.textContent = '복사됨!';
+      setTimeout(() => { btn.textContent = old; }, 1200);
+    } catch (e) {
+      prompt('아래 ID를 복사하세요', btn.dataset.target);
+    }
+  }));
+
+  // 상태 변경 (+ 필요하면 메모)
+  tbody.querySelectorAll('[data-action="creport-set"]').forEach(btn => btn.addEventListener('click', async () => {
+    const next = btn.dataset.status;
+    const patch = { status: next };
+
+    if (next === 'resolved' || next === 'dismissed') {
+      const memo = prompt(
+        next === 'resolved'
+          ? '어떤 조치를 하셨나요? (기록용, 비워도 됩니다)'
+          : '문제없음으로 종결하는 이유를 적어주세요. (기록용, 비워도 됩니다)'
+      );
+      if (memo === null) return; // 취소
+      if (memo.trim()) patch.admin_note = memo.trim();
+    }
+
+    const { error } = await sb.from('content_reports').update(patch).eq('id', btn.dataset.id);
+    if (error) { alert('변경 실패: ' + error.message); return; }
+
+    loadContentReports(
+      document.getElementById('cReportStatusFilter').value,
+      document.getElementById('cReportContextFilter').value
+    );
+    loadOverview(); // 상단 카운트도 갱신
+  }));
+}
+
+document.getElementById('cReportFilterBtn').addEventListener('click', () => loadContentReports(
+  document.getElementById('cReportStatusFilter').value,
+  document.getElementById('cReportContextFilter').value
+));
 
 async function loadPayments(){
   const tbody = document.getElementById('paymentsBody');
@@ -651,6 +804,7 @@ function loadAllTabs(){
   loadMembers();
   loadRegistrations();
   loadReports('open');
+  loadContentReports('pending', ''); // 2026-08-24 신설
   loadPayments();
   loadDeletions();
   loadProducts();
