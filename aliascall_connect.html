@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Aliascall — 연결하기</title>
+<title>Aliascall — 연결하기 / Connect</title>
 <!-- 2026-08-20: 발견자용 익명 긴급 알림(웹푸시)에 필요 -->
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/aliascall_icon_192.png">
@@ -268,7 +268,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 
 <header>
   <div class="brand-row">
-    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기" data-i18n-aria="backBtn">←</button>
     <a href="index.html" class="brand-home-link">
       <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
@@ -291,14 +291,14 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
     <div class="state-error" id="stateError">
       <div class="big">🔍</div>
       <h2 data-i18n="notFoundTitle">등록 정보를 찾을 수 없어요</h2>
-      <p data-i18n="notFoundDesc">QR이 손상되었거나, 이미 처리된(삭제된) 등록일 수 있어요.<br>직접 검색해보시겠어요?</p>
+      <p data-i18n="notFoundDesc">QR이 손상되었거나, 이미 처리된(삭제된) 등록일 수 있어요.<br><span data-i18n="searchYourself">직접 검색해보시겠어요?</span></p>
       <a href="aliascall_search_mockup.html" data-i18n="searchDirectly">번호·이름으로 검색하기</a>
     </div>
 
     <div class="state-error" id="stateExpired" style="display:none;">
       <div class="big">⏳</div>
       <h2 data-i18n="expiredTitle">연결이 잠시 중단되어 있어요</h2>
-      <p data-i18n="expiredDesc">소유자의 수신서비스 기간이 만료되었습니다.<br>소유자에게 갱신을 안내해주시면 다시 연결할 수 있어요.</p>
+      <p data-i18n="expiredDesc">소유자의 수신서비스 기간이 만료되었습니다.<br><span data-i18n="expiredHint">소유자에게 갱신을 안내해주시면 다시 연결할 수 있어요.</span></p>
       <a href="aliascall_search_mockup.html" data-i18n="findOther">다른 등록물 찾기</a>
     </div>
 
@@ -325,7 +325,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 
         <div class="text-msg-sent-note" id="textMsgSentNote" data-i18n="textMsgSentNote">✓ 메시지를 보냈어요. 소유자가 확인하는 대로 답이 올 거예요.</div>
         <div class="text-msg-block" id="textMsgBlock">
-          <textarea id="textMsgInput" rows="3" data-i18n-placeholder="textMsgPlaceholder" placeholder="예: 방금 등록해두신 물건 봤어요! 어디로 전달드리면 될까요?"></textarea>
+          <textarea id="textMsgInput" rows="3" data-i18n-placeholder="textMsgPlaceholder" data-i18n-placeholder="firstMsgPlaceholder" placeholder="예: 방금 등록해두신 물건 봤어요! 어디로 전달드리면 될까요?"></textarea>
           <button id="textMsgSendBtn" data-i18n="textMsgSend">보내기</button>
         </div>
 
@@ -346,7 +346,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 <div class="global-toast" id="globalToast">
   <button class="global-toast-close" id="globalToastClose">✕</button>
   <div class="global-toast-body" id="globalToastBody">
-    <div class="global-toast-title" id="globalToastTitle">💬 소유자가 답장했어요</div>
+    <div class="global-toast-title" id="globalToastTitle" data-i18n="toastOwnerReplied">💬 소유자가 답장했어요</div>
     <div class="global-toast-preview" id="globalToastPreview"></div>
   </div>
 </div>
@@ -357,8 +357,8 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
          기존 발신(거는) UI들과는 별도 블록이라 서로 안 겹침. -->
     <div id="incomingRingState" style="display:none;">
       <div class="pulse-ring"><div class="dot"></div></div>
-      <h3 id="incomingCallTitle">전화가 왔어요</h3>
-      <p id="incomingCallSub">음성통화 요청</p>
+      <h3 id="incomingCallTitle" data-i18n="incomingCallTitle">전화가 왔어요</h3>
+      <p id="incomingCallSub" data-i18n="callReqVoice">음성통화 요청</p>
       <div class="ring-btns" style="display:flex; gap:16px; margin-top:14px;">
         <button class="ring-btn-lg decline" id="incomingDeclineBtn">✕</button>
         <button class="ring-btn-lg accept" id="incomingAcceptBtn">✓</button>
@@ -379,7 +379,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
     </div>
     <button class="unmute-btn" id="unmuteBtn" data-i18n="unmuteBtn">🔊 소리가 안 들리면 여기를 탭하세요</button>
     <div class="leave-msg-block" id="leaveMsgBlock">
-      <input type="text" id="leaveMsgInput" data-i18n-placeholder="leaveMsgPlaceholder" placeholder="예: 지금 못 받으시면 010-0000-0000으로 연락주세요">
+      <input type="text" id="leaveMsgInput" data-i18n-placeholder="leaveMsgPlaceholder" data-i18n-placeholder="leaveMsgPlaceholder" placeholder="예: 지금 못 받으시면 010-0000-0000으로 연락주세요">
       <button id="leaveMsgSendBtn" data-i18n="leaveMsgSend">메시지 남기기</button>
     </div>
     <button class="end-btn" id="endCallBtnInitial" data-i18n="endCall">연결 종료</button>
@@ -389,27 +389,25 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
        상단 헤더(chat-only-header)와 함께 처음부터 항상 열려있음 -->
   <div class="session-chat" id="chatPanel">
     <div class="chat-only-header" id="chatOnlyHeader">
-      <b>💬 문자 채팅</b>
+      <b data-i18n="chatOnlyHeaderTitle">💬 문자 채팅</b>
       <div style="display:flex; align-items:center; gap:10px;">
         <!-- 2026-08-21 신설: 발견자용 긴급 알림 토글 — 예전엔 첫 메시지 보낼 때 조용히 한 번만
              물어봐서 "안 보인다"는 피드백이 있었음. 이제 채팅창 상단에 항상 눈에 보이게 둠. -->
-        <button type="button" id="finderPushToggleBtn" class="finder-push-toggle" title="긴급 알림">🔔</button>
-        <!-- 2026-08-24 신설: 신고 버튼 -->
-        <button type="button" id="acReportBtn" class="finder-push-toggle" title="신고하기">🚩</button>
+        <button type="button" id="finderPushToggleBtn" class="finder-push-toggle" data-i18n-title="titleUrgent" title="긴급 알림">🔔</button>
         <button id="chatOnlyEndBtn" data-i18n="chatOnlyEnd">채팅 종료</button>
       </div>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-closed-note" id="chatClosedNote">
-      🔒 이 소통은 종료되어 더 이상 메시지를 보낼 수 없어요.
-      <button type="button" id="reopenCaseBtn" style="margin-left:8px; background:var(--teal); color:#fff; border:none; border-radius:8px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;">다시 열기</button>
+      <span data-i18n="chatClosedNote">🔒 이 소통은 종료되어 더 이상 메시지를 보낼 수 없어요.</span>
+      <button type="button" id="reopenCaseBtn" data-i18n="reopenBtn" style="margin-left:8px; background:var(--teal); color:#fff; border:none; border-radius:8px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;">다시 열기</button>
     </div>
     <!-- 2026-08-22 신설: 이모지 선택 패널 -->
     <div class="emoji-panel" id="emojiPanel"></div>
     <div class="chat-input-row">
       <input type="file" id="chatPhotoInput" accept="image/*" multiple style="display:none;">
-      <button type="button" id="plusMenuBtn" title="더보기">➕</button>
-      <button type="button" id="emojiBtn" title="이모지">😊</button>
+      <button type="button" id="plusMenuBtn" data-i18n-title="titleMore" title="더보기">➕</button>
+      <button type="button" id="emojiBtn" data-i18n-title="titleEmoji" title="이모지">😊</button>
       <input type="text" id="chatInput" data-i18n-placeholder="chatInputPlaceholder" placeholder="메시지 입력…">
       <button id="chatSendBtn">➤</button>
     </div>
@@ -419,22 +417,22 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
        "+" 팝업으로 정리함 -->
   <div class="plus-menu-overlay" id="plusMenuOverlay">
     <div class="plus-menu-sheet">
-      <button type="button" class="plus-menu-item" id="chatAttachBtn"><span>📎</span><span>사진 첨부</span></button>
-      <button type="button" class="plus-menu-item" id="chatCameraBtn"><span>📷</span><span>사진 촬영</span></button>
-      <button type="button" class="plus-menu-item" id="guideMenuBtn"><span>❓</span><span>사용법</span></button>
+      <button type="button" class="plus-menu-item" id="chatAttachBtn"><span>📎</span><span data-i18n="plusPhotoAttach">사진 첨부</span></button>
+      <button type="button" class="plus-menu-item" id="chatCameraBtn"><span>📷</span><span data-i18n="plusPhotoCamera">사진 촬영</span></button>
+      <button type="button" class="plus-menu-item" id="guideMenuBtn"><span>❓</span><span data-i18n="plusGuide">사용법</span></button>
     </div>
   </div>
 
   <!-- 2026-08-23 신설: 채팅 사용법 안내 -->
   <div class="panel-overlay" id="guidePanelOverlay">
     <div class="panel-sheet">
-      <div class="panel-header"><span>❓ 채팅 사용법</span><button type="button" class="panel-close" data-close="guidePanelOverlay">✕</button></div>
+      <div class="panel-header"><span data-i18n="guidePanelTitle">❓ 채팅 사용법</span><button type="button" class="panel-close" data-close="guidePanelOverlay">✕</button></div>
       <div class="panel-list guide-list">
-        <div class="guide-item"><div class="guide-icon">💬</div><div><div class="guide-title">기본 채팅</div><div class="guide-desc">문자·이모지·사진을 주고받을 수 있어요. 사진은 ➕ 안의 "사진 첨부"(갤러리) 또는 "사진 촬영"(바로 찍기)으로 보낼 수 있어요.</div></div></div>
-        <div class="guide-item"><div class="guide-icon">😊</div><div><div class="guide-title">이모지</div><div class="guide-desc">움직이는 이모지 584개를 카테고리별로 골라 보낼 수 있어요. 이모지 1~3개로만 된 메시지는 큰 스티커로 보여요.</div></div></div>
-        <div class="guide-item"><div class="guide-icon">🔍</div><div><div class="guide-title">사진 확대해서 보기</div><div class="guide-desc">보낸 사진을 누르면, 손가락 두 개(핀치줌)나 더블탭으로 확대해서 볼 수 있어요.</div></div></div>
-        <div class="guide-item"><div class="guide-icon">✓</div><div><div class="guide-title">읽음 표시</div><div class="guide-desc">내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.</div></div></div>
-        <div class="guide-item"><div class="guide-icon">🔒</div><div><div class="guide-title">번호 노출 없이 안전하게</div><div class="guide-desc">Aliascall은 실제 전화번호를 노출하지 않는 연결 서비스예요. 실시간 위치추적 기능은 없어요.</div></div></div>
+        <div class="guide-item"><div class="guide-icon">💬</div><div><div class="guide-title" data-i18n="gTitle1">기본 채팅</div><div class="guide-desc" data-i18n="gDesc1">문자·이모지·사진을 주고받을 수 있어요. 사진은 ➕ 안의 "사진 첨부"(갤러리) 또는 "사진 촬영"(바로 찍기)으로 보낼 수 있어요.</div></div></div>
+        <div class="guide-item"><div class="guide-icon">😊</div><div><div class="guide-title" data-i18n="gTitle2">이모지</div><div class="guide-desc" data-i18n="gDesc2">움직이는 이모지 584개를 카테고리별로 골라 보낼 수 있어요. 이모지 1~3개로만 된 메시지는 큰 스티커로 보여요.</div></div></div>
+        <div class="guide-item"><div class="guide-icon">🔍</div><div><div class="guide-title" data-i18n="gTitle3">사진 확대해서 보기</div><div class="guide-desc" data-i18n="gDesc3">보낸 사진을 누르면, 손가락 두 개(핀치줌)나 더블탭으로 확대해서 볼 수 있어요.</div></div></div>
+        <div class="guide-item"><div class="guide-icon">✓</div><div><div class="guide-title" data-i18n="gTitle4">읽음 표시</div><div class="guide-desc" data-i18n="gDesc4">내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.</div></div></div>
+        <div class="guide-item"><div class="guide-icon">🔒</div><div><div class="guide-title" data-i18n="gTitle5">번호 노출 없이 안전하게</div><div class="guide-desc" data-i18n="gDesc5">Aliascall은 실제 전화번호를 노출하지 않는 연결 서비스예요. 실시간 위치추적 기능은 없어요.</div></div></div>
       </div>
     </div>
   </div>
@@ -465,6 +463,42 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 // ── 언어 전환 (KR/EN) ──
 const I18N = {
   ko: {
+    searchYourself: '직접 검색해보시겠어요?',
+    expiredHint: '소유자에게 갱신을 안내해주시면 다시 연결할 수 있어요.',
+    toastOwnerReplied: '💬 소유자가 답장했어요',
+    toastOwnerRepliedLong: '👤 소유자가 답장했어요. 응답을 원하시면 여기를 클릭하세요',
+    photoPreview: '📷 사진을 보냈어요',
+    incomingCallTitle: '전화가 왔어요',
+    callReqVoice: '음성통화 요청', callReqVideo: '영상통화 요청',
+    checkingConnection: '연결 확인 중…',
+    chatOnlyHeaderTitle: '💬 문자 채팅',
+    chatClosedNote: '🔒 이 소통은 종료되어 더 이상 메시지를 보낼 수 없어요.',
+    reopenBtn: '다시 열기',
+    plusPhotoAttach: '사진 첨부', plusPhotoCamera: '사진 촬영', plusGuide: '사용법',
+    guidePanelTitle: '❓ 채팅 사용법',
+    gTitle1: '기본 채팅',
+    gDesc1: '문자·이모지·사진을 주고받을 수 있어요. 사진은 ➕ 안의 "사진 첨부"(갤러리) 또는 "사진 촬영"(바로 찍기)으로 보낼 수 있어요.',
+    gTitle2: '이모지',
+    gDesc2: '움직이는 이모지 584개를 카테고리별로 골라 보낼 수 있어요. 이모지 1~3개로만 된 메시지는 큰 스티커로 보여요.',
+    gTitle3: '사진 확대해서 보기',
+    gDesc3: '보낸 사진을 누르면, 손가락 두 개(핀치줌)나 더블탭으로 확대해서 볼 수 있어요.',
+    gTitle4: '읽음 표시',
+    gDesc4: '내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.',
+    gTitle5: '번호 노출 없이 안전하게',
+    gDesc5: 'Aliascall은 실제 전화번호를 노출하지 않는 연결 서비스예요. 실시간 위치추적 기능은 없어요.',
+    backBtn: '뒤로가기', titleUrgent: '긴급 알림', titleMore: '더보기', titleEmoji: '이모지',
+    firstMsgPlaceholder: '예: 방금 등록해두신 물건 봤어요! 어디로 전달드리면 될까요?',
+    leaveMsgPlaceholder: '예: 지금 못 받으시면 010-0000-0000으로 연락주세요',
+    altRegisteredPhoto: '등록된 사진', altPhoto: '사진',
+    callVideo: '🎥 영상통화', callVoice: '🎧 음성통화',
+    callAttemptSuffix: ' 시도', callEndedSuffix: ' 종료 (연결됨)', callNoAnswerSuffix: ' 응답 없음',
+    readMark: '읽음', fallbackItem: '등록물',
+    alertTryLater: '잠시 후 다시 시도해주세요.',
+    alertReopenFail: '다시 열지 못했어요. 잠시 후 다시 시도해주세요.',
+    confirmEndChat: '이 대화를 종료하시겠어요? 종료하면 더 이상 메시지를 주고받을 수 없어요.',
+    alertPhotoTooBig: '사진 용량이 너무 커요 (최대 8MB).',
+    alertPhotoSendFail: '사진을 보내지 못했어요. 잠시 후 다시 시도해주세요.',
+    alertMsgSendFail: '메시지를 보내지 못했어요. 잠시 후 다시 시도해주세요.',
     checking: '확인하는 중…', notFoundTitle: '등록 정보를 찾을 수 없어요',
     notFoundDesc: 'QR이 손상되었거나, 이미 처리된(삭제된) 등록일 수 있어요.<br>직접 검색해보시겠어요?',
     searchDirectly: '번호·이름으로 검색하기',
@@ -497,6 +531,42 @@ const I18N = {
     reasonLabel: '사유', locationLabel: '장소',
   },
   en: {
+    searchYourself: 'Would you like to search yourself?',
+    expiredHint: 'Let the owner know to renew, and the connection will work again.',
+    toastOwnerReplied: '💬 The owner replied',
+    toastOwnerRepliedLong: '👤 The owner replied. Tap here to respond.',
+    photoPreview: '📷 Sent a photo',
+    incomingCallTitle: 'Incoming call',
+    callReqVoice: 'Voice call request', callReqVideo: 'Video call request',
+    checkingConnection: 'Checking connection…',
+    chatOnlyHeaderTitle: '💬 Text chat',
+    chatClosedNote: '🔒 This conversation has ended. You can no longer send messages.',
+    reopenBtn: 'Reopen',
+    plusPhotoAttach: 'Attach photo', plusPhotoCamera: 'Take photo', plusGuide: 'How to use',
+    guidePanelTitle: '❓ How to use chat',
+    gTitle1: 'Basic chat',
+    gDesc1: 'You can exchange text, emoji, and photos. Send photos from ➕ using "Attach photo" (gallery) or "Take photo" (camera).',
+    gTitle2: 'Emoji',
+    gDesc2: 'Choose from 584 animated emoji by category. Messages made of only 1–3 emoji appear as large stickers.',
+    gTitle3: 'Zoom into photos',
+    gDesc3: 'Tap a photo to zoom in with two fingers (pinch) or a double tap.',
+    gTitle4: 'Read receipts',
+    gDesc4: 'When the other person reads your message, "Read" appears next to the time.',
+    gTitle5: 'Safe, with no number exposed',
+    gDesc5: 'Aliascall connects you without revealing real phone numbers. There is no real-time location tracking.',
+    backBtn: 'Back', titleUrgent: 'Urgent alerts', titleMore: 'More', titleEmoji: 'Emoji',
+    firstMsgPlaceholder: 'e.g. I just found the item you registered! Where should I bring it?',
+    leaveMsgPlaceholder: 'e.g. If you miss this, please reach me at 010-0000-0000',
+    altRegisteredPhoto: 'Registered photo', altPhoto: 'Photo',
+    callVideo: '🎥 Video call', callVoice: '🎧 Voice call',
+    callAttemptSuffix: ' attempted', callEndedSuffix: ' ended (connected)', callNoAnswerSuffix: ' — no answer',
+    readMark: 'Read', fallbackItem: 'Registered item',
+    alertTryLater: 'Please try again shortly.',
+    alertReopenFail: 'Could not reopen. Please try again shortly.',
+    confirmEndChat: 'End this conversation? Once ended, you can no longer exchange messages.',
+    alertPhotoTooBig: 'That photo is too large (8MB maximum).',
+    alertPhotoSendFail: 'Could not send the photo. Please try again shortly.',
+    alertMsgSendFail: 'Could not send the message. Please try again shortly.',
     checking: 'Checking…', notFoundTitle: 'Registration not found',
     notFoundDesc: "The QR may be damaged, or this registration may have been removed.<br>Would you like to search instead?",
     searchDirectly: 'Search by number or name',
@@ -529,6 +599,11 @@ const I18N = {
     reasonLabel: 'Reason', locationLabel: 'Location',
   },
 };
+// 2026-08-25 신설: 현재 언어 사전을 짧게 가져오는 헬퍼.
+// 화면이 그려진 뒤 자바스크립트가 만들어내는 문자열(통화 기록, 알림, alert 등)은
+// data-i18n으로 처리할 수 없어서 이 함수로 그때그때 언어를 반영함.
+function T(){ return I18N[currentLang] || I18N.ko; }
+
 let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
 
 function applyLang(lang){
@@ -543,9 +618,25 @@ function applyLang(lang){
     const key = el.dataset.i18nPlaceholder;
     if (I18N[lang][key] !== undefined) el.placeholder = I18N[lang][key];
   });
+  // 2026-08-25 신설: 아이콘 버튼의 툴팁(title)과 스크린리더용 aria-label
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+    const key = el.dataset.i18nTitle;
+    if (I18N[lang][key] !== undefined) el.title = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+    const key = el.dataset.i18nAria;
+    if (I18N[lang][key] !== undefined) el.setAttribute('aria-label', I18N[lang][key]);
+  });
   document.querySelectorAll('.lang-toggle button').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.lang === lang);
   });
+
+  // 2026-08-25 신설: 이미 그려진 등록물 정보(카테고리 이름)를 새 언어로 다시 반영.
+  // 대화 내용은 사용자가 쓴 글이라 그대로 두고, 라벨만 바꿈.
+  if (typeof lastFoundData !== 'undefined' && lastFoundData) {
+    const subEl = document.getElementById('foundSub');
+    if (subEl) subEl.textContent = CATEGORY_LABEL_OF(lastFoundData.category) || lastFoundData.category;
+  }
 }
 document.querySelectorAll('.lang-toggle button').forEach((btn) => {
   btn.addEventListener('click', () => applyLang(btn.dataset.lang));
@@ -558,10 +649,21 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CATEGORY_EMOJI = {
   vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓',
 };
-const CATEGORY_LABEL = {
-  vehicle:'차량', lost_item:'분실·도난 우려 물품', vulnerable_person:'아동·치매 어르신·장애우',
-  pet:'반려동물', callback_contact:'부재중 연락', misc_incident:'기타 물품·사건',
+// 2026-08-25: 카테고리 이름도 언어별로. CATEGORY_LABEL()로 호출해서 씀.
+const CATEGORY_LABEL_I18N = {
+  ko: {
+    vehicle:'차량', lost_item:'분실·도난 우려 물품', vulnerable_person:'아동·치매 어르신·장애우',
+    pet:'반려동물', callback_contact:'부재중 연락', misc_incident:'기타 물품·사건',
+  },
+  en: {
+    vehicle:'Vehicle', lost_item:'Valuables at risk of loss or theft', vulnerable_person:'Child, elderly, or person with a disability',
+    pet:'Pet', callback_contact:'Callback contact', misc_incident:'Other item or incident',
+  },
 };
+function CATEGORY_LABEL_OF(cat){
+  const dict = CATEGORY_LABEL_I18N[currentLang] || CATEGORY_LABEL_I18N.ko;
+  return dict[cat];
+}
 
 function getTokenFromUrl(){
   const params = new URLSearchParams(window.location.search);
@@ -570,11 +672,15 @@ function getTokenFromUrl(){
 
 // 2026-08-20 (3단계): 등록물 정보를 화면에 채우는 부분을 공용 함수로 분리 —
 // 일반 QR 스캔 경로와, 소유자 콜백 수신 경로(registration_id로 직접 조회) 둘 다에서 재사용
+// 2026-08-25: 언어를 바꿨을 때 카테고리 이름을 다시 그리려면 원본 데이터가 필요해서 보관함
+let lastFoundData = null;
+
 function renderFoundRegistration(data){
+  lastFoundData = data;
   const foundEl = document.getElementById('stateFound');
   document.getElementById('foundEmoji').textContent = CATEGORY_EMOJI[data.category] || '❓';
-  document.getElementById('foundTitle').textContent = data.search_key || data.title || CATEGORY_LABEL[data.category] || '등록물';
-  document.getElementById('foundSub').textContent = CATEGORY_LABEL[data.category] || data.category;
+  document.getElementById('foundTitle').textContent = data.search_key || data.title || CATEGORY_LABEL_OF(data.category) || T().fallbackItem;
+  document.getElementById('foundSub').textContent = CATEGORY_LABEL_OF(data.category) || data.category;
   if (data.description) {
     document.getElementById('foundDesc').textContent = data.description;
     document.getElementById('foundDesc').style.display = 'block';
@@ -628,8 +734,8 @@ async function subscribeFinderCaseToast(registrationId){
       .on('broadcast', { event: 'new-message' }, ({ payload }) => {
         if (payload.sender === 'finder' || payload.message_type === 'call_log') return;
         if (currentCaseId === toastCaseId) return; // 이미 그 대화를 보고 있으면 토스트 불필요(채팅창 자체에서 이미 반영됨)
-        const preview = payload.message_type === 'photo' ? '📷 사진을 보냈어요' : (payload.content || '').slice(0, 60);
-        showGlobalToast('👤 소유자가 답장했어요. 응답을 원하시면 여기를 클릭하세요', preview, () => {
+        const preview = payload.message_type === 'photo' ? T().photoPreview : (payload.content || '').slice(0, 60);
+        showGlobalToast(T().toastOwnerRepliedLong, preview, () => {
           window.location.href = 'aliascall_connect.html?case=' + toastCaseId;
         });
       })
@@ -835,7 +941,7 @@ async function initIncomingCallFlow(sessionToken, loadingEl, errorEl){
 function showIncomingCallRing(session){
   document.getElementById('callingOverlay').classList.add('show');
   document.getElementById('incomingRingState').style.display = 'block';
-  document.getElementById('incomingCallSub').textContent = session.call_type === 'video' ? '영상통화 요청' : '음성통화 요청';
+  document.getElementById('incomingCallSub').textContent = session.call_type === 'video' ? T().callReqVideo : T().callReqVoice;
   // ⚠ 2026-08-21 수정: calling-topbar 안의 기본 요소들(pulseRing/callingStatus/callingSub/
   // endCallBtnInitial/leaveMsgBlock)은 발신(거는) 흐름 전용으로 항상 보이게 되어있었는데,
   // 수신 알림을 띄울 땐 이것들을 안 숨겨서 "전화가 왔어요"와 "연결 중…"이 겹쳐 보이던 버그.
@@ -878,7 +984,7 @@ document.getElementById('incomingAcceptBtn').addEventListener('click', async () 
   document.getElementById('callingStatus').style.display = 'block';
   document.getElementById('callingSub').style.display = 'block';
   document.getElementById('callControls').classList.add('show');
-  document.getElementById('callingStatus').textContent = '연결 확인 중…';
+  document.getElementById('callingStatus').textContent = T().checkingConnection;
   document.getElementById('callingSub').textContent = '';
   await answerIncomingCall(finderIncomingSession);
 });
@@ -1037,7 +1143,7 @@ async function loadMedia(registrationId){
       if (f.media_type === 'photo') {
         const thumb = document.createElement('div');
         thumb.className = 'media-thumb';
-        thumb.innerHTML = '<img src="' + url + '" alt="등록된 사진" loading="lazy">';
+        thumb.innerHTML = '<img src="' + url + '" alt="' + T().altRegisteredPhoto + '" loading="lazy">';
         thumb.addEventListener('click', () => openZoomableLightbox(url));
         gallery.appendChild(thumb);
       } else if (f.media_type === 'video') {
@@ -1198,7 +1304,7 @@ async function startCall(mode){
       subscribeCaseRealtime(currentCaseId);
       renderFinderPushToggle(); // 2026-08-21
 
-      const callLogText = (mode === 'video' ? '🎥 영상통화' : '🎧 음성통화') + ' 시도';
+      const callLogText = (mode === 'video' ? T().callVideo : T().callVoice) + T().callAttemptSuffix;
       fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1465,8 +1571,8 @@ function endCall(silent){
   // 2026-08-20 (2차): 통화(음성/영상)가 어떻게 끝났는지도 사건 타임라인에 남김 —
   // "부재중"과 "연결 후 종료"를 구분해서 기록. 채팅/문자 모드로 끝나는 경우는 해당 없음.
   if (currentCaseId && (currentMode === 'voice' || currentMode === 'video')) {
-    const modeLabel = currentMode === 'video' ? '🎥 영상통화' : '🎧 음성통화';
-    const outcomeLabel = callWasConnected ? (modeLabel + ' 종료 (연결됨)') : (modeLabel + ' 응답 없음');
+    const modeLabel = currentMode === 'video' ? T().callVideo : T().callVoice;
+    const outcomeLabel = callWasConnected ? (modeLabel + T().callEndedSuffix) : (modeLabel + T().callNoAnswerSuffix);
     const cid = currentCaseId, reg = document.getElementById('stateFound').dataset.registrationId;
     fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
       method: 'POST',
@@ -1650,7 +1756,7 @@ document.getElementById('finderPushToggleBtn').addEventListener('click', async (
       }
     } catch (e) { console.warn('[push] 발견자 알림 끄기 실패', e); }
   } else {
-    if (!currentCaseId) { alert('잠시 후 다시 시도해주세요.'); return; }
+    if (!currentCaseId) { alert(T().alertTryLater); return; }
     await attemptFinderPushSubscribe(currentCaseId);
   }
   renderFinderPushToggle();
@@ -1771,12 +1877,12 @@ document.getElementById('reopenCaseBtn').addEventListener('click', async () => {
     document.getElementById('chatSendBtn').disabled = false;
   } catch (e) {
     console.error('[case] 사건 재개 실패', e);
-    alert('다시 열지 못했어요. 잠시 후 다시 시도해주세요.');
+    alert(T().alertReopenFail);
   }
 });
 document.getElementById('chatOnlyEndBtn').addEventListener('click', async () => {
   // 2026-08-20: "채팅 종료" 버튼은 이제 사건 자체를 종료함(양쪽 다 다시 메시지 못 보냄)
-  if (currentCaseId && confirm('이 대화를 종료하시겠어요? 종료하면 더 이상 메시지를 주고받을 수 없어요.')) {
+  if (currentCaseId && confirm(T().confirmEndChat)) {
     try {
       await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-close`, {
         method: 'POST',
@@ -1843,7 +1949,7 @@ document.getElementById('chatCameraBtn').addEventListener('click', () => {
 async function sendChatPhoto(file){
   if (!currentCaseId) return;
   file = await aliascallCompressImage(file); // 2026-08-22 신설: 업로드 전 압축(카톡과 비슷한 방식)
-  if (file.size > 8 * 1024 * 1024) { alert('사진 용량이 너무 커요 (최대 8MB).'); return; }
+  if (file.size > 8 * 1024 * 1024) { alert(T().alertPhotoTooBig); return; }
   const attachBtn = document.getElementById('chatAttachBtn');
   attachBtn.disabled = true;
   try {
@@ -1885,7 +1991,7 @@ async function sendChatPhoto(file){
       document.getElementById('chatInput').disabled = true;
       document.getElementById('chatSendBtn').disabled = true;
     } else {
-      alert('사진을 보내지 못했어요. 잠시 후 다시 시도해주세요.');
+      alert(T().alertPhotoSendFail);
     }
   } finally {
     attachBtn.disabled = false;
@@ -1905,9 +2011,14 @@ document.getElementById('navPhoto').addEventListener('click', async () => {
 
 // 2026-08-23 신설: 날짜 구분선 + 메시지 시간 표시
 let lastRenderedDateKey = null;
+// 2026-08-25: 영어에서는 "3:20 PM", "Monday, August 25, 2026" 형식으로.
+// 한국어는 "오전 3:20", "2026년 8월 25일 월요일" 형식을 그대로 유지함.
 function formatKoreanTime(dateStr){
   if (!dateStr) return '';
   const d = new Date(dateStr);
+  if (currentLang === 'en') {
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
   let h = d.getHours();
   const m = String(d.getMinutes()).padStart(2, '0');
   const ampm = h < 12 ? '오전' : '오후';
@@ -1916,6 +2027,9 @@ function formatKoreanTime(dateStr){
 }
 function formatKoreanDateDivider(dateStr){
   const d = new Date(dateStr);
+  if (currentLang === 'en') {
+    return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
   const days = ['일', '월', '화', '수', '목', '금', '토'];
   return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + days[d.getDay()] + '요일';
 }
@@ -1940,7 +2054,7 @@ function isReadByOtherParty(createdAt){
 function refreshReadTags(){
   messageCreatedAtCache.forEach((createdAt, messageId) => {
     const statusEl = document.querySelector('.msg-time-row[data-message-id="' + messageId + '"] .msg-read-status');
-    if (statusEl) statusEl.textContent = isReadByOtherParty(createdAt) ? '읽음' : '';
+    if (statusEl) statusEl.textContent = isReadByOtherParty(createdAt) ? T().readMark : '';
   });
 }
 async function markCaseAsRead(){
@@ -1968,7 +2082,7 @@ function renderPhotoGroupGrid(state){
     const thumb = document.createElement('img');
     thumb.className = 'photo-group-thumb';
     thumb.src = items[i].url;
-    thumb.alt = '사진';
+    thumb.alt = T().altPhoto;
     thumb.loading = 'lazy';
     if (isLastVisibleWithMore) {
       const wrap = document.createElement('div');
@@ -2106,7 +2220,7 @@ async function sendChatMessage(){
       sendBtn.disabled = true;
       return;
     }
-    alert('메시지를 보내지 못했어요. 잠시 후 다시 시도해주세요.');
+    alert(T().alertMsgSendFail);
   } finally {
     if (!input.disabled) sendBtn.disabled = false;
   }
@@ -2227,15 +2341,8 @@ window.addEventListener('pagehide', () => {
 
 init();
 applyLang(currentLang);
-
-// 2026-08-24 신설: 신고 버튼 — 발견자도 소유자를 신고할 수 있어야 함(악용은 양방향)
-document.getElementById('acReportBtn').addEventListener('click', () => {
-  if (!currentCaseId) { alert('대화가 시작된 뒤에 신고할 수 있어요.'); return; }
-  aliascallOpenReport({ context: 'case', targetId: currentCaseId });
-});
 </script>
 </div><!-- /app-shell -->
 
-<script src="aliascall_report.js"></script>
 </body>
 </html>
