@@ -15,6 +15,80 @@
 
 const PUSH_FN_BASE = 'https://qmwaraittiurkynszjts.supabase.co/functions/v1';
 
+// =====================================================
+// 2026-08-25 신설: 다국어(한/영)
+// 이 파일은 index.html / my_account.html / registration_mockup.html /
+// incoming_calls.html 등 여러 화면이 공유함. 각 화면마다 I18N 사전이 따로 있고
+// 키 이름도 제각각이라, 화면 쪽 사전에 의존하면 한 곳만 고쳐도 다른 화면이 깨짐.
+// 그래서 이 파일 안에 자체 사전을 두고, 언어 선택값(localStorage)만 공유함.
+// =====================================================
+const PUSH_I18N = {
+  ko: {
+    notSupported: '이 브라우저는 알림 기능을 지원하지 않아요.',
+    moduleFail: '알림 모듈을 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+    iosGuideTitle: '📲 긴급 알림을 받으시려면',
+    iosGuideBody: '아이폰(사파리)은 <b>홈 화면에 추가</b>한 뒤에만 알림을 받을 수 있어요.<br><br>'
+      + '1. 하단의 <b>공유 버튼(⬆️)</b>을 눌러주세요<br>'
+      + '2. <b>"홈 화면에 추가"</b>를 선택해주세요<br>'
+      + '3. 홈 화면의 Aliascall 아이콘으로 다시 접속한 뒤, 이 화면에서 "긴급 알림 켜기"를 눌러주세요',
+    optInOnTitle: '🔔 긴급 알림이 켜져 있어요',
+    optInOnDesc: '앱을 안 보고 있어도, 15초 안에 응답이 없으면 알림으로 알려드려요.',
+    optOutBtn: '알림 끄기',
+    optInOffTitle: '🔔 긴급 알림을 켜두시면 좋아요',
+    optInOffDesc: '누군가 연결을 시도했는데 15초간 응답이 없으면, 앱을 안 보고 있어도 알림으로 알려드려요.',
+    optInBtn: '긴급 알림 켜기',
+    optInBtnBusy: '설정 중…',
+    soundLabel: '🔔 통화·문자 알림음',
+    soundSub: '전화벨, 문자 도착음이 울려요',
+    pushLabel: '🚨 긴급 알림 (푸시)',
+    pushSubDefault: '화면을 안 보고 있어도 알림이 와요',
+    pushSubUnsupported: '이 브라우저는 긴급 알림을 지원하지 않아요.',
+    pushSubAppModuleFail: '알림 모듈을 불러오지 못했어요. 앱을 다시 실행해주세요.',
+    pushSubIos: '아이폰은 홈 화면에 추가한 뒤 켤 수 있어요 (공유 버튼 → "홈 화면에 추가")',
+    pcNote: '💻 PC에서도 확실히 알림통지를 받으시려면 크롬의 백그라운드 실행 옵션을 켜두세요.',
+    alertModuleFail: '알림 모듈을 불러오지 못했어요.',
+    alertDeniedApp: '알림을 허용해주셔야 긴급 알림을 받을 수 있어요. 휴대폰 설정 → 앱 → Aliascall → 알림에서 다시 허용할 수 있어요.',
+    alertDeniedWeb: '알림을 허용해주셔야 긴급 알림을 받을 수 있어요. 브라우저 설정에서 다시 허용할 수 있어요.',
+    alertLoginNeeded: '로그인이 필요합니다.',
+    alertSetupFail: '긴급 알림 설정 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.',
+  },
+  en: {
+    notSupported: 'This browser does not support notifications.',
+    moduleFail: 'Could not load the notification module. Please try again shortly.',
+    iosGuideTitle: '📲 To receive urgent alerts',
+    iosGuideBody: 'On iPhone (Safari), alerts work only after you <b>add this to your Home Screen</b>.<br><br>'
+      + '1. Tap the <b>Share button (⬆️)</b> at the bottom<br>'
+      + '2. Choose <b>"Add to Home Screen"</b><br>'
+      + '3. Open Aliascall from the Home Screen icon, then tap "Turn on urgent alerts" here',
+    optInOnTitle: '🔔 Urgent alerts are on',
+    optInOnDesc: 'Even when the app is closed, we\u2019ll notify you if there\u2019s no reply within 15 seconds.',
+    optOutBtn: 'Turn off alerts',
+    optInOffTitle: '🔔 We recommend turning on urgent alerts',
+    optInOffDesc: 'If someone tries to reach you and there\u2019s no reply for 15 seconds, we\u2019ll notify you even when the app is closed.',
+    optInBtn: 'Turn on urgent alerts',
+    optInBtnBusy: 'Setting up…',
+    soundLabel: '🔔 Call & message sounds',
+    soundSub: 'Ringtone and message alert sounds will play',
+    pushLabel: '🚨 Urgent alerts (push)',
+    pushSubDefault: 'You\u2019ll be notified even when you\u2019re not looking at the screen',
+    pushSubUnsupported: 'This browser does not support urgent alerts.',
+    pushSubAppModuleFail: 'Could not load the notification module. Please restart the app.',
+    pushSubIos: 'On iPhone, add this to your Home Screen first (Share → "Add to Home Screen")',
+    pcNote: '💻 On a PC, turn on Chrome\u2019s background-run option to receive alerts reliably.',
+    alertModuleFail: 'Could not load the notification module.',
+    alertDeniedApp: 'You need to allow notifications to receive urgent alerts. You can allow them again in Settings → Apps → Aliascall → Notifications.',
+    alertDeniedWeb: 'You need to allow notifications to receive urgent alerts. You can allow them again in your browser settings.',
+    alertLoginNeeded: 'Please log in.',
+    alertSetupFail: 'Something went wrong while setting up urgent alerts. Please try again shortly.',
+  },
+};
+
+// 각 화면이 언어를 localStorage('aliascall_lang')에 저장하므로 그 값을 그대로 따라감
+function pushLang(){
+  return localStorage.getItem('aliascall_lang') === 'en' ? 'en' : 'ko';
+}
+function PT(){ return PUSH_I18N[pushLang()]; }
+
 // VAPID 공개키 (비밀키 아님 — 클라이언트에 노출돼도 안전. 서버의 VAPID_PRIVATE_KEY와 짝을 이룸)
 const VAPID_PUBLIC_KEY = 'BJxWgI0hDS1z_PoTu5T5VRkHl5Rti38Dih4Vx4vHryduNlgeuBCRQP1-Y8LiyeV9k4mOLCbZyMn3I_Ac-HnkpGA';
 
@@ -89,7 +163,7 @@ async function renderPushOptIn(sb, containerId){
   if (!el) return;
 
   if (!pushIsSupported()) {
-    el.innerHTML = '<div class="push-optin-note">이 브라우저는 알림 기능을 지원하지 않아요.</div>';
+    el.innerHTML = '<div class="push-optin-note">' + PT().notSupported + '</div>';
     return;
   }
 
@@ -103,20 +177,15 @@ async function renderPushOptIn(sb, containerId){
     if (_isIOS() && !_isStandalone()) {
       el.innerHTML = `
         <div class="push-optin-card push-optin-ios-guide">
-          <div class="push-optin-title">📲 긴급 알림을 받으시려면</div>
-          <div class="push-optin-desc">
-            아이폰(사파리)은 <b>홈 화면에 추가</b>한 뒤에만 알림을 받을 수 있어요.<br><br>
-            1. 하단의 <b>공유 버튼(⬆️)</b>을 눌러주세요<br>
-            2. <b>"홈 화면에 추가"</b>를 선택해주세요<br>
-            3. 홈 화면의 Aliascall 아이콘으로 다시 접속한 뒤, 이 화면에서 "긴급 알림 켜기"를 눌러주세요
-          </div>
+          <div class="push-optin-title">${PT().iosGuideTitle}</div>
+          <div class="push-optin-desc">${PT().iosGuideBody}</div>
         </div>`;
       return;
     }
 
     const reg = await registerAliascallServiceWorker();
     if (!reg) {
-      el.innerHTML = '<div class="push-optin-note">알림 모듈을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</div>';
+      el.innerHTML = '<div class="push-optin-note">' + PT().moduleFail + '</div>';
       return;
     }
 
@@ -127,9 +196,9 @@ async function renderPushOptIn(sb, containerId){
   if (isOn) {
     el.innerHTML = `
       <div class="push-optin-card push-optin-active">
-        <div class="push-optin-title">🔔 긴급 알림이 켜져 있어요</div>
-        <div class="push-optin-desc">앱을 안 보고 있어도, 15초 안에 응답이 없으면 알림으로 알려드려요.</div>
-        <button type="button" class="push-optin-btn push-optin-btn-off" id="pushOptOutBtn">알림 끄기</button>
+        <div class="push-optin-title">${PT().optInOnTitle}</div>
+        <div class="push-optin-desc">${PT().optInOnDesc}</div>
+        <button type="button" class="push-optin-btn push-optin-btn-off" id="pushOptOutBtn">${PT().optOutBtn}</button>
       </div>`;
     document.getElementById('pushOptOutBtn').addEventListener('click', () => unsubscribeAliascallPush(sb, containerId));
     return;
@@ -137,21 +206,21 @@ async function renderPushOptIn(sb, containerId){
 
   el.innerHTML = `
     <div class="push-optin-card">
-      <div class="push-optin-title">🔔 긴급 알림을 켜두시면 좋아요</div>
-      <div class="push-optin-desc">누군가 연결을 시도했는데 15초간 응답이 없으면, 앱을 안 보고 있어도 알림으로 알려드려요.</div>
-      <button type="button" class="push-optin-btn" id="pushOptInBtn">긴급 알림 켜기</button>
+      <div class="push-optin-title">${PT().optInOffTitle}</div>
+      <div class="push-optin-desc">${PT().optInOffDesc}</div>
+      <button type="button" class="push-optin-btn" id="pushOptInBtn">${PT().optInBtn}</button>
     </div>`;
   document.getElementById('pushOptInBtn').addEventListener('click', () => subscribeAliascallPush(sb, containerId));
 }
 
 async function subscribeAliascallPush(sb, containerId){
   const btn = document.getElementById('pushOptInBtn');
-  if (btn) { btn.disabled = true; btn.textContent = '설정 중…'; }
+  if (btn) { btn.disabled = true; btn.textContent = PT().optInBtnBusy; }
   const ok = await _subscribeCore(sb);
   if (ok) {
     await renderPushOptIn(sb, containerId); // "켜짐" 상태로 다시 그림
   } else if (btn) {
-    btn.disabled = false; btn.textContent = '긴급 알림 켜기';
+    btn.disabled = false; btn.textContent = PT().optInBtn;
   }
 }
 
@@ -174,14 +243,14 @@ async function _unsubscribeCore(sb){
 async function _subscribeCoreNative(sb){
   try {
     const P = _nativePush();
-    if (!P) { alert('알림 모듈을 불러오지 못했어요.'); return false; }
+    if (!P) { alert(PT().alertModuleFail); return false; }
 
     let perm = await P.checkPermissions();
     if (perm.receive !== 'granted') {
       perm = await P.requestPermissions();
     }
     if (perm.receive !== 'granted') {
-      alert('알림을 허용해주셔야 긴급 알림을 받을 수 있어요. 휴대폰 설정 → 앱 → Aliascall → 알림에서 다시 허용할 수 있어요.');
+      alert(PT().alertDeniedApp);
       return false;
     }
 
@@ -204,7 +273,7 @@ async function _subscribeCoreNative(sb){
     });
 
     const { data: { session } } = await sb.auth.getSession();
-    if (!session) { alert('로그인이 필요합니다.'); return false; }
+    if (!session) { alert(PT().alertLoginNeeded); return false; }
 
     const res = await fetch(`${PUSH_FN_BASE}/aliascall-push-subscribe`, {
       method: 'POST',
@@ -221,7 +290,7 @@ async function _subscribeCoreNative(sb){
     return true;
   } catch (e) {
     console.error('[push] 앱 알림 등록 실패', e);
-    alert('긴급 알림 설정 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.');
+    alert(PT().alertSetupFail);
     return false;
   }
 }
@@ -252,7 +321,7 @@ async function _subscribeCoreWeb(sb){
   try {
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
-      alert('알림을 허용해주셔야 긴급 알림을 받을 수 있어요. 브라우저 설정에서 다시 허용할 수 있어요.');
+      alert(PT().alertDeniedWeb);
       return false;
     }
 
@@ -263,7 +332,7 @@ async function _subscribeCoreWeb(sb){
     });
 
     const { data: { session } } = await sb.auth.getSession();
-    if (!session) { alert('로그인이 필요합니다.'); return false; }
+    if (!session) { alert(PT().alertLoginNeeded); return false; }
 
     const subJson = sub.toJSON();
     const res = await fetch(`${PUSH_FN_BASE}/aliascall-push-subscribe`, {
@@ -280,7 +349,7 @@ async function _subscribeCoreWeb(sb){
     return true;
   } catch (e) {
     console.error('[push] 구독 실패', e);
-    alert('긴급 알림 설정 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.');
+    alert(PT().alertSetupFail);
     return false;
   }
 }
@@ -406,19 +475,17 @@ async function renderNotifySettings(sb, containerId){
 
   const soundOn = aliascallIsSoundEnabled();
   const isApp = aliascallIsNativeApp();
-  let pushOn = false, pushDisabled = false, pushNote = '화면을 안 보고 있어도 알림이 와요';
+  let pushOn = false, pushDisabled = false, pushNote = PT().pushSubDefault;
 
   if (!pushIsSupported()) {
     pushDisabled = true;
-    pushNote = isApp
-      ? '알림 모듈을 불러오지 못했어요. 앱을 다시 실행해주세요.'
-      : '이 브라우저는 긴급 알림을 지원하지 않아요.';
+    pushNote = isApp ? PT().pushSubAppModuleFail : PT().pushSubUnsupported;
   } else if (isApp) {
     // ── 앱: FCM ──
     pushOn = await _nativePushIsOn();
   } else if (_isIOS() && !_isStandalone()) {
     pushDisabled = true;
-    pushNote = '아이폰은 홈 화면에 추가한 뒤 켤 수 있어요 (공유 버튼 → "홈 화면에 추가")';
+    pushNote = PT().pushSubIos;
   } else {
     const reg = await registerAliascallServiceWorker();
     if (reg) {
@@ -426,22 +493,22 @@ async function renderNotifySettings(sb, containerId){
       pushOn = !!(existingSub && Notification.permission === 'granted');
     } else {
       pushDisabled = true;
-      pushNote = '알림 모듈을 불러오지 못했어요. 잠시 후 다시 시도해주세요.';
+      pushNote = PT().moduleFail;
     }
   }
 
   // PC 안내문은 앱에서는 의미가 없으므로 숨김
   const pcNote = isApp ? '' :
-    '<div class="notify-pc-note">💻 PC에서도 확실히 알림통지를 받으시려면 크롬의 백그라운드 실행 옵션을 켜두세요.</div>';
+    '<div class="notify-pc-note">' + PT().pcNote + '</div>';
 
   el.innerHTML = `
     <div class="notify-settings">
       <div class="notify-row">
-        <div class="notify-label"><b>🔔 통화·문자 알림음</b><span class="notify-sub">전화벨, 문자 도착음이 울려요</span></div>
+        <div class="notify-label"><b>${PT().soundLabel}</b><span class="notify-sub">${PT().soundSub}</span></div>
         <button type="button" class="toggle-switch${soundOn ? ' on' : ''}" id="soundToggleBtn" role="switch" aria-checked="${soundOn}"><span class="toggle-knob"></span></button>
       </div>
       <div class="notify-row">
-        <div class="notify-label"><b>🚨 긴급 알림 (푸시)</b><span class="notify-sub">${pushNote}</span></div>
+        <div class="notify-label"><b>${PT().pushLabel}</b><span class="notify-sub">${pushNote}</span></div>
         <button type="button" class="toggle-switch${pushOn ? ' on' : ''}" id="pushToggleBtn" role="switch" aria-checked="${pushOn}"${pushDisabled ? ' disabled' : ''}><span class="toggle-knob"></span></button>
       </div>
       ${pcNote}
