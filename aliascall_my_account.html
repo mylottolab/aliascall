@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aliascall — 내 계정</title>
+<title>Aliascall — 내 계정 / My Account</title>
 <!-- 2026-08-19: 웹푸시(iOS 홈화면 추가 포함)를 위한 PWA 매니페스트 + 아이콘 링크 -->
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/aliascall_icon_192.png">
@@ -293,7 +293,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
 <header>
   <div class="brand-row">
-    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기" data-i18n-aria="backBtn">←</button>
     <a href="index.html" class="brand-home-link">
       <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
@@ -369,10 +369,10 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
          답장할 수 있음. (2026-08-20 (3차): "부재중 메시지" 배지 + 실시간 피드는 사건함으로 통합되어 제거) -->
     <div class="card" id="caseInboxCard">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-        <b style="font-size:14px;" id="caseInboxTitle">📂 진행 중인 소통함</b>
-        <button type="button" id="toggleClosedCasesBtn" style="background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;">지난 소통 보기</button>
+        <b style="font-size:14px;" id="caseInboxTitle" data-i18n="caseInboxOpen">📂 진행 중인 소통함</b>
+        <button type="button" id="toggleClosedCasesBtn" style="background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;" data-i18n="caseShowClosed">지난 소통 보기</button>
       </div>
-      <div id="caseInboxList"><div class="empty-regs" style="padding:14px;">불러오는 중…</div></div>
+      <div id="caseInboxList"><div class="empty-regs" style="padding:14px;" data-i18n="loading">불러오는 중…</div></div>
     </div>
 
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
@@ -507,8 +507,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 <!-- 2026-08-23 신설: QR 인쇄 — 사이즈 선택 + 가득채우기/견본섞기 (등록화면과 동일한 기능) -->
 <div class="print-modal-overlay" id="printModalOverlay">
   <div class="print-modal-box">
-    <div class="print-modal-title">🖨️ QR 인쇄</div>
-    <div class="section-label" style="margin-top:14px;">인쇄 사이즈 선택</div>
+    <div class="print-modal-title" data-i18n="printTitle">🖨️ QR 인쇄</div>
+    <div class="section-label" style="margin-top:14px;" data-i18n="printSizeLabel">인쇄 사이즈 선택</div>
     <div class="size-grid" id="printSizeGrid">
       <div class="size-card selected" data-size="3x3">3×3cm</div>
       <div class="size-card" data-size="4.5x4.5">4.5×4.5cm</div>
@@ -516,12 +516,12 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
       <div class="size-card" data-size="6x6">6×6cm</div>
     </div>
     <div class="print-mode-tabs">
-      <div class="print-mode-tab selected" id="printModeFillBtn">📄 이 사이즈로 가득채우기</div>
-      <div class="print-mode-tab" id="printModeSampleBtn">🔀 4개 사이즈 견본으로 섞어찍기</div>
+      <div class="print-mode-tab selected" id="printModeFillBtn" data-i18n="printModeFill">📄 이 사이즈로 가득채우기</div>
+      <div class="print-mode-tab" id="printModeSampleBtn" data-i18n="printModeMix">🔀 4개 사이즈 견본으로 섞어찍기</div>
     </div>
-    <div class="hint" id="printModalHint">A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. 인쇄 확정 시 100P가 차감됩니다.</div>
-    <button type="button" id="printModalConfirmBtn" style="width:100%; margin-top:14px; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px; font-size:13px; font-weight:700; cursor:pointer;">인쇄하기(100P)</button>
-    <button type="button" class="modal-cancel-btn-pm" id="printModalCloseBtn">취소</button>
+    <div class="hint" id="printModalHint" data-i18n="printHintFill">A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. 인쇄 확정 시 100P가 차감됩니다.</div>
+    <button type="button" id="printModalConfirmBtn" style="width:100%; margin-top:14px; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px; font-size:13px; font-weight:700; cursor:pointer;" data-i18n="printGoBtn">인쇄하기(100P)</button>
+    <button type="button" class="modal-cancel-btn-pm" id="printModalCloseBtn" data-i18n="cancel">취소</button>
   </div>
 </div>
 
@@ -531,8 +531,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
   <div class="ring-banner-inner">
     <div class="ring-avatar-mini" id="ringAvatar">📞</div>
     <div class="ring-banner-text">
-      <h3 id="ringTitle">연결 요청이 왔어요</h3>
-      <p id="ringSub">음성으로 연결 요청</p>
+      <h3 id="ringTitle" data-i18n="ringTitle">연결 요청이 왔어요</h3>
+      <p id="ringSub" data-i18n="ringSubVoice">음성으로 연결 요청</p>
     </div>
     <div class="ring-banner-btns">
       <button class="ring-btn-mini decline" id="declineBtn">✕</button>
@@ -545,8 +545,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
   <div class="ring-banner-inner">
     <div class="ring-avatar-mini">💬</div>
     <div class="ring-banner-text">
-      <h3>문자 채팅 요청이 왔어요</h3>
-      <p>탭해서 바로 대화를 시작하세요</p>
+      <h3 data-i18n="chatReqTitle">문자 채팅 요청이 왔어요</h3>
+      <p data-i18n="chatReqSub">탭해서 바로 대화를 시작하세요</p>
     </div>
     <div class="ring-banner-btns">
       <button class="ring-btn-mini decline" id="chatDismissBtn">✕</button>
@@ -560,7 +560,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 <div class="global-toast" id="globalToast">
   <button class="global-toast-close" id="globalToastClose">✕</button>
   <div class="global-toast-body" id="globalToastBody">
-    <div class="global-toast-title" id="globalToastTitle">💬 새 메시지가 왔어요</div>
+    <div class="global-toast-title" id="globalToastTitle" data-i18n="toastNewMsg">💬 새 메시지가 왔어요</div>
     <div class="global-toast-preview" id="globalToastPreview"></div>
   </div>
 </div>
@@ -583,6 +583,56 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 // ── 언어 전환 (KR/EN) ──
 const I18N = {
   ko: {
+    bonus100: '+100P 보너스',
+    bonus200: '+200P 보너스',
+    bonus300: '+300P 보너스',
+    subSummaryLabel: '결제 금액',
+    subPayBtn: '결제하고 계속하기',
+    backBtn: '뒤로가기',
+    loading: '불러오는 중…',
+    caseInboxOpen: '📂 진행 중인 소통함',
+    caseInboxClosed: '📂 지난 소통함',
+    caseShowClosed: '지난 소통 보기',
+    caseShowOpen: '진행중인 소통만 보기',
+    caseEmptyClosed: '지난 소통이 없어요.',
+    caseEmptyOpen: '확인해야 할 알림이 없어요.',
+    caseAlertTitle: '확인해야 할 알림입니다',
+    caseLoadFail: '불러오지 못했어요.',
+    caseMePrefix: '나: ',
+    caseNoMessage: '(메시지 없음)',
+    caseClosedBadge: '종료됨',
+    fallbackItem: '등록물',
+    ringTitle: '연결 요청이 왔어요',
+    chatReqTitle: '문자 채팅 요청이 왔어요',
+    chatReqSub: '탭해서 바로 대화를 시작하세요',
+    toastNewMsg: '💬 새 메시지가 왔어요',
+    toastFinderReplied: '👤 발견자가 답장했어요. 응답을 원하시면 여기를 클릭하세요',
+    photoPreview: '📷 사진을 보냈어요',
+    printTitle: '🖨️ QR 인쇄',
+    printSizeLabel: '인쇄 사이즈 선택',
+    printModeFill: '📄 이 사이즈로 가득채우기',
+    printModeMix: '🔀 4개 사이즈 견본으로 섞어찍기',
+    printHintFill: 'A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. 인쇄 확정 시 100P가 차감됩니다.',
+    printHintMix: '4개 사이즈를 한 장에 소량씩 섞어 찍어서, 잘라보고 어느 사이즈가 맞는지 먼저 확인하실 수 있어요. 인쇄 확정 시 100P가 차감됩니다.',
+    printGoBtn: '인쇄하기(100P)',
+    cancelBtn: '취소',
+    saving: '저장 중…',
+    saveBtn: '저장',
+    addFileBtn: '+ 추가하기',
+    memberFallback: '회원',
+    alertQrNotReady: 'QR 정보를 아직 못 불러왔어요. 잠시 후 다시 시도해주세요.',
+    alertLoginNeeded: '로그인이 필요합니다.',
+    alertTopUpPending: '충전이 아직 반영되지 않았을 수 있어요. 잠시 후 "인쇄하기" 버튼을 다시 눌러주세요.',
+    confirmGoTopUp: '포인트가 부족합니다. 충전하러 가시겠어요?',
+    alertPrintError: '인쇄 준비 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.',
+    confirmDeleteReg: '이 등록물을 삭제할까요? QR도 함께 무효화되며, 되돌릴 수 없습니다.',
+    confirmDeleteFile: '이 파일을 삭제할까요?',
+    alertDeleteFail: '삭제 실패: ',
+    alertUploadFail: '업로드 실패: ',
+    alertSaveFail: '저장 실패: ',
+    alertWithdrawDone: '탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사했습니다.',
+    alertWithdrawError: '탈퇴 처리 중 오류가 발생했어요: ',
+    deleteConfirmMismatch: '"{word}"를 정확히 입력해주세요.',
     loginNeeded: '로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.',
     pageTitle: '내 계정', nicknameLabel: '닉네임', pointsLabel: '보유 포인트', joinedLabel: '가입일',
     logoutBtn: '로그아웃', logoutConfirm: '로그아웃 하시겠어요?',
@@ -651,6 +701,56 @@ const I18N = {
     loginFailed: (msg) => '처리에 실패했어요: ' + msg,
   },
   en: {
+    bonus100: '+100P bonus',
+    bonus200: '+200P bonus',
+    bonus300: '+300P bonus',
+    subSummaryLabel: 'Amount to pay',
+    subPayBtn: 'Pay and continue',
+    backBtn: 'Back',
+    loading: 'Loading…',
+    caseInboxOpen: '📂 Active Conversations',
+    caseInboxClosed: '📂 Past Conversations',
+    caseShowClosed: 'View past',
+    caseShowOpen: 'View active only',
+    caseEmptyClosed: 'No past conversations.',
+    caseEmptyOpen: 'Nothing needs your attention.',
+    caseAlertTitle: 'Needs your attention',
+    caseLoadFail: 'Could not load.',
+    caseMePrefix: 'Me: ',
+    caseNoMessage: '(No messages)',
+    caseClosedBadge: 'Closed',
+    fallbackItem: 'Registered item',
+    ringTitle: 'Incoming connection request',
+    chatReqTitle: 'Text chat request',
+    chatReqSub: 'Tap to start the conversation',
+    toastNewMsg: '💬 New message',
+    toastFinderReplied: '👤 The finder replied. Tap here to respond.',
+    photoPreview: '📷 Sent a photo',
+    printTitle: '🖨️ Print QR',
+    printSizeLabel: 'Choose print size',
+    printModeFill: '📄 Fill the page with this size',
+    printModeMix: '🔀 Mixed sample sheet of 4 sizes',
+    printHintFill: 'One A4 sheet will be filled with the size you chose. 100P will be deducted when you confirm.',
+    printHintMix: 'Prints a few of each of the 4 sizes on one sheet so you can cut them out and see which size fits best. 100P will be deducted when you confirm.',
+    printGoBtn: 'Print (100P)',
+    cancelBtn: 'Cancel',
+    saving: 'Saving…',
+    saveBtn: 'Save',
+    addFileBtn: '+ Add',
+    memberFallback: 'Member',
+    alertQrNotReady: 'The QR data has not loaded yet. Please try again shortly.',
+    alertLoginNeeded: 'Please log in.',
+    alertTopUpPending: 'Your top-up may not have been applied yet. Please tap "Print" again shortly.',
+    confirmGoTopUp: 'You don\u2019t have enough points. Go to top up?',
+    alertPrintError: 'Something went wrong while preparing the print. Please try again shortly.',
+    confirmDeleteReg: 'Delete this item? Its QR code will stop working, and this cannot be undone.',
+    confirmDeleteFile: 'Delete this file?',
+    alertDeleteFail: 'Delete failed: ',
+    alertUploadFail: 'Upload failed: ',
+    alertSaveFail: 'Save failed: ',
+    alertWithdrawDone: 'Your account has been deleted. Thank you for using Aliascall.',
+    alertWithdrawError: 'Something went wrong while deleting your account: ',
+    deleteConfirmMismatch: 'Please type "{word}" exactly.',
     loginNeeded: 'Please log in. Log in with your nickname + password on the registration screen first.',
     pageTitle: 'My Account', nicknameLabel: 'Nickname', pointsLabel: 'Points balance', joinedLabel: 'Joined',
     logoutBtn: 'Log out', logoutConfirm: 'Are you sure you want to log out?',
@@ -681,7 +781,7 @@ const I18N = {
     descLabel: 'Description', save: 'Save',
     deleteConfirmTitle: 'Are you sure you want to delete your account?', deleteConfirmDesc: 'All account and registration data will be permanently deleted. This cannot be undone.',
     deleteReasonPlaceholder: 'Reason for leaving (optional)', deleteConfirmLabel: 'Type "DELETE" to continue',
-    deleteConfirmWord: '탈퇴합니다', confirmWithdraw: 'Confirm deletion',
+    deleteConfirmWord: 'DELETE', confirmWithdraw: 'Confirm deletion',
     catVehicle: 'Vehicle', catLostItem: 'Lost / at risk of theft', catVulnerable: 'Child · Dementia · Disability', catPet: 'Pet', catCallback: 'Callback contact', catMisc: 'Other item / incident',
     statusForever: '♾️ Permanent', statusForeverDesc: 'This is a safety category, so the connection stays active regardless of subscription status.',
     statusNoSub: '❓ No subscription info', statusNoSubDesc: 'Could not check subscription info.',
@@ -719,6 +819,9 @@ const I18N = {
     loginFailed: (msg) => 'Something went wrong: ' + msg,
   },
 };
+// 2026-08-25 신설: 화면이 그려진 뒤 JS가 만들어내는 문자열용 언어 헬퍼
+function T(){ return I18N[currentLang] || I18N.ko; }
+
 let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
 
 function applyLang(lang){
@@ -737,9 +840,42 @@ function applyLang(lang){
     const key = el.dataset.i18nPlaceholder;
     if (I18N[lang][key] !== undefined) el.placeholder = I18N[lang][key];
   });
+  // 2026-08-25 신설: 아이콘 버튼 툴팁과 스크린리더용 라벨
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+    const key = el.dataset.i18nTitle;
+    if (I18N[lang][key] !== undefined) el.title = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+    const key = el.dataset.i18nAria;
+    if (I18N[lang][key] !== undefined) el.setAttribute('aria-label', I18N[lang][key]);
+  });
   document.querySelectorAll('.lang-toggle button').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.lang === lang);
   });
+
+  // 2026-08-25 신설: 이미 그려진 목록들은 data-i18n이 없으므로 다시 그림.
+  // (사건함 제목/버튼은 상태에 따라 문구가 갈려서 별도 처리)
+  const inboxTitle = document.getElementById('caseInboxTitle');
+  if (inboxTitle && typeof showingClosedCases !== 'undefined') {
+    inboxTitle.textContent = showingClosedCases ? I18N[lang].caseInboxClosed : I18N[lang].caseInboxOpen;
+  }
+  const toggleBtn = document.getElementById('toggleClosedCasesBtn');
+  if (toggleBtn && typeof showingClosedCases !== 'undefined') {
+    toggleBtn.textContent = showingClosedCases ? I18N[lang].caseShowOpen : I18N[lang].caseShowClosed;
+  }
+  if (typeof loadCaseInbox === 'function' && document.getElementById('caseInboxCard')) loadCaseInbox();
+  // 등록물 목록도 카테고리 이름이 언어에 따라 달라지므로 다시 그림.
+  // 로그인 상태일 때만 (비로그인이면 목록 자체가 없음)
+  if (typeof loadMyRegistrations === 'function' && typeof sb !== 'undefined') {
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) loadMyRegistrations(session.user.id);
+    }).catch(() => {});
+  }
+
+  // 알림 설정 위젯(aliascall_push.js)도 자체 사전을 쓰므로 다시 그림
+  if (typeof renderNotifySettings === 'function' && document.getElementById('notifySettingsContainer')) {
+    renderNotifySettings(sb, 'notifySettingsContainer');
+  }
 }
 document.querySelectorAll('.lang-toggle button').forEach((btn) => {
   btn.addEventListener('click', () => applyLang(btn.dataset.lang));
@@ -832,7 +968,7 @@ function stopRingtone(){
 
 function showIncomingCall(row){
   pendingSession = row;
-  document.getElementById('ringSub').textContent = row.call_type === 'video' ? '영상으로 연결 요청' : '음성으로 연결 요청';
+  document.getElementById('ringSub').textContent = row.call_type === 'video' ? T().ringSubVideo : T().ringSubVoice;
   document.getElementById('ringBanner').classList.add('show');
   startRingtone();
   sb.from('registrations').select('category').eq('id', row.registration_id).maybeSingle().then(({ data: reg }) => {
@@ -900,10 +1036,10 @@ async function initIncomingWatcher(userId){
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'case_messages' }, (payload) => {
       const m = payload.new;
       if (m.sender === 'owner' || m.message_type === 'call_log') return;
-      const preview = m.message_type === 'photo' ? '📷 사진을 보냈어요' : (m.content || '').slice(0, 60);
+      const preview = m.message_type === 'photo' ? T().photoPreview : (m.content || '').slice(0, 60);
       playDoorbell();
       loadCaseInbox();
-      showGlobalToast('👤 발견자가 답장했어요. 응답을 원하시면 여기를 클릭하세요', preview, () => {
+      showGlobalToast(T().toastFinderReplied, preview, () => {
         window.location.href = 'aliascall_incoming_calls.html?case=' + m.case_id;
       });
     })
@@ -966,17 +1102,17 @@ async function loadCaseInbox(){
     if (!res.ok) throw new Error(data.error || '조회 실패');
 
     if (!data.cases || data.cases.length === 0) {
-      listEl.innerHTML = '<div class="empty-regs" style="padding:14px;">' + (showingClosedCases ? '지난 소통이 없어요.' : '확인해야 할 알림이 없어요.') + '</div>';
+      listEl.innerHTML = '<div class="empty-regs" style="padding:14px;">' + (showingClosedCases ? T().caseEmptyClosed : T().caseEmptyOpen) + '</div>';
       return;
     }
 
-    const alertTitleHtml = !showingClosedCases ? '<div class="case-inbox-alert-title">확인해야 할 알림입니다</div>' : '';
+    const alertTitleHtml = !showingClosedCases ? '<div class="case-inbox-alert-title">' + T().caseAlertTitle + '</div>' : '';
     const isFirstLoad = Object.keys(caseInboxSnapshot).length === 0;
     listEl.innerHTML = alertTitleHtml + data.cases.map((c) => {
       const emoji = CASE_CATEGORY_EMOJI[c.category] || '❓';
       const preview = c.lastMessage
-        ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? '나: ' : '') + c.lastMessage.preview)
-        : '(메시지 없음)';
+        ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? T().caseMePrefix : '') + c.lastMessage.preview)
+        : T().caseNoMessage;
       const snapKey = c.lastMessage ? c.lastMessage.createdAt + '|' + c.lastMessage.preview : '';
       const isNewActivity = !isFirstLoad && c.lastMessage && c.lastMessage.sender !== 'owner' && caseInboxSnapshot[c.caseId] !== snapKey;
       caseInboxSnapshot[c.caseId] = snapKey;
@@ -989,12 +1125,12 @@ async function loadCaseInbox(){
           ? d.toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: true })
           : d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
       })() : '';
-      const closedBadge = c.status === 'closed' ? '<span class="ci-badge">종료됨</span>' : '';
+      const closedBadge = c.status === 'closed' ? '<span class="ci-badge">' + T().caseClosedBadge + '</span>' : '';
       return `
         <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}${isNewActivity ? ' new-highlight' : ''}" data-case-id="${c.caseId}">
           <span class="ci-emoji">${emoji}</span>
           <span class="ci-body">
-            <span class="ci-title">${c.registrationTitle || '등록물'} ${closedBadge}</span>
+            <span class="ci-title">${c.registrationTitle || T().fallbackItem} ${closedBadge}</span>
             <span class="ci-preview">${preview}</span>
           </span>
           <span class="ci-time">${time}</span>
@@ -1008,13 +1144,13 @@ async function loadCaseInbox(){
     });
   } catch (e) {
     console.error('[case] 사건함 조회 실패', e);
-    listEl.innerHTML = '<div class="empty-regs" style="padding:14px;">불러오지 못했어요.</div>';
+    listEl.innerHTML = '<div class="empty-regs" style="padding:14px;">' + T().caseLoadFail + '</div>';
   }
 }
 document.getElementById('toggleClosedCasesBtn').addEventListener('click', () => {
   showingClosedCases = !showingClosedCases;
-  document.getElementById('toggleClosedCasesBtn').textContent = showingClosedCases ? '진행중인 소통만 보기' : '지난 소통 보기';
-  document.getElementById('caseInboxTitle').textContent = showingClosedCases ? '📂 지난 소통함' : '📂 진행 중인 소통함';
+  document.getElementById('toggleClosedCasesBtn').textContent = showingClosedCases ? T().caseShowOpen : T().caseShowClosed;
+  document.getElementById('caseInboxTitle').textContent = showingClosedCases ? T().caseInboxClosed : T().caseInboxOpen;
   loadCaseInbox();
 });
 
@@ -1126,7 +1262,7 @@ function updateNewSubPrice(){
     paypalContainer.style.display = 'block';
     renderPayPalButtons(sb, 'newSubPaypalContainer', { purpose: 'subscription', months: newSubMonths }, onNewSubPaymentSuccess);
   } else {
-    priceEl.textContent = p.krw.toLocaleString() + (currentLang === 'ko' ? '원' : '');
+    priceEl.textContent = p.krw.toLocaleString() + (currentLang === 'ko' ? '원' : ' KRW');
     payBtn.style.display = 'block';
     paypalContainer.style.display = 'none';
     paypalContainer.innerHTML = '';
@@ -1157,7 +1293,7 @@ document.getElementById('newSubPayBtn').addEventListener('click', async () => {
     purpose: 'subscription',
     price: p.krw,
     goodname: 'Aliascall 수신서비스 구독 (' + (newSubMonths / 12) + '년)',
-    buyername: profile?.nickname || '회원',
+    buyername: profile?.nickname || T().memberFallback,
     months: newSubMonths,
     returnPage: 'aliascall_my_account.html',
   });
@@ -1180,7 +1316,15 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 
 // ── 내 등록물 목록 (구독은 이제 계정단위 — loadSubscriptionStatus() 참고) ──
 const CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
-const CATEGORY_LABEL = { vehicle:'차량', lost_item:'분실·도난 우려 물품', vulnerable_person:'아동·치매 어르신·장애우', pet:'반려동물', callback_contact:'부재중 연락', misc_incident:'기타 물품·사건' };
+// 2026-08-25: 카테고리 이름을 언어별로. const는 재할당이 안 되므로 함수로 감싸서
+// 언어를 바꿀 때마다 그 시점의 언어에 맞는 표를 돌려주도록 함.
+const CATEGORY_LABEL_I18N = {
+  ko: { vehicle:'차량', lost_item:'분실·도난 우려 물품', vulnerable_person:'아동·치매 어르신·장애우', pet:'반려동물', callback_contact:'부재중 연락', misc_incident:'기타 물품·사건' },
+  en: { vehicle:'Vehicle', lost_item:'Valuables at risk of loss or theft', vulnerable_person:'Child, elderly, or person with a disability', pet:'Pet', callback_contact:'Callback contact', misc_incident:'Other item or incident' },
+};
+function CATEGORY_LABEL_OF(cat){
+  return (CATEGORY_LABEL_I18N[currentLang] || CATEGORY_LABEL_I18N.ko)[cat];
+}
 const NEVER_EXPIRES = ['vulnerable_person', 'pet'];
 
 let renewMonths = 12;
@@ -1244,7 +1388,7 @@ async function loadMyRegistrations(userId){
   }
 
   container.innerHTML = data.map((r) => {
-    const label = r.search_key || r.title || CATEGORY_LABEL[r.category] || '등록물';
+    const label = r.search_key || r.title || CATEGORY_LABEL_OF(r.category) || T().fallbackItem;
     const foreverBadge = NEVER_EXPIRES.includes(r.category)
       ? '<span class="reg-status forever">' + I18N[currentLang].statusForever + '</span>' : '';
 
@@ -1378,14 +1522,14 @@ let printModalTarget = null; // { regId, name, token }
 const PENDING_PRINT_KEY = 'aliascall_pending_print'; // 2026-08-23 신설: 충전화면 다녀온 뒤 복귀용 저장키
 
 function openPrintModal(regId, name, token){
-  if (!token) { alert('QR 정보를 아직 못 불러왔어요. 잠시 후 다시 시도해주세요.'); return; }
+  if (!token) { alert(T().alertQrNotReady); return; }
   printModalTarget = { regId, name, token };
   printModalSize = '3x3';
   printModalMode = 'fill';
   document.querySelectorAll('#printSizeGrid .size-card').forEach((c) => c.classList.toggle('selected', c.dataset.size === printModalSize));
   document.getElementById('printModeFillBtn').classList.add('selected');
   document.getElementById('printModeSampleBtn').classList.remove('selected');
-  document.getElementById('printModalHint').textContent = 'A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. 인쇄 확정 시 100P가 차감됩니다.';
+  document.getElementById('printModalHint').textContent = T().printHintFill;
   document.getElementById('printModalOverlay').classList.add('show');
 }
 function closePrintModal(){
@@ -1409,7 +1553,7 @@ document.getElementById('printModeFillBtn').addEventListener('click', () => {
   document.getElementById('printModeSampleBtn').classList.remove('selected');
   document.getElementById('printSizeGrid').classList.remove('disabled'); // 2026-08-23 신설
   document.querySelectorAll('#printSizeGrid .size-card').forEach((c) => c.classList.toggle('selected', c.dataset.size === printModalSize));
-  document.getElementById('printModalHint').textContent = 'A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. 인쇄 확정 시 100P가 차감됩니다.';
+  document.getElementById('printModalHint').textContent = T().printHintFill;
 });
 document.getElementById('printModeSampleBtn').addEventListener('click', () => {
   printModalMode = 'sample';
@@ -1417,7 +1561,7 @@ document.getElementById('printModeSampleBtn').addEventListener('click', () => {
   document.getElementById('printModeFillBtn').classList.remove('selected');
   document.getElementById('printSizeGrid').classList.add('disabled'); // 2026-08-23 신설: 4종혼합에선 사이즈 선택 자체가 무의미하므로 흐리게 처리
   document.querySelectorAll('#printSizeGrid .size-card').forEach((c) => c.classList.remove('selected')); // 2026-08-23 신설: 선택 표시 해제
-  document.getElementById('printModalHint').textContent = '4개 사이즈를 한 장에 소량씩 섞어 찍어서, 잘라보고 어느 사이즈가 맞는지 먼저 확인하실 수 있어요. 인쇄 확정 시 100P가 차감됩니다.';
+  document.getElementById('printModalHint').textContent = T().printHintMix;
 });
 
 function buildPrintCell(mm){
@@ -1484,11 +1628,11 @@ async function confirmPrintAndCharge({ silent } = {}){
   if (!printModalTarget) return;
   const { regId, token } = printModalTarget;
   const btn = document.getElementById('printModalConfirmBtn');
-  if (!silent) { btn.disabled = true; btn.textContent = '처리 중…'; }
+  if (!silent) { btn.disabled = true; btn.textContent = T().processing; }
 
   const { data: { session } } = await sb.auth.getSession();
   if (!session) {
-    if (!silent) { alert('로그인이 필요합니다.'); btn.disabled = false; btn.textContent = '인쇄하기(100P)'; }
+    if (!silent) { alert(T().alertLoginNeeded); btn.disabled = false; btn.textContent = T().printGoBtn; }
     return;
   }
 
@@ -1519,9 +1663,9 @@ async function confirmPrintAndCharge({ silent } = {}){
       if (silent) {
         // 2026-08-23 신설: 충전 후 자동복귀했는데도 여전히 부족한 경우(반영 지연 등) — 조용히
         // 실패시키지 않고 모달을 다시 열어서 손님이 상황을 알 수 있게 함
-        alert('충전이 아직 반영되지 않았을 수 있어요. 잠시 후 "인쇄하기" 버튼을 다시 눌러주세요.');
+        alert(T().alertTopUpPending);
         document.getElementById('printModalOverlay').classList.add('show');
-      } else if (confirm('포인트가 부족합니다. 충전하러 가시겠어요?')) {
+      } else if (confirm(T().confirmGoTopUp)) {
         // 2026-08-23 신설: 충전화면 다녀온 뒤 이 인쇄 작업으로 자동 복귀하도록 상태 저장(등록화면의
         // "충전 후 복귀" 패턴과 동일한 방식) — 이걸 안 하면 결제하고 돌아왔을 때 손님이 이 화면을
         // 다시 못 찾고 이탈할 수 있음
@@ -1535,10 +1679,10 @@ async function confirmPrintAndCharge({ silent } = {}){
         closePrintModal();
       }
     } else if (!silent) {
-      alert('인쇄 준비 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.');
+      alert(T().alertPrintError);
     }
   } finally {
-    if (!silent) { btn.disabled = false; btn.textContent = '인쇄하기(100P)'; }
+    if (!silent) { btn.disabled = false; btn.textContent = T().printGoBtn; }
   }
 }
 
@@ -1587,9 +1731,9 @@ document.getElementById('mediaLightboxOverlay').addEventListener('click', (e) =>
 
 // ── 등록물 삭제 ──
 async function deleteRegistration(regId, userId){
-  if (!confirm('이 등록물을 삭제할까요? QR도 함께 무효화되며, 되돌릴 수 없습니다.')) return;
+  if (!confirm(T().confirmDeleteReg)) return;
   const { error } = await sb.from('registrations').delete().eq('id', regId);
-  if (error) { alert('삭제 실패: ' + error.message); return; }
+  if (error) { alert(T().alertDeleteFail + error.message); return; }
   await loadMyRegistrations(userId);
 }
 
@@ -1667,7 +1811,7 @@ function renderEditMediaGrid(){
   const filtered = currentEditMedia.filter((m) => m.media_type === editMediaType);
 
   if (filtered.length === 0) {
-    grid.innerHTML = '<div class="edit-media-empty">등록된 파일이 없어요.</div>';
+    grid.innerHTML = '<div class="edit-media-empty">' + T().noFiles + '</div>';
     return;
   }
 
@@ -1691,7 +1835,7 @@ function renderEditMediaGrid(){
 }
 
 async function deleteEditMedia(mediaId){
-  if (!confirm('이 파일을 삭제할까요?')) return;
+  if (!confirm(T().confirmDeleteFile)) return;
   const m = currentEditMedia.find((x) => x.id === mediaId);
   try {
     if (m) await sb.storage.from('aliascall-media').remove([m.storage_path]);
@@ -1699,7 +1843,7 @@ async function deleteEditMedia(mediaId){
     currentEditMedia = currentEditMedia.filter((x) => x.id !== mediaId);
     renderEditMediaGrid();
   } catch (e) {
-    alert('삭제 실패: ' + e.message);
+    alert(T().alertDeleteFail + e.message);
   }
 }
 
@@ -1723,7 +1867,7 @@ document.getElementById('editMediaFileInput').addEventListener('change', async (
   if (!file || !editTargetRegId) return;
 
   const addBtn = document.getElementById('editMediaAddBtn');
-  addBtn.textContent = '업로드 중…';
+  addBtn.textContent = T().uploading;
   try {
     const path = editTargetRegId + '/' + Date.now() + '-' + file.name;
     const { error: upErr } = await sb.storage.from('aliascall-media').upload(path, file);
@@ -1737,16 +1881,16 @@ document.getElementById('editMediaFileInput').addEventListener('change', async (
     currentEditMedia.push(inserted);
     renderEditMediaGrid();
   } catch (err) {
-    alert('업로드 실패: ' + err.message);
+    alert(T().alertUploadFail + err.message);
   } finally {
-    addBtn.textContent = '+ 추가하기';
+    addBtn.textContent = T().addFileBtn;
     e.target.value = '';
   }
 });
 
 document.getElementById('editRegSaveBtn').addEventListener('click', async () => {
   const btn = document.getElementById('editRegSaveBtn');
-  btn.disabled = true; btn.textContent = '저장 중…';
+  btn.disabled = true; btn.textContent = T().saving;
   try {
     const description = document.getElementById('editDescription').value.trim();
     let searchKey = description.slice(0, 40);
@@ -1782,9 +1926,9 @@ document.getElementById('editRegSaveBtn').addEventListener('click', async () => 
     const { data: { session } } = await sb.auth.getSession();
     await loadMyRegistrations(session.user.id);
   } catch (e) {
-    alert('저장 실패: ' + e.message);
+    alert(T().alertSaveFail + e.message);
   } finally {
-    btn.disabled = false; btn.textContent = '저장';
+    btn.disabled = false; btn.textContent = T().saveBtn;
   }
 });
 
@@ -1850,7 +1994,7 @@ document.getElementById('renewConfirmBtn').addEventListener('click', async () =>
     purpose: 'subscription',
     price: p.krw,
     goodname: 'Aliascall 수신서비스 구독연장 (' + (renewMonths / 12) + '년)',
-    buyername: profile?.nickname || '회원',
+    buyername: profile?.nickname || T().memberFallback,
     months: renewMonths,
     returnPage: 'aliascall_my_account.html',
   });
@@ -1873,12 +2017,17 @@ document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
 });
 
 document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
-  if (document.getElementById('deleteConfirmText').value.trim() !== '탈퇴합니다') {
-    alert('"탈퇴합니다"를 정확히 입력해주세요.');
+  // 2026-08-25 수정: 확인 단어를 언어별로. 예전엔 '탈퇴합니다'로 고정돼 있어서
+  // 한글 자판이 없는 영어권 사용자는 계정 삭제 자체가 불가능했음.
+  // (구글 플레이는 계정 삭제 경로 제공을 필수로 요구함)
+  const confirmWord = T().deleteConfirmWord;
+  const typed = document.getElementById('deleteConfirmText').value.trim();
+  if (typed.toUpperCase() !== confirmWord.toUpperCase()) {
+    alert(T().deleteConfirmMismatch.replace('{word}', confirmWord));
     return;
   }
   const btn = document.getElementById('confirmDeleteBtn');
-  btn.disabled = true; btn.textContent = '처리 중…';
+  btn.disabled = true; btn.textContent = T().processing;
 
   try {
     const { data: { session } } = await sb.auth.getSession();
@@ -1891,11 +2040,11 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
     if (!resp.ok) throw new Error(data.error || '탈퇴 처리에 실패했습니다.');
 
     await sb.auth.signOut();
-    alert('탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사했습니다.');
+    alert(T().alertWithdrawDone);
     window.location.href = 'aliascall_registration_mockup.html';
   } catch (e) {
-    alert('탈퇴 처리 중 오류가 발생했어요: ' + e.message);
-    btn.disabled = false; btn.textContent = '탈퇴 확정';
+    alert(T().alertWithdrawError + e.message);
+    btn.disabled = false; btn.textContent = T().confirmWithdraw;
   }
 });
 </script>
