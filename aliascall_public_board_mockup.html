@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aliascall — 찾습니다 게시판</title>
+<title>Aliascall — 찾습니다 게시판 / Lost &amp; Found Board</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -32,6 +32,11 @@ header{ padding:20px 24px; border-bottom:1px solid var(--line); background:var(-
 .public-badge::before{ content:''; width:6px; height:6px; border-radius:50%; background:var(--found); }
 .guide-nav-link{ font-size:12px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:20px; padding:7px 13px; text-decoration:none; }
 .guide-nav-link:hover{ background:var(--teal); color:#fff; }
+
+/* 2026-08-25 신설: 언어 전환 (헤더가 흰 배경이라 index.html과 색을 달리함) */
+.lang-toggle{ display:flex; gap:4px; background:var(--teal-tint); border-radius:20px; padding:3px; }
+.lang-toggle button{ border:none; background:none; color:var(--ink-soft); font-size:11px; font-weight:700; padding:5px 10px; border-radius:16px; cursor:pointer; }
+.lang-toggle button.active{ background:var(--teal); color:#fff; }
 
 main{ max-width:600px; margin:0 auto; padding:24px 20px 60px; }
 .page-title{ font-size:24px; margin-bottom:4px; }
@@ -88,43 +93,47 @@ main{ max-width:600px; margin:0 auto; padding:24px 20px 60px; }
 <header>
   <div class="brand-row">
     <div class="brand-left">
-      <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+      <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기" data-i18n-aria="backBtn">←</button>
       <a href="index.html" class="brand-home-link">
         <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
       </a>
     </div>
-    <div class="public-badge">로그인 없이 열람 가능</div>
-    <a href="aliascall_guide.html" class="guide-nav-link" target="_blank">📖 사용설명서</a>
+    <div class="public-badge" data-i18n="publicBadge">로그인 없이 열람 가능</div>
+    <div class="lang-toggle">
+      <button type="button" data-lang="ko">KR</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+    <a href="aliascall_guide.html" class="guide-nav-link" target="_blank" data-i18n="guideLink">📖 사용설명서</a>
   </div>
 </header>
 
 <main>
-  <div class="page-title">찾습니다 게시판</div>
-  <div class="page-desc">분실·실종 소식을 국가별로 확인하고 제보할 수 있는 공익 게시판입니다. 실제 연락처는 노출되지 않습니다.</div>
+  <div class="page-title" data-i18n="pageTitle">찾습니다 게시판</div>
+  <div class="page-desc" data-i18n="pageDesc">분실·실종 소식을 국가별로 확인하고 제보할 수 있는 공익 게시판입니다. 실제 연락처는 노출되지 않습니다.</div>
 
   <div class="control-row">
     <select class="country-select" id="countrySelect">
-      <option value="KR">🇰🇷 대한민국</option>
-      <option value="JP">🇯🇵 일본</option>
-      <option value="US">🇺🇸 미국</option>
-      <option value="GB">🇬🇧 영국</option>
-      <option value="FR">🇫🇷 프랑스</option>
-      <option value="IT">🇮🇹 이탈리아</option>
-      <option value="DE">🇩🇪 독일</option>
+      <option value="KR" data-i18n="countryKR">🇰🇷 대한민국</option>
+      <option value="JP" data-i18n="countryJP">🇯🇵 일본</option>
+      <option value="US" data-i18n="countryUS">🇺🇸 미국</option>
+      <option value="GB" data-i18n="countryGB">🇬🇧 영국</option>
+      <option value="FR" data-i18n="countryFR">🇫🇷 프랑스</option>
+      <option value="IT" data-i18n="countryIT">🇮🇹 이탈리아</option>
+      <option value="DE" data-i18n="countryDE">🇩🇪 독일</option>
     </select>
     <div class="filter-row" id="filterRow">
-      <div class="filter-chip active" data-cat="all">전체</div>
-      <div class="filter-chip" data-cat="vulnerable_person">🧑‍🦳 아동·노인</div>
-      <div class="filter-chip" data-cat="pet">🐾 반려동물</div>
-      <div class="filter-chip" data-cat="lost_item">🎒 분실물</div>
-      <div class="filter-chip" data-cat="misc_incident">❓ 기타</div>
+      <div class="filter-chip active" data-cat="all" data-i18n="cat_all">전체</div>
+      <div class="filter-chip" data-cat="vulnerable_person" data-i18n="cat_vulnerable_person">🧑‍🦳 아동·노인</div>
+      <div class="filter-chip" data-cat="pet" data-i18n="cat_pet">🐾 반려동물</div>
+      <div class="filter-chip" data-cat="lost_item" data-i18n="cat_lost_item">🎒 분실물</div>
+      <div class="filter-chip" data-cat="misc_incident" data-i18n="cat_misc_incident">❓ 기타</div>
     </div>
   </div>
 
   <div class="status-tabs">
-    <div class="status-tab active" data-status="searching">찾는 중</div>
-    <div class="status-tab" data-status="found">발견됨</div>
+    <div class="status-tab active" data-status="searching" data-i18n="statusSearching">찾는 중</div>
+    <div class="status-tab" data-status="found" data-i18n="statusFound">발견됨</div>
   </div>
 
   <div id="postsArea"></div>
@@ -133,27 +142,21 @@ main{ max-width:600px; margin:0 auto; padding:24px 20px 60px; }
 <div class="detail-overlay" id="detailOverlay">
   <div class="detail-sheet">
     <button class="detail-close" id="detailClose">✕</button>
-    <div class="detail-emoji" id="dEmoji">🧑‍🦳</div>
-    <div class="detail-title" id="dTitle">7세 남아 실종</div>
-    <div class="status-ribbon searching" id="dStatus">찾는 중</div>
+    <div class="detail-emoji" id="dEmoji"></div>
+    <div class="detail-title" id="dTitle"></div>
+    <div class="status-ribbon searching" id="dStatus"></div>
 
     <div class="sixw-grid">
-      <div class="sixw-item"><div class="sixw-label">언제</div><div class="sixw-value" id="dWhen">2026-08-14 오후 3시경</div></div>
-      <div class="sixw-item"><div class="sixw-label">어디서</div><div class="sixw-value" id="dWhere">서울 마포구 망원동 한강공원 인근</div></div>
-      <div class="sixw-item"><div class="sixw-label">어떻게</div><div class="sixw-value" id="dHow">놀이터에서 놀던 중 보호자가 잠시 눈을 뗀 사이 사라짐</div></div>
-      <div class="sixw-item"><div class="sixw-label">특징</div><div class="sixw-value" id="dDesc">파란색 반팔티, 흰색 반바지 착용. 키 120cm 가량, 밝은 갈색 머리</div></div>
-      <div class="sixw-item"><div class="sixw-label">목격시</div><div class="sixw-value">아래 버튼으로 실제 번호 노출 없이 바로 연락하실 수 있어요</div></div>
+      <div class="sixw-item"><div class="sixw-label" data-i18n="labelWhen">언제</div><div class="sixw-value" id="dWhen"></div></div>
+      <div class="sixw-item"><div class="sixw-label" data-i18n="labelWhere">어디서</div><div class="sixw-value" id="dWhere"></div></div>
+      <div class="sixw-item"><div class="sixw-label" data-i18n="labelHow">어떻게</div><div class="sixw-value" id="dHow"></div></div>
+      <div class="sixw-item"><div class="sixw-label" data-i18n="labelDesc">특징</div><div class="sixw-value" id="dDesc"></div></div>
+      <div class="sixw-item"><div class="sixw-label" data-i18n="labelIfSeen">목격시</div><div class="sixw-value" data-i18n="ifSeenDesc">아래 버튼으로 실제 번호 노출 없이 바로 연락하실 수 있어요</div></div>
     </div>
 
     <div class="contact-cta">
-      <p>여기서 연락하면 실제 전화번호는 보이지 않습니다. 브라우저에서 바로 음성·영상으로 연결됩니다.</p>
-      <button id="contactBtn">제보하기 · 지금 연결하기</button>
-    </div>
-
-    <!-- 2026-08-24 신설: 신고 버튼 -->
-    <div style="text-align:center; margin-top:14px;">
-      <button type="button" id="acReportBtn"
-        style="background:none; border:none; color:var(--danger); font-size:12.5px; cursor:pointer; padding:6px 10px;">🚩 이 게시물 신고하기</button>
+      <p data-i18n="ctaDesc">여기서 연락하면 실제 전화번호는 보이지 않습니다. 브라우저에서 바로 음성·영상으로 연결됩니다.</p>
+      <button id="contactBtn" data-i18n="contactBtn">제보하기 · 지금 연결하기</button>
     </div>
   </div>
 </div>
@@ -163,8 +166,85 @@ const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ── 언어 전환 (KR/EN) ──
+// 2026-08-25 신설: 이 화면은 로그인 없이 누구나 볼 수 있어서 해외 유입 가능성이 가장 큼.
+// 언어 선택값은 다른 화면과 동일하게 localStorage('aliascall_lang')를 공유함.
+const I18N = {
+  ko: {
+    publicBadge: '로그인 없이 열람 가능',
+    guideLink: '📖 사용설명서',
+    backBtn: '뒤로가기',
+    pageTitle: '찾습니다 게시판',
+    pageDesc: '분실·실종 소식을 국가별로 확인하고 제보할 수 있는 공익 게시판입니다. 실제 연락처는 노출되지 않습니다.',
+    countryKR: '🇰🇷 대한민국', countryJP: '🇯🇵 일본', countryUS: '🇺🇸 미국', countryGB: '🇬🇧 영국',
+    countryFR: '🇫🇷 프랑스', countryIT: '🇮🇹 이탈리아', countryDE: '🇩🇪 독일',
+    cat_all: '전체', cat_vulnerable_person: '🧑‍🦳 아동·노인', cat_pet: '🐾 반려동물',
+    cat_lost_item: '🎒 분실물', cat_misc_incident: '❓ 기타',
+    statusSearching: '찾는 중', statusFound: '발견됨',
+    labelWhen: '언제', labelWhere: '어디서', labelHow: '어떻게', labelDesc: '특징', labelIfSeen: '목격시',
+    ifSeenDesc: '아래 버튼으로 실제 번호 노출 없이 바로 연락하실 수 있어요',
+    ctaDesc: '여기서 연락하면 실제 전화번호는 보이지 않습니다. 브라우저에서 바로 음성·영상으로 연결됩니다.',
+    contactBtn: '제보하기 · 지금 연결하기',
+    loading: '불러오는 중…',
+    emptyList: '해당하는 게시물이 없습니다',
+    unknownTime: '시점 미상', unknownPlace: '위치 미상',
+    fallbackPost: '게시물',
+    fb_vulnerable_person: '실종', fb_pet: '반려동물 실종', fb_lost_item: '분실물', fb_misc_incident: '기타 사건',
+    contactAlert: '브라우저에서 음성/영상 연결이 시작됩니다. (WebRTC, 실제번호 비노출)',
+  },
+  en: {
+    publicBadge: 'Viewable without logging in',
+    guideLink: '📖 User Guide',
+    backBtn: 'Back',
+    pageTitle: 'Lost & Found Board',
+    pageDesc: 'A public board where you can browse missing-person and lost-item reports by country, and send a tip. Real contact numbers are never shown.',
+    countryKR: '🇰🇷 South Korea', countryJP: '🇯🇵 Japan', countryUS: '🇺🇸 United States', countryGB: '🇬🇧 United Kingdom',
+    countryFR: '🇫🇷 France', countryIT: '🇮🇹 Italy', countryDE: '🇩🇪 Germany',
+    cat_all: 'All', cat_vulnerable_person: '🧑‍🦳 Child · Elderly', cat_pet: '🐾 Pet',
+    cat_lost_item: '🎒 Lost item', cat_misc_incident: '❓ Other',
+    statusSearching: 'Searching', statusFound: 'Found',
+    labelWhen: 'When', labelWhere: 'Where', labelHow: 'How', labelDesc: 'Details', labelIfSeen: 'If seen',
+    ifSeenDesc: 'Use the button below to get in touch — no phone number is revealed',
+    ctaDesc: 'Contacting from here never reveals a real phone number. Voice and video connect right in your browser.',
+    contactBtn: 'Send a tip · Connect now',
+    loading: 'Loading…',
+    emptyList: 'No matching posts',
+    unknownTime: 'Time unknown', unknownPlace: 'Location unknown',
+    fallbackPost: 'Post',
+    fb_vulnerable_person: 'Missing person', fb_pet: 'Missing pet', fb_lost_item: 'Lost item', fb_misc_incident: 'Other incident',
+    contactAlert: 'A voice/video connection will start in your browser. (WebRTC — real numbers stay hidden)',
+  },
+};
+
+let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
+function T(){ return I18N[currentLang] || I18N.ko; }
+
+function applyLang(lang){
+  currentLang = lang;
+  localStorage.setItem('aliascall_lang', lang);
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.dataset.i18n;
+    if (I18N[lang][key] !== undefined) el.textContent = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+    const key = el.dataset.i18nAria;
+    if (I18N[lang][key] !== undefined) el.setAttribute('aria-label', I18N[lang][key]);
+  });
+  document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+  // 목록과 상세는 JS가 그리므로 다시 그림
+  renderPosts();
+}
+document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+});
+
+
 const CATEGORY_EMOJI = { vulnerable_person:'🧑‍🦳', pet:'🐾', lost_item:'🎒', misc_incident:'❓' };
-const CATEGORY_TITLE_FALLBACK = { vulnerable_person:'실종', pet:'반려동물 실종', lost_item:'분실물', misc_incident:'기타 사건' };
+// 2026-08-25: 등록물 제목이 없을 때 쓰는 대체 이름도 언어별로
+function CATEGORY_TITLE_FALLBACK_OF(cat){ return T()['fb_' + cat]; }
 
 let currentCat = 'all';
 let currentStatus = 'searching';
@@ -188,20 +268,20 @@ async function fetchPosts(){
 }
 
 function fmtWhen(iso){
-  if (!iso) return '시점 미상';
+  if (!iso) return T().unknownTime;
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return '시점 미상';
+  if (isNaN(d.getTime())) return T().unknownTime;
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
 async function renderPosts(){
   const area = document.getElementById('postsArea');
-  area.innerHTML = '<div class="empty-state"><div class="big">⏳</div>불러오는 중…</div>';
+  area.innerHTML = '<div class="empty-state"><div class="big">⏳</div>' + T().loading + '</div>';
 
   currentPosts = await fetchPosts();
 
   if (currentPosts.length === 0) {
-    area.innerHTML = '<div class="empty-state"><div class="big">📋</div>해당하는 게시물이 없습니다</div>';
+    area.innerHTML = '<div class="empty-state"><div class="big">📋</div>' + T().emptyList + '</div>';
     return;
   }
 
@@ -210,10 +290,10 @@ async function renderPosts(){
       <div class="post-head">
         <span class="post-emoji">${CATEGORY_EMOJI[p.category] || '❓'}</span>
         <span class="post-titles">
-          <div class="post-title">${(p.registrations && p.registrations.title) || CATEGORY_TITLE_FALLBACK[p.category] || '게시물'}</div>
-          <div class="post-meta">${fmtWhen(p.occurred_at)} · ${p.last_seen_location || '위치 미상'}</div>
+          <div class="post-title">${(p.registrations && p.registrations.title) || CATEGORY_TITLE_FALLBACK_OF(p.category) || T().fallbackPost}</div>
+          <div class="post-meta">${fmtWhen(p.occurred_at)} · ${p.last_seen_location || T().unknownPlace}</div>
         </span>
-        <span class="status-ribbon ${p.status}">${p.status === 'searching' ? '찾는 중' : '발견됨'}</span>
+        <span class="status-ribbon ${p.status}">${p.status === 'searching' ? T().statusSearching : T().statusFound}</span>
       </div>
       <div class="post-desc">${p.public_description || ''}</div>
     </div>
@@ -224,19 +304,15 @@ async function renderPosts(){
   });
 }
 
-// 2026-08-24 신설: 신고 시 어느 게시물인지 알아야 해서 현재 열린 글의 id를 기억함
-let currentDetailPostId = null;
-
 function openDetail(id){
   const p = currentPosts.find(x => String(x.id) === String(id));
   if (!p) return;
-  currentDetailPostId = p.id;
   document.getElementById('dEmoji').textContent = CATEGORY_EMOJI[p.category] || '❓';
-  document.getElementById('dTitle').textContent = (p.registrations && p.registrations.title) || CATEGORY_TITLE_FALLBACK[p.category] || '게시물';
-  document.getElementById('dStatus').textContent = p.status === 'searching' ? '찾는 중' : '발견됨';
+  document.getElementById('dTitle').textContent = (p.registrations && p.registrations.title) || CATEGORY_TITLE_FALLBACK_OF(p.category) || T().fallbackPost;
+  document.getElementById('dStatus').textContent = p.status === 'searching' ? T().statusSearching : T().statusFound;
   document.getElementById('dStatus').className = 'status-ribbon ' + p.status;
   document.getElementById('dWhen').textContent = fmtWhen(p.occurred_at);
-  document.getElementById('dWhere').textContent = p.last_seen_location || '위치 미상';
+  document.getElementById('dWhere').textContent = p.last_seen_location || T().unknownPlace;
   document.getElementById('dHow').textContent = p.circumstance || '';
   document.getElementById('dDesc').textContent = p.public_description || '';
   document.getElementById('detailOverlay').classList.add('show');
@@ -245,7 +321,7 @@ document.getElementById('detailClose').addEventListener('click', () => {
   document.getElementById('detailOverlay').classList.remove('show');
 });
 document.getElementById('contactBtn').addEventListener('click', () => {
-  alert('브라우저에서 음성/영상 연결이 시작됩니다. (WebRTC, 실제번호 비노출)');
+  alert(T().contactAlert);
 });
 
 document.querySelectorAll('.filter-chip').forEach(chip => {
@@ -269,14 +345,7 @@ document.getElementById('countrySelect').addEventListener('change', (e) => {
   renderPosts();
 });
 
-renderPosts();
-
-// 2026-08-24 신설: 신고 버튼
-document.getElementById('acReportBtn').addEventListener('click', () => {
-  if (!currentDetailPostId) return;
-  aliascallOpenReport({ context: 'board', targetId: currentDetailPostId });
-});
+applyLang(currentLang); // 2026-08-25: 언어 적용 + 목록 렌더링을 함께 수행
 </script>
-<script src="aliascall_report.js"></script>
 </body>
 </html>
