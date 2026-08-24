@@ -307,7 +307,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   <!-- 2026-08-21: E2EE 완성되어 정식 판매로 전환 — "준비중" 표시/알림 제거, 실제 구매로 연결 -->
   <div class="hotline-subgroup-label secure">
     <span data-i18n="hlGroupSecure">현존 최강 보안 다자간 종단간 암호화(E2EE) 상품</span>
-    <a class="subgroup-link secure" href="aliascall_hotline_guide.html#secure">상품설명 ▷</a>
+    <a class="subgroup-link secure" href="aliascall_hotline_guide.html#secure" data-i18n="hlSeeDetail">상품설명 ▷</a>
   </div>
   <div class="hotline-grid">
     <div class="hotline-stack">
@@ -372,6 +372,9 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 
   <!-- 2026-08-23 신설: 통신판매업자 기본 표시사항(전자상거래법) -->
   <div class="biz-info">
+    <!-- 2026-08-25: 통신판매업자 표시사항은 전자상거래법상 한국어 표기가 원칙이라 번역하지 않음.
+         대신 영어 화면에서는 아래 한 줄로 무엇인지만 안내함. -->
+    <span data-i18n="bizIntro" style="display:none;"></span>
     위브앱솔루션 · 대표 이미화 · 사업자등록번호 206-08-71754 · 경기도 수원시 권선구 수성로47 10동 501호 · 010-9237-9042 · 통신판매업신고 2022-수원권선-1701
     <br>
     <a href="aliascall_terms.html" data-i18n="terms">이용약관</a> · <a href="aliascall_privacy.html" data-i18n="privacy">개인정보보호방침</a>
@@ -714,6 +717,7 @@ const I18N = {
     toastFinderReplied: '👤 발견자가 답장했어요. 응답을 원하시면 여기를 클릭하세요',
     photoPreview: '📷 사진을 보냈어요',
     terms: '이용약관', privacy: '개인정보보호방침',
+    bizIntro: '',
     tagline: '실제 번호 노출 없이, QR 하나로 바로 연결',
     searchPlaceholder: '차량번호·이름·코드로 바로 찾기',
     search: '찾기 · QR스캔',
@@ -768,6 +772,7 @@ const I18N = {
     toastFinderReplied: '👤 The finder replied. Tap here to respond.',
     photoPreview: '📷 Sent a photo',
     terms: 'Terms of Service', privacy: 'Privacy Policy',
+    bizIntro: 'Business registration details (required by Korean e-commerce law):',
     tagline: 'Connect instantly via QR — your phone number stays private',
     searchPlaceholder: 'Search by plate number, name, or code',
     search: 'Search · Scan QR',
@@ -819,6 +824,10 @@ function applyLang(lang){
 
   // 2026-08-25 신설: 가격 표기. 한국어는 "3개월 3,900원부터",
   // 영어는 "From 3,900 KRW / 3 months" — 숫자 앞뒤 순서가 달라서 별도 처리함.
+  // 2026-08-25: 사업자 표시사항 안내줄 — 영어에서만 노출
+  const bizIntro = document.querySelector('[data-i18n="bizIntro"]');
+  if (bizIntro) bizIntro.style.display = (lang === 'en' && I18N[lang].bizIntro) ? 'block' : 'none';
+
   document.querySelectorAll('[data-i18n-price]').forEach((el) => {
     el.textContent = I18N[lang].pricePrefix + el.dataset.i18nPrice + I18N[lang].priceSuffix;
   });
