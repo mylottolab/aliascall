@@ -66,6 +66,10 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 
 .member-row{ display:flex; align-items:center; gap:8px; padding:7px 0; border-top:1px solid var(--line); font-size:12.5px; }
 .member-badge{ font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:8px; background:var(--found-tint); color:var(--found); }
+
+/* 2026-08-25 신설: 언어 전환 버튼 */
+.lang-toggle{ margin-left:auto; background:var(--card,#fff); color:inherit; border:1.5px solid var(--line); border-radius:20px; padding:6px 13px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; }
+.lang-toggle:active{ opacity:.6; }
 </style>
 </head>
 <body>
@@ -75,13 +79,14 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
   <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'">←</button>
   <div class="brand-mark">A</div>
   <div class="brand-name">Alias<em>call</em></div>
+  <button type="button" class="lang-toggle" id="langToggleBtn" data-i18n="langToggle" data-i18n-aria="langAria" aria-label="언어 바꾸기">EN</button>
 </header>
 
 <main>
-  <div class="page-title">핫라인 관리</div>
-  <div class="login-needed" id="loginNeeded">로그인이 필요합니다.</div>
+  <div class="page-title" data-i18n="pageTitle">핫라인 관리</div>
+  <div class="login-needed" id="loginNeeded" data-i18n="loginNeeded">로그인이 필요합니다.</div>
   <div id="content">
-    <div id="hlList"><div class="empty-state">불러오는 중…</div></div>
+    <div id="hlList"><div class="empty-state" data-i18n="loading">불러오는 중…</div></div>
   </div>
 </main>
 
@@ -92,6 +97,87 @@ const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// =====================================================================
+// 2026-08-25 신설: 다국어(한국어/영어)
+// =====================================================================
+const I18N = {
+  ko: {
+    docTitle: 'Aliascall — 핫라인 관리',
+    langToggle: 'EN', langAria: '언어 바꾸기',
+    pageTitle: '핫라인 관리',
+    loginNeeded: '로그인이 필요합니다.',
+    loading: '불러오는 중…',
+    loadFail: '불러오지 못했어요: ',
+    empty: '아직 개설한 핫라인이 없어요.',
+    stage1: '1차 안내', stage2: '2차 안내', stage3: '마지막 안내 ⚠️',
+    renewBtn: '지금 연장하기',
+    approve: '승인', reject: '거절',
+    ownerBadge: '개설자', removeBtn: '내보내기',
+    keyMissing: '🔒 이 핫라인은 암호화되어 있어요. 결제 완료 시 받으신 열쇠(키)를 입력해야 초대링크와 대화방을 열 수 있습니다.',
+    keyPlaceholder: '여기에 열쇠(#k= 뒷부분)를 붙여넣으세요',
+    keySave: '저장',
+    copy: '복사', copied: '복사됨!',
+    openRoom: '💬 대화방 열기',
+    alertNeedKey: '열쇠를 입력해주세요.',
+    alertActionFail: '처리에 실패했어요.',
+    alertActionFailRetry: '처리에 실패했어요. 잠시 후 다시 시도해주세요.',
+    alertRemoved: '내보냈습니다. 새 초대 링크가 발급되었어요 — 목록에서 확인해주세요.',
+  },
+  en: {
+    docTitle: 'Aliascall — Manage hotlines',
+    langToggle: '한국어', langAria: 'Change language',
+    pageTitle: 'Manage hotlines',
+    loginNeeded: 'Please sign in.',
+    loading: 'Loading…',
+    loadFail: "Couldn't load: ",
+    empty: "You haven't created any hotlines yet.",
+    stage1: 'First notice', stage2: 'Second notice', stage3: 'Final notice ⚠️',
+    renewBtn: 'Renew now',
+    approve: 'Approve', reject: 'Decline',
+    ownerBadge: 'Owner', removeBtn: 'Remove',
+    keyMissing: '🔒 This hotline is encrypted. Enter the key you received when payment completed to open the invite link and the room.',
+    keyPlaceholder: 'Paste the key (the part after #k=) here',
+    keySave: 'Save',
+    copy: 'Copy', copied: 'Copied!',
+    openRoom: '💬 Open the room',
+    alertNeedKey: 'Please enter the key.',
+    alertActionFail: "Couldn't complete that.",
+    alertActionFailRetry: "Couldn't complete that. Please try again in a moment.",
+    alertRemoved: 'Removed. A new invite link has been issued — check the list.',
+  },
+};
+
+const TIER_LABEL_EN = {
+  hotline_1to1: 'Hotline (2)', hotline_everybody: 'Hotline Everybody (2)',
+  economy_4: 'Economy (4)', premium_4: 'Premium (4)',
+  hotline_1to1_secure: 'Hotline Secure (2)', hotline_everybody_secure: 'Everybody Secure (2)',
+  economy_4_secure: 'Economy Secure (4)', premium_4_secure: 'Premium Secure (4)',
+};
+function tierLabel(tier){
+  return (LANG === 'en' ? TIER_LABEL_EN[tier] : TIER_LABEL[tier]) || TIER_LABEL[tier] || tier;
+}
+
+const LANG_KEYS = ['aliascall_lang', 'aliascall_language', 'ac_lang', 'lang'];
+let LANG = (typeof window.getAliascallLang === 'function')
+  ? window.getAliascallLang()
+  : ((navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en');
+function T(k){ const d = I18N[LANG] || I18N.ko; return d[k] !== undefined ? d[k] : (I18N.ko[k] !== undefined ? I18N.ko[k] : k); }
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.title = T('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', T(el.dataset.i18nAria)); });
+}
+applyI18n();
+document.getElementById('langToggleBtn').addEventListener('click', () => {
+  LANG = (LANG === 'ko') ? 'en' : 'ko';
+  if (typeof window.setAliascallLang === 'function') window.setAliascallLang(LANG);
+  else LANG_KEYS.forEach((k) => { try { localStorage.setItem(k, LANG); } catch (e) {} });
+  applyI18n();
+  loadHotlines(); // 목록은 JS로 그리므로 다시 그려줌
+});
+
+
 const TIER_LABEL = { hotline_1to1: '핫라인 (2명)', hotline_everybody: '핫라인 에브리바디 (2명)', economy_4: '이코노미 (4명)', premium_4: '프리미엄 (4명)',
   hotline_1to1_secure: '핫라인 Secure (2명)', hotline_everybody_secure: '에브리바디 Secure (2명)', economy_4_secure: '이코노미 Secure (4명)', premium_4_secure: '프리미엄 Secure (4명)' };
 
@@ -101,8 +187,8 @@ async function loadHotlines(){
 
   const { data: hotlines, error } = await sb.from('hotlines').select('*').eq('owner_user_id', session.user.id).order('created_at', { ascending: false });
   const listEl = document.getElementById('hlList');
-  if (error) { listEl.innerHTML = '<div class="empty-state">불러오지 못했어요: ' + error.message + '</div>'; return; }
-  if (!hotlines || hotlines.length === 0) { listEl.innerHTML = '<div class="empty-state">아직 개설한 핫라인이 없어요.</div>'; return; }
+  if (error) { listEl.innerHTML = '<div class="empty-state">' + T('loadFail') + error.message + '</div>'; return; }
+  if (!hotlines || hotlines.length === 0) { listEl.innerHTML = '<div class="empty-state">' + T('empty') + '</div>'; return; }
 
   const html = await Promise.all(hotlines.map((h) => renderHotlineItem(h)));
   listEl.innerHTML = html.join('');
@@ -116,7 +202,7 @@ async function renderHotlineItem(h){
   ]);
 
   const usagePercent = h.usage_cap_gb > 0 ? Math.min(100, Math.round((h.usage_used_gb / h.usage_cap_gb) * 100)) : 0;
-  const expiresLabel = new Date(h.expires_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' });
+  const expiresLabel = new Date(h.expires_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' });
 
   // 2026-08-23 신설: 만료됐는데 아직 연장 안 한 핫라인 — 30일 뒤 파일 자동삭제 예정 안내
   // (3단계로 나눠서, 시간이 갈수록 더 급하게 알림 — 카톡 "구독 3회 알림"과 비슷한 취지)
@@ -125,14 +211,29 @@ async function renderHotlineItem(h){
   if (daysSinceExpiry >= 0 && daysSinceExpiry < 30) {
     const daysLeft = 30 - daysSinceExpiry;
     let stage, message;
-    if (daysSinceExpiry < 10) { stage = '1차 안내'; message = `핫라인이 만료됐어요. ${daysLeft}일 안에 연장하지 않으면 그동안의 사진·동영상·음성 파일이 삭제됩니다.`; }
-    else if (daysSinceExpiry < 20) { stage = '2차 안내'; message = `아직 연장하지 않으셨어요. ${daysLeft}일 후 파일이 삭제됩니다.`; }
-    else { stage = '마지막 안내 ⚠️'; message = `${daysLeft}일 후 파일이 영구 삭제됩니다. 보관하고 싶으시면 지금 연장해주세요.`; }
+    // 2026-08-25: 남은 일수가 문장 중간에 들어가 어순이 달라지므로 언어별로 따로 씀
+    const dayWord = daysLeft === 1 ? 'day' : 'days';
+    if (daysSinceExpiry < 10) {
+      stage = T('stage1');
+      message = (LANG === 'en')
+        ? `This hotline has expired. If you don't renew within ${daysLeft} ${dayWord}, the photos, videos and voice files shared so far will be deleted.`
+        : `핫라인이 만료됐어요. ${daysLeft}일 안에 연장하지 않으면 그동안의 사진·동영상·음성 파일이 삭제됩니다.`;
+    } else if (daysSinceExpiry < 20) {
+      stage = T('stage2');
+      message = (LANG === 'en')
+        ? `You still haven't renewed. Your files will be deleted in ${daysLeft} ${dayWord}.`
+        : `아직 연장하지 않으셨어요. ${daysLeft}일 후 파일이 삭제됩니다.`;
+    } else {
+      stage = T('stage3');
+      message = (LANG === 'en')
+        ? `Your files will be permanently deleted in ${daysLeft} ${dayWord}. Renew now if you want to keep them.`
+        : `${daysLeft}일 후 파일이 영구 삭제됩니다. 보관하고 싶으시면 지금 연장해주세요.`;
+    }
     expiryWarningHtml = `
       <div class="expiry-warning">
         <div class="expiry-warning-stage">${stage}</div>
         <div class="expiry-warning-msg">${message}</div>
-        <button class="expiry-warning-btn" onclick="location.href='aliascall_hotline_purchase.html?tier=${h.tier}'">지금 연장하기</button>
+        <button class="expiry-warning-btn" onclick="location.href='aliascall_hotline_purchase.html?tier=${h.tier}'">${T('renewBtn')}</button>
       </div>`;
   }
 
@@ -148,24 +249,24 @@ async function renderHotlineItem(h){
     : `aliascall_hotline_room.html?hotline=${h.id}`;
 
   const requestsHtml = (requests || []).length === 0 ? '' : `
-    <div class="section-label">📋 대기 중 (${requests.length}명)</div>
+    <div class="section-label">${LANG === 'en' ? `📋 Pending (${requests.length})` : `📋 대기 중 (${requests.length}명)`}</div>
     ${requests.map((r) => `
       <div class="request-row">
         <span class="request-nick">${r.nickname}</span>
         <span class="request-btns">
-          <button class="req-btn approve" data-action="approve" data-req="${r.id}" data-hotline="${h.id}">승인</button>
-          <button class="req-btn reject" data-action="reject" data-req="${r.id}" data-hotline="${h.id}">거절</button>
+          <button class="req-btn approve" data-action="approve" data-req="${r.id}" data-hotline="${h.id}">${T('approve')}</button>
+          <button class="req-btn reject" data-action="reject" data-req="${r.id}" data-hotline="${h.id}">${T('reject')}</button>
         </span>
       </div>
     `).join('')}
   `;
 
   const membersHtml = (members || []).length === 0 ? '' : `
-    <div class="section-label">참가자 (${members.length}/${h.max_participants})</div>
+    <div class="section-label">${LANG === 'en' ? 'Participants' : '참가자'} (${members.length}/${h.max_participants})</div>
     ${members.map((m) => `
       <div class="member-row">
         <span style="flex:1;">${m.nickname}</span>
-        ${m.role === 'owner' ? '<span class="member-badge">개설자</span>' : (h.tier === 'hotline_everybody' ? `<button class="req-btn reject" data-action="remove-member" data-hotline="${h.id}" data-anon="${m.member_anon_id}" data-nick="${m.nickname}">내보내기</button>` : '')}
+        ${m.role === 'owner' ? `<span class="member-badge">${T('ownerBadge')}</span>` : (h.tier === 'hotline_everybody' ? `<button class="req-btn reject" data-action="remove-member" data-hotline="${h.id}" data-anon="${m.member_anon_id}" data-nick="${m.nickname}">${T('removeBtn')}</button>` : '')}
       </div>
     `).join('')}
   `;
@@ -173,35 +274,35 @@ async function renderHotlineItem(h){
   // 암호화 상품인데 이 브라우저에 저장된 키가 없으면 — 링크/입장 버튼 대신 키 입력창을 보여줌
   const linkSectionHtml = (secure && !cachedKey) ? `
     <div class="key-missing-box">
-      🔒 이 핫라인은 암호화되어 있어요. 결제 완료 시 받으신 열쇠(키)를 입력해야 초대링크와 대화방을 열 수 있습니다.
+      ${T('keyMissing')}
       <div class="invite-row" style="margin-top:8px;">
-        <input type="text" placeholder="여기에 열쇠(#k= 뒷부분)를 붙여넣으세요" data-key-input="${h.id}">
-        <button data-action="save-key" data-hotline="${h.id}">저장</button>
+        <input type="text" placeholder="${T('keyPlaceholder')}" data-key-input="${h.id}">
+        <button data-action="save-key" data-hotline="${h.id}">${T('keySave')}</button>
       </div>
     </div>
   ` : `
     <div class="invite-row">
       <input type="text" readonly value="${inviteUrl}">
-      <button data-action="copy-invite" data-url="${inviteUrl}">복사</button>
+      <button data-action="copy-invite" data-url="${inviteUrl}">${T('copy')}</button>
     </div>
-    <button class="req-btn approve" style="width:100%; margin-bottom:12px; padding:9px;" onclick="window.location.href='${roomUrl}'">💬 대화방 열기</button>
+    <button class="req-btn approve" style="width:100%; margin-bottom:12px; padding:9px;" onclick="window.location.href='${roomUrl}'">${T('openRoom')}</button>
   `;
 
   return `
     <div class="hl-item" data-hotline-id="${h.id}">
       <div class="hl-item-head">
-        <span class="hl-item-callsign">${TIER_LABEL[h.tier] || h.tier}</span>
+        <span class="hl-item-callsign">${tierLabel(h.tier)}</span>
         <span class="hl-item-expiry">~${expiresLabel}</span>
       </div>
-      <div class="hl-item-title">${h.title || (TIER_LABEL[h.tier] || h.tier)}</div>
-      <div class="hl-item-meta">${(members || []).length} / ${h.max_participants}명 참가 중</div>
+      <div class="hl-item-title">${h.title || tierLabel(h.tier)}</div>
+      <div class="hl-item-meta">${(members || []).length} / ${h.max_participants}${LANG === 'en' ? ' joined' : '명 참가 중'}</div>
 
       ${expiryWarningHtml}
 
       ${linkSectionHtml}
 
       <div class="usage-bar-track"><div class="usage-bar-fill" style="width:${usagePercent}%;"></div></div>
-      <div class="usage-label">사용량 ${h.usage_used_gb.toFixed(1)}GB / ${h.usage_cap_gb}GB (${usagePercent}%)</div>
+      <div class="usage-label">${LANG === 'en' ? 'Usage' : '사용량'} ${h.usage_used_gb.toFixed(1)}GB / ${h.usage_cap_gb}GB (${usagePercent}%)</div>
 
       ${requestsHtml}
       ${membersHtml}
@@ -214,7 +315,7 @@ function wireHotlineItems(){
     btn.addEventListener('click', () => {
       navigator.clipboard.writeText(btn.dataset.url).then(() => {
         const original = btn.textContent;
-        btn.textContent = '복사됨!';
+        btn.textContent = T('copied');
         setTimeout(() => { btn.textContent = original; }, 1500);
       });
     });
@@ -226,7 +327,7 @@ function wireHotlineItems(){
     btn.addEventListener('click', () => {
       const input = document.querySelector(`[data-key-input="${btn.dataset.hotline}"]`);
       const key = (input.value || '').trim().replace(/^#?k=/, ''); // 혹시 전체 링크를 통째로 붙여넣어도 되게, k= 부분만 추출
-      if (!key) { alert('열쇠를 입력해주세요.'); return; }
+      if (!key) { alert(T('alertNeedKey')); return; }
       localStorage.setItem('aliascall_hotline_key_' + btn.dataset.hotline, key);
       loadHotlines();
     });
@@ -245,11 +346,11 @@ function wireHotlineItems(){
           body: JSON.stringify({ requestId: btn.dataset.req, decision }),
         });
         const data = await res.json();
-        if (!res.ok) { alert(data.error || '처리에 실패했어요.'); btn.disabled = false; return; }
+        if (!res.ok) { alert(T('alertActionFail')); btn.disabled = false; return; }
         loadHotlines(); // 목록 새로고침
       } catch (e) {
         console.error('[hotline] 승인/거절 실패', e);
-        alert('처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+        alert(T('alertActionFailRetry'));
         btn.disabled = false;
       }
     });
@@ -258,7 +359,10 @@ function wireHotlineItems(){
   // 2026-08-21 신설: "상대방 내보내기" — 핫라인 에브리바디(상대방 교체) 기능
   document.querySelectorAll('[data-action="remove-member"]').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      if (!confirm(`${btn.dataset.nick}님을 내보내시겠어요? 초대 링크가 새로 발급되며, 예전 링크는 더 이상 쓸 수 없습니다.`)) return;
+      const confirmMsg = (LANG === 'en')
+    ? `Remove ${btn.dataset.nick}? A new invite link will be issued and the old one will stop working.`
+    : `${btn.dataset.nick}님을 내보내시겠어요? 초대 링크가 새로 발급되며, 예전 링크는 더 이상 쓸 수 없습니다.`;
+  if (!confirm(confirmMsg)) return;
       btn.disabled = true;
       const { data: { session } } = await sb.auth.getSession();
       if (!session) return;
@@ -269,12 +373,12 @@ function wireHotlineItems(){
           body: JSON.stringify({ hotlineId: btn.dataset.hotline, memberAnonId: btn.dataset.anon }),
         });
         const data = await res.json();
-        if (!res.ok) { alert(data.error || '처리에 실패했어요.'); btn.disabled = false; return; }
-        alert('내보냈습니다. 새 초대 링크가 발급되었어요 — 목록에서 확인해주세요.');
+        if (!res.ok) { alert(T('alertActionFail')); btn.disabled = false; return; }
+        alert(T('alertRemoved'));
         loadHotlines();
       } catch (e) {
         console.error('[hotline] 상대방 내보내기 실패', e);
-        alert('처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+        alert(T('alertActionFailRetry'));
         btn.disabled = false;
       }
     });

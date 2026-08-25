@@ -24,6 +24,9 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .mono{ font-family:'IBM Plex Mono',monospace; }
 
 header{ padding:20px 24px 6px; display:flex; align-items:center; gap:9px; }
+/* 2026-08-25 신설: 언어 전환 버튼 */
+.lang-toggle{ margin-left:auto; background:var(--card); color:var(--ink); border:1.5px solid var(--line); border-radius:20px; padding:6px 13px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; }
+.lang-toggle:active{ opacity:.6; }
 .brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
 .brand-name{ font-size:16px; font-weight:600; }
 .brand-name em{ font-style:normal; color:var(--coral); }
@@ -57,50 +60,51 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 <header>
   <div class="brand-mark">A</div>
   <div class="brand-name">Alias<em>call</em></div>
+  <button type="button" class="lang-toggle" id="langToggleBtn" data-i18n="langToggle" data-i18n-aria="langAria" aria-label="언어 바꾸기">EN</button>
 </header>
 
 <main>
   <div class="state show" id="stateLoading">
-    <p style="text-align:center; color:var(--ink-soft); font-size:13px; margin-top:40px;">불러오는 중…</p>
+    <p style="text-align:center; color:var(--ink-soft); font-size:13px; margin-top:40px;" data-i18n="loading">불러오는 중…</p>
   </div>
 
   <div class="state" id="stateError">
-    <div class="error-box" id="errorMsg">유효하지 않은 초대 링크입니다.</div>
+    <div class="error-box" id="errorMsg" data-i18n="errInvalidLink">유효하지 않은 초대 링크입니다.</div>
   </div>
 
   <div class="state" id="stateEntry">
     <div class="hl-card">
       <div class="hl-callsign"><span class="hl-dot"></span><span id="hlCallsignText">LINE</span></div>
-      <div class="hl-title" id="hlTitle">핫라인</div>
-      <div class="hl-meta" id="hlMeta">인원 확인 중…</div>
-      <input type="text" class="nickname-input" id="nicknameInput" placeholder="사용하실 별명을 입력하세요" maxlength="20">
-      <button class="join-btn" id="joinBtn">참가 신청하기</button>
-      <p style="font-size:11px; color:var(--ink-soft); margin-top:12px; line-height:1.5;">별명 외 개인정보는 필요 없습니다. 개설자가 승인하면 바로 대화에 참여할 수 있어요.</p>
+      <div class="hl-title" id="hlTitle" data-i18n="roomTitleDefault">핫라인</div>
+      <div class="hl-meta" id="hlMeta" data-i18n="metaChecking">인원 확인 중…</div>
+      <input type="text" class="nickname-input" id="nicknameInput" placeholder="사용하실 별명을 입력하세요" data-i18n-placeholder="nicknamePlaceholder" maxlength="20">
+      <button class="join-btn" id="joinBtn" data-i18n="joinBtn">참가 신청하기</button>
+      <p style="font-size:11px; color:var(--ink-soft); margin-top:12px; line-height:1.5;" data-i18n="entryNote">별명 외 개인정보는 필요 없습니다. 개설자가 승인하면 바로 대화에 참여할 수 있어요.</p>
     </div>
   </div>
 
   <div class="state" id="stateWaiting">
     <div class="hl-card">
       <div class="waiting-spinner">⏳</div>
-      <h3 style="margin-bottom:6px;">대기 중이에요</h3>
-      <p style="font-size:13px; color:var(--ink-soft);">개설자가 승인하면 바로 대화가 시작됩니다.<br>이 화면을 닫지 말고 잠시만 기다려주세요.</p>
+      <h3 style="margin-bottom:6px;" data-i18n="waitingTitle">대기 중이에요</h3>
+      <p style="font-size:13px; color:var(--ink-soft);" data-i18n-html="waitingDesc">개설자가 승인하면 바로 대화가 시작됩니다.<br>이 화면을 닫지 말고 잠시만 기다려주세요.</p>
     </div>
   </div>
 
   <div class="state" id="stateApproved">
     <div class="hl-card">
       <div class="result-icon">✓</div>
-      <h3 style="margin-bottom:6px; color:var(--found);">참가가 승인됐어요</h3>
-      <p style="font-size:13px; color:var(--ink-soft); margin-bottom:18px;">이제 대화에 참여할 수 있습니다.</p>
-      <button class="join-btn" id="enterRoomBtn">대화방 입장하기</button>
+      <h3 style="margin-bottom:6px; color:var(--found);" data-i18n="approvedTitle">참가가 승인됐어요</h3>
+      <p style="font-size:13px; color:var(--ink-soft); margin-bottom:18px;" data-i18n="approvedDesc">이제 대화에 참여할 수 있습니다.</p>
+      <button class="join-btn" id="enterRoomBtn" data-i18n="enterRoomBtn">대화방 입장하기</button>
     </div>
   </div>
 
   <div class="state" id="stateRejected">
     <div class="hl-card">
       <div class="result-icon">✕</div>
-      <h3 style="margin-bottom:6px; color:var(--danger);">참가가 거절됐어요</h3>
-      <p style="font-size:13px; color:var(--ink-soft);">개설자에게 직접 문의해주세요.</p>
+      <h3 style="margin-bottom:6px; color:var(--danger);" data-i18n="rejectedTitle">참가가 거절됐어요</h3>
+      <p style="font-size:13px; color:var(--ink-soft);" data-i18n="rejectedDesc">개설자에게 직접 문의해주세요.</p>
     </div>
   </div>
 </main>
@@ -111,6 +115,94 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// =====================================================================
+// 2026-08-25 신설: 다국어(한국어/영어)
+// =====================================================================
+const I18N = {
+  ko: {
+    docTitle: 'Aliascall — 핫라인 참가',
+    langToggle: 'EN', langAria: '언어 바꾸기',
+    loading: '불러오는 중…',
+    errInvalidLink: '유효하지 않은 초대 링크입니다.',
+    errBadAccess: '올바르지 않은 접근입니다. 초대 링크를 다시 확인해주세요.',
+    errFull: '정원이 가득 찼습니다.',
+    errNoKey: '이 초대링크에 암호화 열쇠가 빠져있어요. 링크를 보낸 분에게 전체 링크(#로 시작하는 부분까지)를 다시 요청해주세요.',
+    errLoadFail: '불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+    roomTitleDefault: '핫라인',
+    metaChecking: '인원 확인 중…',
+    nicknamePlaceholder: '사용하실 별명을 입력하세요',
+    joinBtn: '참가 신청하기',
+    entryNote: '별명 외 개인정보는 필요 없습니다. 개설자가 승인하면 바로 대화에 참여할 수 있어요.',
+    waitingTitle: '대기 중이에요',
+    waitingDesc: '개설자가 승인하면 바로 대화가 시작됩니다.<br>이 화면을 닫지 말고 잠시만 기다려주세요.',
+    approvedTitle: '참가가 승인됐어요',
+    approvedDesc: '이제 대화에 참여할 수 있습니다.',
+    enterRoomBtn: '대화방 입장하기',
+    rejectedTitle: '참가가 거절됐어요',
+    rejectedDesc: '개설자에게 직접 문의해주세요.',
+    alertNeedNickname: '별명을 입력해주세요.',
+    alertJoinFail: '신청에 실패했어요.',
+    alertJoinFailRetry: '신청에 실패했어요. 잠시 후 다시 시도해주세요.',
+  },
+  en: {
+    docTitle: 'Aliascall — Join a hotline',
+    langToggle: '한국어', langAria: 'Change language',
+    loading: 'Loading…',
+    errInvalidLink: 'This invite link is not valid.',
+    errBadAccess: 'Invalid access. Please check the invite link again.',
+    errFull: 'This hotline is full.',
+    errNoKey: 'This invite link is missing its encryption key. Ask whoever sent it for the full link, including the part that starts with #.',
+    errLoadFail: "Couldn't load. Please try again in a moment.",
+    roomTitleDefault: 'Hotline',
+    metaChecking: 'Checking capacity…',
+    nicknamePlaceholder: 'Enter the nickname you want to use',
+    joinBtn: 'Request to join',
+    entryNote: 'No personal details beyond a nickname are needed. Once the owner approves you, you can join the conversation right away.',
+    waitingTitle: 'Waiting for approval',
+    waitingDesc: 'The conversation starts as soon as the owner approves you.<br>Please keep this screen open for a moment.',
+    approvedTitle: "You're approved",
+    approvedDesc: 'You can now join the conversation.',
+    enterRoomBtn: 'Enter the room',
+    rejectedTitle: 'Your request was declined',
+    rejectedDesc: 'Please contact the owner directly.',
+    alertNeedNickname: 'Please enter a nickname.',
+    alertJoinFail: "Couldn't send your request.",
+    alertJoinFailRetry: "Couldn't send your request. Please try again in a moment.",
+  },
+};
+
+// ⚠ 서버가 돌려주는 tierLabel은 한국어라, 영어 화면에서는 tier 코드로 직접 만들어 씀.
+const TIER_LABEL_EN = {
+  hotline_1to1: 'Hotline (2)', hotline_everybody: 'Everybody (2)',
+  economy_4: 'Economy (4)', premium_4: 'Premium (4)',
+  hotline_1to1_secure: 'Hotline Secure (2)', hotline_everybody_secure: 'Everybody Secure (2)',
+  economy_4_secure: 'Economy Secure (4)', premium_4_secure: 'Premium Secure (4)',
+};
+
+const LANG_KEYS = ['aliascall_lang', 'aliascall_language', 'ac_lang', 'lang'];
+let LANG = (typeof window.getAliascallLang === 'function')
+  ? window.getAliascallLang()
+  : ((navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en');
+function T(k){ const d = I18N[LANG] || I18N.ko; return d[k] !== undefined ? d[k] : (I18N.ko[k] !== undefined ? I18N.ko[k] : k); }
+// 서버 오류 문구는 한국어라, 영어 화면에서는 이 파일 문구를 씀
+function srvErr(msg, key){ return (LANG === 'ko' && msg) ? msg : T(key); }
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.title = T('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = T(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = T(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', T(el.dataset.i18nAria)); });
+}
+applyI18n();
+document.getElementById('langToggleBtn').addEventListener('click', () => {
+  LANG = (LANG === 'ko') ? 'en' : 'ko';
+  if (typeof window.setAliascallLang === 'function') window.setAliascallLang(LANG);
+  else LANG_KEYS.forEach((k) => { try { localStorage.setItem(k, LANG); } catch (e) {} });
+  location.reload(); // #k=(열쇠) 조각은 새로고침해도 그대로 유지됨
+});
+
 
 function getInviteToken(){
   return new URLSearchParams(window.location.search).get('t');
@@ -139,7 +231,7 @@ let pollInterval = null;
 async function init(){
   inviteToken = getInviteToken();
   if (!inviteToken) {
-    document.getElementById('errorMsg').textContent = '올바르지 않은 접근입니다. 초대 링크를 다시 확인해주세요.';
+    document.getElementById('errorMsg').textContent = T('errBadAccess');
     showState('stateError');
     return;
   }
@@ -165,33 +257,36 @@ async function init(){
       body: JSON.stringify({ inviteToken }),
     });
     const data = await res.json();
-    if (!res.ok) { document.getElementById('errorMsg').textContent = data.error || '유효하지 않은 초대 링크입니다.'; showState('stateError'); return; }
+    if (!res.ok) { document.getElementById('errorMsg').textContent = srvErr(data.error, 'errInvalidLink'); showState('stateError'); return; }
 
-    document.getElementById('hlCallsignText').textContent = data.tierLabel;
-    document.getElementById('hlTitle').textContent = data.title;
-    document.getElementById('hlMeta').textContent = `${data.currentMemberCount} / ${data.maxParticipants}명 참가 중`;
+    // 2026-08-25: 서버의 tierLabel은 한국어라 영어일 땐 tier 코드로 직접 만듦
+    document.getElementById('hlCallsignText').textContent = (LANG === 'en' && TIER_LABEL_EN[data.tier]) ? TIER_LABEL_EN[data.tier] : data.tierLabel;
+    document.getElementById('hlTitle').textContent = data.title; // 방 이름은 개설자가 지은 것이라 번역하지 않음
+    document.getElementById('hlMeta').textContent = (LANG === 'en')
+      ? `${data.currentMemberCount} / ${data.maxParticipants} joined`
+      : `${data.currentMemberCount} / ${data.maxParticipants}명 참가 중`;
     if (data.isFull) {
-      document.getElementById('errorMsg').textContent = '정원이 가득 찼습니다.';
+      document.getElementById('errorMsg').textContent = T('errFull');
       showState('stateError');
       return;
     }
     // 2026-08-21 신설: 암호화 상품인데 링크에 열쇠(#k=)가 없으면 대화를 절대 못 여니 미리 안내
     if (data.tier && data.tier.endsWith('_secure') && !e2eeReadKeyFromUrlFragment()) {
-      document.getElementById('errorMsg').textContent = '이 초대링크에 암호화 열쇠가 빠져있어요. 링크를 보낸 분에게 전체 링크(#로 시작하는 부분까지)를 다시 요청해주세요.';
+      document.getElementById('errorMsg').textContent = T('errNoKey');
       showState('stateError');
       return;
     }
     showState('stateEntry');
   } catch (e) {
     console.error('[hotline] 조회 실패', e);
-    document.getElementById('errorMsg').textContent = '불러오지 못했어요. 잠시 후 다시 시도해주세요.';
+    document.getElementById('errorMsg').textContent = T('errLoadFail');
     showState('stateError');
   }
 }
 
 document.getElementById('joinBtn').addEventListener('click', async () => {
   const nickname = document.getElementById('nicknameInput').value.trim();
-  if (!nickname) { alert('별명을 입력해주세요.'); return; }
+  if (!nickname) { alert(T('alertNeedNickname')); return; }
 
   const btn = document.getElementById('joinBtn');
   btn.disabled = true;
@@ -201,14 +296,14 @@ document.getElementById('joinBtn').addEventListener('click', async () => {
       body: JSON.stringify({ inviteToken, memberAnonId: hotlineAnonId, nickname }),
     });
     const data = await res.json();
-    if (!res.ok) { alert(data.error || '신청에 실패했어요.'); btn.disabled = false; return; }
+    if (!res.ok) { alert(srvErr(data.error, 'alertJoinFail')); btn.disabled = false; return; }
 
     if (data.status === 'approved') { showState('stateApproved'); return; }
     if (data.status === 'rejected') { showState('stateRejected'); return; }
     enterWaitingState();
   } catch (e) {
     console.error('[hotline] 신청 실패', e);
-    alert('신청에 실패했어요. 잠시 후 다시 시도해주세요.');
+    alert(T('alertJoinFailRetry'));
     btn.disabled = false;
   }
 });

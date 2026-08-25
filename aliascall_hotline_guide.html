@@ -68,6 +68,10 @@ main{ max-width:420px; margin:0 auto; padding:6px 22px 60px; }
 .product-card.secure .pc-cta{ background:var(--brass); color:#3A2E10; }
 
 .note-box{ background:rgba(201,162,75,.12); border:1px dashed var(--brass); border-radius:12px; padding:14px; font-size:11.5px; color:#8a6416; line-height:1.6; margin:20px 0; }
+
+/* 2026-08-25 신설: 언어 전환 버튼 */
+.lang-toggle{ margin-left:auto; background:var(--card,#fff); color:inherit; border:1.5px solid var(--line); border-radius:20px; padding:6px 13px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; }
+.lang-toggle:active{ opacity:.6; }
 </style>
 </head>
 <body>
@@ -77,211 +81,379 @@ main{ max-width:420px; margin:0 auto; padding:6px 22px 60px; }
   <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'">←</button>
   <div class="brand-mark">A</div>
   <div class="brand-name">Alias<em>call</em></div>
+  <button type="button" class="lang-toggle" id="langToggleBtn" data-i18n="langToggle" data-i18n-aria="langAria" aria-label="언어 바꾸기">EN</button>
 </header>
 
 <main>
-  <div class="page-title">🔒 핫라인 상품 안내</div>
-  <p class="page-desc">누구나 아는 메신저 대신, 둘 또는 몇 명만 아는 우리끼리의 회선입니다. 8개 상품 전부 문자·사진·동영상·문서 공유와 음성·영상통화를 지원하며, 차이는 <b>인원수·상대 교체 가능 여부·암호화 여부</b>입니다.</p>
+  <div class="page-title" data-i18n-html="p001">🔒 핫라인 상품 안내</div>
+  <p class="page-desc" data-i18n-html="p002">누구나 아는 메신저 대신, 둘 또는 몇 명만 아는 우리끼리의 회선입니다. 8개 상품 전부 문자·사진·동영상·문서 공유와 음성·영상통화를 지원하며, 차이는 <b>인원수·상대 교체 가능 여부·암호화 여부</b>입니다.</p>
 
   <div class="jump-tabs">
-    <a href="#regular">일반 4종</a>
-    <a href="#secure" class="secure-tab">Secure 4종 🔒</a>
+    <a href="#regular" data-i18n-html="p003">일반 4종</a>
+    <a href="#secure" class="secure-tab" data-i18n-html="p004">Secure 4종 🔒</a>
   </div>
 
   <table class="compare-table">
-    <thead><tr><th>상품</th><th>인원</th><th>상대교체</th><th>암호화</th><th>3개월</th></tr></thead>
+    <thead><tr><th data-i18n-html="p005">상품</th><th data-i18n-html="p006">인원</th><th data-i18n-html="p007">상대교체</th><th data-i18n-html="p008">암호화</th><th data-i18n-html="p009">3개월</th></tr></thead>
     <tbody>
-      <tr><td>핫라인</td><td>2명</td><td class="chk-no">✕</td><td class="chk-no">✕</td><td>3,900원</td></tr>
-      <tr><td>에브리바디</td><td>2명</td><td class="chk-yes">✓</td><td class="chk-no">✕</td><td>5,000원</td></tr>
-      <tr><td>이코노미</td><td>4명</td><td class="chk-no">✕</td><td class="chk-no">✕</td><td>7,800원</td></tr>
-      <tr><td>프리미엄</td><td>4명</td><td class="chk-no">✕</td><td class="chk-no">✕</td><td>15,000원</td></tr>
-      <tr><td>핫라인 Secure</td><td>2명</td><td class="chk-no">✕</td><td class="chk-yes">✓</td><td>5,800원</td></tr>
-      <tr><td>에브리바디 Secure</td><td>2명</td><td class="chk-yes">✓</td><td class="chk-yes">✓</td><td>7,500원</td></tr>
-      <tr><td>이코노미 Secure</td><td>4명</td><td class="chk-no">✕</td><td class="chk-yes">✓</td><td>11,700원</td></tr>
-      <tr><td>프리미엄 Secure</td><td>4명</td><td class="chk-no">✕</td><td class="chk-yes">✓</td><td>22,500원</td></tr>
+      <tr><td data-i18n-html="p010">핫라인</td><td data-i18n-html="p011">2명</td><td class="chk-no">✕</td><td class="chk-no">✕</td><td data-i18n-price>3,900원</td></tr>
+      <tr><td data-i18n-html="p012">에브리바디</td><td data-i18n-html="p011">2명</td><td class="chk-yes">✓</td><td class="chk-no">✕</td><td data-i18n-price>5,000원</td></tr>
+      <tr><td data-i18n-html="p013">이코노미</td><td data-i18n-html="p014">4명</td><td class="chk-no">✕</td><td class="chk-no">✕</td><td data-i18n-price>7,800원</td></tr>
+      <tr><td data-i18n-html="p015">프리미엄</td><td data-i18n-html="p014">4명</td><td class="chk-no">✕</td><td class="chk-no">✕</td><td data-i18n-price>15,000원</td></tr>
+      <tr><td data-i18n-html="p016">핫라인 Secure</td><td data-i18n-html="p011">2명</td><td class="chk-no">✕</td><td class="chk-yes">✓</td><td data-i18n-price>5,800원</td></tr>
+      <tr><td data-i18n-html="p017">에브리바디 Secure</td><td data-i18n-html="p011">2명</td><td class="chk-yes">✓</td><td class="chk-yes">✓</td><td data-i18n-price>7,500원</td></tr>
+      <tr><td data-i18n-html="p018">이코노미 Secure</td><td data-i18n-html="p014">4명</td><td class="chk-no">✕</td><td class="chk-yes">✓</td><td data-i18n-price>11,700원</td></tr>
+      <tr><td data-i18n-html="p019">프리미엄 Secure</td><td data-i18n-html="p014">4명</td><td class="chk-no">✕</td><td class="chk-yes">✓</td><td data-i18n-price>22,500원</td></tr>
     </tbody>
   </table>
 
-  <div class="group-title" id="regular">보안이 강화된 핫라인 상품</div>
-  <p class="group-desc">실제 전화번호를 주고받지 않고도, 초대한 사람과만 연결되는 개인 회선입니다. 전송 구간은 항상 암호화되어 있어(WebRTC 표준), 중간에서 가로채기는 매우 어렵습니다.</p>
+  <div class="group-title" id="regular" data-i18n-html="p020">보안이 강화된 핫라인 상품</div>
+  <p class="group-desc" data-i18n-html="p021">실제 전화번호를 주고받지 않고도, 초대한 사람과만 연결되는 개인 회선입니다. 전송 구간은 항상 암호화되어 있어(WebRTC 표준), 중간에서 가로채기는 매우 어렵습니다.</p>
 
   <div class="product-card">
-    <div class="pc-head"><span class="pc-name">📌 핫라인</span><span class="pc-participants">LINE·02</span></div>
-    <div class="pc-tagline">단둘이, 정해진 상대와 고정으로</div>
+    <div class="pc-head"><span class="pc-name" data-i18n-html="p022">📌 핫라인</span><span class="pc-participants">LINE·02</span></div>
+    <div class="pc-tagline" data-i18n-html="p023">단둘이, 정해진 상대와 고정으로</div>
     <div class="pc-features">
-      <span class="pc-feature">2인 전용</span>
-      <span class="pc-feature">문자·사진·동영상·문서</span>
-      <span class="pc-feature">음성·영상통화</span>
+      <span class="pc-feature" data-i18n-html="p024">2인 전용</span>
+      <span class="pc-feature" data-i18n-html="p025">문자·사진·동영상·문서</span>
+      <span class="pc-feature" data-i18n-html="p026">음성·영상통화</span>
     </div>
     <table class="pc-price-table">
-      <tr><th>3개월</th><th>6개월</th><th>12개월</th><th>24개월</th></tr>
+      <tr><th data-i18n-html="p009">3개월</th><th data-i18n-html="p027">6개월</th><th data-i18n-html="p028">12개월</th><th data-i18n-html="p029">24개월</th></tr>
       <tr>
-        <td><div class="d-price">3,900원</div><div class="d-cap">4GB</div></td>
-        <td><div class="d-price">7,200원</div><div class="d-cap">7GB</div></td>
-        <td><div class="d-price">13,200원</div><div class="d-cap">14GB</div></td>
-        <td><div class="d-price">24,000원</div><div class="d-cap">25GB</div></td>
+        <td><div class="d-price" data-i18n-price>3,900원</div><div class="d-cap">4GB</div></td>
+        <td><div class="d-price" data-i18n-price>7,200원</div><div class="d-cap">7GB</div></td>
+        <td><div class="d-price" data-i18n-price>13,200원</div><div class="d-cap">14GB</div></td>
+        <td><div class="d-price" data-i18n-price>24,000원</div><div class="d-cap">25GB</div></td>
       </tr>
     </table>
-    <p style="font-size:11px; color:var(--ink-soft); margin:10px 2px 0;">연인이나 특정 프로젝트 상대처럼, 상대가 바뀌지 않는 관계에 적합합니다.</p>
-    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=hotline_1to1">이 상품으로 개설하기</a>
+    <p style="font-size:11px; color:var(--ink-soft); margin:10px 2px 0;" data-i18n-html="p030">연인이나 특정 프로젝트 상대처럼, 상대가 바뀌지 않는 관계에 적합합니다.</p>
+    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=hotline_1to1" data-i18n-html="p031">이 상품으로 개설하기</a>
   </div>
 
   <div class="product-card">
-    <div class="pc-head"><span class="pc-name">🔄 에브리바디</span><span class="pc-participants">LINE·02E</span></div>
-    <div class="pc-tagline">단둘이, 상대는 언제든 바꿀 수 있게</div>
+    <div class="pc-head"><span class="pc-name" data-i18n-html="p032">🔄 에브리바디</span><span class="pc-participants">LINE·02E</span></div>
+    <div class="pc-tagline" data-i18n-html="p033">단둘이, 상대는 언제든 바꿀 수 있게</div>
     <div class="pc-features">
-      <span class="pc-feature">2인 전용</span>
-      <span class="pc-feature">상대 교체 가능</span>
-      <span class="pc-feature">문자·사진·동영상·문서</span>
-      <span class="pc-feature">음성·영상통화</span>
+      <span class="pc-feature" data-i18n-html="p024">2인 전용</span>
+      <span class="pc-feature" data-i18n-html="p034">상대 교체 가능</span>
+      <span class="pc-feature" data-i18n-html="p025">문자·사진·동영상·문서</span>
+      <span class="pc-feature" data-i18n-html="p026">음성·영상통화</span>
     </div>
     <table class="pc-price-table">
-      <tr><th>3개월</th><th>6개월</th><th>12개월</th><th>24개월</th></tr>
+      <tr><th data-i18n-html="p009">3개월</th><th data-i18n-html="p027">6개월</th><th data-i18n-html="p028">12개월</th><th data-i18n-html="p029">24개월</th></tr>
       <tr>
-        <td><div class="d-price">5,000원</div><div class="d-cap">4GB</div></td>
-        <td><div class="d-price">9,000원</div><div class="d-cap">7GB</div></td>
-        <td><div class="d-price">16,000원</div><div class="d-cap">14GB</div></td>
-        <td><div class="d-price">29,000원</div><div class="d-cap">25GB</div></td>
+        <td><div class="d-price" data-i18n-price>5,000원</div><div class="d-cap">4GB</div></td>
+        <td><div class="d-price" data-i18n-price>9,000원</div><div class="d-cap">7GB</div></td>
+        <td><div class="d-price" data-i18n-price>16,000원</div><div class="d-cap">14GB</div></td>
+        <td><div class="d-price" data-i18n-price>29,000원</div><div class="d-cap">25GB</div></td>
       </tr>
     </table>
-    <p style="font-size:11px; color:var(--ink-soft); margin:10px 2px 0;">개설자가 원할 때 관리 화면에서 "내보내기"를 누르면, 그 사람은 나가고 새 초대링크가 발급됩니다. 개설자는 이전 대화도 계속 볼 수 있어요(구간별로 색으로 구분됨).</p>
-    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=hotline_everybody">이 상품으로 개설하기</a>
+    <p style="font-size:11px; color:var(--ink-soft); margin:10px 2px 0;" data-i18n-html="p035">개설자가 원할 때 관리 화면에서 "내보내기"를 누르면, 그 사람은 나가고 새 초대링크가 발급됩니다. 개설자는 이전 대화도 계속 볼 수 있어요(구간별로 색으로 구분됨).</p>
+    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=hotline_everybody" data-i18n-html="p031">이 상품으로 개설하기</a>
   </div>
 
   <div class="product-card">
-    <div class="pc-head"><span class="pc-name">👥 이코노미</span><span class="pc-participants">LINE·04E</span></div>
-    <div class="pc-tagline">4명이서, 가볍게</div>
+    <div class="pc-head"><span class="pc-name" data-i18n-html="p036">👥 이코노미</span><span class="pc-participants">LINE·04E</span></div>
+    <div class="pc-tagline" data-i18n-html="p037">4명이서, 가볍게</div>
     <div class="pc-features">
-      <span class="pc-feature">최대 4인</span>
-      <span class="pc-feature">문자·사진·동영상·문서</span>
-      <span class="pc-feature">음성·영상통화</span>
+      <span class="pc-feature" data-i18n-html="p038">최대 4인</span>
+      <span class="pc-feature" data-i18n-html="p025">문자·사진·동영상·문서</span>
+      <span class="pc-feature" data-i18n-html="p026">음성·영상통화</span>
     </div>
     <table class="pc-price-table">
-      <tr><th>3개월</th><th>6개월</th><th>12개월</th><th>24개월</th></tr>
+      <tr><th data-i18n-html="p009">3개월</th><th data-i18n-html="p027">6개월</th><th data-i18n-html="p028">12개월</th><th data-i18n-html="p029">24개월</th></tr>
       <tr>
-        <td><div class="d-price">7,800원</div><div class="d-cap">8GB</div></td>
-        <td><div class="d-price">14,400원</div><div class="d-cap">15GB</div></td>
-        <td><div class="d-price">26,400원</div><div class="d-cap">28GB</div></td>
-        <td><div class="d-price">48,000원</div><div class="d-cap">51GB</div></td>
+        <td><div class="d-price" data-i18n-price>7,800원</div><div class="d-cap">8GB</div></td>
+        <td><div class="d-price" data-i18n-price>14,400원</div><div class="d-cap">15GB</div></td>
+        <td><div class="d-price" data-i18n-price>26,400원</div><div class="d-cap">28GB</div></td>
+        <td><div class="d-price" data-i18n-price>48,000원</div><div class="d-cap">51GB</div></td>
       </tr>
     </table>
-    <p style="font-size:11px; color:var(--ink-soft); margin:10px 2px 0;">소모임·프로젝트 팀 등 여러 명이 함께 쓰기에 적당한 가격대입니다. 개설자가 참가자를 승인제로 받습니다.</p>
-    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=economy_4">이 상품으로 개설하기</a>
+    <p style="font-size:11px; color:var(--ink-soft); margin:10px 2px 0;" data-i18n-html="p039">소모임·프로젝트 팀 등 여러 명이 함께 쓰기에 적당한 가격대입니다. 개설자가 참가자를 승인제로 받습니다.</p>
+    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=economy_4" data-i18n-html="p031">이 상품으로 개설하기</a>
   </div>
 
   <div class="product-card">
-    <div class="pc-head"><span class="pc-name">✨ 프리미엄</span><span class="pc-participants">LINE·04P</span></div>
-    <div class="pc-tagline">4명이서, 고화질로</div>
+    <div class="pc-head"><span class="pc-name" data-i18n-html="p040">✨ 프리미엄</span><span class="pc-participants">LINE·04P</span></div>
+    <div class="pc-tagline" data-i18n-html="p041">4명이서, 고화질로</div>
     <div class="pc-features">
-      <span class="pc-feature">최대 4인</span>
-      <span class="pc-feature">고화질 영상통화</span>
-      <span class="pc-feature">문자·사진·동영상·문서</span>
+      <span class="pc-feature" data-i18n-html="p038">최대 4인</span>
+      <span class="pc-feature" data-i18n-html="p042">고화질 영상통화</span>
+      <span class="pc-feature" data-i18n-html="p025">문자·사진·동영상·문서</span>
     </div>
     <table class="pc-price-table">
-      <tr><th>3개월</th><th>6개월</th><th>12개월</th><th>24개월</th></tr>
+      <tr><th data-i18n-html="p009">3개월</th><th data-i18n-html="p027">6개월</th><th data-i18n-html="p028">12개월</th><th data-i18n-html="p029">24개월</th></tr>
       <tr>
-        <td><div class="d-price">15,000원</div><div class="d-cap">16GB</div></td>
-        <td><div class="d-price">28,000원</div><div class="d-cap">30GB</div></td>
-        <td><div class="d-price">50,000원</div><div class="d-cap">53GB</div></td>
-        <td><div class="d-price">95,000원</div><div class="d-cap">101GB</div></td>
+        <td><div class="d-price" data-i18n-price>15,000원</div><div class="d-cap">16GB</div></td>
+        <td><div class="d-price" data-i18n-price>28,000원</div><div class="d-cap">30GB</div></td>
+        <td><div class="d-price" data-i18n-price>50,000원</div><div class="d-cap">53GB</div></td>
+        <td><div class="d-price" data-i18n-price>95,000원</div><div class="d-cap">101GB</div></td>
       </tr>
     </table>
-    <p style="font-size:11px; color:var(--ink-soft); margin:10px 2px 0;">이코노미와 인원·기능은 같지만, 화질 제한이 없고 사용량 한도가 넉넉해서 영상통화를 자주·길게 하는 모임에 적합합니다.</p>
-    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=premium_4">이 상품으로 개설하기</a>
+    <p style="font-size:11px; color:var(--ink-soft); margin:10px 2px 0;" data-i18n-html="p043">이코노미와 인원·기능은 같지만, 화질 제한이 없고 사용량 한도가 넉넉해서 영상통화를 자주·길게 하는 모임에 적합합니다.</p>
+    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=premium_4" data-i18n-html="p031">이 상품으로 개설하기</a>
   </div>
 
-  <div class="group-title secure" id="secure">현존 최강 보안 다자간 종단간 암호화(E2EE) 상품</div>
-  <p class="group-desc">위 4종과 인원·기능은 동일하지만, <b>문자·사진·동영상·문서를 저희(Aliascall)도 못 보게</b> 브라우저에서 직접 암호화합니다. 참가자들만 아는 "열쇠"가 초대링크 안에 담겨 전달되고, 이 열쇠는 저희 서버로 절대 전송되지 않습니다.</p>
+  <div class="group-title secure" id="secure" data-i18n-html="p044">현존 최강 보안 다자간 종단간 암호화(E2EE) 상품</div>
+  <p class="group-desc" data-i18n-html="p045">위 4종과 인원·기능은 동일하지만, <b>문자·사진·동영상·문서를 저희(Aliascall)도 못 보게</b> 브라우저에서 직접 암호화합니다. 참가자들만 아는 "열쇠"가 초대링크 안에 담겨 전달되고, 이 열쇠는 저희 서버로 절대 전송되지 않습니다.</p>
 
-  <div class="note-box">
+  <div class="note-box" data-i18n-html="p046">
     ⚠️ <b>중요:</b> 초대링크(정확히는 <span class="mono">#k=</span> 뒷부분)를 잃어버리면, 그 대화는 저희를 포함해서 아무도 복구할 수 없습니다. 링크를 안전한 곳에 꼭 저장해주세요.
   </div>
 
   <div class="product-card secure">
-    <div class="pc-head"><span class="pc-name">📌🔒 핫라인 Secure</span><span class="pc-participants">LINE·02S</span></div>
-    <div class="pc-tagline">단둘이, 저희도 못 보는 대화</div>
+    <div class="pc-head"><span class="pc-name" data-i18n-html="p047">📌🔒 핫라인 Secure</span><span class="pc-participants">LINE·02S</span></div>
+    <div class="pc-tagline" data-i18n-html="p048">단둘이, 저희도 못 보는 대화</div>
     <div class="pc-features">
-      <span class="pc-feature brass">2인 전용</span>
-      <span class="pc-feature brass">종단간 암호화</span>
-      <span class="pc-feature brass">문자·사진·동영상·문서</span>
+      <span class="pc-feature brass" data-i18n-html="p024">2인 전용</span>
+      <span class="pc-feature brass" data-i18n-html="p049">종단간 암호화</span>
+      <span class="pc-feature brass" data-i18n-html="p025">문자·사진·동영상·문서</span>
     </div>
     <table class="pc-price-table">
-      <tr><th>3개월</th><th>6개월</th><th>12개월</th><th>24개월</th></tr>
+      <tr><th data-i18n-html="p009">3개월</th><th data-i18n-html="p027">6개월</th><th data-i18n-html="p028">12개월</th><th data-i18n-html="p029">24개월</th></tr>
       <tr>
-        <td><div class="d-price">5,800원</div><div class="d-cap">6GB</div></td>
-        <td><div class="d-price">10,800원</div><div class="d-cap">11GB</div></td>
-        <td><div class="d-price">19,800원</div><div class="d-cap">21GB</div></td>
-        <td><div class="d-price">36,000원</div><div class="d-cap">38GB</div></td>
+        <td><div class="d-price" data-i18n-price>5,800원</div><div class="d-cap">6GB</div></td>
+        <td><div class="d-price" data-i18n-price>10,800원</div><div class="d-cap">11GB</div></td>
+        <td><div class="d-price" data-i18n-price>19,800원</div><div class="d-cap">21GB</div></td>
+        <td><div class="d-price" data-i18n-price>36,000원</div><div class="d-cap">38GB</div></td>
       </tr>
     </table>
-    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=hotline_1to1_secure">이 상품으로 개설하기</a>
+    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=hotline_1to1_secure" data-i18n-html="p031">이 상품으로 개설하기</a>
   </div>
 
   <div class="product-card secure">
-    <div class="pc-head"><span class="pc-name">🔄🔒 에브리바디 Secure</span><span class="pc-participants">LINE·02ES</span></div>
-    <div class="pc-tagline">단둘이, 상대 교체 + 암호화</div>
+    <div class="pc-head"><span class="pc-name" data-i18n-html="p050">🔄🔒 에브리바디 Secure</span><span class="pc-participants">LINE·02ES</span></div>
+    <div class="pc-tagline" data-i18n-html="p051">단둘이, 상대 교체 + 암호화</div>
     <div class="pc-features">
-      <span class="pc-feature brass">2인 전용</span>
-      <span class="pc-feature brass">상대 교체 가능</span>
-      <span class="pc-feature brass">종단간 암호화</span>
+      <span class="pc-feature brass" data-i18n-html="p024">2인 전용</span>
+      <span class="pc-feature brass" data-i18n-html="p034">상대 교체 가능</span>
+      <span class="pc-feature brass" data-i18n-html="p049">종단간 암호화</span>
     </div>
     <table class="pc-price-table">
-      <tr><th>3개월</th><th>6개월</th><th>12개월</th><th>24개월</th></tr>
+      <tr><th data-i18n-html="p009">3개월</th><th data-i18n-html="p027">6개월</th><th data-i18n-html="p028">12개월</th><th data-i18n-html="p029">24개월</th></tr>
       <tr>
-        <td><div class="d-price">7,500원</div><div class="d-cap">8GB</div></td>
-        <td><div class="d-price">13,500원</div><div class="d-cap">14GB</div></td>
-        <td><div class="d-price">24,000원</div><div class="d-cap">25GB</div></td>
-        <td><div class="d-price">43,500원</div><div class="d-cap">46GB</div></td>
+        <td><div class="d-price" data-i18n-price>7,500원</div><div class="d-cap">8GB</div></td>
+        <td><div class="d-price" data-i18n-price>13,500원</div><div class="d-cap">14GB</div></td>
+        <td><div class="d-price" data-i18n-price>24,000원</div><div class="d-cap">25GB</div></td>
+        <td><div class="d-price" data-i18n-price>43,500원</div><div class="d-cap">46GB</div></td>
       </tr>
     </table>
-    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=hotline_everybody_secure">이 상품으로 개설하기</a>
+    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=hotline_everybody_secure" data-i18n-html="p031">이 상품으로 개설하기</a>
   </div>
 
   <div class="product-card secure">
-    <div class="pc-head"><span class="pc-name">👥🔒 이코노미 Secure</span><span class="pc-participants">LINE·04ES</span></div>
-    <div class="pc-tagline">4명이서, 암호화까지</div>
+    <div class="pc-head"><span class="pc-name" data-i18n-html="p052">👥🔒 이코노미 Secure</span><span class="pc-participants">LINE·04ES</span></div>
+    <div class="pc-tagline" data-i18n-html="p053">4명이서, 암호화까지</div>
     <div class="pc-features">
-      <span class="pc-feature brass">최대 4인</span>
-      <span class="pc-feature brass">종단간 암호화</span>
-      <span class="pc-feature brass">문자·사진·동영상·문서</span>
+      <span class="pc-feature brass" data-i18n-html="p038">최대 4인</span>
+      <span class="pc-feature brass" data-i18n-html="p049">종단간 암호화</span>
+      <span class="pc-feature brass" data-i18n-html="p025">문자·사진·동영상·문서</span>
     </div>
     <table class="pc-price-table">
-      <tr><th>3개월</th><th>6개월</th><th>12개월</th><th>24개월</th></tr>
+      <tr><th data-i18n-html="p009">3개월</th><th data-i18n-html="p027">6개월</th><th data-i18n-html="p028">12개월</th><th data-i18n-html="p029">24개월</th></tr>
       <tr>
-        <td><div class="d-price">11,700원</div><div class="d-cap">12GB</div></td>
-        <td><div class="d-price">21,600원</div><div class="d-cap">23GB</div></td>
-        <td><div class="d-price">39,600원</div><div class="d-cap">42GB</div></td>
-        <td><div class="d-price">72,000원</div><div class="d-cap">77GB</div></td>
+        <td><div class="d-price" data-i18n-price>11,700원</div><div class="d-cap">12GB</div></td>
+        <td><div class="d-price" data-i18n-price>21,600원</div><div class="d-cap">23GB</div></td>
+        <td><div class="d-price" data-i18n-price>39,600원</div><div class="d-cap">42GB</div></td>
+        <td><div class="d-price" data-i18n-price>72,000원</div><div class="d-cap">77GB</div></td>
       </tr>
     </table>
-    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=economy_4_secure">이 상품으로 개설하기</a>
+    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=economy_4_secure" data-i18n-html="p031">이 상품으로 개설하기</a>
   </div>
 
   <div class="product-card secure">
-    <div class="pc-head"><span class="pc-name">✨🔒 프리미엄 Secure</span><span class="pc-participants">LINE·04PS</span></div>
-    <div class="pc-tagline">4명이서, 고화질 + 암호화</div>
+    <div class="pc-head"><span class="pc-name" data-i18n-html="p054">✨🔒 프리미엄 Secure</span><span class="pc-participants">LINE·04PS</span></div>
+    <div class="pc-tagline" data-i18n-html="p055">4명이서, 고화질 + 암호화</div>
     <div class="pc-features">
-      <span class="pc-feature brass">최대 4인</span>
-      <span class="pc-feature brass">고화질 영상통화</span>
-      <span class="pc-feature brass">종단간 암호화</span>
+      <span class="pc-feature brass" data-i18n-html="p038">최대 4인</span>
+      <span class="pc-feature brass" data-i18n-html="p042">고화질 영상통화</span>
+      <span class="pc-feature brass" data-i18n-html="p049">종단간 암호화</span>
     </div>
     <table class="pc-price-table">
-      <tr><th>3개월</th><th>6개월</th><th>12개월</th><th>24개월</th></tr>
+      <tr><th data-i18n-html="p009">3개월</th><th data-i18n-html="p027">6개월</th><th data-i18n-html="p028">12개월</th><th data-i18n-html="p029">24개월</th></tr>
       <tr>
-        <td><div class="d-price">22,500원</div><div class="d-cap">24GB</div></td>
-        <td><div class="d-price">42,000원</div><div class="d-cap">45GB</div></td>
-        <td><div class="d-price">75,000원</div><div class="d-cap">80GB</div></td>
-        <td><div class="d-price">142,500원</div><div class="d-cap">152GB</div></td>
+        <td><div class="d-price" data-i18n-price>22,500원</div><div class="d-cap">24GB</div></td>
+        <td><div class="d-price" data-i18n-price>42,000원</div><div class="d-cap">45GB</div></td>
+        <td><div class="d-price" data-i18n-price>75,000원</div><div class="d-cap">80GB</div></td>
+        <td><div class="d-price" data-i18n-price>142,500원</div><div class="d-cap">152GB</div></td>
       </tr>
     </table>
-    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=premium_4_secure">이 상품으로 개설하기</a>
+    <a class="pc-cta" href="aliascall_hotline_purchase.html?tier=premium_4_secure" data-i18n-html="p031">이 상품으로 개설하기</a>
   </div>
 
-  <p style="font-size:10.5px; color:var(--ink-soft); text-align:center; margin-top:24px; line-height:1.7;">
+  <p style="font-size:10.5px; color:var(--ink-soft); text-align:center; margin-top:24px; line-height:1.7;" data-i18n-html="p056">
     모든 상품은 개설자 승인제(대기실) 참가 방식이며, 사용량 한도를 넘으면 그 시점에 추가결제가 안내됩니다.<br>
     한도 이하로 사용하시면 별도 알림 없이 그대로 이용하실 수 있습니다.
   </p>
 </main>
+
+<script>
+// =====================================================================
+// 2026-08-25 신설: 다국어(한국어/영어)
+// 가격은 반복이 많아 사전에 넣지 않고 data-i18n-price 규칙으로 바꿈.
+// 결제는 원화(이니시스)로 이뤄지므로 통화는 그대로 두고 표기만 바꿈.
+// =====================================================================
+const I18N = {
+ "ko": {
+  "p001": "🔒 핫라인 상품 안내",
+  "p002": "누구나 아는 메신저 대신, 둘 또는 몇 명만 아는 우리끼리의 회선입니다. 8개 상품 전부 문자·사진·동영상·문서 공유와 음성·영상통화를 지원하며, 차이는 <b>인원수·상대 교체 가능 여부·암호화 여부</b>입니다.",
+  "p003": "일반 4종",
+  "p004": "Secure 4종 🔒",
+  "p005": "상품",
+  "p006": "인원",
+  "p007": "상대교체",
+  "p008": "암호화",
+  "p009": "3개월",
+  "p010": "핫라인",
+  "p011": "2명",
+  "p012": "에브리바디",
+  "p013": "이코노미",
+  "p014": "4명",
+  "p015": "프리미엄",
+  "p016": "핫라인 Secure",
+  "p017": "에브리바디 Secure",
+  "p018": "이코노미 Secure",
+  "p019": "프리미엄 Secure",
+  "p020": "보안이 강화된 핫라인 상품",
+  "p021": "실제 전화번호를 주고받지 않고도, 초대한 사람과만 연결되는 개인 회선입니다. 전송 구간은 항상 암호화되어 있어(WebRTC 표준), 중간에서 가로채기는 매우 어렵습니다.",
+  "p022": "📌 핫라인",
+  "p023": "단둘이, 정해진 상대와 고정으로",
+  "p024": "2인 전용",
+  "p025": "문자·사진·동영상·문서",
+  "p026": "음성·영상통화",
+  "p027": "6개월",
+  "p028": "12개월",
+  "p029": "24개월",
+  "p030": "연인이나 특정 프로젝트 상대처럼, 상대가 바뀌지 않는 관계에 적합합니다.",
+  "p031": "이 상품으로 개설하기",
+  "p032": "🔄 에브리바디",
+  "p033": "단둘이, 상대는 언제든 바꿀 수 있게",
+  "p034": "상대 교체 가능",
+  "p035": "개설자가 원할 때 관리 화면에서 \"내보내기\"를 누르면, 그 사람은 나가고 새 초대링크가 발급됩니다. 개설자는 이전 대화도 계속 볼 수 있어요(구간별로 색으로 구분됨).",
+  "p036": "👥 이코노미",
+  "p037": "4명이서, 가볍게",
+  "p038": "최대 4인",
+  "p039": "소모임·프로젝트 팀 등 여러 명이 함께 쓰기에 적당한 가격대입니다. 개설자가 참가자를 승인제로 받습니다.",
+  "p040": "✨ 프리미엄",
+  "p041": "4명이서, 고화질로",
+  "p042": "고화질 영상통화",
+  "p043": "이코노미와 인원·기능은 같지만, 화질 제한이 없고 사용량 한도가 넉넉해서 영상통화를 자주·길게 하는 모임에 적합합니다.",
+  "p044": "현존 최강 보안 다자간 종단간 암호화(E2EE) 상품",
+  "p045": "위 4종과 인원·기능은 동일하지만, <b>문자·사진·동영상·문서를 저희(Aliascall)도 못 보게</b> 브라우저에서 직접 암호화합니다. 참가자들만 아는 \"열쇠\"가 초대링크 안에 담겨 전달되고, 이 열쇠는 저희 서버로 절대 전송되지 않습니다.",
+  "p046": "⚠️ <b>중요:</b> 초대링크(정확히는 <span class=\"mono\">#k=</span> 뒷부분)를 잃어버리면, 그 대화는 저희를 포함해서 아무도 복구할 수 없습니다. 링크를 안전한 곳에 꼭 저장해주세요.",
+  "p047": "📌🔒 핫라인 Secure",
+  "p048": "단둘이, 저희도 못 보는 대화",
+  "p049": "종단간 암호화",
+  "p050": "🔄🔒 에브리바디 Secure",
+  "p051": "단둘이, 상대 교체 + 암호화",
+  "p052": "👥🔒 이코노미 Secure",
+  "p053": "4명이서, 암호화까지",
+  "p054": "✨🔒 프리미엄 Secure",
+  "p055": "4명이서, 고화질 + 암호화",
+  "p056": "모든 상품은 개설자 승인제(대기실) 참가 방식이며, 사용량 한도를 넘으면 그 시점에 추가결제가 안내됩니다.<br>\n    한도 이하로 사용하시면 별도 알림 없이 그대로 이용하실 수 있습니다.",
+  "docTitle": "Aliascall — 핫라인 상품 안내",
+  "langToggle": "EN",
+  "langAria": "언어 바꾸기"
+ },
+ "en": {
+  "p001": "🔒 Hotline plans",
+  "p002": "Instead of a messenger everyone knows, this is a line only you and a few others know about. All eight plans support text, photos, video and document sharing plus voice and video calls. What differs is <b>group size, whether you can swap the other person, and whether it is encrypted</b>.",
+  "p003": "4 standard",
+  "p004": "4 Secure 🔒",
+  "p005": "Plan",
+  "p006": "People",
+  "p007": "Swappable",
+  "p008": "Encrypted",
+  "p009": "3 months",
+  "p010": "Hotline",
+  "p011": "2",
+  "p012": "Everybody",
+  "p013": "Economy",
+  "p014": "4",
+  "p015": "Premium",
+  "p016": "Hotline Secure",
+  "p017": "Everybody Secure",
+  "p018": "Economy Secure",
+  "p019": "Premium Secure",
+  "p020": "Hotline plans with stronger security",
+  "p021": "A private line that connects you only to the people you invite, without exchanging real phone numbers. Traffic is always encrypted in transit (the WebRTC standard), which makes interception very difficult.",
+  "p022": "📌 Hotline",
+  "p023": "Just the two of you, with one fixed partner",
+  "p024": "2 people only",
+  "p025": "Text, photos, video, documents",
+  "p026": "Voice and video calls",
+  "p027": "6 months",
+  "p028": "12 months",
+  "p029": "24 months",
+  "p030": "Suited to relationships where the other person does not change — a partner, or a fixed project counterpart.",
+  "p031": "Create with this plan",
+  "p032": "🔄 Everybody",
+  "p033": "Two at a time, with the other person swappable anytime",
+  "p034": "Swappable partner",
+  "p035": "Whenever the owner wants, tapping \"Remove\" on the management screen makes that person leave and issues a new invite link. The owner can still see the earlier conversation, colour-coded by stretch.",
+  "p036": "👥 Economy",
+  "p037": "Four people, kept simple",
+  "p038": "Up to 4 people",
+  "p039": "Priced for small groups and project teams. The owner approves each participant before they join.",
+  "p040": "✨ Premium",
+  "p041": "Four people, in high definition",
+  "p042": "HD video calls",
+  "p043": "Same group size and features as Economy, but with no quality cap and a generous usage limit — good for groups that make long, frequent video calls.",
+  "p044": "The strongest security available: group end-to-end encrypted (E2EE) plans",
+  "p045": "Same group size and features as the four plans above, but everything — text, photos, video and documents — is encrypted in your browser <b>so that we (Aliascall) cannot read it either</b>. The \"key\" that only the participants have is carried inside the invite link, so if you lose that link the conversation cannot be recovered by anyone.",
+  "p046": "⚠️ <b>Important:</b> if you lose the invite link (specifically the part after <span class=\"mono\">#k=</span>), nobody can recover that conversation — not even us. Be sure to save the link somewhere safe.",
+  "p047": "📌🔒 Hotline Secure",
+  "p048": "Just the two of you — a conversation even we cannot read",
+  "p049": "End-to-end encryption",
+  "p050": "🔄🔒 Everybody Secure",
+  "p051": "Two at a time, swappable partner plus encryption",
+  "p052": "👥🔒 Economy Secure",
+  "p053": "Four people, with encryption too",
+  "p054": "✨🔒 Premium Secure",
+  "p055": "Four people, high definition plus encryption",
+  "p056": "On every plan, participants join through the owner's approval (a lobby), and if you go over the usage limit you will be told about an additional charge at that point.<br>\n    Stay under the limit and you can keep using it with no notice at all.",
+  "docTitle": "Aliascall — Hotline plans",
+  "langToggle": "한국어",
+  "langAria": "Change language"
+ }
+};
+
+const LANG_KEYS = ['aliascall_lang', 'aliascall_language', 'ac_lang', 'lang'];
+function detectLang(){
+  try { const q = new URLSearchParams(location.search).get('lang');
+        if (q) return q.toLowerCase().indexOf('en') === 0 ? 'en' : 'ko'; } catch (e) {}
+  for (const k of LANG_KEYS) {
+    try { const v = localStorage.getItem(k);
+          if (v) return String(v).toLowerCase().indexOf('en') === 0 ? 'en' : 'ko'; } catch (e) {}
+  }
+  return (navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en';
+}
+let LANG = detectLang();
+function T(k){ const d = I18N[LANG] || I18N.ko; return d[k] !== undefined ? d[k] : (I18N.ko[k] !== undefined ? I18N.ko[k] : k); }
+function localizePrices(){
+  document.querySelectorAll('[data-i18n-price]').forEach((el) => {
+    if (!el.dataset.priceKo) el.dataset.priceKo = el.textContent.trim();
+    const n = el.dataset.priceKo.replace('원', '');
+    el.textContent = (LANG === 'en') ? ('KRW ' + n) : el.dataset.priceKo;
+  });
+}
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.title = T('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = T(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', T(el.dataset.i18nAria)); });
+  localizePrices();
+}
+applyI18n();
+document.getElementById('langToggleBtn').addEventListener('click', () => {
+  LANG = (LANG === 'ko') ? 'en' : 'ko';
+  LANG_KEYS.forEach((k) => { try { localStorage.setItem(k, LANG); } catch (e) {} });
+  applyI18n();
+});
+</script>
+
 
 </div>
 </body>

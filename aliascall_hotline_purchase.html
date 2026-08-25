@@ -78,6 +78,10 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 .key-link-row button{ background:var(--teal); color:#fff; border:none; border-radius:10px; padding:0 16px; font-size:12px; font-weight:700; cursor:pointer; }
 .pay-btn:disabled{ opacity:.5; }
 #paypalButtonContainer{ display:none; }
+
+/* 2026-08-25 신설: 언어 전환 버튼 */
+.lang-toggle{ margin-left:auto; background:var(--card,#fff); color:inherit; border:1.5px solid var(--line); border-radius:20px; padding:6px 13px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; }
+.lang-toggle:active{ opacity:.6; }
 </style>
 </head>
 <body>
@@ -87,60 +91,61 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
   <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'">←</button>
   <div class="brand-mark">A</div>
   <div class="brand-name">Alias<em>call</em></div>
+  <button type="button" class="lang-toggle" id="langToggleBtn" data-i18n="langToggle" data-i18n-aria="langAria" aria-label="언어 바꾸기">EN</button>
 </header>
 
 <main>
-  <div class="page-title">핫라인 개설</div>
+  <div class="page-title" data-i18n="pageTitle">핫라인 개설</div>
   <div class="login-needed" id="loginNeeded" style="display:none;">
-    로그인이 필요합니다.<br><br>
-    <a href="aliascall_registration_mockup.html" style="color:var(--teal); font-weight:700;">로그인/가입하러 가기</a>
+    <span data-i18n="loginNeeded">로그인이 필요합니다.</span><br><br>
+    <a href="aliascall_registration_mockup.html" style="color:var(--teal); font-weight:700;" data-i18n="loginLink">로그인/가입하러 가기</a>
   </div>
 
   <div id="content">
     <div class="tier-tabs" id="tierTabs">
-      <div class="tier-tab" data-tier="hotline_1to1"><div class="t-name">핫라인</div><div class="t-sub">2인·고정</div></div>
-      <div class="tier-tab" data-tier="hotline_everybody"><div class="t-name">에브리바디</div><div class="t-sub">2인·교체가능</div></div>
-      <div class="tier-tab" data-tier="economy_4"><div class="t-name">이코노미</div><div class="t-sub">4인</div></div>
-      <div class="tier-tab" data-tier="premium_4"><div class="t-name">프리미엄</div><div class="t-sub">4인</div></div>
+      <div class="tier-tab" data-tier="hotline_1to1"><div class="t-name" data-i18n="tHotline">핫라인</div><div class="t-sub" data-i18n="sub2fixed">2인·고정</div></div>
+      <div class="tier-tab" data-tier="hotline_everybody"><div class="t-name" data-i18n="tEverybody">에브리바디</div><div class="t-sub" data-i18n="sub2swap">2인·교체가능</div></div>
+      <div class="tier-tab" data-tier="economy_4"><div class="t-name" data-i18n="tEconomy">이코노미</div><div class="t-sub" data-i18n="sub4">4인</div></div>
+      <div class="tier-tab" data-tier="premium_4"><div class="t-name" data-i18n="tPremium">프리미엄</div><div class="t-sub" data-i18n="sub4">4인</div></div>
     </div>
     <!-- 2026-08-22 수정: "암호화 추가(+50%)" 체크박스를 없애고, 8개 상품 전부 독립된 별개
          상품 탭으로 분리함 — 계산식이 아니라 그 자체로 이름과 가격이 있는 상품임을 명확히 함 -->
     <div class="tier-tabs secure-row" id="tierTabsSecure">
-      <div class="tier-tab secure" data-tier="hotline_1to1_secure"><div class="t-name">핫라인🔒</div><div class="t-sub">2인·암호화</div></div>
-      <div class="tier-tab secure" data-tier="hotline_everybody_secure"><div class="t-name">에브리바디🔒</div><div class="t-sub">2인·교체+암호화</div></div>
-      <div class="tier-tab secure" data-tier="economy_4_secure"><div class="t-name">이코노미🔒</div><div class="t-sub">4인·암호화</div></div>
-      <div class="tier-tab secure" data-tier="premium_4_secure"><div class="t-name">프리미엄🔒</div><div class="t-sub">4인·암호화</div></div>
+      <div class="tier-tab secure" data-tier="hotline_1to1_secure"><div class="t-name" data-i18n="tHotlineSec">핫라인🔒</div><div class="t-sub" data-i18n="sub2sec">2인·암호화</div></div>
+      <div class="tier-tab secure" data-tier="hotline_everybody_secure"><div class="t-name" data-i18n="tEverybodySec">에브리바디🔒</div><div class="t-sub" data-i18n="sub2swapsec">2인·교체+암호화</div></div>
+      <div class="tier-tab secure" data-tier="economy_4_secure"><div class="t-name" data-i18n="tEconomySec">이코노미🔒</div><div class="t-sub" data-i18n="sub4sec">4인·암호화</div></div>
+      <div class="tier-tab secure" data-tier="premium_4_secure"><div class="t-name" data-i18n="tPremiumSec">프리미엄🔒</div><div class="t-sub" data-i18n="sub4sec">4인·암호화</div></div>
     </div>
 
-    <div class="duration-grid" id="durationGrid"><div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px; padding:20px;">불러오는 중…</div></div>
+    <div class="duration-grid" id="durationGrid"><div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px; padding:20px;" data-i18n="loading">불러오는 중…</div></div>
 
     <div class="summary-card" id="summaryCard" style="display:none;">
-      <div class="summary-row"><span>상품</span><span id="sumTier">-</span></div>
-      <div class="summary-row"><span>기간</span><span id="sumDuration">-</span></div>
-      <div class="summary-row"><span>포함 사용량</span><span id="sumCap">-</span></div>
-      <div class="summary-row total"><span>결제 금액</span><span id="sumPrice">-</span></div>
+      <div class="summary-row"><span data-i18n="sumProduct">상품</span><span id="sumTier">-</span></div>
+      <div class="summary-row"><span data-i18n="sumPeriod">기간</span><span id="sumDuration">-</span></div>
+      <div class="summary-row"><span data-i18n="sumCap">포함 사용량</span><span id="sumCap">-</span></div>
+      <div class="summary-row total"><span data-i18n="sumPrice">결제 금액</span><span id="sumPrice">-</span></div>
     </div>
 
     <!-- 2026-08-23 신설: 결제 전 필수 확인사항 -->
     <div class="purchase-notice">
-      <div class="purchase-notice-title">⚠️ 결제 전 꼭 확인해주세요</div>
+      <div class="purchase-notice-title" data-i18n="noticeTitle">⚠️ 결제 전 꼭 확인해주세요</div>
       <ol class="purchase-notice-list">
-        <li>구독을 연장하지 않고 <b>만료 후 30일이 지나면</b>, 개인정보 보호 차원에서 그동안 주고받은 사진·동영상·음성 등 <b>파일이 자동으로 삭제</b>됩니다. (문자 대화 기록은 유지)</li>
-        <li>연장하지 않으신 경우, 삭제되기 전 <b>관리 화면에서 최대 3회까지</b> 연장 안내와 삭제 예정 사실을 알려드립니다.</li>
-        <li>사진·동영상을 과하게 많이 보내고 다시 열어보실 경우, 그만큼 <b>통화 등에 쓸 수 있는 전체 사용량이 줄어들 수 있습니다.</b></li>
+        <li data-i18n-html="notice1">구독을 연장하지 않고 <b>만료 후 30일이 지나면</b>, 개인정보 보호 차원에서 그동안 주고받은 사진·동영상·음성 등 <b>파일이 자동으로 삭제</b>됩니다. (문자 대화 기록은 유지)</li>
+        <li data-i18n-html="notice2">연장하지 않으신 경우, 삭제되기 전 <b>관리 화면에서 최대 3회까지</b> 연장 안내와 삭제 예정 사실을 알려드립니다.</li>
+        <li data-i18n-html="notice3">사진·동영상을 과하게 많이 보내고 다시 열어보실 경우, 그만큼 <b>통화 등에 쓸 수 있는 전체 사용량이 줄어들 수 있습니다.</b></li>
       </ol>
       <label class="purchase-notice-check">
         <input type="checkbox" id="purchaseNoticeCheckbox">
-        <span>위 내용을 확인했으며 동의합니다</span>
+        <span data-i18n="noticeAgree">위 내용을 확인했으며 동의합니다</span>
       </label>
     </div>
 
     <div class="pay-method-tabs">
-      <div class="pay-method-tab active" data-method="inicis">💳 국내카드</div>
+      <div class="pay-method-tab active" data-method="inicis" data-i18n="payDomestic">💳 국내카드</div>
       <div class="pay-method-tab" data-method="paypal">🌐 PayPal</div>
     </div>
 
-    <button class="pay-btn" id="inicisPayBtn" disabled>결제하고 핫라인 만들기</button>
+    <button class="pay-btn" id="inicisPayBtn" disabled data-i18n="payBtn">결제하고 핫라인 만들기</button>
     <div id="paypalButtonContainer"></div>
   </div>
 
@@ -148,15 +153,15 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
   <div id="secureKeyReveal" style="display:none;">
     <div class="key-reveal-card">
       <div class="key-reveal-icon">🔑</div>
-      <h3 style="margin-bottom:8px;">핫라인이 만들어졌어요</h3>
-      <p style="font-size:12.5px; color:var(--danger); font-weight:700; line-height:1.6; margin-bottom:16px;">
+      <h3 style="margin-bottom:8px;" data-i18n="keyRevealTitle">핫라인이 만들어졌어요</h3>
+      <p style="font-size:12.5px; color:var(--danger); font-weight:700; line-height:1.6; margin-bottom:16px;" data-i18n-html="keyRevealWarn">
         아래 링크를 지금 꼭 저장해두세요.<br>이 링크(정확히는 <span class="mono">#k=</span> 뒷부분)를 잃어버리면, 저희도 포함해서 <u>아무도</u> 이 대화를 복구할 수 없습니다.
       </p>
       <div class="key-link-row">
         <input type="text" id="ownerLinkOutput" readonly>
-        <button id="copyOwnerLinkBtn">복사</button>
+        <button id="copyOwnerLinkBtn" data-i18n="copy">복사</button>
       </div>
-      <button class="pay-btn" style="margin-top:16px;" onclick="window.location.href='aliascall_hotline_manage.html'">확인했어요, 관리화면으로</button>
+      <button class="pay-btn" style="margin-top:16px;" onclick="window.location.href='aliascall_hotline_manage.html'" data-i18n="goManage">확인했어요, 관리화면으로</button>
     </div>
   </div>
 </main>
@@ -168,6 +173,109 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// =====================================================================
+// 2026-08-25 신설: 다국어(한국어/영어)
+// =====================================================================
+const I18N = {
+  ko: {
+    docTitle: 'Aliascall — 핫라인 개설',
+    langToggle: 'EN', langAria: '언어 바꾸기',
+    pageTitle: '핫라인 개설',
+    loginNeeded: '로그인이 필요합니다.',
+    loginLink: '로그인/가입하러 가기',
+    tHotline: '핫라인', tEverybody: '에브리바디', tEconomy: '이코노미', tPremium: '프리미엄',
+    tHotlineSec: '핫라인🔒', tEverybodySec: '에브리바디🔒', tEconomySec: '이코노미🔒', tPremiumSec: '프리미엄🔒',
+    sub2fixed: '2인·고정', sub2swap: '2인·교체가능', sub4: '4인',
+    sub2sec: '2인·암호화', sub2swapsec: '2인·교체+암호화', sub4sec: '4인·암호화',
+    loading: '불러오는 중…',
+    noPlans: '요금 정보가 없어요.',
+    planLoadFail: '요금 정보를 불러오지 못했어요.',
+    sumProduct: '상품', sumPeriod: '기간', sumCap: '포함 사용량', sumPrice: '결제 금액',
+    noticeTitle: '⚠️ 결제 전 꼭 확인해주세요',
+    notice1: '구독을 연장하지 않고 <b>만료 후 30일이 지나면</b>, 개인정보 보호 차원에서 그동안 주고받은 사진·동영상·음성 등 <b>파일이 자동으로 삭제</b>됩니다. (문자 대화 기록은 유지)',
+    notice2: '연장하지 않으신 경우, 삭제되기 전 <b>관리 화면에서 최대 3회까지</b> 연장 안내와 삭제 예정 사실을 알려드립니다.',
+    notice3: '사진·동영상을 과하게 많이 보내고 다시 열어보실 경우, 그만큼 <b>통화 등에 쓸 수 있는 전체 사용량이 줄어들 수 있습니다.</b>',
+    noticeAgree: '위 내용을 확인했으며 동의합니다',
+    payDomestic: '💳 국내카드',
+    payBtn: '결제하고 핫라인 만들기',
+    payPreparing: '결제 준비 중…',
+    checkFirst: '먼저 위 확인사항에 체크해주세요',
+    keyRevealTitle: '핫라인이 만들어졌어요',
+    keyRevealWarn: '아래 링크를 지금 꼭 저장해두세요.<br>이 링크(정확히는 <span class="mono">#k=</span> 뒷부분)를 잃어버리면, 저희도 포함해서 <u>아무도</u> 이 대화를 복구할 수 없습니다.',
+    copy: '복사', copied: '복사됨!',
+    goManage: '확인했어요, 관리화면으로',
+  },
+  en: {
+    docTitle: 'Aliascall — Create a hotline',
+    langToggle: '한국어', langAria: 'Change language',
+    pageTitle: 'Create a hotline',
+    loginNeeded: 'Please sign in.',
+    loginLink: 'Go to sign in / sign up',
+    tHotline: 'Hotline', tEverybody: 'Everybody', tEconomy: 'Economy', tPremium: 'Premium',
+    tHotlineSec: 'Hotline🔒', tEverybodySec: 'Everybody🔒', tEconomySec: 'Economy🔒', tPremiumSec: 'Premium🔒',
+    sub2fixed: '2 · fixed', sub2swap: '2 · swappable', sub4: '4 people',
+    sub2sec: '2 · encrypted', sub2swapsec: '2 · swap + encrypted', sub4sec: '4 · encrypted',
+    loading: 'Loading…',
+    noPlans: 'No pricing available.',
+    planLoadFail: "Couldn't load the pricing information.",
+    sumProduct: 'Plan', sumPeriod: 'Period', sumCap: 'Included usage', sumPrice: 'Total',
+    noticeTitle: '⚠️ Please read before paying',
+    notice1: 'If you do not renew and <b>30 days pass after expiry</b>, the photos, videos, voice files and other <b>files you exchanged are deleted automatically</b> for privacy reasons. (Text history is kept.)',
+    notice2: 'If you have not renewed, we will remind you <b>up to three times on the management screen</b> before anything is deleted.',
+    notice3: 'Sending and re-opening a very large number of photos and videos <b>can reduce the total usage left for calls and everything else.</b>',
+    noticeAgree: 'I have read and agree to the above',
+    payDomestic: '💳 Korean card',
+    payBtn: 'Pay and create the hotline',
+    payPreparing: 'Preparing payment…',
+    checkFirst: 'Please tick the box above first',
+    keyRevealTitle: 'Your hotline is ready',
+    keyRevealWarn: 'Save the link below right now.<br>If you lose this link (specifically the part after <span class="mono">#k=</span>), <u>nobody</u> can recover this conversation — not even us.',
+    copy: 'Copy', copied: 'Copied!',
+    goManage: 'Got it — go to management',
+  },
+};
+
+const TIER_LABEL_EN = {
+  hotline_1to1: 'Hotline (2)', hotline_everybody: 'Hotline Everybody (2)',
+  economy_4: 'Economy (4)', premium_4: 'Premium (4)',
+  hotline_1to1_secure: 'Hotline Secure (2)', hotline_everybody_secure: 'Hotline Everybody Secure (2)',
+  economy_4_secure: 'Economy Secure (4)', premium_4_secure: 'Premium Secure (4)',
+};
+function tierLabel(tier){
+  return (LANG === 'en' ? TIER_LABEL_EN[tier] : TIER_LABEL[tier]) || TIER_LABEL[tier] || tier;
+}
+// ⚠ 결제는 원화(이니시스)로 이뤄지므로 통화는 바꾸지 않고 표기만 바꿈.
+//   한국어 "12,000원" / 영어 "KRW 12,000"
+function priceLabel(krw){
+  const n = Number(krw).toLocaleString('en-US');
+  return (LANG === 'en') ? ('KRW ' + n) : (Number(krw).toLocaleString() + '원');
+}
+function monthsLabel(m){
+  return (LANG === 'en') ? (m + (m === 1 ? ' month' : ' months')) : (m + '개월');
+}
+
+const LANG_KEYS = ['aliascall_lang', 'aliascall_language', 'ac_lang', 'lang'];
+let LANG = (typeof window.getAliascallLang === 'function')
+  ? window.getAliascallLang()
+  : ((navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en');
+function T(k){ const d = I18N[LANG] || I18N.ko; return d[k] !== undefined ? d[k] : (I18N.ko[k] !== undefined ? I18N.ko[k] : k); }
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.title = T('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = T(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', T(el.dataset.i18nAria)); });
+}
+applyI18n();
+document.getElementById('langToggleBtn').addEventListener('click', () => {
+  LANG = (LANG === 'ko') ? 'en' : 'ko';
+  if (typeof window.setAliascallLang === 'function') window.setAliascallLang(LANG);
+  else LANG_KEYS.forEach((k) => { try { localStorage.setItem(k, LANG); } catch (e) {} });
+  applyI18n();
+  if (typeof renderDurations === 'function' && allPlans && allPlans.length) renderDurations();
+});
+
 
 
 const TIER_LABEL = {
@@ -186,7 +294,7 @@ async function init(){
   if (!session) { document.getElementById('loginNeeded').style.display = 'block'; document.getElementById('content').style.display = 'none'; return; }
 
   const { data: plans, error } = await sb.from('hotline_pricing_plans').select('*');
-  if (error || !plans) { document.getElementById('durationGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--danger); font-size:12.5px;">요금 정보를 불러오지 못했어요.</div>'; return; }
+  if (error || !plans) { document.getElementById('durationGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--danger); font-size:12.5px;">' + T('planLoadFail') + '</div>'; return; }
   allPlans = plans;
   renderDurations();
 }
@@ -213,13 +321,13 @@ if (urlTier && document.querySelector(`.tier-tab[data-tier="${urlTier}"]`)) {
 function renderDurations(){
   const grid = document.getElementById('durationGrid');
   const plansForTier = allPlans.filter((p) => p.tier === selectedTier).sort((a, b) => a.duration_months - b.duration_months);
-  if (plansForTier.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px;">요금 정보가 없어요.</div>'; document.getElementById('summaryCard').style.display = 'none'; document.getElementById('inicisPayBtn').disabled = true; return; }
+  if (plansForTier.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px;">' + T('noPlans') + '</div>'; document.getElementById('summaryCard').style.display = 'none'; document.getElementById('inicisPayBtn').disabled = true; return; }
 
   grid.innerHTML = plansForTier.map((p) => `
     <div class="duration-card${p.duration_months === selectedDuration ? ' active' : ''}" data-duration="${p.duration_months}">
-      <div class="d-months">${p.duration_months}개월</div>
-      <div class="d-price">${p.price_krw.toLocaleString()}원</div>
-      <div class="d-cap">${p.usage_cap_gb}GB 포함</div>
+      <div class="d-months">${monthsLabel(p.duration_months)}</div>
+      <div class="d-price">${priceLabel(p.price_krw)}</div>
+      <div class="d-cap">${p.usage_cap_gb}GB${LANG === 'en' ? ' included' : ' 포함'}</div>
     </div>
   `).join('');
 
@@ -244,10 +352,10 @@ function updateSummary(){
   const plan = currentPlan();
   if (!plan) return;
   document.getElementById('summaryCard').style.display = 'block';
-  document.getElementById('sumTier').textContent = TIER_LABEL[selectedTier];
-  document.getElementById('sumDuration').textContent = selectedDuration + '개월';
+  document.getElementById('sumTier').textContent = tierLabel(selectedTier);
+  document.getElementById('sumDuration').textContent = monthsLabel(selectedDuration);
   document.getElementById('sumCap').textContent = plan.usage_cap_gb + 'GB';
-  document.getElementById('sumPrice').textContent = plan.price_krw.toLocaleString() + '원';
+  document.getElementById('sumPrice').textContent = priceLabel(plan.price_krw);
   updatePayButtonState();
 }
 
@@ -272,7 +380,7 @@ document.querySelectorAll('.pay-method-tab').forEach((tab) => {
     if (selectedMethod === 'paypal') {
       // 2026-08-23 신설: 체크박스를 먼저 체크해야 PayPal 버튼이 실제로 나타남
       if (document.getElementById('purchaseNoticeCheckbox').checked) renderPaypalButton();
-      else document.getElementById('paypalButtonContainer').innerHTML = '<div style="text-align:center; color:var(--ink-soft); font-size:12px; padding:16px;">먼저 위 확인사항에 체크해주세요</div>';
+      else document.getElementById('paypalButtonContainer').innerHTML = '<div style="text-align:center; color:var(--ink-soft); font-size:12px; padding:16px;">' + T('checkFirst') + '</div>';
     }
   });
 });
@@ -289,19 +397,20 @@ async function prepareSecureKeyIfNeeded(){
 document.getElementById('inicisPayBtn').addEventListener('click', async () => {
   const btn = document.getElementById('inicisPayBtn');
   btn.disabled = true;
-  btn.textContent = '결제 준비 중…';
+  btn.textContent = T('payPreparing');
   try {
     await prepareSecureKeyIfNeeded();
     await startHotlineInicisPayment(sb, {
       tier: selectedTier,
       durationMonths: selectedDuration,
+      // ⚠ PG사(이니시스)로 넘어가는 구매자명 — 결제 영수증이 한국어라 기본값은 한국어로 둠
       buyername: session.user.user_metadata?.nickname || '회원',
       buyertel: '',
       buyeremail: session.user.email || '',
     });
   } finally {
     btn.disabled = false;
-    btn.textContent = '결제하고 핫라인 만들기';
+    btn.textContent = T('payBtn');
   }
 });
 
@@ -330,7 +439,7 @@ document.getElementById('copyOwnerLinkBtn').addEventListener('click', () => {
   navigator.clipboard.writeText(input.value).then(() => {
     const btn = document.getElementById('copyOwnerLinkBtn');
     const original = btn.textContent;
-    btn.textContent = '복사됨!';
+    btn.textContent = T('copied');
     setTimeout(() => { btn.textContent = original; }, 1500);
   });
 });
