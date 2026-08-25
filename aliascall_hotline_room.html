@@ -1209,19 +1209,12 @@ async function init(){
     document.getElementById('roomMeta').textContent = `${(data.members || []).length} / ${data.maxParticipants}` + (LANG === 'en' ? ' people' : '명');
     document.getElementById('bottomNav').style.display = 'flex';
 
-    // 2026-08-25 신설: 개설자 판별 + 자리비움/안내판 불러오기
-    // 개설자는 로그인 상태이고 RLS상 자기 핫라인만 읽히므로, 조회되면 개설자임
-    try {
-      if (accessToken) {
-        const { data: own } = await sb.from('hotlines')
-          .select('id, away_status, away_message').eq('id', hotlineId).maybeSingle();
-        if (own) {
-          isRoomOwner = true;
-          awayStatus = own.away_status || 'available';
-          awayMessage = own.away_message || '';
-        }
-      }
-    } catch (e) { console.warn('[room] 개설자 판별 실패(참가자로 진행)', e); }
+    // 2026-08-25 신설(v50): 개설자 여부와 자리비움 상태는 서버가 내려줌
+    isRoomOwner = !!data.isOwner;
+    if (data.away) {
+      awayStatus = data.away.status || 'available';
+      awayMessage = data.away.message || '';   // 참가자에겐 안 내려옴(빈 값)
+    }
     applyOwnerMenus();
     renderAwayBadge();
     loadRoomConfig(); // 안내판은 손님도 봐야 하므로 항상 불러옴
@@ -1264,6 +1257,8 @@ function subscribeChat(){
   chatChannel = sb.channel('hotline-' + hotlineId, { config: { broadcast: { self: false } } });
   chatChannel
     .on('broadcast', { event: 'new-message' }, async ({ payload }) => {
+      // 2026-08-25(v50): 서버가 보낸 자리비움 자동응답이면 꼬리표를 달아둠
+      if (payload && payload.auto_reply) payload._autoReply = true;
       if (renderedMsgIds.has(payload.id)) return;
       renderedMsgIds.add(payload.id);
       await appendChatMessage(payload);
@@ -1572,6 +1567,13 @@ async function appendChatMessage(msg){
   timeRow.className = 'msg-time-row ' + (isMe ? 'me' : 'them');
   timeRow.dataset.messageId = msg.id;
   timeRow.innerHTML = `<span class="msg-time-text">${formatMsgTime(msg.created_at)}</span><span class="msg-read-status"></span>`;
+  // 2026-08-25(v50): 자리비움 자동응답이면 꼬리표를 붙여, 사람이 직접 쓴 답이 아님을 알림
+  if (msg._autoReply) {
+    const autoTag = document.createElement('span');
+    autoTag.className = 'msg-auto-tag';
+    autoTag.textContent = T('awAutoTag');
+    timeRow.appendChild(autoTag);
+  }
   list.appendChild(timeRow);
 
   list.scrollTop = list.scrollHeight;
@@ -2977,12 +2979,15 @@ function renderAwayPanel(){
 async function loadRoomConfig(){
   if (!hotlineId) return;
   try {
-    const [{ data: presets }, { data: board }, { data: items }] = await Promise.all([
-      sb.from('hotline_away_presets').select('*').eq('hotline_id', hotlineId).order('sort_order'),
+    // ⚠ 자리비움 문구(presets)는 개설자만 읽힘(RLS). 참가자는 건너뜀.
+    const [presetsRes, { data: board }, { data: items }] = await Promise.all([
+      isRoomOwner
+        ? sb.from('hotline_away_presets').select('*').eq('hotline_id', hotlineId).order('sort_order')
+        : Promise.resolve({ data: [] }),
       sb.from('hotline_board').select('*').eq('hotline_id', hotlineId).maybeSingle(),
       sb.from('hotline_board_items').select('*').eq('hotline_id', hotlineId).order('sort_order'),
     ]);
-    awayPresets = presets || [];
+    awayPresets = presetsRes.data || [];
     boardData = board || null;
     boardItems = items || [];
     renderBoard();
