@@ -70,6 +70,20 @@ tr:hover td{ background:rgba(31,111,107,.03); }
 .login-box input{ width:100%; padding:12px 13px; border:1.5px solid var(--line); border-radius:9px; font-size:14px; margin-bottom:10px; }
 .login-box button{ width:100%; padding:12px; border:none; border-radius:9px; background:var(--teal); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
 .login-err{ font-size:12px; color:var(--danger); margin-top:10px; display:none; }
+
+/* 2026-08-26 신설(v52): 환경설정 */
+.set-card{ background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:18px; margin-bottom:14px; }
+.set-label{ font-size:13.5px; font-weight:700; margin-bottom:5px; }
+.set-desc{ font-size:11.5px; color:var(--ink-soft); line-height:1.6; margin-bottom:10px; }
+.set-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.set-row input{ width:150px; padding:9px 11px; border:1.5px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit; }
+.set-row button{ padding:9px 18px; border:none; border-radius:8px; background:var(--teal); color:#fff; font-weight:700; font-size:12.5px; cursor:pointer; font-family:inherit; }
+.set-row button:disabled{ opacity:.5; cursor:default; }
+.set-range{ font-size:11px; color:var(--ink-soft); }
+.set-status{ font-size:12px; margin-left:4px; }
+.set-status.ok{ color:var(--found,#2E7D4F); }
+.set-status.err{ color:var(--danger,#C1483A); }
+.set-preview{ font-size:11.5px; color:var(--ink-soft); background:rgba(0,0,0,.03); border-radius:8px; padding:9px 11px; margin-top:9px; line-height:1.7; }
 </style>
 </head>
 <body>
@@ -107,6 +121,7 @@ tr:hover td{ background:rgba(31,111,107,.03); }
   <div class="nav-tab" data-tab="deletions">탈퇴 현황</div>
   <div class="nav-tab" data-tab="products">상품 관리</div>
   <div class="nav-tab" data-tab="hotlinePricing">핫라인 요금정책</div>
+  <div class="nav-tab" data-tab="settings">⚙️ 환경설정</div>
 </div>
 
 <main>
@@ -274,6 +289,24 @@ tr:hover td{ background:rgba(31,111,107,.03); }
 
     <button id="hlConfirmBtn" style="margin-top:16px; padding:12px 24px; border:none; border-radius:8px; background:var(--teal); color:#fff; font-weight:700; font-size:13px; cursor:pointer;">✓ 이 내용으로 확정 (저장 + 요금체계 반영)</button>
     <span id="hlSaveStatus" style="margin-left:12px; font-size:12px; color:var(--ink-soft);"></span>
+  </div>
+
+  <!-- 2026-08-26 신설(v52): 환경설정 — 코드에 박혀 있던 값들을 여기서 바꿈 -->
+  <div class="tab-panel" data-panel="settings">
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">
+      아래 값들은 <b>바꾸는 즉시 반영</b>됩니다. 함수를 다시 배포할 필요가 없습니다.<br>
+      변경 내역은 자동으로 기록되며, 아래 "최근 변경 내역"에서 확인할 수 있습니다.
+    </p>
+
+    <div id="settingsList"><div class="empty-row" style="padding:20px;">불러오는 중…</div></div>
+
+    <div style="margin-top:24px;">
+      <div style="font-size:13px; font-weight:700; margin-bottom:10px;">최근 변경 내역</div>
+      <table>
+        <thead><tr><th>항목</th><th>이전</th><th>변경</th><th>일시</th></tr></thead>
+        <tbody id="settingsHistoryBody"><tr class="empty-row"><td colspan="4">불러오는 중…</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
 </main>
@@ -639,6 +672,172 @@ const HL_TIERS = ['hotline_1to1', 'hotline_everybody', 'economy_4', 'premium_4',
 const HL_DURATIONS = [3, 6, 12, 24];
 let hlPlansCache = {}; // key: tier|duration -> { price_krw, usage_cap_gb }
 
+
+// =====================================================================
+// 2026-08-26 신설(v52): 환경설정
+// 코드에 박혀 있던 값(PayPal 환율 등)을 여기서 바꿉니다. 즉시 반영되고,
+// 변경 이력은 app_settings_history에 자동으로 남습니다.
+//
+// ⚠ 저장은 반드시 update_setting() RPC를 거칩니다.
+//   표에 직접 쓰기를 열어두면 관리자 확인과 이력 기록을 건너뛸 수 있기 때문입니다.
+// =====================================================================
+
+let settingsCache = [];
+let hlPlansForPreview = []; // 환율 미리보기에 쓸 요금표
+
+async function loadSettings(){
+  const box = document.getElementById('settingsList');
+  try {
+    const [{ data: rows, error }, { data: plans }] = await Promise.all([
+      sb.from('app_settings').select('*').order('key'),
+      sb.from('hotline_pricing_plans').select('tier, duration_months, price_krw').order('price_krw'),
+    ]);
+    if (error) throw error;
+    settingsCache = rows || [];
+    hlPlansForPreview = plans || [];
+    renderSettings();
+  } catch (e) {
+    console.error('[settings] 불러오기 실패', e);
+    box.innerHTML = '<div class="empty-row" style="padding:20px;">불러오지 못했습니다: ' + (e.message || '') + '</div>';
+  }
+  loadSettingsHistory();
+}
+
+// 환율을 바꾸면 실제 달러 가격이 어떻게 되는지 바로 보여줌.
+// ⚠ 숫자만 보고 바꾸면 감이 안 옵니다. "39,900원이 $28.50이 된다"가 보여야 판단이 됩니다.
+function ratePreview(rate){
+  const r = Number(rate);
+  if (!r || !isFinite(r) || r <= 0) return '';
+  const pro = hlPlansForPreview.filter((p) => String(p.tier).startsWith('pro_'));
+  const list = (pro.length ? pro : hlPlansForPreview).slice(0, 4);
+  if (list.length === 0) return '';
+  const TIER_KO = { pro_starter: '스타터', pro_business: '프로', pro_enterprise: '비즈니스' };
+  return list.map((p) => {
+    const usd = Math.round((p.price_krw / r) * 100) / 100;
+    const name = TIER_KO[p.tier] || p.tier;
+    return `${name} ${p.duration_months}개월: ${Number(p.price_krw).toLocaleString()}원 → $${usd.toFixed(2)}`;
+  }).join('<br>');
+}
+
+function renderSettings(){
+  const box = document.getElementById('settingsList');
+  box.innerHTML = '';
+  if (settingsCache.length === 0) {
+    box.innerHTML = '<div class="empty-row" style="padding:20px;">설정 항목이 없습니다. v52.sql을 실행하셨는지 확인해주세요.</div>';
+    return;
+  }
+
+  settingsCache.forEach((row) => {
+    const card = document.createElement('div');
+    card.className = 'set-card';
+
+    const label = document.createElement('div');
+    label.className = 'set-label';
+    label.textContent = row.label || row.key;
+    card.appendChild(label);
+
+    if (row.description) {
+      const desc = document.createElement('div');
+      desc.className = 'set-desc';
+      desc.textContent = row.description;
+      card.appendChild(desc);
+    }
+
+    const line = document.createElement('div');
+    line.className = 'set-row';
+
+    const input = document.createElement('input');
+    input.type = (row.value_type === 'number') ? 'number' : 'text';
+    input.value = row.value;
+    line.appendChild(input);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = '저장';
+    line.appendChild(btn);
+
+    if (row.min_value !== null || row.max_value !== null) {
+      const range = document.createElement('span');
+      range.className = 'set-range';
+      range.textContent = `허용 범위 ${row.min_value ?? '-'} ~ ${row.max_value ?? '-'}`;
+      line.appendChild(range);
+    }
+
+    const status = document.createElement('span');
+    status.className = 'set-status';
+    line.appendChild(status);
+    card.appendChild(line);
+
+    // 환율 항목만 미리보기를 붙임
+    let preview = null;
+    if (row.key === 'krw_per_usd') {
+      preview = document.createElement('div');
+      preview.className = 'set-preview';
+      preview.innerHTML = ratePreview(input.value);
+      card.appendChild(preview);
+      input.addEventListener('input', () => { preview.innerHTML = ratePreview(input.value); });
+    }
+
+    btn.addEventListener('click', async () => {
+      const newVal = String(input.value).trim();
+      if (newVal === '') { status.className = 'set-status err'; status.textContent = '값을 입력해주세요.'; return; }
+      if (newVal === String(row.value)) { status.className = 'set-status'; status.textContent = '바뀐 값이 없습니다.'; return; }
+
+      // ⚠ 환율은 결제 금액을 직접 바꾸는 값이라 한 번 더 확인받음
+      if (row.key === 'krw_per_usd') {
+        if (!confirm(`PayPal 환율을 ${Number(row.value).toLocaleString()}원 → ${Number(newVal).toLocaleString()}원으로 바꿉니다.\n\n다음 결제부터 즉시 적용됩니다. 계속할까요?`)) return;
+      }
+
+      btn.disabled = true;
+      status.className = 'set-status';
+      status.textContent = '저장 중…';
+      try {
+        const { data, error } = await sb.rpc('update_setting', { p_key: row.key, p_value: newVal });
+        if (error) throw error;
+        if (!data?.ok) {
+          status.className = 'set-status err';
+          status.textContent = data?.error || '저장하지 못했습니다.';
+          btn.disabled = false;
+          return;
+        }
+        row.value = newVal;
+        status.className = 'set-status ok';
+        status.textContent = '✓ 저장됨 (즉시 반영)';
+        loadSettingsHistory();
+      } catch (e) {
+        console.error('[settings] 저장 실패', e);
+        status.className = 'set-status err';
+        status.textContent = e.message || '저장하지 못했습니다.';
+      }
+      btn.disabled = false;
+    });
+
+    box.appendChild(card);
+  });
+}
+
+async function loadSettingsHistory(){
+  const body = document.getElementById('settingsHistoryBody');
+  try {
+    const { data: rows, error } = await sb.from('app_settings_history')
+      .select('key, old_value, new_value, changed_at')
+      .order('changed_at', { ascending: false }).limit(20);
+    if (error) throw error;
+    if (!rows || rows.length === 0) {
+      body.innerHTML = '<tr class="empty-row"><td colspan="4">변경 내역이 없습니다.</td></tr>';
+      return;
+    }
+    const labelOf = (k) => (settingsCache.find((s) => s.key === k)?.label) || k;
+    body.innerHTML = rows.map((r) =>
+      `<tr><td>${labelOf(r.key)}</td><td>${r.old_value ?? '-'}</td><td><b>${r.new_value}</b></td>` +
+      `<td>${new Date(r.changed_at).toLocaleString('ko-KR')}</td></tr>`
+    ).join('');
+  } catch (e) {
+    console.error('[settings] 이력 조회 실패', e);
+    body.innerHTML = '<tr class="empty-row"><td colspan="4">불러오지 못했습니다.</td></tr>';
+  }
+}
+
 async function loadHotlinePricing(){
   const tbody = document.getElementById('hlPricingBody');
 
@@ -809,6 +1008,7 @@ function loadAllTabs(){
   loadDeletions();
   loadProducts();
   loadHotlinePricing(); // 2026-08-21 신설
+  loadSettings();        // 2026-08-26 신설(v52)
 }
 
 (async () => {
