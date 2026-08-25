@@ -318,6 +318,52 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .exd-attach table{ width:100%; border-collapse:collapse; font-size:9pt; }
 .exd-attach th,.exd-attach td{ border-bottom:1px solid #ddd; padding:5px 6px; text-align:left; }
 .exd-foot{ margin-top:20px; padding-top:8px; border-top:1px solid #ccc; font-size:8pt; color:#777; text-align:center; }
+
+/* ===== 2026-08-25 신설: 자리비움 + 안내판 ===== */
+.aw-badge{ font-size:11px; font-weight:700; padding:3px 9px; border-radius:12px; background:#FDF0D5; color:#8A6A1F; margin-left:6px; white-space:nowrap; }
+.msg-auto-tag{ font-size:10px; color:var(--ink-soft); background:var(--line); border-radius:8px; padding:1px 6px; margin-left:5px; }
+
+/* 방 상단 고정 안내판 */
+.board-card{ display:none; background:var(--card); border-bottom:1px solid var(--line); }
+.board-card.show{ display:block; }
+.board-head{ display:flex; align-items:center; gap:8px; padding:11px 14px; cursor:pointer; }
+.board-head b{ font-size:13.5px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.board-toggle{ font-size:11.5px; color:var(--teal); background:none; border:none; cursor:pointer; font-family:inherit; white-space:nowrap; }
+.board-body{ display:none; padding:0 14px 12px; }
+.board-body.show{ display:block; }
+.board-desc{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; white-space:pre-wrap; margin-bottom:10px; }
+.board-item{ display:flex; gap:10px; padding:9px 0; border-top:1px solid var(--line); }
+.board-item img{ width:52px; height:52px; border-radius:8px; object-fit:cover; flex-shrink:0; background:var(--teal-tint); }
+.board-item-txt{ flex:1; min-width:0; }
+.board-item-name{ font-size:13px; font-weight:700; }
+.board-item-desc{ font-size:11.5px; color:var(--ink-soft); line-height:1.5; margin-top:2px; }
+.board-item-price{ font-size:12.5px; font-weight:700; color:var(--teal-deep); white-space:nowrap; align-self:center; }
+
+/* 설정 패널(자리비움·안내판 공용) */
+.cfg-panel{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:700; align-items:flex-end; justify-content:center; }
+.cfg-panel.show{ display:flex; }
+.cfg-box{ background:#fff; width:100%; max-width:430px; border-radius:18px 18px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px)); max-height:88vh; overflow-y:auto; }
+.cfg-box h3{ font-size:16px; margin-bottom:6px; }
+.cfg-desc{ font-size:12px; color:var(--ink-soft); line-height:1.6; margin-bottom:14px; }
+.cfg-label{ font-size:12px; font-weight:700; color:var(--ink-soft); margin:14px 0 6px; }
+.cfg-box input[type=text], .cfg-box textarea{ width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:10px; padding:10px; font-size:13px; font-family:inherit; }
+.cfg-box textarea{ min-height:60px; resize:vertical; }
+.cfg-row{ display:flex; gap:7px; margin-bottom:7px; }
+.cfg-row input{ flex:1; min-width:0; }
+.cfg-list{ margin-top:8px; }
+.cfg-preset{ display:flex; align-items:center; gap:8px; border:1.5px solid var(--line); border-radius:11px; padding:10px 12px; margin-bottom:7px; }
+.cfg-preset.on{ border-color:var(--teal); background:var(--teal-tint); }
+.cfg-preset-txt{ flex:1; min-width:0; cursor:pointer; }
+.cfg-preset-label{ font-size:12.5px; font-weight:700; }
+.cfg-preset-msg{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; line-height:1.5; }
+.cfg-del{ background:none; border:none; color:var(--danger); font-size:11.5px; cursor:pointer; font-family:inherit; flex-shrink:0; }
+.cfg-actions{ display:flex; gap:8px; margin-top:16px; }
+.cfg-actions button{ flex:1; padding:13px; border-radius:11px; border:none; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+.cfg-primary{ background:var(--teal-deep); color:#fff; }
+.cfg-sub{ background:var(--teal-tint); color:var(--teal-deep); }
+.cfg-cancel{ background:#f0f0f0; color:#444; }
+.cfg-status{ font-size:12px; color:var(--ink-soft); text-align:center; margin-top:10px; min-height:16px; }
+.cfg-toggle{ display:flex; align-items:center; gap:8px; font-size:13px; margin:10px 0; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -338,6 +384,8 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
     <button type="button" class="more-menu-item" id="openKeepBtn" data-i18n="menuKeep">📌 내 메모함</button>
     <button type="button" class="more-menu-item" id="openSearchBtn" data-i18n="menuSearch">🔍 대화 검색</button>
     <!-- 2026-08-24 신설: 신고 -->
+    <button type="button" class="more-menu-item" id="openAwayBtn" data-i18n="menuAway" style="display:none;">🟡 자리비움 설정</button>
+    <button type="button" class="more-menu-item" id="openBoardBtn" data-i18n="menuBoard" style="display:none;">📋 안내판 편집</button>
     <button type="button" class="more-menu-item" id="openExportBtn" data-i18n="menuExport">🖨️ 대화 내보내기</button>
     <button type="button" class="more-menu-item" id="openReportBtn" data-i18n="menuReport">🚩 신고하기</button>
     <!-- 2026-08-25 신설: 언어 전환 -->
@@ -360,6 +408,20 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 </div>
 
 <div class="state" id="stateChat">
+  <!-- 2026-08-25 신설: 방 상단 고정 안내판 (메뉴판 · 진료안내 등)
+       ⚠ 이것은 "게시"이지 "전송"이 아님 — 손님이 방을 열었을 때 거기 있는 것이라
+         정보통신망법 제50조의 광고성 정보 "전송"에 해당하지 않음.
+         그래서 이 기능은 어떤 경우에도 알림을 발송하지 않음. -->
+  <div class="board-card" id="boardCard">
+    <div class="board-head" id="boardHead">
+      <b id="boardTitle"></b>
+      <button type="button" class="board-toggle" id="boardToggle" data-i18n="bdMore">펼쳐보기</button>
+    </div>
+    <div class="board-body" id="boardBody">
+      <div class="board-desc" id="boardDesc"></div>
+      <div id="boardItems"></div>
+    </div>
+  </div>
   <!-- 2026-08-22 신설: 목표(D-DAY) 스트립 — 여행/기념일 등 참가자 누구나 등록 가능 -->
   <div class="goals-strip" id="goalsStrip"></div>
   <!-- 2026-08-22 신설: 오늘의 질문 — 조용해진 대화방에 화제를 던져줌 -->
@@ -593,6 +655,43 @@ const I18N = {
     menuSearch: '🔍 대화 검색',
     menuReport: '🚩 신고하기',
     menuExport: '🖨️ 대화 내보내기',
+    menuAway: '🟡 자리비움 설정',
+    menuBoard: '📋 안내판 편집',
+    awTitle: '🟡 자리비움 설정',
+    awDesc: '자리를 비운 동안, 상대가 메시지를 보내면 아래 문구가 한 번 자동으로 나갑니다.',
+    awOn: '자리비움 켜기',
+    awOff: '자리비움 끄기',
+    awNow: '지금 상태',
+    awAvailable: '🟢 응답 가능',
+    awBusy: '🟡 자리비움',
+    awPresets: '문구 고르기',
+    awNewLabel: '이름 (예: 진료 중)',
+    awNewMsg: '나갈 문구',
+    awAdd: '문구 추가',
+    awDelete: '삭제',
+    awClose: '닫기',
+    awSaved: '저장했어요.',
+    awNeedBoth: '이름과 문구를 모두 입력해주세요.',
+    awAutoTag: '자동응답', // ⚠ 서버가 보낸 자동응답 말풍선에 붙일 꼬리표(Edge Function 연동 후 사용)
+
+    bdTitle: '📋 안내판 편집',
+    bdDesc: '방 상단에 항상 보이는 안내판입니다. 메뉴판, 진료 안내, 상담료 안내 등에 쓰세요.',
+    bdCardTitle: '제목 (예: 오늘의 메뉴)',
+    bdCardBody: '설명 (선택)',
+    bdOpenDefault: '처음 열 때 펼쳐두기',
+    bdItems: '항목',
+    bdItemName: '이름',
+    bdItemDesc: '설명 (선택)',
+    bdItemPrice: '가격 (예: 15,000원)',
+    bdItemImage: '사진 넣기',
+    bdAddItem: '항목 추가',
+    bdSave: '저장',
+    bdClose: '닫기',
+    bdSaved: '저장했어요.',
+    bdNeedName: '항목 이름을 입력해주세요.',
+    bdEmpty: '아직 등록된 항목이 없어요.',
+    bdMore: '펼쳐보기',
+    bdLess: '접기',
     exTitle: '🖨️ 대화 내보내기',
     exPeriod: '기간',
     exWho: '참가자',
@@ -774,6 +873,43 @@ const I18N = {
     menuSearch: '🔍 Search messages',
     menuReport: '🚩 Report',
     menuExport: '🖨️ Export conversation',
+    menuAway: '🟡 Away settings',
+    menuBoard: '📋 Edit info board',
+    awTitle: '🟡 Away settings',
+    awDesc: 'While you are away, the message below is sent once automatically when someone writes to you.',
+    awOn: 'Turn on away',
+    awOff: 'Turn off away',
+    awNow: 'Current status',
+    awAvailable: '🟢 Available',
+    awBusy: '🟡 Away',
+    awPresets: 'Choose a message',
+    awNewLabel: 'Name (e.g. With a patient)',
+    awNewMsg: 'Message to send',
+    awAdd: 'Add message',
+    awDelete: 'Delete',
+    awClose: 'Close',
+    awSaved: 'Saved.',
+    awNeedBoth: 'Please enter both a name and a message.',
+    awAutoTag: 'Auto-reply',
+
+    bdTitle: '📋 Edit info board',
+    bdDesc: 'An info board pinned to the top of the room. Use it for a menu, clinic hours, consultation fees and so on.',
+    bdCardTitle: "Title (e.g. Today's menu)",
+    bdCardBody: 'Description (optional)',
+    bdOpenDefault: 'Expanded when the room opens',
+    bdItems: 'Items',
+    bdItemName: 'Name',
+    bdItemDesc: 'Description (optional)',
+    bdItemPrice: 'Price (e.g. 15,000 KRW)',
+    bdItemImage: 'Add photo',
+    bdAddItem: 'Add item',
+    bdSave: 'Save',
+    bdClose: 'Close',
+    bdSaved: 'Saved.',
+    bdNeedName: 'Please enter an item name.',
+    bdEmpty: 'No items yet.',
+    bdMore: 'Show more',
+    bdLess: 'Show less',
     exTitle: '🖨️ Export conversation',
     exPeriod: 'Period',
     exWho: 'Participants',
@@ -1072,6 +1208,23 @@ async function init(){
     // 2026-08-25: 인원 표기 — 한국어 "3 / 8명", 영어 "3 / 8 people"
     document.getElementById('roomMeta').textContent = `${(data.members || []).length} / ${data.maxParticipants}` + (LANG === 'en' ? ' people' : '명');
     document.getElementById('bottomNav').style.display = 'flex';
+
+    // 2026-08-25 신설: 개설자 판별 + 자리비움/안내판 불러오기
+    // 개설자는 로그인 상태이고 RLS상 자기 핫라인만 읽히므로, 조회되면 개설자임
+    try {
+      if (accessToken) {
+        const { data: own } = await sb.from('hotlines')
+          .select('id, away_status, away_message').eq('id', hotlineId).maybeSingle();
+        if (own) {
+          isRoomOwner = true;
+          awayStatus = own.away_status || 'available';
+          awayMessage = own.away_message || '';
+        }
+      }
+    } catch (e) { console.warn('[room] 개설자 판별 실패(참가자로 진행)', e); }
+    applyOwnerMenus();
+    renderAwayBadge();
+    loadRoomConfig(); // 안내판은 손님도 봐야 하므로 항상 불러옴
 
     // 2026-08-22 신설: "같이 듣기" 현재 재생 상태를 화면에 반영해둠(음악 탭 눌렀을 때 바로 이어짐)
     if (data.music) applyMusicSync({ action: (data.music.youtubeId || data.music.audioUrl) ? 'load-silent' : 'stop', youtubeId: data.music.youtubeId, audioUrl: data.music.audioUrl, positionSeconds: data.music.positionSeconds, isPlaying: data.music.isPlaying, updatedAt: data.music.updatedAt, setByNickname: data.music.setByNickname });
@@ -2668,6 +2821,334 @@ document.getElementById('openReportBtn').addEventListener('click', () => {
 init();
 
 // =====================================================================
+// 2026-08-25 신설 ① 자리비움 자동응답  ② 방 상단 고정 안내판
+//
+// 두 기능 모두 "전문관리용"과 "소상공인용"이 함께 씁니다.
+//   자리비움 : 의사 "진료 중" / 식당 "브레이크타임"
+//   안내판   : 병원 "진료 안내" / 식당 "메뉴판"
+// 담기는 내용만 다르고 구조는 같아서 한 벌로 만들었습니다.
+//
+// ⚠ 안내판은 "게시"이지 "전송"이 아닙니다.
+//   손님이 방을 열었을 때 거기 있는 것이라 정보통신망법 제50조의 광고성 정보
+//   "전송"에 해당하지 않아 수신동의가 필요 없습니다.
+//   반대로 "새 메뉴 나왔어요"라고 알림을 보내면 그 순간 '전송'이 되므로,
+//   이 기능은 어떤 경우에도 알림을 발송하지 않습니다. 절대 추가하지 마세요.
+// =====================================================================
+
+let isRoomOwner = false;     // 개설자만 설정 메뉴가 보임
+let awayStatus = 'available';
+let awayMessage = '';
+let awayPresets = [];
+let boardData = null;
+let boardItems = [];
+let bdPendingImage = null;   // 항목에 붙일 사진 (업로드 전)
+
+// ── 개설자 여부에 따라 ⋯ 메뉴 항목을 보이거나 숨김 ──
+function applyOwnerMenus(){
+  const d = isRoomOwner ? 'block' : 'none';
+  document.getElementById('openAwayBtn').style.display = d;
+  document.getElementById('openBoardBtn').style.display = d;
+}
+
+// ─────────────────────────────────────────────
+// 안내판 — 화면에 그리기 (참가자·개설자 모두 봄)
+// ─────────────────────────────────────────────
+function renderBoard(){
+  const card = document.getElementById('boardCard');
+  if (!boardData || (!boardData.title && boardItems.length === 0)) {
+    card.classList.remove('show');
+    return;
+  }
+  card.classList.add('show');
+  document.getElementById('boardTitle').textContent = boardData.title || '';
+
+  const desc = document.getElementById('boardDesc');
+  desc.textContent = boardData.body || '';
+  desc.style.display = boardData.body ? 'block' : 'none';
+
+  const list = document.getElementById('boardItems');
+  list.innerHTML = '';
+  if (boardItems.length === 0) {
+    const e = document.createElement('div');
+    e.className = 'board-desc';
+    e.textContent = T('bdEmpty');
+    list.appendChild(e);
+  } else {
+    boardItems.forEach((it) => {
+      const row = document.createElement('div');
+      row.className = 'board-item';
+      if (it.image_url) {
+        const img = document.createElement('img');
+        img.src = it.image_url;
+        img.alt = it.name || '';
+        img.loading = 'lazy';
+        row.appendChild(img);
+      }
+      const txt = document.createElement('div');
+      txt.className = 'board-item-txt';
+      const nm = document.createElement('div');
+      nm.className = 'board-item-name';
+      nm.textContent = it.name || '';
+      txt.appendChild(nm);
+      if (it.description) {
+        const ds = document.createElement('div');
+        ds.className = 'board-item-desc';
+        ds.textContent = it.description;
+        txt.appendChild(ds);
+      }
+      row.appendChild(txt);
+      if (it.price) {
+        const pr = document.createElement('div');
+        pr.className = 'board-item-price';
+        pr.textContent = it.price;
+        row.appendChild(pr);
+      }
+      list.appendChild(row);
+    });
+  }
+
+  const body = document.getElementById('boardBody');
+  const open = !!(boardData.is_open);
+  body.classList.toggle('show', open);
+  document.getElementById('boardToggle').textContent = open ? T('bdLess') : T('bdMore');
+}
+
+document.getElementById('boardHead').addEventListener('click', () => {
+  const body = document.getElementById('boardBody');
+  const open = body.classList.toggle('show');
+  document.getElementById('boardToggle').textContent = open ? T('bdLess') : T('bdMore');
+});
+
+// ─────────────────────────────────────────────
+// 자리비움 — 상태 표시
+// ─────────────────────────────────────────────
+function renderAwayBadge(){
+  let badge = document.getElementById('awBadge');
+  const meta = document.getElementById('roomMeta');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.id = 'awBadge';
+    badge.className = 'aw-badge';
+    meta.parentNode.insertBefore(badge, meta.nextSibling);
+  }
+  const busy = (awayStatus === 'busy');
+  badge.style.display = busy ? 'inline-block' : 'none';
+  badge.textContent = T('awBusy');
+}
+
+function renderAwayPanel(){
+  document.getElementById('awNowLabel').textContent =
+    (awayStatus === 'busy') ? T('awBusy') : T('awAvailable');
+  document.getElementById('awToggleBtn').textContent =
+    (awayStatus === 'busy') ? T('awOff') : T('awOn');
+
+  const list = document.getElementById('awPresetList');
+  list.innerHTML = '';
+  awayPresets.forEach((p) => {
+    const row = document.createElement('div');
+    row.className = 'cfg-preset' + (p.message === awayMessage ? ' on' : '');
+
+    const txt = document.createElement('div');
+    txt.className = 'cfg-preset-txt';
+    const lb = document.createElement('div');
+    lb.className = 'cfg-preset-label';
+    lb.textContent = p.label;
+    const ms = document.createElement('div');
+    ms.className = 'cfg-preset-msg';
+    ms.textContent = p.message;
+    txt.appendChild(lb); txt.appendChild(ms);
+    txt.addEventListener('click', () => { awayMessage = p.message; renderAwayPanel(); });
+    row.appendChild(txt);
+
+    const del = document.createElement('button');
+    del.type = 'button'; del.className = 'cfg-del';
+    del.textContent = T('awDelete');
+    del.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await sb.from('hotline_away_presets').delete().eq('id', p.id);
+      awayPresets = awayPresets.filter((x) => x.id !== p.id);
+      renderAwayPanel();
+    });
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+async function loadRoomConfig(){
+  if (!hotlineId) return;
+  try {
+    const [{ data: presets }, { data: board }, { data: items }] = await Promise.all([
+      sb.from('hotline_away_presets').select('*').eq('hotline_id', hotlineId).order('sort_order'),
+      sb.from('hotline_board').select('*').eq('hotline_id', hotlineId).maybeSingle(),
+      sb.from('hotline_board_items').select('*').eq('hotline_id', hotlineId).order('sort_order'),
+    ]);
+    awayPresets = presets || [];
+    boardData = board || null;
+    boardItems = items || [];
+    renderBoard();
+  } catch (e) {
+    console.warn('[room-config] 불러오기 실패(화면은 그대로 진행)', e);
+  }
+}
+
+// ── 자리비움 켜기/끄기 ──
+document.getElementById('awToggleBtn').addEventListener('click', async () => {
+  const status = document.getElementById('awStatus');
+  const next = (awayStatus === 'busy') ? 'available' : 'busy';
+  if (next === 'busy' && !awayMessage) {
+    // 문구를 안 고른 채 켜면 기본 문구를 씀
+    awayMessage = awayPresets.length ? awayPresets[0].message : T('awBusy');
+  }
+  const { error } = await sb.from('hotlines')
+    .update({ away_status: next, away_message: next === 'busy' ? awayMessage : null })
+    .eq('id', hotlineId);
+  if (error) { console.error('[away] 저장 실패', error); alert(T('alertTryLater')); return; }
+  awayStatus = next;
+  // 상태를 바꾸면 "이미 자동응답을 받은 사람" 기록을 지워, 다음에 다시 한 번 나가게 함
+  try { await sb.from('hotline_away_sent').delete().eq('hotline_id', hotlineId); } catch (e) {}
+  renderAwayPanel();
+  renderAwayBadge();
+  status.textContent = T('awSaved');
+  setTimeout(() => { status.textContent = ''; }, 1500);
+});
+
+document.getElementById('awAddBtn').addEventListener('click', async () => {
+  const label = document.getElementById('awNewLabel').value.trim();
+  const msg = document.getElementById('awNewMsg').value.trim();
+  if (!label || !msg) { alert(T('awNeedBoth')); return; }
+  const { data, error } = await sb.from('hotline_away_presets')
+    .insert({ hotline_id: hotlineId, label, message: msg, sort_order: awayPresets.length })
+    .select().single();
+  if (error) { console.error('[away] 문구 추가 실패', error); alert(T('alertTryLater')); return; }
+  awayPresets.push(data);
+  document.getElementById('awNewLabel').value = '';
+  document.getElementById('awNewMsg').value = '';
+  renderAwayPanel();
+});
+
+document.getElementById('openAwayBtn').addEventListener('click', () => {
+  document.getElementById('moreMenu').classList.remove('show');
+  renderAwayPanel();
+  document.getElementById('awPanel').classList.add('show');
+});
+document.getElementById('awCloseBtn').addEventListener('click', () => document.getElementById('awPanel').classList.remove('show'));
+document.getElementById('awPanel').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('awPanel')) document.getElementById('awPanel').classList.remove('show');
+});
+
+// ─────────────────────────────────────────────
+// 안내판 편집
+// ─────────────────────────────────────────────
+function renderBoardEditor(){
+  document.getElementById('bdTitleInput').value = (boardData && boardData.title) || '';
+  document.getElementById('bdBodyInput').value = (boardData && boardData.body) || '';
+  document.getElementById('bdOpenDefault').checked = !!(boardData && boardData.is_open);
+
+  const list = document.getElementById('bdItemList');
+  list.innerHTML = '';
+  boardItems.forEach((it) => {
+    const row = document.createElement('div');
+    row.className = 'cfg-preset';
+    const txt = document.createElement('div');
+    txt.className = 'cfg-preset-txt';
+    const lb = document.createElement('div');
+    lb.className = 'cfg-preset-label';
+    lb.textContent = it.name + (it.price ? '  ' + it.price : '');
+    txt.appendChild(lb);
+    if (it.description) {
+      const ds = document.createElement('div');
+      ds.className = 'cfg-preset-msg';
+      ds.textContent = it.description;
+      txt.appendChild(ds);
+    }
+    row.appendChild(txt);
+    const del = document.createElement('button');
+    del.type = 'button'; del.className = 'cfg-del';
+    del.textContent = T('awDelete');
+    del.addEventListener('click', async () => {
+      await sb.from('hotline_board_items').delete().eq('id', it.id);
+      boardItems = boardItems.filter((x) => x.id !== it.id);
+      renderBoardEditor(); renderBoard();
+    });
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('bdPickImageBtn').addEventListener('click', () => document.getElementById('bdImageInput').click());
+document.getElementById('bdImageInput').addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  bdPendingImage = f;
+  document.getElementById('bdPickImageBtn').textContent = '✓ ' + (f.name.length > 12 ? f.name.slice(0, 12) + '…' : f.name);
+});
+
+document.getElementById('bdAddItemBtn').addEventListener('click', async () => {
+  const name = document.getElementById('bdNewName').value.trim();
+  if (!name) { alert(T('bdNeedName')); return; }
+  const status = document.getElementById('bdStatus');
+  status.textContent = T('exPreparing');
+  try {
+    let imageUrl = null;
+    if (bdPendingImage) {
+      // ⚠ 안내판 사진은 손님 누구나 봐야 하므로 암호화하지 않음(공개 버킷에 그대로 올림)
+      const compressed = await aliascallCompressImage(bdPendingImage, 800, 0.85);
+      const path = 'board/' + hotlineId + '/' + Date.now() + '.jpg';
+      const { error: upErr } = await sb.storage.from('aliascall-media').upload(path, compressed, { contentType: 'image/jpeg' });
+      if (upErr) throw upErr;
+      imageUrl = sb.storage.from('aliascall-media').getPublicUrl(path).data.publicUrl;
+    }
+    const { data, error } = await sb.from('hotline_board_items').insert({
+      hotline_id: hotlineId,
+      name,
+      description: document.getElementById('bdNewDesc').value.trim() || null,
+      price: document.getElementById('bdNewPrice').value.trim() || null,
+      image_url: imageUrl,
+      sort_order: boardItems.length,
+    }).select().single();
+    if (error) throw error;
+    boardItems.push(data);
+    ['bdNewName', 'bdNewDesc', 'bdNewPrice'].forEach((id) => { document.getElementById(id).value = ''; });
+    bdPendingImage = null;
+    document.getElementById('bdImageInput').value = '';
+    document.getElementById('bdPickImageBtn').textContent = T('bdItemImage');
+    status.textContent = '';
+    renderBoardEditor(); renderBoard();
+  } catch (e) {
+    console.error('[board] 항목 추가 실패', e);
+    status.textContent = '';
+    alert(T('alertTryLater'));
+  }
+});
+
+document.getElementById('bdSaveBtn').addEventListener('click', async () => {
+  const status = document.getElementById('bdStatus');
+  const payload = {
+    hotline_id: hotlineId,
+    title: document.getElementById('bdTitleInput').value.trim() || null,
+    body: document.getElementById('bdBodyInput').value.trim() || null,
+    is_open: document.getElementById('bdOpenDefault').checked,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await sb.from('hotline_board').upsert(payload, { onConflict: 'hotline_id' });
+  if (error) { console.error('[board] 저장 실패', error); alert(T('alertTryLater')); return; }
+  boardData = payload;
+  renderBoard();
+  status.textContent = T('bdSaved');
+  setTimeout(() => { status.textContent = ''; }, 1500);
+});
+
+document.getElementById('openBoardBtn').addEventListener('click', () => {
+  document.getElementById('moreMenu').classList.remove('show');
+  renderBoardEditor();
+  document.getElementById('bdPanel').classList.add('show');
+});
+document.getElementById('bdCloseBtn').addEventListener('click', () => document.getElementById('bdPanel').classList.remove('show'));
+document.getElementById('bdPanel').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('bdPanel')) document.getElementById('bdPanel').classList.remove('show');
+});
+
+// =====================================================================
 // 2026-08-25 신설: 대화 내보내기 (인쇄 / PDF로 저장)
 //
 // ⚠ 반드시 브라우저에서 조립해야 함 — 암호화 방(Secure)은 서버가 내용을 못 읽고,
@@ -2947,6 +3428,64 @@ document.getElementById('exFilesBtn').addEventListener('click', async () => {
 });
 
 </script>
+<!-- 2026-08-25 신설: 자리비움 설정 (개설자 전용) -->
+<div class="cfg-panel" id="awPanel">
+  <div class="cfg-box">
+    <h3 data-i18n="awTitle">🟡 자리비움 설정</h3>
+    <div class="cfg-desc" data-i18n="awDesc">자리를 비운 동안, 상대가 메시지를 보내면 아래 문구가 한 번 자동으로 나갑니다.</div>
+
+    <div class="cfg-label"><span data-i18n="awNow">지금 상태</span> — <span id="awNowLabel"></span></div>
+    <div class="cfg-actions">
+      <button type="button" class="cfg-primary" id="awToggleBtn"></button>
+    </div>
+
+    <div class="cfg-label" data-i18n="awPresets">문구 고르기</div>
+    <div class="cfg-list" id="awPresetList"></div>
+
+    <div class="cfg-row"><input type="text" id="awNewLabel" placeholder="이름 (예: 진료 중)" data-i18n-placeholder="awNewLabel" maxlength="20"></div>
+    <div class="cfg-row"><input type="text" id="awNewMsg" placeholder="나갈 문구" data-i18n-placeholder="awNewMsg" maxlength="200"></div>
+    <div class="cfg-actions">
+      <button type="button" class="cfg-sub" id="awAddBtn" data-i18n="awAdd">문구 추가</button>
+    </div>
+
+    <div class="cfg-actions">
+      <button type="button" class="cfg-cancel" id="awCloseBtn" data-i18n="awClose">닫기</button>
+    </div>
+    <div class="cfg-status" id="awStatus"></div>
+  </div>
+</div>
+
+<!-- 2026-08-25 신설: 안내판 편집 (개설자 전용) -->
+<div class="cfg-panel" id="bdPanel">
+  <div class="cfg-box">
+    <h3 data-i18n="bdTitle">📋 안내판 편집</h3>
+    <div class="cfg-desc" data-i18n="bdDesc">방 상단에 항상 보이는 안내판입니다. 메뉴판, 진료 안내, 상담료 안내 등에 쓰세요.</div>
+
+    <input type="text" id="bdTitleInput" placeholder="제목 (예: 오늘의 메뉴)" data-i18n-placeholder="bdCardTitle" maxlength="40">
+    <div style="height:7px;"></div>
+    <textarea id="bdBodyInput" placeholder="설명 (선택)" data-i18n-placeholder="bdCardBody" maxlength="500"></textarea>
+    <label class="cfg-toggle"><input type="checkbox" id="bdOpenDefault"><span data-i18n="bdOpenDefault">처음 열 때 펼쳐두기</span></label>
+
+    <div class="cfg-label" data-i18n="bdItems">항목</div>
+    <div class="cfg-list" id="bdItemList"></div>
+
+    <div class="cfg-row"><input type="text" id="bdNewName" placeholder="이름" data-i18n-placeholder="bdItemName" maxlength="40"></div>
+    <div class="cfg-row"><input type="text" id="bdNewPrice" placeholder="가격 (예: 15,000원)" data-i18n-placeholder="bdItemPrice" maxlength="20"></div>
+    <div class="cfg-row"><input type="text" id="bdNewDesc" placeholder="설명 (선택)" data-i18n-placeholder="bdItemDesc" maxlength="100"></div>
+    <div class="cfg-actions">
+      <button type="button" class="cfg-sub" id="bdPickImageBtn" data-i18n="bdItemImage">사진 넣기</button>
+      <button type="button" class="cfg-sub" id="bdAddItemBtn" data-i18n="bdAddItem">항목 추가</button>
+    </div>
+    <input type="file" id="bdImageInput" accept="image/*" style="display:none;">
+
+    <div class="cfg-actions">
+      <button type="button" class="cfg-primary" id="bdSaveBtn" data-i18n="bdSave">저장</button>
+      <button type="button" class="cfg-cancel" id="bdCloseBtn" data-i18n="bdClose">닫기</button>
+    </div>
+    <div class="cfg-status" id="bdStatus"></div>
+  </div>
+</div>
+
 <!-- 2026-08-25 신설: 대화 내보내기 -->
 <div class="ex-panel" id="exPanel">
   <div class="ex-box">
