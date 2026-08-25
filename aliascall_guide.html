@@ -19,7 +19,7 @@ body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',s
 h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .mono{ font-family:'IBM Plex Mono',monospace; }
 
-header{ padding:20px 24px; border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:10; }
+header{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:20px 24px; border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:10; }
 .brand-row{ display:flex; align-items:center; gap:9px; }
 .brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
 .brand-name{ font-size:16px; font-weight:600; }
@@ -97,298 +97,653 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
 
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
+
+/* 2026-08-25 신설: 언어 전환 버튼 */
+.lang-toggle{ background:var(--card,#fff); color:inherit; border:1.5px solid var(--line); border-radius:20px; padding:6px 13px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; }
+.lang-toggle:active{ opacity:.6; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand-row">
-    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기" data-i18n-aria="backAria">←</button>
     <a href="index.html" class="brand-home-link">
       <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
     </a>
   </div>
+  <button type="button" class="lang-toggle" id="langToggleBtn" data-i18n="langToggle" data-i18n-aria="langAria" aria-label="언어 바꾸기">EN</button>
 </header>
 
 <main>
-  <div class="page-title">안심비상연락(Alias Emergency Call) 사용설명서</div>
-  <div class="page-desc">Aliascall을 처음 쓰시는 분들을 위한 안내입니다. 궁금한 항목을 눌러 바로 이동하세요.</div>
+  <div class="page-title" data-i18n-html="g001">안심비상연락(Alias Emergency Call) 사용설명서</div>
+  <div class="page-desc" data-i18n-html="g002">Aliascall을 처음 쓰시는 분들을 위한 안내입니다. 궁금한 항목을 눌러 바로 이동하세요.</div>
 
   <div class="toc">
-    <a href="#sec-overview">① 전체 흐름</a>
-    <a href="#sec-category">② 카테고리별 등록</a>
-    <a href="#sec-noseprint">③ 비문 촬영법 ⭐</a>
-    <a href="#sec-print">④ QR 인쇄·부착</a>
-    <a href="#sec-finder">⑤ 발견자는 이렇게</a>
-    <a href="#sec-board">⑥ 찾습니다 게시판 ⭐</a>
-    <a href="#sec-notify">⑦ 알림 설정 ⭐</a>
-    <a href="#sec-comm">⑧ 통신 방법 완전정리 ⭐</a>
-    <a href="#sec-faq">⑨ 자주 묻는 질문</a>
+    <a href="#sec-overview" data-i18n-html="g003">① 전체 흐름</a>
+    <a href="#sec-category" data-i18n-html="g004">② 카테고리별 등록</a>
+    <a href="#sec-noseprint" data-i18n-html="g005">③ 비문 촬영법 ⭐</a>
+    <a href="#sec-print" data-i18n-html="g006">④ QR 인쇄·부착</a>
+    <a href="#sec-finder" data-i18n-html="g007">⑤ 발견자는 이렇게</a>
+    <a href="#sec-board" data-i18n-html="g008">⑥ 찾습니다 게시판 ⭐</a>
+    <a href="#sec-notify" data-i18n-html="g009">⑦ 알림 설정 ⭐</a>
+    <a href="#sec-comm" data-i18n-html="g010">⑧ 통신 방법 완전정리 ⭐</a>
+    <a href="#sec-faq" data-i18n-html="g011">⑨ 자주 묻는 질문</a>
   </div>
 
   <section id="sec-overview">
-    <div class="sec-title"><span class="sec-num">1</span>전체 흐름</div>
+    <div class="sec-title"><span class="sec-num">1</span><span data-i18n-html="g012">전체 흐름</span></div>
     <div class="step-list">
-      <div class="step-item"><span class="n">1</span><span class="t"><b>등록하기</b>차량, 물품, 아동·어르신, 반려동물 중 하나를 선택하고 정보를 입력합니다.</span></div>
-      <div class="step-item"><span class="n">2</span><span class="t"><b>QR 태그 생성</b>등록이 끝나면 그 대상만의 고유 QR이 만들어집니다.</span></div>
-      <div class="step-item"><span class="n">3</span><span class="t"><b>인쇄해서 부착</b>원하는 크기로 인쇄해 대상에 붙이거나 걸어둡니다.</span></div>
-      <div class="step-item"><span class="n">4</span><span class="t"><b>발견자가 연락</b>QR을 스캔하면 <b>채팅·음성·영상·문자·사진</b> 5가지 중 원하는 방법을 골라 바로 연결됩니다. 실제 전화번호는 절대 노출되지 않아요.</span></div>
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="g013"><b>등록하기</b>차량, 물품, 아동·어르신, 반려동물 중 하나를 선택하고 정보를 입력합니다.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="g014"><b>QR 태그 생성</b>등록이 끝나면 그 대상만의 고유 QR이 만들어집니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="g015"><b>인쇄해서 부착</b>원하는 크기로 인쇄해 대상에 붙이거나 걸어둡니다.</span></div>
+      <div class="step-item"><span class="n">4</span><span class="t" data-i18n-html="g016"><b>발견자가 연락</b>QR을 스캔하면 <b>채팅·음성·영상·문자·사진</b> 5가지 중 원하는 방법을 골라 바로 연결됩니다. 실제 전화번호는 절대 노출되지 않아요.</span></div>
     </div>
-    <div class="tip-callout"><b>이미 잃어버리셨다면?</b> QR을 미리 붙여두지 못한 상태에서 아이나 반려동물이 사라졌다면, <a href="#sec-board">⑥ 찾습니다 게시판</a>을 봐주세요. 지금 바로 등록하고 소식을 알리실 수 있습니다.</div>
+    <div class="tip-callout" data-i18n-html="g017"><b>이미 잃어버리셨다면?</b> QR을 미리 붙여두지 못한 상태에서 아이나 반려동물이 사라졌다면, <a href="#sec-board">⑥ 찾습니다 게시판</a>을 봐주세요. 지금 바로 등록하고 소식을 알리실 수 있습니다.</div>
   </section>
 
   <section id="sec-category">
-    <div class="sec-title"><span class="sec-num">2</span>카테고리별 등록 팁</div>
+    <div class="sec-title"><span class="sec-num">2</span><span data-i18n-html="g018">카테고리별 등록 팁</span></div>
     <div class="category-grid">
-      <div class="category-card"><div class="h">🚗 차량</div><div class="d">차량번호만 있으면 충분해요. 유리창 안쪽에 QR을 붙여두세요.</div></div>
-      <div class="category-card"><div class="h">🎒 분실·도난 우려 물품</div><div class="d">브랜드, 색상, 스티커 등 남과 구별되는 특징을 자세히 적을수록 좋아요.</div></div>
-      <div class="category-card"><div class="h">🧑‍🦳 아동·치매 어르신·장애우</div><div class="d">옷이나 신발, 가방에 QR을 부착해두세요. 목소리 녹음(안심 콘텐츠)도 추천드려요.</div></div>
-      <div class="category-card"><div class="h">🐾 반려동물</div><div class="d">목걸이에 QR을 걸고, 비문 사진도 꼭 등록해두세요 (아래 ③ 참고).</div></div>
-      <div class="category-card"><div class="h">📮 부재중 연락</div><div class="d">마이페이지에서 "긴급 알림"을 켜두시면, 화면을 안 보고 있어도 연결 요청이 오면 알려드려요.</div></div>
-      <div class="category-card"><div class="h">❓ 기타 물품·사건</div><div class="d">상황을 자유롭게 적어주세요. 음성으로 말씀하셔도 됩니다.</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="g019">🚗 차량</div><div class="d" data-i18n-html="g020">차량번호만 있으면 충분해요. 유리창 안쪽에 QR을 붙여두세요.</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="g021">🎒 분실·도난 우려 물품</div><div class="d" data-i18n-html="g022">브랜드, 색상, 스티커 등 남과 구별되는 특징을 자세히 적을수록 좋아요.</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="g023">🧑‍🦳 아동·치매 어르신·장애우</div><div class="d" data-i18n-html="g024">옷이나 신발, 가방에 QR을 부착해두세요. 목소리 녹음(안심 콘텐츠)도 추천드려요.</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="g025">🐾 반려동물</div><div class="d" data-i18n-html="g026">목걸이에 QR을 걸고, 비문 사진도 꼭 등록해두세요 (아래 ③ 참고).</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="g027">📮 부재중 연락</div><div class="d" data-i18n-html="g028">마이페이지에서 "긴급 알림"을 켜두시면, 화면을 안 보고 있어도 연결 요청이 오면 알려드려요.</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="g029">❓ 기타 물품·사건</div><div class="d" data-i18n-html="g030">상황을 자유롭게 적어주세요. 음성으로 말씀하셔도 됩니다.</div></div>
     </div>
   </section>
 
   <!-- ⭐⭐⭐ 비문 촬영법 — 핵심 강조 섹션 ⭐⭐⭐ -->
   <section id="sec-noseprint">
-    <div class="sec-title"><span class="sec-num">3</span>비문(코무늬) 촬영법</div>
+    <div class="sec-title"><span class="sec-num">3</span><span data-i18n-html="g031">비문(코무늬) 촬영법</span></div>
 
     <div class="highlight-box">
-      <div class="tag">가장 많이 실패하는 단계</div>
-      <h3>왜 중요한가요?</h3>
-      <p>사람 지문처럼 반려동물의 코 주름도 개체마다 고유합니다. 하지만 사진이 흐리거나 각도가 비뚤면 인식률이 크게 떨어져요. 아래 방법대로 찍으시면 훨씬 정확하게 등록됩니다.</p>
+      <div class="tag" data-i18n-html="g032">가장 많이 실패하는 단계</div>
+      <h3 data-i18n-html="g033">왜 중요한가요?</h3>
+      <p data-i18n-html="g034">사람 지문처럼 반려동물의 코 주름도 개체마다 고유합니다. 하지만 사진이 흐리거나 각도가 비뚤면 인식률이 크게 떨어져요. 아래 방법대로 찍으시면 훨씬 정확하게 등록됩니다.</p>
     </div>
 
     <div class="dodont-grid">
       <div class="dodont-col do">
-        <div class="head">✅ 이렇게 찍어주세요</div>
-        <div class="dodont-item"><span class="icon">☀️</span><span>밝고 은은한 자연광 아래에서 (창가 근처가 좋아요)</span></div>
-        <div class="dodont-item"><span class="icon">📐</span><span>코와 카메라가 수직이 되도록 정면에서</span></div>
-        <div class="dodont-item"><span class="icon">🔍</span><span>코가 화면을 가득 채울 만큼 가까이, 초점 맞춰서</span></div>
-        <div class="dodont-item"><span class="icon">💧</span><span>코가 살짝 촉촉한 상태일 때 (평소 상태면 충분해요)</span></div>
-        <div class="dodont-item"><span class="icon">🔁</span><span>여러 장 찍어서 가장 선명한 사진으로 선택</span></div>
-        <div class="dodont-item"><span class="icon">🦴</span><span>간식으로 잠깐 시선을 고정시켜 움직임 줄이기</span></div>
+        <div class="head" data-i18n-html="g035">✅ 이렇게 찍어주세요</div>
+        <div class="dodont-item"><span class="icon">☀️</span><span><span data-i18n-html="g036">밝고 은은한 자연광 아래에서 (창가 근처가 좋아요)</span></span></div>
+        <div class="dodont-item"><span class="icon">📐</span><span><span data-i18n-html="g037">코와 카메라가 수직이 되도록 정면에서</span></span></div>
+        <div class="dodont-item"><span class="icon">🔍</span><span><span data-i18n-html="g038">코가 화면을 가득 채울 만큼 가까이, 초점 맞춰서</span></span></div>
+        <div class="dodont-item"><span class="icon">💧</span><span><span data-i18n-html="g039">코가 살짝 촉촉한 상태일 때 (평소 상태면 충분해요)</span></span></div>
+        <div class="dodont-item"><span class="icon">🔁</span><span><span data-i18n-html="g040">여러 장 찍어서 가장 선명한 사진으로 선택</span></span></div>
+        <div class="dodont-item"><span class="icon">🦴</span><span><span data-i18n-html="g041">간식으로 잠깐 시선을 고정시켜 움직임 줄이기</span></span></div>
       </div>
       <div class="dodont-col dont">
-        <div class="head">❌ 이건 피해주세요</div>
-        <div class="dodont-item"><span class="icon">⚡</span><span>플래시 직접 사용 (반사광으로 무늬가 하얗게 날아가요)</span></div>
-        <div class="dodont-item"><span class="icon">↗️</span><span>비스듬한 각도 (무늬가 찌그러져 보여요)</span></div>
-        <div class="dodont-item"><span class="icon">🌫️</span><span>너무 멀리서, 흔들린 채로 촬영</span></div>
-        <div class="dodont-item"><span class="icon">🌙</span><span>어두운 곳에서 촬영 (뿌옇게 나와요)</span></div>
-        <div class="dodont-item"><span class="icon">💦</span><span>코에 물방울이 흥건히 맺힌 상태</span></div>
-        <div class="dodont-item"><span class="icon">🐕‍🦺</span><span>움직이는 채로 급하게 촬영</span></div>
+        <div class="head" data-i18n-html="g042">❌ 이건 피해주세요</div>
+        <div class="dodont-item"><span class="icon">⚡</span><span><span data-i18n-html="g043">플래시 직접 사용 (반사광으로 무늬가 하얗게 날아가요)</span></span></div>
+        <div class="dodont-item"><span class="icon">↗️</span><span><span data-i18n-html="g044">비스듬한 각도 (무늬가 찌그러져 보여요)</span></span></div>
+        <div class="dodont-item"><span class="icon">🌫️</span><span><span data-i18n-html="g045">너무 멀리서, 흔들린 채로 촬영</span></span></div>
+        <div class="dodont-item"><span class="icon">🌙</span><span><span data-i18n-html="g046">어두운 곳에서 촬영 (뿌옇게 나와요)</span></span></div>
+        <div class="dodont-item"><span class="icon">💦</span><span><span data-i18n-html="g047">코에 물방울이 흥건히 맺힌 상태</span></span></div>
+        <div class="dodont-item"><span class="icon">🐕‍🦺</span><span><span data-i18n-html="g048">움직이는 채로 급하게 촬영</span></span></div>
       </div>
     </div>
 
     <div class="step-list step-photo-list">
-      <div class="step-item"><span class="n"></span><span class="t"><b>준비</b>밝은 창가나 실외 그늘로 이동하고, 간식을 한 손에 준비하세요.</span></div>
-      <div class="step-item"><span class="n"></span><span class="t"><b>자세 잡기</b>반려동물의 얼굴을 살짝 들어올려 카메라와 코가 수직이 되게 합니다.</span></div>
-      <div class="step-item"><span class="n"></span><span class="t"><b>거리 맞추기</b>코가 화면의 절반 이상을 채울 정도로 가까이 다가가되, 초점이 흐려지지 않는 선까지만.</span></div>
-      <div class="step-item"><span class="n"></span><span class="t"><b>촬영</b>간식으로 시선을 살짝 고정시킨 뒤 플래시 없이 3~5장 연속 촬영하세요.</span></div>
-      <div class="step-item"><span class="n"></span><span class="t"><b>선택·업로드</b>그중 가장 선명하고 무늬가 또렷한 한 장을 골라 업로드합니다.</span></div>
+      <div class="step-item"><span class="n"></span><span class="t" data-i18n-html="g049"><b>준비</b>밝은 창가나 실외 그늘로 이동하고, 간식을 한 손에 준비하세요.</span></div>
+      <div class="step-item"><span class="n"></span><span class="t" data-i18n-html="g050"><b>자세 잡기</b>반려동물의 얼굴을 살짝 들어올려 카메라와 코가 수직이 되게 합니다.</span></div>
+      <div class="step-item"><span class="n"></span><span class="t" data-i18n-html="g051"><b>거리 맞추기</b>코가 화면의 절반 이상을 채울 정도로 가까이 다가가되, 초점이 흐려지지 않는 선까지만.</span></div>
+      <div class="step-item"><span class="n"></span><span class="t" data-i18n-html="g052"><b>촬영</b>간식으로 시선을 살짝 고정시킨 뒤 플래시 없이 3~5장 연속 촬영하세요.</span></div>
+      <div class="step-item"><span class="n"></span><span class="t" data-i18n-html="g053"><b>선택·업로드</b>그중 가장 선명하고 무늬가 또렷한 한 장을 골라 업로드합니다.</span></div>
     </div>
 
-    <div class="tip-callout"><b>Tip.</b> 한 번에 잘 안 나와도 괜찮아요. 등록 후에도 언제든 사진을 다시 올려 갱신할 수 있습니다.</div>
+    <div class="tip-callout" data-i18n-html="g054"><b>Tip.</b> 한 번에 잘 안 나와도 괜찮아요. 등록 후에도 언제든 사진을 다시 올려 갱신할 수 있습니다.</div>
 
     <!-- 2026-08-23 신설: 웹/앱 기능 차이 명확히 안내 -->
     <div class="highlight-box" style="margin-top:20px;">
-      <div class="tag">웹 이용 시 꼭 알아두세요</div>
-      <h3>지금은 "안전 보관"까지만 됩니다</h3>
-      <p><b>지금 이 웹 화면(브라우저)에서 등록하시면</b>, 비문 사진은 다른 사람은 볼 수 없는 비공개 저장소에 안전하게 보관되어, 나중에 발견 연락이 왔을 때 소유자가 직접 눈으로 대조해보는 용도로 쓰입니다. <b>AI가 자동으로 "이 강아지가 맞다/아니다"를 판별해주는 기능은 아직 웹에서는 지원되지 않습니다.</b></p>
-      <p style="margin-top:10px;">AI 자동 비문 인식은 <b>Aliascall 앱(iOS/Android, 출시 예정)</b>에서 지원될 예정입니다. 앱이 출시되면 이 페이지에 안내해드리겠습니다.</p>
+      <div class="tag" data-i18n-html="g055">웹 이용 시 꼭 알아두세요</div>
+      <h3 data-i18n-html="g056">지금은 "안전 보관"까지만 됩니다</h3>
+      <p data-i18n-html="g057"><b>지금 이 웹 화면(브라우저)에서 등록하시면</b>, 비문 사진은 다른 사람은 볼 수 없는 비공개 저장소에 안전하게 보관되어, 나중에 발견 연락이 왔을 때 소유자가 직접 눈으로 대조해보는 용도로 쓰입니다. <b>AI가 자동으로 "이 강아지가 맞다/아니다"를 판별해주는 기능은 아직 웹에서는 지원되지 않습니다.</b></p>
+      <p style="margin-top:10px;" data-i18n-html="g058">AI 자동 비문 인식은 <b>Aliascall 앱(iOS/Android, 출시 예정)</b>에서 지원될 예정입니다. 앱이 출시되면 이 페이지에 안내해드리겠습니다.</p>
     </div>
   </section>
 
   <section id="sec-print">
-    <div class="sec-title"><span class="sec-num">4</span>QR 태그 인쇄 및 부착</div>
+    <div class="sec-title"><span class="sec-num">4</span><span data-i18n-html="g059">QR 태그 인쇄 및 부착</span></div>
     <div class="step-list">
-      <div class="step-item"><span class="n">1</span><span class="t">등록 완료 화면에서 원하는 사이즈(3×3 / 4.5×4.5 / 5.5×5.5 / 6×6cm)를 선택하세요.</span></div>
-      <div class="step-item"><span class="n">2</span><span class="t">100P가 차감되며 A4용지 인쇄용 파일이 다운로드됩니다.</span></div>
-      <div class="step-item"><span class="n">3</span><span class="t">가정용 프린터로 출력 후 가위로 잘라 사용하시면 됩니다.</span></div>
-      <div class="step-item"><span class="n">4</span><span class="t">비바람에 노출되는 곳(차량 외부 등)에는 투명 보호필름을 함께 부착하시길 권해드려요.</span></div>
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="g060">등록 완료 화면에서 원하는 사이즈(3×3 / 4.5×4.5 / 5.5×5.5 / 6×6cm)를 선택하세요.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="g061">100P가 차감되며 A4용지 인쇄용 파일이 다운로드됩니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="g062">가정용 프린터로 출력 후 가위로 잘라 사용하시면 됩니다.</span></div>
+      <div class="step-item"><span class="n">4</span><span class="t" data-i18n-html="g063">비바람에 노출되는 곳(차량 외부 등)에는 투명 보호필름을 함께 부착하시길 권해드려요.</span></div>
     </div>
   </section>
 
   <section id="sec-finder">
-    <div class="sec-title"><span class="sec-num">5</span>발견자는 이렇게 연락해요</div>
+    <div class="sec-title"><span class="sec-num">5</span><span data-i18n-html="g064">발견자는 이렇게 연락해요</span></div>
     <div class="step-list">
-      <div class="step-item"><span class="n">1</span><span class="t">QR을 스캔하거나, aliascall.com에서 번호·이름을 문자 또는 음성으로 검색합니다. 앱 설치는 필요 없어요.</span></div>
-      <div class="step-item"><span class="n">2</span><span class="t">일치하는 등록 정보를 찾으면 눌러서 연결 화면으로 이동합니다.</span></div>
-      <div class="step-item"><span class="n">3</span><span class="t">화면 하단에서 <b>채팅 · 음성 · 영상 · 문자 · 사진</b> 5가지 중 원하는 방법을 고릅니다. 진행 중에 다른 걸 눌러도 즉시 그걸로 전환돼요.</span></div>
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="g065">QR을 스캔하거나, aliascall.com에서 번호·이름을 문자 또는 음성으로 검색합니다. 앱 설치는 필요 없어요.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="g066">일치하는 등록 정보를 찾으면 눌러서 연결 화면으로 이동합니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="g067">화면 하단에서 <b>채팅 · 음성 · 영상 · 문자 · 사진</b> 5가지 중 원하는 방법을 고릅니다. 진행 중에 다른 걸 눌러도 즉시 그걸로 전환돼요.</span></div>
     </div>
 
     <div class="category-grid" style="margin-top:14px;">
-      <div class="category-card"><div class="h">💬 채팅</div><div class="d">가장 부담 없는 방법. 대화 내용이 저장되어, 소유자가 나중에 봐도 답장할 수 있어요.</div></div>
-      <div class="category-card"><div class="h">🎧 음성 / 🎥 영상</div><div class="d">실시간 통화. 소유자가 그 순간 화면을 보고 있어야 연결돼요.</div></div>
-      <div class="category-card"><div class="h">✉️ 문자메세지 남기기</div><div class="d">한 번 보내고 끝나는 메모. 소유자의 "부재중 메시지"에 남아요.</div></div>
-      <div class="category-card"><div class="h">📷 사진</div><div class="d">채팅창 안에서 첨부하거나, 이 버튼으로 바로 촬영·전송할 수 있어요.</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="g068">💬 채팅</div><div class="d" data-i18n-html="g069">가장 부담 없는 방법. 대화 내용이 저장되어, 소유자가 나중에 봐도 답장할 수 있어요.</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="g070">🎧 음성 / 🎥 영상</div><div class="d" data-i18n-html="g071">실시간 통화. 소유자가 그 순간 화면을 보고 있어야 연결돼요.</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="g072">✉️ 문자메세지 남기기</div><div class="d" data-i18n-html="g073">한 번 보내고 끝나는 메모. 소유자의 "부재중 메시지"에 남아요.</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="g074">📷 사진</div><div class="d" data-i18n-html="g075">채팅창 안에서 첨부하거나, 이 버튼으로 바로 촬영·전송할 수 있어요.</div></div>
     </div>
 
-    <div class="tip-callout"><b>Tip.</b> 채팅과 사진은 대화 이력이 최대 14일(아동·치매어르신·장애우·반려동물은 30일) 저장됩니다. 같은 QR/링크로 다시 들어오면 이전 대화가 이어져서 보여요.</div>
+    <div class="tip-callout" data-i18n-html="g076"><b>Tip.</b> 채팅과 사진은 대화 이력이 최대 14일(아동·치매어르신·장애우·반려동물은 30일) 저장됩니다. 같은 QR/링크로 다시 들어오면 이전 대화가 이어져서 보여요.</div>
   </section>
 
   <!-- ⭐⭐⭐ 2026-08-25 신설: 찾습니다 게시판 ⭐⭐⭐ -->
   <section id="sec-board">
-    <div class="sec-title"><span class="sec-num">6</span>찾습니다 게시판</div>
+    <div class="sec-title"><span class="sec-num">6</span><span data-i18n-html="g077">찾습니다 게시판</span></div>
 
     <div class="highlight-box">
-      <div class="tag">QR을 미리 못 붙였을 때</div>
-      <h3>이미 잃어버린 뒤에도 쓸 수 있어요</h3>
-      <p>QR 태그는 <b>미리 붙여두는</b> 대비책입니다. 하지만 아무것도 준비하지 못한 채 아이나 반려동물이 사라졌다면, 찾습니다 게시판에 소식을 올려 <b>여러 사람의 눈</b>을 빌릴 수 있습니다. 목격하신 분은 실제 전화번호를 몰라도 바로 제보할 수 있어요.</p>
-      <p style="margin-top:10px;"><a href="aliascall_public_board_mockup.html">게시판 열어보기 →</a></p>
+      <div class="tag" data-i18n-html="g078">QR을 미리 못 붙였을 때</div>
+      <h3 data-i18n-html="g079">이미 잃어버린 뒤에도 쓸 수 있어요</h3>
+      <p data-i18n-html="g080">QR 태그는 <b>미리 붙여두는</b> 대비책입니다. 하지만 아무것도 준비하지 못한 채 아이나 반려동물이 사라졌다면, 찾습니다 게시판에 소식을 올려 <b>여러 사람의 눈</b>을 빌릴 수 있습니다. 목격하신 분은 실제 전화번호를 몰라도 바로 제보할 수 있어요.</p>
+      <p style="margin-top:10px;" data-i18n-html="g081"><a href="aliascall_public_board_mockup.html">게시판 열어보기 →</a></p>
     </div>
 
-    <div class="step-title" style="font-size:14px; font-weight:700; margin:18px 0 10px;">📢 글 올리는 법</div>
+    <div class="step-title" style="font-size:14px; font-weight:700; margin:18px 0 10px;" data-i18n-html="g082">📢 글 올리는 법</div>
     <div class="step-list">
-      <div class="step-item"><span class="n">1</span><span class="t"><b>가입하기</b>마이페이지에서 <b>닉네임과 비밀번호</b>만 정하면 끝입니다. 실명도, 전화번호도 필요 없어요.</span></div>
-      <div class="step-item"><span class="n">2</span><span class="t"><b>등록하기</b>찾고 계신 아이·어르신·반려동물·물건을 등록합니다. 사진을 함께 올리시면 알아보기 훨씬 쉬워요.</span></div>
-      <div class="step-item"><span class="n">3</span><span class="t"><b>게시하기</b>게시판 오른쪽 아래 <b>✏️ 글쓰기</b>를 누르고, 등록해둔 항목을 고른 뒤 언제·어디서·어떻게·특징을 적으면 됩니다.</span></div>
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="g083"><b>가입하기</b>마이페이지에서 <b>닉네임과 비밀번호</b>만 정하면 끝입니다. 실명도, 전화번호도 필요 없어요.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="g084"><b>등록하기</b>찾고 계신 아이·어르신·반려동물·물건을 등록합니다. 사진을 함께 올리시면 알아보기 훨씬 쉬워요.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="g085"><b>게시하기</b>게시판 오른쪽 아래 <b>✏️ 글쓰기</b>를 누르고, 등록해둔 항목을 고른 뒤 언제·어디서·어떻게·특징을 적으면 됩니다.</span></div>
     </div>
 
-    <div class="urgent-callout">
+    <div class="urgent-callout" data-i18n-html="g086">
       <b>🚨 급하신 분께.</b> 가입 직후 구독 결제 화면이 나와도 당황하지 마세요. 그 화면 아래쪽의 <b>"비상시(중요한 분실 및 발견시) 결제없이 바로 등록하기"</b> 버튼을 누르시면 결제를 건너뛰고 곧바로 등록하실 수 있습니다.<br><br>
       <b>가입도 게시도 모두 무료입니다.</b> 아동·치매어르신·장애우·반려동물은 구독 여부와 상관없이 언제나 연결됩니다. 등록을 거치는 이유는 단 하나 — 제보하시는 분이 <b>전화번호 노출 없이</b> 연락드릴 수 있게 하기 위해서입니다.
     </div>
 
-    <div class="privacy-warn">
+    <div class="privacy-warn" data-i18n-html="g087">
       <b>⚠️ 적으실 때 주의.</b> 게시글은 <b>로그인하지 않은 누구나</b> 볼 수 있습니다. 주민등록번호, 집 주소, 전화번호 같은 정보는 절대 적지 마세요. 연락은 게시글의 "제보하기" 버튼이 안전하게 대신해 줍니다.
     </div>
 
-    <div class="step-title" style="font-size:14px; font-weight:700; margin:22px 0 10px;">🔖 "찾는 중"과 "발견됨"</div>
+    <div class="step-title" style="font-size:14px; font-weight:700; margin:22px 0 10px;" data-i18n-html="g088">🔖 "찾는 중"과 "발견됨"</div>
     <div class="status-demo">
       <div class="searching">
-        <span class="lbl">찾는 중</span>
-        <div class="d">아직 찾지 못한 상태입니다. 글을 올리면 처음에 여기로 들어갑니다.</div>
+        <span class="lbl" data-i18n-html="g089">찾는 중</span>
+        <div class="d" data-i18n-html="g090">아직 찾지 못한 상태입니다. 글을 올리면 처음에 여기로 들어갑니다.</div>
       </div>
       <div class="found">
-        <span class="lbl">발견됨</span>
-        <div class="d">무사히 찾았거나 되찾은 경우입니다. 다른 분들께도 좋은 소식이 됩니다.</div>
+        <span class="lbl" data-i18n-html="g091">발견됨</span>
+        <div class="d" data-i18n-html="g092">무사히 찾았거나 되찾은 경우입니다. 다른 분들께도 좋은 소식이 됩니다.</div>
       </div>
     </div>
     <div class="step-list">
-      <div class="step-item"><span class="n">✅</span><span class="t"><b>찾으셨다면 "찾았어요"를 눌러주세요</b>내가 올린 글을 열면 <b>✅ 찾았어요</b> 버튼이 보입니다. 누르면 "발견됨" 탭으로 옮겨집니다. 이걸 안 누르면 이미 찾았는데도 계속 "찾는 중"으로 남아, 다른 분들이 헛되이 찾아다니게 됩니다.</span></div>
-      <div class="step-item"><span class="n">🗑️</span><span class="t"><b>다 끝났으면 "글 내리기"</b>더 이상 게시할 이유가 없으면 <b>글 내리기</b>를 눌러주세요. 게시판에서 사라집니다. 등록물 자체는 그대로 남으니 QR은 계속 쓰실 수 있어요.</span></div>
+      <div class="step-item"><span class="n">✅</span><span class="t" data-i18n-html="g093"><b>찾으셨다면 "찾았어요"를 눌러주세요</b>내가 올린 글을 열면 <b>✅ 찾았어요</b> 버튼이 보입니다. 누르면 "발견됨" 탭으로 옮겨집니다. 이걸 안 누르면 이미 찾았는데도 계속 "찾는 중"으로 남아, 다른 분들이 헛되이 찾아다니게 됩니다.</span></div>
+      <div class="step-item"><span class="n">🗑️</span><span class="t" data-i18n-html="g094"><b>다 끝났으면 "글 내리기"</b>더 이상 게시할 이유가 없으면 <b>글 내리기</b>를 눌러주세요. 게시판에서 사라집니다. 등록물 자체는 그대로 남으니 QR은 계속 쓰실 수 있어요.</span></div>
     </div>
 
     <div class="share-emphasis">
-      <div class="h">🔗 공유하기 — 가장 중요한 기능입니다</div>
-      <div class="d">
+      <div class="h" data-i18n-html="g095">🔗 공유하기 — 가장 중요한 기능입니다</div>
+      <div class="d" data-i18n-html="g096">
         게시글마다 <b>고유한 주소</b>가 있습니다. 글을 열고 <b>🔗 공유하기</b>를 누르면 카카오톡·문자로 바로 보낼 수 있어요.<br><br>
         게시판을 찾아오는 사람은 많지 않습니다. 하지만 <b>동네 단톡방에 링크 하나를 던지는 것</b>만으로 수십 명이 사진을 보게 됩니다. 실종 상황에서는 이게 가장 큰 힘이 됩니다.<br><br>
         공유된 링크에는 <b>사진과 제목이 미리보기</b>로 함께 뜹니다. 받는 분이 열어보지 않아도 무슨 일인지 알 수 있어요.
       </div>
     </div>
 
-    <div class="step-title" style="font-size:14px; font-weight:700; margin:22px 0 10px;">🔍 목격하셨다면</div>
+    <div class="step-title" style="font-size:14px; font-weight:700; margin:22px 0 10px;" data-i18n-html="g097">🔍 목격하셨다면</div>
     <div class="step-list">
-      <div class="step-item"><span class="n">1</span><span class="t"><b>국가와 분류로 찾아보세요</b>게시판 위쪽에서 국가를 고르고, 아동·노인 / 반려동물 / 분실물 / 기타로 걸러볼 수 있습니다.</span></div>
-      <div class="step-item"><span class="n">2</span><span class="t"><b>글을 열어 사진을 확인하세요</b>사진은 좌우로 넘겨가며 볼 수 있고, 누르면 크게 볼 수 있습니다.</span></div>
-      <div class="step-item"><span class="n">3</span><span class="t"><b>"제보하기 · 지금 연결하기"</b>이 버튼을 누르면 QR을 스캔한 것과 똑같이 연결됩니다. 문자·음성·영상 중 편한 방법을 고르시면 되고, <b>서로의 전화번호는 노출되지 않습니다.</b></span></div>
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="g098"><b>국가와 분류로 찾아보세요</b>게시판 위쪽에서 국가를 고르고, 아동·노인 / 반려동물 / 분실물 / 기타로 걸러볼 수 있습니다.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="g099"><b>글을 열어 사진을 확인하세요</b>사진은 좌우로 넘겨가며 볼 수 있고, 누르면 크게 볼 수 있습니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="g100"><b>"제보하기 · 지금 연결하기"</b>이 버튼을 누르면 QR을 스캔한 것과 똑같이 연결됩니다. 문자·음성·영상 중 편한 방법을 고르시면 되고, <b>서로의 전화번호는 노출되지 않습니다.</b></span></div>
     </div>
 
-    <div class="tip-callout"><b>게시글번호란?</b> 글마다 <span class="mono">A3F2C1</span> 같은 6자리 번호가 붙습니다. 전화나 대화로 "몇 번 글이요"라고 알려주실 때 쓰시면 됩니다. 이 번호로는 연락이 되지 않으니 안심하고 알려주셔도 됩니다.</div>
+    <div class="tip-callout" data-i18n-html="g101"><b>게시글번호란?</b> 글마다 <span class="mono">A3F2C1</span> 같은 6자리 번호가 붙습니다. 전화나 대화로 "몇 번 글이요"라고 알려주실 때 쓰시면 됩니다. 이 번호로는 연락이 되지 않으니 안심하고 알려주셔도 됩니다.</div>
 
-    <div class="tip-callout" style="border-left-color:var(--danger); background:var(--danger-tint);"><b style="color:var(--danger);">부적절한 글을 보셨다면.</b> 글 아래쪽 <b>🚩 신고하기</b>를 눌러주세요. 확인 후 조치합니다. 신고하신 사실은 상대에게 알려지지 않습니다.</div>
+    <div class="tip-callout" style="border-left-color:var(--danger); background:var(--danger-tint);" data-i18n-html="g102"><b style="color:var(--danger);">부적절한 글을 보셨다면.</b> 글 아래쪽 <b>🚩 신고하기</b>를 눌러주세요. 확인 후 조치합니다. 신고하신 사실은 상대에게 알려지지 않습니다.</div>
   </section>
 
   <section id="sec-notify">
-    <div class="sec-title"><span class="sec-num">7</span>알림 설정</div>
+    <div class="sec-title"><span class="sec-num">7</span><span data-i18n-html="g103">알림 설정</span></div>
     <div class="step-list">
-      <div class="step-item"><span class="n">1</span><span class="t"><b>통화·문자 알림음</b>전화벨, 딩동 소리 등 그 화면을 열어두고 있을 때만 울리는 소리예요. 마이페이지·수신대기 화면 상단 토글로 켜세요.</span></div>
-      <div class="step-item"><span class="n">2</span><span class="t"><b>긴급 알림 (푸시)</b>화면을 완전히 닫아놔도 폰 알림창에 뜨는 진짜 알림이에요. 최초 1회 브라우저의 "허용" 팝업을 눌러주셔야 켜집니다.</span></div>
-      <div class="step-item"><span class="n">3</span><span class="t"><b>PC에서 쓰신다면</b>크롬의 "백그라운드 실행" 옵션을 켜두셔야, 창을 닫아도 알림을 확실히 받을 수 있어요.</span></div>
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="g104"><b>통화·문자 알림음</b>전화벨, 딩동 소리 등 그 화면을 열어두고 있을 때만 울리는 소리예요. 마이페이지·수신대기 화면 상단 토글로 켜세요.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="g105"><b>긴급 알림 (푸시)</b>화면을 완전히 닫아놔도 폰 알림창에 뜨는 진짜 알림이에요. 최초 1회 브라우저의 "허용" 팝업을 눌러주셔야 켜집니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="g106"><b>PC에서 쓰신다면</b>크롬의 "백그라운드 실행" 옵션을 켜두셔야, 창을 닫아도 알림을 확실히 받을 수 있어요.</span></div>
     </div>
-    <div class="tip-callout"><b>Tip.</b> 두 알림 다 각자의 브라우저·기기별로 따로 설정해야 해요. 폰을 바꾸시면 새로 켜주셔야 합니다.</div>
-    <div class="tip-callout"><b>게시판에 글을 올리셨다면 꼭 켜주세요.</b> 제보는 언제 올지 모릅니다. 긴급 알림을 켜두시면 화면을 닫아두셔도 제보가 도착한 순간 폰으로 알려드립니다.</div>
+    <div class="tip-callout" data-i18n-html="g107"><b>Tip.</b> 두 알림 다 각자의 브라우저·기기별로 따로 설정해야 해요. 폰을 바꾸시면 새로 켜주셔야 합니다.</div>
+    <div class="tip-callout" data-i18n-html="g108"><b>게시판에 글을 올리셨다면 꼭 켜주세요.</b> 제보는 언제 올지 모릅니다. 긴급 알림을 켜두시면 화면을 닫아두셔도 제보가 도착한 순간 폰으로 알려드립니다.</div>
   </section>
 
   <!-- ⭐ 신설: 소유자·발견자 통신 방법 완전정리 -->
   <section id="sec-comm">
-    <div class="sec-title"><span class="sec-num">8</span>통신 방법 완전정리</div>
+    <div class="sec-title"><span class="sec-num">8</span><span data-i18n-html="g109">통신 방법 완전정리</span></div>
     <div class="highlight-box">
-      <div class="tag">헷갈리기 쉬운 부분</div>
-      <h3>누가, 언제, 어떻게 알게 되나요?</h3>
-      <p>소유자(등록자)는 항상 로그인된 계정이 있고, 발견자는 항상 로그인 없는 익명입니다. 그래서 "로그인 여부"는 소유자에게만 해당되고, 발견자는 "화면을 열어뒀는지"만 문제가 됩니다.</p>
+      <div class="tag" data-i18n-html="g110">헷갈리기 쉬운 부분</div>
+      <h3 data-i18n-html="g111">누가, 언제, 어떻게 알게 되나요?</h3>
+      <p data-i18n-html="g112">소유자(등록자)는 항상 로그인된 계정이 있고, 발견자는 항상 로그인 없는 익명입니다. 그래서 "로그인 여부"는 소유자에게만 해당되고, 발견자는 "화면을 열어뒀는지"만 문제가 됩니다.</p>
     </div>
 
-    <div class="step-title" style="font-size:14px; font-weight:700; margin:18px 0 10px;">🙋 소유자(등록자) 쪽</div>
+    <div class="step-title" style="font-size:14px; font-weight:700; margin:18px 0 10px;" data-i18n-html="g113">🙋 소유자(등록자) 쪽</div>
     <div class="step-list">
-      <div class="step-item"><span class="n">①</span><span class="t"><b>로그인 O + 화면(메인/마이페이지/수신대기) 열어둠</b>실시간으로 배너가 뜨고 소리도 울립니다. 그 자리에서 바로 응대 가능해요.</span></div>
-      <div class="step-item"><span class="n">②</span><span class="t"><b>로그인 O + 화면 안 열어둠</b>"긴급 알림"을 켜뒀다면 15초 뒤 폰 알림이 뜹니다. 안 켜뒀다면 알림 없이 지나가고, 나중에 마이페이지 "소통함"에서 확인해야 해요.</span></div>
-      <div class="step-item"><span class="n">③</span><span class="t"><b>로그인 X (로그아웃 상태)</b>아무것도 못 받습니다. 대신 데이터는 안전하게 쌓여있어서, 나중에 로그인만 하면 소통함에 다 남아있어요.</span></div>
+      <div class="step-item"><span class="n">①</span><span class="t" data-i18n-html="g114"><b>로그인 O + 화면(메인/마이페이지/수신대기) 열어둠</b>실시간으로 배너가 뜨고 소리도 울립니다. 그 자리에서 바로 응대 가능해요.</span></div>
+      <div class="step-item"><span class="n">②</span><span class="t" data-i18n-html="g115"><b>로그인 O + 화면 안 열어둠</b>"긴급 알림"을 켜뒀다면 15초 뒤 폰 알림이 뜹니다. 안 켜뒀다면 알림 없이 지나가고, 나중에 마이페이지 "소통함"에서 확인해야 해요.</span></div>
+      <div class="step-item"><span class="n">③</span><span class="t" data-i18n-html="g116"><b>로그인 X (로그아웃 상태)</b>아무것도 못 받습니다. 대신 데이터는 안전하게 쌓여있어서, 나중에 로그인만 하면 소통함에 다 남아있어요.</span></div>
     </div>
 
-    <div class="step-title" style="font-size:14px; font-weight:700; margin:22px 0 10px;">🔍 발견자 쪽</div>
+    <div class="step-title" style="font-size:14px; font-weight:700; margin:22px 0 10px;" data-i18n-html="g117">🔍 발견자 쪽</div>
     <div class="step-list">
-      <div class="step-item"><span class="n">①</span><span class="t"><b>채팅/통화 화면을 열어두고 있음</b>소유자가 답장하면 실시간(늦어도 8초 안)으로 화면에 뜨고, 알림음도 울려요.</span></div>
-      <div class="step-item"><span class="n">②</span><span class="t"><b>화면을 닫음 / 다른 데로 감</b>처음 메시지 보낼 때 "답장 알림 받기"를 허용했다면, 소유자가 답장할 때 폰에 알림이 떠요. 허용 안 했다면, 같은 브라우저로 같은 QR/링크에 다시 들어가야 대화가 이어져서 보입니다.</span></div>
-      <div class="step-item"><span class="n">③</span><span class="t"><b>다른 기기/브라우저로 재접속</b>⚠️ 이 경우는 예전 대화를 못 찾습니다. 익명 식별값이 그 브라우저에만 저장되기 때문에, 새로운 대화로 취급돼요.</span></div>
+      <div class="step-item"><span class="n">①</span><span class="t" data-i18n-html="g118"><b>채팅/통화 화면을 열어두고 있음</b>소유자가 답장하면 실시간(늦어도 8초 안)으로 화면에 뜨고, 알림음도 울려요.</span></div>
+      <div class="step-item"><span class="n">②</span><span class="t" data-i18n-html="g119"><b>화면을 닫음 / 다른 데로 감</b>처음 메시지 보낼 때 "답장 알림 받기"를 허용했다면, 소유자가 답장할 때 폰에 알림이 떠요. 허용 안 했다면, 같은 브라우저로 같은 QR/링크에 다시 들어가야 대화가 이어져서 보입니다.</span></div>
+      <div class="step-item"><span class="n">③</span><span class="t" data-i18n-html="g120"><b>다른 기기/브라우저로 재접속</b>⚠️ 이 경우는 예전 대화를 못 찾습니다. 익명 식별값이 그 브라우저에만 저장되기 때문에, 새로운 대화로 취급돼요.</span></div>
     </div>
 
     <div class="dodont-grid" style="margin-top:20px;">
       <div class="dodont-col do">
-        <div class="head">🔔 알림음</div>
-        <div class="dodont-item"><span class="icon">📱</span><span>그 화면을 <b>열어두고 있을 때만</b> 울리는 소리예요.</span></div>
-        <div class="dodont-item"><span class="icon">🔇</span><span>화면을 닫으면 안 울립니다.</span></div>
+        <div class="head" data-i18n-html="g121">🔔 알림음</div>
+        <div class="dodont-item"><span class="icon">📱</span><span><span data-i18n-html="g122">그 화면을 <b>열어두고 있을 때만</b> 울리는 소리예요.</span></span></div>
+        <div class="dodont-item"><span class="icon">🔇</span><span><span data-i18n-html="g123">화면을 닫으면 안 울립니다.</span></span></div>
       </div>
       <div class="dodont-col dont">
-        <div class="head">🚨 긴급 알림(웹푸시)</div>
-        <div class="dodont-item"><span class="icon">📴</span><span>화면을 <b>완전히 닫아놔도</b> 뜨는 진짜 알림이에요.</span></div>
-        <div class="dodont-item"><span class="icon">✅</span><span>최초 1회 "허용"을 눌러야 켜집니다.</span></div>
+        <div class="head" data-i18n-html="g124">🚨 긴급 알림(웹푸시)</div>
+        <div class="dodont-item"><span class="icon">📴</span><span><span data-i18n-html="g125">화면을 <b>완전히 닫아놔도</b> 뜨는 진짜 알림이에요.</span></span></div>
+        <div class="dodont-item"><span class="icon">✅</span><span><span data-i18n-html="g126">최초 1회 "허용"을 눌러야 켜집니다.</span></span></div>
       </div>
     </div>
 
-    <div class="tip-callout"><b>한 줄 요약.</b> 둘 다 화면을 열어두고 있으면 실시간이고, 한쪽이 없으면 "긴급 알림"이 대신 깨워주고, 그것도 안 켰으면 나중에 각자 자기 화면(소유자는 소통함, 발견자는 같은 링크 재방문)에서 확인해야 합니다.</div>
+    <div class="tip-callout" data-i18n-html="g127"><b>한 줄 요약.</b> 둘 다 화면을 열어두고 있으면 실시간이고, 한쪽이 없으면 "긴급 알림"이 대신 깨워주고, 그것도 안 켰으면 나중에 각자 자기 화면(소유자는 소통함, 발견자는 같은 링크 재방문)에서 확인해야 합니다.</div>
   </section>
 
   <section id="sec-faq">
-    <div class="sec-title"><span class="sec-num">9</span>자주 묻는 질문</div>
+    <div class="sec-title"><span class="sec-num">9</span><span data-i18n-html="g128">자주 묻는 질문</span></div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span>비문 사진을 안 올리면 반려동물 등록이 안 되나요?</div>
-      <div class="faq-a">아니요, 비문 사진은 권장사항이지 필수가 아닙니다. 다만 등록해두시면 발견 시 신원 확인 정확도가 크게 올라가요.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="g129">비문 사진을 안 올리면 반려동물 등록이 안 되나요?</span></div>
+      <div class="faq-a" data-i18n-html="g130">아니요, 비문 사진은 권장사항이지 필수가 아닙니다. 다만 등록해두시면 발견 시 신원 확인 정확도가 크게 올라가요.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span>QR이 오염되어 스캔이 안 되면 어떻게 하나요?</div>
-      <div class="faq-a">aliascall.com의 "찾기" 화면에서 문자나 음성으로 직접 검색하시면 됩니다. 마이크 아이콘을 눌러 번호를 말씀하시는 것도 가능해요.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="g131">QR이 오염되어 스캔이 안 되면 어떻게 하나요?</span></div>
+      <div class="faq-a" data-i18n-html="g132">aliascall.com의 "찾기" 화면에서 문자나 음성으로 직접 검색하시면 됩니다. 마이크 아이콘을 눌러 번호를 말씀하시는 것도 가능해요.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span>발견자가 제 실제 번호를 알 수 있나요?</div>
-      <div class="faq-a">아니요. 모든 연결은 브라우저 기반 익명 연결(WebRTC)로 이루어지며, 실제 전화번호는 어떤 경우에도 노출되지 않습니다.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="g133">발견자가 제 실제 번호를 알 수 있나요?</span></div>
+      <div class="faq-a" data-i18n-html="g134">아니요. 모든 연결은 브라우저 기반 익명 연결(WebRTC)로 이루어지며, 실제 전화번호는 어떤 경우에도 노출되지 않습니다.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span>발견자가 남긴 메시지를 뒤늦게 봤어요. 다시 연락할 수 있나요?</div>
-      <div class="faq-a">네, 마이페이지 "소통함"에서 그 대화를 열어 답장하실 수 있습니다. 발견자가 "답장 알림"을 허용했다면 알림도 받게 돼요.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="g135">발견자가 남긴 메시지를 뒤늦게 봤어요. 다시 연락할 수 있나요?</span></div>
+      <div class="faq-a" data-i18n-html="g136">네, 마이페이지 "소통함"에서 그 대화를 열어 답장하실 수 있습니다. 발견자가 "답장 알림"을 허용했다면 알림도 받게 돼요.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span>연락처(전화번호)를 따로 등록해두면 안 되나요?</div>
-      <div class="faq-a">Aliascall은 전화번호를 아예 수집하지 않는 정책이라 등록 자체가 불가능합니다. 대신 "긴급 알림(웹푸시)"이 같은 역할을 대신해요 — 계정/전화번호 없이도 알림을 받을 수 있는 방식입니다.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="g137">연락처(전화번호)를 따로 등록해두면 안 되나요?</span></div>
+      <div class="faq-a" data-i18n-html="g138">Aliascall은 전화번호를 아예 수집하지 않는 정책이라 등록 자체가 불가능합니다. 대신 "긴급 알림(웹푸시)"이 같은 역할을 대신해요 — 계정/전화번호 없이도 알림을 받을 수 있는 방식입니다.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span>알림음이 안 울려요.</div>
-      <div class="faq-a">마이페이지·수신대기 화면 상단의 "통화·문자 알림음" 토글이 켜져 있는지 확인해주세요. 브라우저 정책상 최초 1회는 직접 눌러서 켜셔야 합니다.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="g139">알림음이 안 울려요.</span></div>
+      <div class="faq-a" data-i18n-html="g140">마이페이지·수신대기 화면 상단의 "통화·문자 알림음" 토글이 켜져 있는지 확인해주세요. 브라우저 정책상 최초 1회는 직접 눌러서 켜셔야 합니다.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span>게시판에 글을 올리려면 돈을 내야 하나요?</div>
-      <div class="faq-a">아니요. 가입도 게시도 모두 무료입니다. 결제 화면이 나오더라도 아래쪽 "비상시 결제없이 바로 등록하기" 버튼으로 건너뛰실 수 있어요. 아동·치매어르신·장애우·반려동물은 구독과 무관하게 언제나 연결됩니다.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="g141">게시판에 글을 올리려면 돈을 내야 하나요?</span></div>
+      <div class="faq-a" data-i18n-html="g142">아니요. 가입도 게시도 모두 무료입니다. 결제 화면이 나오더라도 아래쪽 "비상시 결제없이 바로 등록하기" 버튼으로 건너뛰실 수 있어요. 아동·치매어르신·장애우·반려동물은 구독과 무관하게 언제나 연결됩니다.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span>왜 등록을 먼저 해야 게시글을 쓸 수 있나요?</div>
-      <div class="faq-a">게시글의 "제보하기" 버튼이 등록물에 연결되어 있기 때문입니다. 등록 없이 글만 올리면 목격하신 분이 연락할 방법이 없어져요. 등록이 곧 연락받는 창구입니다.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="g143">왜 등록을 먼저 해야 게시글을 쓸 수 있나요?</span></div>
+      <div class="faq-a" data-i18n-html="g144">게시글의 "제보하기" 버튼이 등록물에 연결되어 있기 때문입니다. 등록 없이 글만 올리면 목격하신 분이 연락할 방법이 없어져요. 등록이 곧 연락받는 창구입니다.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span>아이를 찾았어요. 글은 어떻게 하나요?</div>
-      <div class="faq-a">글을 열고 "✅ 찾았어요"를 눌러주세요. "발견됨" 탭으로 옮겨져 다른 분들께 좋은 소식이 전해집니다. 완전히 내리고 싶으시면 "글 내리기"를 누르시면 됩니다.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="g145">아이를 찾았어요. 글은 어떻게 하나요?</span></div>
+      <div class="faq-a" data-i18n-html="g146">글을 열고 "✅ 찾았어요"를 눌러주세요. "발견됨" 탭으로 옮겨져 다른 분들께 좋은 소식이 전해집니다. 완전히 내리고 싶으시면 "글 내리기"를 누르시면 됩니다.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span>게시글을 카카오톡으로 공유하면 사진도 같이 보이나요?</div>
-      <div class="faq-a">네. 링크를 보내면 사진과 제목이 미리보기로 함께 표시됩니다. 받는 분이 열어보지 않아도 무슨 일인지 알 수 있어요.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="g147">게시글을 카카오톡으로 공유하면 사진도 같이 보이나요?</span></div>
+      <div class="faq-a" data-i18n-html="g148">네. 링크를 보내면 사진과 제목이 미리보기로 함께 표시됩니다. 받는 분이 열어보지 않아도 무슨 일인지 알 수 있어요.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span>게시글에 올린 사진은 누가 볼 수 있나요?</div>
-      <div class="faq-a">로그인하지 않은 누구나 볼 수 있습니다. 그래야 많은 분들이 알아봐 주실 수 있으니까요. 다만 반려동물 비문(코무늬) 사진은 예외로, 비공개 저장소에 따로 보관되어 게시판에 노출되지 않습니다.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="g149">게시글에 올린 사진은 누가 볼 수 있나요?</span></div>
+      <div class="faq-a" data-i18n-html="g150">로그인하지 않은 누구나 볼 수 있습니다. 그래야 많은 분들이 알아봐 주실 수 있으니까요. 다만 반려동물 비문(코무늬) 사진은 예외로, 비공개 저장소에 따로 보관되어 게시판에 노출되지 않습니다.</div>
     </div>
   </section>
 </main>
+
+<script>
+// =====================================================================
+// 2026-08-25 신설: 다국어(한국어/영어)
+// 이 페이지는 순수 문서라 본문 덩어리를 통째로 사전에 담았음.
+// 글을 고치실 때는 ko와 en 양쪽을 같이 고쳐야 합니다.
+// =====================================================================
+const I18N = {
+ "ko": {
+  "g150": "로그인하지 않은 누구나 볼 수 있습니다. 그래야 많은 분들이 알아봐 주실 수 있으니까요. 다만 반려동물 비문(코무늬) 사진은 예외로, 비공개 저장소에 따로 보관되어 게시판에 노출되지 않습니다.",
+  "g149": "게시글에 올린 사진은 누가 볼 수 있나요?",
+  "g148": "네. 링크를 보내면 사진과 제목이 미리보기로 함께 표시됩니다. 받는 분이 열어보지 않아도 무슨 일인지 알 수 있어요.",
+  "g147": "게시글을 카카오톡으로 공유하면 사진도 같이 보이나요?",
+  "g146": "글을 열고 \"✅ 찾았어요\"를 눌러주세요. \"발견됨\" 탭으로 옮겨져 다른 분들께 좋은 소식이 전해집니다. 완전히 내리고 싶으시면 \"글 내리기\"를 누르시면 됩니다.",
+  "g145": "아이를 찾았어요. 글은 어떻게 하나요?",
+  "g144": "게시글의 \"제보하기\" 버튼이 등록물에 연결되어 있기 때문입니다. 등록 없이 글만 올리면 목격하신 분이 연락할 방법이 없어져요. 등록이 곧 연락받는 창구입니다.",
+  "g143": "왜 등록을 먼저 해야 게시글을 쓸 수 있나요?",
+  "g142": "아니요. 가입도 게시도 모두 무료입니다. 결제 화면이 나오더라도 아래쪽 \"비상시 결제없이 바로 등록하기\" 버튼으로 건너뛰실 수 있어요. 아동·치매어르신·장애우·반려동물은 구독과 무관하게 언제나 연결됩니다.",
+  "g141": "게시판에 글을 올리려면 돈을 내야 하나요?",
+  "g140": "마이페이지·수신대기 화면 상단의 \"통화·문자 알림음\" 토글이 켜져 있는지 확인해주세요. 브라우저 정책상 최초 1회는 직접 눌러서 켜셔야 합니다.",
+  "g139": "알림음이 안 울려요.",
+  "g138": "Aliascall은 전화번호를 아예 수집하지 않는 정책이라 등록 자체가 불가능합니다. 대신 \"긴급 알림(웹푸시)\"이 같은 역할을 대신해요 — 계정/전화번호 없이도 알림을 받을 수 있는 방식입니다.",
+  "g137": "연락처(전화번호)를 따로 등록해두면 안 되나요?",
+  "g136": "네, 마이페이지 \"소통함\"에서 그 대화를 열어 답장하실 수 있습니다. 발견자가 \"답장 알림\"을 허용했다면 알림도 받게 돼요.",
+  "g135": "발견자가 남긴 메시지를 뒤늦게 봤어요. 다시 연락할 수 있나요?",
+  "g134": "아니요. 모든 연결은 브라우저 기반 익명 연결(WebRTC)로 이루어지며, 실제 전화번호는 어떤 경우에도 노출되지 않습니다.",
+  "g133": "발견자가 제 실제 번호를 알 수 있나요?",
+  "g132": "aliascall.com의 \"찾기\" 화면에서 문자나 음성으로 직접 검색하시면 됩니다. 마이크 아이콘을 눌러 번호를 말씀하시는 것도 가능해요.",
+  "g131": "QR이 오염되어 스캔이 안 되면 어떻게 하나요?",
+  "g130": "아니요, 비문 사진은 권장사항이지 필수가 아닙니다. 다만 등록해두시면 발견 시 신원 확인 정확도가 크게 올라가요.",
+  "g129": "비문 사진을 안 올리면 반려동물 등록이 안 되나요?",
+  "g128": "자주 묻는 질문",
+  "g127": "<b>한 줄 요약.</b> 둘 다 화면을 열어두고 있으면 실시간이고, 한쪽이 없으면 \"긴급 알림\"이 대신 깨워주고, 그것도 안 켰으면 나중에 각자 자기 화면(소유자는 소통함, 발견자는 같은 링크 재방문)에서 확인해야 합니다.",
+  "g126": "최초 1회 \"허용\"을 눌러야 켜집니다.",
+  "g125": "화면을 <b>완전히 닫아놔도</b> 뜨는 진짜 알림이에요.",
+  "g124": "🚨 긴급 알림(웹푸시)",
+  "g123": "화면을 닫으면 안 울립니다.",
+  "g122": "그 화면을 <b>열어두고 있을 때만</b> 울리는 소리예요.",
+  "g121": "🔔 알림음",
+  "g120": "<b>다른 기기/브라우저로 재접속</b>⚠️ 이 경우는 예전 대화를 못 찾습니다. 익명 식별값이 그 브라우저에만 저장되기 때문에, 새로운 대화로 취급돼요.",
+  "g119": "<b>화면을 닫음 / 다른 데로 감</b>처음 메시지 보낼 때 \"답장 알림 받기\"를 허용했다면, 소유자가 답장할 때 폰에 알림이 떠요. 허용 안 했다면, 같은 브라우저로 같은 QR/링크에 다시 들어가야 대화가 이어져서 보입니다.",
+  "g118": "<b>채팅/통화 화면을 열어두고 있음</b>소유자가 답장하면 실시간(늦어도 8초 안)으로 화면에 뜨고, 알림음도 울려요.",
+  "g117": "🔍 발견자 쪽",
+  "g116": "<b>로그인 X (로그아웃 상태)</b>아무것도 못 받습니다. 대신 데이터는 안전하게 쌓여있어서, 나중에 로그인만 하면 소통함에 다 남아있어요.",
+  "g115": "<b>로그인 O + 화면 안 열어둠</b>\"긴급 알림\"을 켜뒀다면 15초 뒤 폰 알림이 뜹니다. 안 켜뒀다면 알림 없이 지나가고, 나중에 마이페이지 \"소통함\"에서 확인해야 해요.",
+  "g114": "<b>로그인 O + 화면(메인/마이페이지/수신대기) 열어둠</b>실시간으로 배너가 뜨고 소리도 울립니다. 그 자리에서 바로 응대 가능해요.",
+  "g113": "🙋 소유자(등록자) 쪽",
+  "g112": "소유자(등록자)는 항상 로그인된 계정이 있고, 발견자는 항상 로그인 없는 익명입니다. 그래서 \"로그인 여부\"는 소유자에게만 해당되고, 발견자는 \"화면을 열어뒀는지\"만 문제가 됩니다.",
+  "g111": "누가, 언제, 어떻게 알게 되나요?",
+  "g110": "헷갈리기 쉬운 부분",
+  "g109": "통신 방법 완전정리",
+  "g108": "<b>게시판에 글을 올리셨다면 꼭 켜주세요.</b> 제보는 언제 올지 모릅니다. 긴급 알림을 켜두시면 화면을 닫아두셔도 제보가 도착한 순간 폰으로 알려드립니다.",
+  "g107": "<b>Tip.</b> 두 알림 다 각자의 브라우저·기기별로 따로 설정해야 해요. 폰을 바꾸시면 새로 켜주셔야 합니다.",
+  "g106": "<b>PC에서 쓰신다면</b>크롬의 \"백그라운드 실행\" 옵션을 켜두셔야, 창을 닫아도 알림을 확실히 받을 수 있어요.",
+  "g105": "<b>긴급 알림 (푸시)</b>화면을 완전히 닫아놔도 폰 알림창에 뜨는 진짜 알림이에요. 최초 1회 브라우저의 \"허용\" 팝업을 눌러주셔야 켜집니다.",
+  "g104": "<b>통화·문자 알림음</b>전화벨, 딩동 소리 등 그 화면을 열어두고 있을 때만 울리는 소리예요. 마이페이지·수신대기 화면 상단 토글로 켜세요.",
+  "g103": "알림 설정",
+  "g102": "<b style=\"color:var(--danger);\">부적절한 글을 보셨다면.</b> 글 아래쪽 <b>🚩 신고하기</b>를 눌러주세요. 확인 후 조치합니다. 신고하신 사실은 상대에게 알려지지 않습니다.",
+  "g101": "<b>게시글번호란?</b> 글마다 <span class=\"mono\">A3F2C1</span> 같은 6자리 번호가 붙습니다. 전화나 대화로 \"몇 번 글이요\"라고 알려주실 때 쓰시면 됩니다. 이 번호로는 연락이 되지 않으니 안심하고 알려주셔도 됩니다.",
+  "g100": "<b>\"제보하기 · 지금 연결하기\"</b>이 버튼을 누르면 QR을 스캔한 것과 똑같이 연결됩니다. 문자·음성·영상 중 편한 방법을 고르시면 되고, <b>서로의 전화번호는 노출되지 않습니다.</b>",
+  "g099": "<b>글을 열어 사진을 확인하세요</b>사진은 좌우로 넘겨가며 볼 수 있고, 누르면 크게 볼 수 있습니다.",
+  "g098": "<b>국가와 분류로 찾아보세요</b>게시판 위쪽에서 국가를 고르고, 아동·노인 / 반려동물 / 분실물 / 기타로 걸러볼 수 있습니다.",
+  "g097": "🔍 목격하셨다면",
+  "g096": "게시글마다 <b>고유한 주소</b>가 있습니다. 글을 열고 <b>🔗 공유하기</b>를 누르면 카카오톡·문자로 바로 보낼 수 있어요.<br><br>\n        게시판을 찾아오는 사람은 많지 않습니다. 하지만 <b>동네 단톡방에 링크 하나를 던지는 것</b>만으로 수십 명이 사진을 보게 됩니다. 실종 상황에서는 이게 가장 큰 힘이 됩니다.<br><br>\n        공유된 링크에는 <b>사진과 제목이 미리보기</b>로 함께 뜹니다. 받는 분이 열어보지 않아도 무슨 일인지 알 수 있어요.",
+  "g095": "🔗 공유하기 — 가장 중요한 기능입니다",
+  "g094": "<b>다 끝났으면 \"글 내리기\"</b>더 이상 게시할 이유가 없으면 <b>글 내리기</b>를 눌러주세요. 게시판에서 사라집니다. 등록물 자체는 그대로 남으니 QR은 계속 쓰실 수 있어요.",
+  "g093": "<b>찾으셨다면 \"찾았어요\"를 눌러주세요</b>내가 올린 글을 열면 <b>✅ 찾았어요</b> 버튼이 보입니다. 누르면 \"발견됨\" 탭으로 옮겨집니다. 이걸 안 누르면 이미 찾았는데도 계속 \"찾는 중\"으로 남아, 다른 분들이 헛되이 찾아다니게 됩니다.",
+  "g092": "무사히 찾았거나 되찾은 경우입니다. 다른 분들께도 좋은 소식이 됩니다.",
+  "g091": "발견됨",
+  "g090": "아직 찾지 못한 상태입니다. 글을 올리면 처음에 여기로 들어갑니다.",
+  "g089": "찾는 중",
+  "g088": "🔖 \"찾는 중\"과 \"발견됨\"",
+  "g087": "<b>⚠️ 적으실 때 주의.</b> 게시글은 <b>로그인하지 않은 누구나</b> 볼 수 있습니다. 주민등록번호, 집 주소, 전화번호 같은 정보는 절대 적지 마세요. 연락은 게시글의 \"제보하기\" 버튼이 안전하게 대신해 줍니다.",
+  "g086": "<b>🚨 급하신 분께.</b> 가입 직후 구독 결제 화면이 나와도 당황하지 마세요. 그 화면 아래쪽의 <b>\"비상시(중요한 분실 및 발견시) 결제없이 바로 등록하기\"</b> 버튼을 누르시면 결제를 건너뛰고 곧바로 등록하실 수 있습니다.<br><br>\n      <b>가입도 게시도 모두 무료입니다.</b> 아동·치매어르신·장애우·반려동물은 구독 여부와 상관없이 언제나 연결됩니다. 등록을 거치는 이유는 단 하나 — 제보하시는 분이 <b>전화번호 노출 없이</b> 연락드릴 수 있게 하기 위해서입니다.",
+  "g085": "<b>게시하기</b>게시판 오른쪽 아래 <b>✏️ 글쓰기</b>를 누르고, 등록해둔 항목을 고른 뒤 언제·어디서·어떻게·특징을 적으면 됩니다.",
+  "g084": "<b>등록하기</b>찾고 계신 아이·어르신·반려동물·물건을 등록합니다. 사진을 함께 올리시면 알아보기 훨씬 쉬워요.",
+  "g083": "<b>가입하기</b>마이페이지에서 <b>닉네임과 비밀번호</b>만 정하면 끝입니다. 실명도, 전화번호도 필요 없어요.",
+  "g082": "📢 글 올리는 법",
+  "g081": "<a href=\"aliascall_public_board_mockup.html\">게시판 열어보기 →</a>",
+  "g080": "QR 태그는 <b>미리 붙여두는</b> 대비책입니다. 하지만 아무것도 준비하지 못한 채 아이나 반려동물이 사라졌다면, 찾습니다 게시판에 소식을 올려 <b>여러 사람의 눈</b>을 빌릴 수 있습니다. 목격하신 분은 실제 전화번호를 몰라도 바로 제보할 수 있어요.",
+  "g079": "이미 잃어버린 뒤에도 쓸 수 있어요",
+  "g078": "QR을 미리 못 붙였을 때",
+  "g077": "찾습니다 게시판",
+  "g076": "<b>Tip.</b> 채팅과 사진은 대화 이력이 최대 14일(아동·치매어르신·장애우·반려동물은 30일) 저장됩니다. 같은 QR/링크로 다시 들어오면 이전 대화가 이어져서 보여요.",
+  "g075": "채팅창 안에서 첨부하거나, 이 버튼으로 바로 촬영·전송할 수 있어요.",
+  "g074": "📷 사진",
+  "g073": "한 번 보내고 끝나는 메모. 소유자의 \"부재중 메시지\"에 남아요.",
+  "g072": "✉️ 문자메세지 남기기",
+  "g071": "실시간 통화. 소유자가 그 순간 화면을 보고 있어야 연결돼요.",
+  "g070": "🎧 음성 / 🎥 영상",
+  "g069": "가장 부담 없는 방법. 대화 내용이 저장되어, 소유자가 나중에 봐도 답장할 수 있어요.",
+  "g068": "💬 채팅",
+  "g067": "화면 하단에서 <b>채팅 · 음성 · 영상 · 문자 · 사진</b> 5가지 중 원하는 방법을 고릅니다. 진행 중에 다른 걸 눌러도 즉시 그걸로 전환돼요.",
+  "g066": "일치하는 등록 정보를 찾으면 눌러서 연결 화면으로 이동합니다.",
+  "g065": "QR을 스캔하거나, aliascall.com에서 번호·이름을 문자 또는 음성으로 검색합니다. 앱 설치는 필요 없어요.",
+  "g064": "발견자는 이렇게 연락해요",
+  "g063": "비바람에 노출되는 곳(차량 외부 등)에는 투명 보호필름을 함께 부착하시길 권해드려요.",
+  "g062": "가정용 프린터로 출력 후 가위로 잘라 사용하시면 됩니다.",
+  "g061": "100P가 차감되며 A4용지 인쇄용 파일이 다운로드됩니다.",
+  "g060": "등록 완료 화면에서 원하는 사이즈(3×3 / 4.5×4.5 / 5.5×5.5 / 6×6cm)를 선택하세요.",
+  "g059": "QR 태그 인쇄 및 부착",
+  "g058": "AI 자동 비문 인식은 <b>Aliascall 앱(iOS/Android, 출시 예정)</b>에서 지원될 예정입니다. 앱이 출시되면 이 페이지에 안내해드리겠습니다.",
+  "g057": "<b>지금 이 웹 화면(브라우저)에서 등록하시면</b>, 비문 사진은 다른 사람은 볼 수 없는 비공개 저장소에 안전하게 보관되어, 나중에 발견 연락이 왔을 때 소유자가 직접 눈으로 대조해보는 용도로 쓰입니다. <b>AI가 자동으로 \"이 강아지가 맞다/아니다\"를 판별해주는 기능은 아직 웹에서는 지원되지 않습니다.</b>",
+  "g056": "지금은 \"안전 보관\"까지만 됩니다",
+  "g055": "웹 이용 시 꼭 알아두세요",
+  "g054": "<b>Tip.</b> 한 번에 잘 안 나와도 괜찮아요. 등록 후에도 언제든 사진을 다시 올려 갱신할 수 있습니다.",
+  "g053": "<b>선택·업로드</b>그중 가장 선명하고 무늬가 또렷한 한 장을 골라 업로드합니다.",
+  "g052": "<b>촬영</b>간식으로 시선을 살짝 고정시킨 뒤 플래시 없이 3~5장 연속 촬영하세요.",
+  "g051": "<b>거리 맞추기</b>코가 화면의 절반 이상을 채울 정도로 가까이 다가가되, 초점이 흐려지지 않는 선까지만.",
+  "g050": "<b>자세 잡기</b>반려동물의 얼굴을 살짝 들어올려 카메라와 코가 수직이 되게 합니다.",
+  "g049": "<b>준비</b>밝은 창가나 실외 그늘로 이동하고, 간식을 한 손에 준비하세요.",
+  "g048": "움직이는 채로 급하게 촬영",
+  "g047": "코에 물방울이 흥건히 맺힌 상태",
+  "g046": "어두운 곳에서 촬영 (뿌옇게 나와요)",
+  "g045": "너무 멀리서, 흔들린 채로 촬영",
+  "g044": "비스듬한 각도 (무늬가 찌그러져 보여요)",
+  "g043": "플래시 직접 사용 (반사광으로 무늬가 하얗게 날아가요)",
+  "g042": "❌ 이건 피해주세요",
+  "g041": "간식으로 잠깐 시선을 고정시켜 움직임 줄이기",
+  "g040": "여러 장 찍어서 가장 선명한 사진으로 선택",
+  "g039": "코가 살짝 촉촉한 상태일 때 (평소 상태면 충분해요)",
+  "g038": "코가 화면을 가득 채울 만큼 가까이, 초점 맞춰서",
+  "g037": "코와 카메라가 수직이 되도록 정면에서",
+  "g036": "밝고 은은한 자연광 아래에서 (창가 근처가 좋아요)",
+  "g035": "✅ 이렇게 찍어주세요",
+  "g034": "사람 지문처럼 반려동물의 코 주름도 개체마다 고유합니다. 하지만 사진이 흐리거나 각도가 비뚤면 인식률이 크게 떨어져요. 아래 방법대로 찍으시면 훨씬 정확하게 등록됩니다.",
+  "g033": "왜 중요한가요?",
+  "g032": "가장 많이 실패하는 단계",
+  "g031": "비문(코무늬) 촬영법",
+  "g030": "상황을 자유롭게 적어주세요. 음성으로 말씀하셔도 됩니다.",
+  "g029": "❓ 기타 물품·사건",
+  "g028": "마이페이지에서 \"긴급 알림\"을 켜두시면, 화면을 안 보고 있어도 연결 요청이 오면 알려드려요.",
+  "g027": "📮 부재중 연락",
+  "g026": "목걸이에 QR을 걸고, 비문 사진도 꼭 등록해두세요 (아래 ③ 참고).",
+  "g025": "🐾 반려동물",
+  "g024": "옷이나 신발, 가방에 QR을 부착해두세요. 목소리 녹음(안심 콘텐츠)도 추천드려요.",
+  "g023": "🧑‍🦳 아동·치매 어르신·장애우",
+  "g022": "브랜드, 색상, 스티커 등 남과 구별되는 특징을 자세히 적을수록 좋아요.",
+  "g021": "🎒 분실·도난 우려 물품",
+  "g020": "차량번호만 있으면 충분해요. 유리창 안쪽에 QR을 붙여두세요.",
+  "g019": "🚗 차량",
+  "g018": "카테고리별 등록 팁",
+  "g017": "<b>이미 잃어버리셨다면?</b> QR을 미리 붙여두지 못한 상태에서 아이나 반려동물이 사라졌다면, <a href=\"#sec-board\">⑥ 찾습니다 게시판</a>을 봐주세요. 지금 바로 등록하고 소식을 알리실 수 있습니다.",
+  "g016": "<b>발견자가 연락</b>QR을 스캔하면 <b>채팅·음성·영상·문자·사진</b> 5가지 중 원하는 방법을 골라 바로 연결됩니다. 실제 전화번호는 절대 노출되지 않아요.",
+  "g015": "<b>인쇄해서 부착</b>원하는 크기로 인쇄해 대상에 붙이거나 걸어둡니다.",
+  "g014": "<b>QR 태그 생성</b>등록이 끝나면 그 대상만의 고유 QR이 만들어집니다.",
+  "g013": "<b>등록하기</b>차량, 물품, 아동·어르신, 반려동물 중 하나를 선택하고 정보를 입력합니다.",
+  "g012": "전체 흐름",
+  "g011": "⑨ 자주 묻는 질문",
+  "g010": "⑧ 통신 방법 완전정리 ⭐",
+  "g009": "⑦ 알림 설정 ⭐",
+  "g008": "⑥ 찾습니다 게시판 ⭐",
+  "g007": "⑤ 발견자는 이렇게",
+  "g006": "④ QR 인쇄·부착",
+  "g005": "③ 비문 촬영법 ⭐",
+  "g004": "② 카테고리별 등록",
+  "g003": "① 전체 흐름",
+  "g002": "Aliascall을 처음 쓰시는 분들을 위한 안내입니다. 궁금한 항목을 눌러 바로 이동하세요.",
+  "g001": "안심비상연락(Alias Emergency Call) 사용설명서",
+  "docTitle": "안심비상연락(Alias Emergency Call) 사용설명서",
+  "backAria": "뒤로가기",
+  "langToggle": "EN",
+  "langAria": "언어 바꾸기"
+ },
+ "en": {
+  "g150": "Anyone, without logging in — that is what makes it possible for lots of people to recognise them. The one exception is pet nose-print photos, which are kept separately in private storage and never appear on the board.",
+  "g149": "Who can see the photos I post?",
+  "g148": "Yes. Sending the link displays the photo and title as a preview. Whoever receives it knows what happened without opening it.",
+  "g147": "If I share a post through a messaging app, does the photo show too?",
+  "g146": "Open the post and tap \"✅ Found\". It moves to the \"Found\" tab and shares the good news. If you would rather remove it entirely, tap \"Take down\".",
+  "g145": "I found my child. What do I do with the post?",
+  "g144": "Because the \"Report a sighting\" button on a post is tied to a registration. If you post without registering, anyone who spots them has no way to reach you. The registration is what gives you a channel to be contacted through.",
+  "g143": "Why do I have to register something before I can post?",
+  "g142": "No. Signing up and posting are both free. Even if a payment screen appears, you can skip it with the \"Emergency — register now without paying\" button lower down. Children, older adults with dementia, people with disabilities and pets always connect regardless of subscription.",
+  "g141": "Do I have to pay to post on the board?",
+  "g140": "Check that the \"Call and message sounds\" toggle at the top of My Page or the Waiting screen is on. Because of browser policy, you have to turn it on by tapping once yourself the first time.",
+  "g139": "My notification sounds are not playing.",
+  "g138": "Aliascall's policy is to never collect phone numbers at all, so registering one is not possible. \"Urgent alerts (web push)\" fill the same role instead — a way to receive alerts without an account or a phone number.",
+  "g137": "Can I not just register a contact number?",
+  "g136": "Yes — open that conversation under \"Conversations\" in My Page and reply. If the finder allowed \"reply notifications\", they will be notified too.",
+  "g135": "I saw a finder's message too late. Can I still get back to them?",
+  "g134": "No. Every connection runs on anonymous, browser-based connections (WebRTC), and real phone numbers are never revealed under any circumstances.",
+  "g133": "Can a finder see my real phone number?",
+  "g132": "They can search directly by text or voice on the \"Find\" screen at aliascall.com. Tapping the microphone icon and saying the number aloud works too.",
+  "g131": "What if the QR gets dirty and will not scan?",
+  "g130": "Yes. The nose-print photo is recommended, not required. But registering one greatly improves how accurately identity can be confirmed if they are found.",
+  "g129": "Can I register a pet without uploading a nose-print photo?",
+  "g128": "Frequently asked questions",
+  "g127": "<b>In one line.</b> If both sides have the screen open it is real time; if one side does not, \"urgent alerts\" wake them instead; and if that is not on either, each side checks later on their own screen (Conversations for the owner, revisiting the same link for the finder).",
+  "g126": "You need to tap \"Allow\" once to enable them.",
+  "g125": "Real notifications that appear <b>even with the screen completely closed</b>.",
+  "g124": "🚨 Urgent alerts (web push)",
+  "g123": "Close the screen and it will not sound.",
+  "g122": "A sound that plays <b>only while you have that screen open</b>.",
+  "g121": "🔔 Notification sounds",
+  "g120": "<b>Reconnecting from a different device or browser</b>⚠️ In this case the earlier conversation cannot be found. The anonymous identifier is stored only in that one browser, so it is treated as a brand-new conversation.",
+  "g119": "<b>Screen closed / moved on</b>If they allowed \"Get reply notifications\" when first sending a message, their phone is notified when the owner replies. If not, they need to return to the same QR or link in the same browser for the conversation to continue.",
+  "g118": "<b>Chat or call screen left open</b>When the owner replies it appears on screen in real time (within 8 seconds at the latest), with a sound.",
+  "g117": "🔍 On the finder's side",
+  "g116": "<b>Logged out</b>You receive nothing. The data is stored safely regardless, so once you log in it is all waiting in Conversations.",
+  "g115": "<b>Logged in + screen not open</b>If you turned on \"Urgent alerts\", a phone notification arrives 15 seconds later. If you did not, it passes silently and you will need to check \"Conversations\" in My Page later.",
+  "g114": "<b>Logged in + screen open (home / My Page / Waiting)</b>A banner appears in real time and a sound plays. You can respond right there.",
+  "g113": "🙋 On the owner's side",
+  "g112": "The owner (the person who registered) always has a logged-in account, and the finder is always anonymous with no login. So \"logged in or not\" only applies to the owner; for the finder, the only question is whether they have the screen open.",
+  "g111": "Who finds out, when, and how?",
+  "g110": "The part people find confusing",
+  "g109": "How contact works, in full",
+  "g108": "<b>Turn this on if you have posted to the board.</b> You never know when a sighting will come in. With urgent alerts on, your phone tells you the moment a report arrives, even with the screen closed.",
+  "g107": "<b>Tip.</b> Both kinds of notification are set per browser and per device. If you change phones, you will need to turn them on again.",
+  "g106": "<b>If you use a PC</b>Turn on Chrome's \"Continue running background apps\" option so you reliably get alerts even after closing the window.",
+  "g105": "<b>Urgent alerts (push)</b>Real notifications that appear in your phone's notification tray even with the screen completely closed. You need to tap \"Allow\" on the browser prompt once to enable them.",
+  "g104": "<b>Call and message sounds</b>Ringtones, chimes and so on — these only sound while you have that screen open. Turn them on with the toggle at the top of My Page or the Waiting screen.",
+  "g103": "Notification settings",
+  "g102": "<b style=\"color:var(--danger);\">If you see an inappropriate post.</b> Tap <b>🚩 Report</b> at the bottom of the post. We will review it and act. The person you report is not told about it.",
+  "g101": "<b>What is the post number?</b> Every post carries a six-character code like <span class=\"mono\">A3F2C1</span>. Use it when you want to tell someone \"it's post such-and-such\" over the phone or in conversation. Nobody can contact you through this number, so it is safe to share.",
+  "g100": "<b>\"Report a sighting · Connect now\"</b>Tapping this connects you exactly as scanning the QR would. Pick whichever suits you — text, voice or video — and <b>neither side's phone number is revealed.</b>",
+  "g099": "<b>Open the post and look at the photos</b>Swipe left and right through the photos, and tap one to see it large.",
+  "g098": "<b>Filter by country and category</b>Choose a country at the top of the board, then narrow by children and older adults / pets / lost items / other.",
+  "g097": "🔍 If you have seen them",
+  "g096": "Every post has its <b>own address</b>. Open the post and tap <b>🔗 Share</b> to send it straight through a messaging app or SMS.<br><br> Not many people come looking at the board on their own. But <b>dropping one link into a neighbourhood group chat</b> puts the photo in front of dozens of people. In a missing-person situation, that is what makes the biggest difference.<br><br> A shared link shows the <b>photo and title as a preview</b>. Whoever receives it knows what happened without even opening it.",
+  "g095": "🔗 Sharing — the most important feature here",
+  "g094": "<b>Take it down when it is over</b>If there is no reason to keep it up, tap <b>Take down</b> and it disappears from the board. The registration itself stays, so your QR keeps working.",
+  "g093": "<b>Tap \"Found\" once you have found them</b>Open your own post and you will see a <b>✅ Found</b> button. Tapping it moves the post to the \"Found\" tab. If you do not tap it, the post stays under \"Searching\" even though they are home, and other people keep looking for nothing.",
+  "g092": "Safely found or recovered. Good news for everyone else too.",
+  "g091": "Found",
+  "g090": "Not found yet. New posts start here.",
+  "g089": "Searching",
+  "g088": "🔖 \"Searching\" and \"Found\"",
+  "g087": "<b>⚠️ Care when writing.</b> Posts can be seen by <b>anyone, without logging in</b>. Never write national ID numbers, home addresses or phone numbers. The \"Report a sighting\" button on the post handles contact safely for you.",
+  "g086": "<b>🚨 If you are in a hurry.</b> Do not panic if a subscription payment screen appears right after you sign up. Tap the <b>\"Emergency — register now without paying\"</b> button lower down that screen and you can skip payment and register straight away.<br><br> <b>Signing up and posting are both free.</b> Children, older adults with dementia, people with disabilities and pets always connect, subscription or not. There is exactly one reason we ask you to register first — so that whoever reports a sighting can reach you <b>without your phone number being exposed</b>.",
+  "g085": "<b>Post</b>Tap <b>✏️ Write</b> at the bottom right of the board, pick the item you registered, and write when, where, how, and any distinguishing features.",
+  "g084": "<b>Register</b>Register the child, older adult, pet or item you are looking for. Adding photos makes them far easier to recognise.",
+  "g083": "<b>Sign up</b>All you set in My Page is a <b>nickname and password</b>. No real name, no phone number.",
+  "g082": "📢 How to post",
+  "g081": "<a href=\"aliascall_public_board_mockup.html\">Open the board →</a>",
+  "g080": "A QR tag is a precaution you <b>put in place ahead of time</b>. But if a child or pet has gone missing and you had nothing prepared, you can post on the Missing board and borrow <b>many pairs of eyes</b>. Anyone who spots them can report it immediately without knowing your real phone number.",
+  "g079": "It still helps after they are already lost",
+  "g078": "When you never got a QR on them",
+  "g077": "The Missing board",
+  "g076": "<b>Tip.</b> Chat and photo history is kept for up to 14 days (30 days for children, older adults with dementia, people with disabilities, and pets). Come back through the same QR or link and the earlier conversation continues.",
+  "g075": "Attach one inside the chat, or use this button to shoot and send one right away.",
+  "g074": "📷 Photo",
+  "g073": "A one-shot note. It lands in the owner's \"missed messages\".",
+  "g072": "✉️ Leave a text message",
+  "g071": "A live call. It only connects if the owner is looking at their screen at that moment.",
+  "g070": "🎧 Voice / 🎥 Video",
+  "g069": "The easiest option. The conversation is saved, so the owner can reply even if they see it later.",
+  "g068": "💬 Chat",
+  "g067": "At the bottom of the screen they choose from <b>chat, voice, video, text or photo</b>. They can switch to another one part-way through and it changes immediately.",
+  "g066": "When they find the matching registration, they tap it to open the connection screen.",
+  "g065": "They scan the QR, or search by number or name at aliascall.com using text or voice. No app installation needed.",
+  "g064": "How a finder gets in touch",
+  "g063": "Where it will be exposed to wind and rain (the outside of a vehicle, for example), we recommend covering it with clear protective film.",
+  "g062": "Print it on a home printer and cut it out with scissors.",
+  "g061": "100P is deducted and a file for A4 printing is downloaded.",
+  "g060": "On the registration complete screen, choose the size you want (3×3 / 4.5×4.5 / 5.5×5.5 / 6×6 cm).",
+  "g059": "Printing and attaching your QR tag",
+  "g058": "Automatic AI nose-print recognition will be supported in the <b>Aliascall app (iOS/Android, coming soon)</b>. We will post a notice on this page when the app is released.",
+  "g057": "<b>If you register here on the web (in a browser)</b>, the nose-print photo is kept safely in private storage that nobody else can see, so that you can compare it yourself later when someone contacts you about a find. <b>Automatic AI matching that tells you \"this is / is not your dog\" is not yet available on the web.</b>",
+  "g056": "For now, this is secure storage only",
+  "g055": "Please note when using the web",
+  "g054": "<b>Tip.</b> Do not worry if it does not come out well the first time. You can upload a new photo and replace it at any point after registering.",
+  "g053": "<b>Pick and upload</b>Choose the single sharpest one with the clearest pattern and upload it.",
+  "g052": "<b>Shoot</b>Hold their gaze with a treat, then take three to five shots in a row with the flash off.",
+  "g051": "<b>Set the distance</b>Get close enough that the nose fills over half the frame — but no closer than your camera can focus.",
+  "g050": "<b>Position them</b>Lift your pet's face slightly so the nose is perpendicular to the camera.",
+  "g049": "<b>Prepare</b>Move to a bright window or outdoor shade, and hold a treat in one hand.",
+  "g048": "Rushing the shot while they are moving",
+  "g047": "When the nose is dripping wet",
+  "g046": "Shooting in a dark place (it comes out hazy)",
+  "g045": "Shooting from too far away, or with camera shake",
+  "g044": "A slanted angle (the pattern comes out distorted)",
+  "g043": "Direct flash (the glare washes the pattern out white)",
+  "g042": "❌ Avoid this",
+  "g041": "Use a treat to hold their gaze for a moment and reduce movement",
+  "g040": "Take several and pick the sharpest one",
+  "g039": "When the nose is slightly damp (its normal state is fine)",
+  "g038": "Close enough that the nose fills the frame, and in focus",
+  "g037": "Straight on, with the nose perpendicular to the camera",
+  "g036": "In bright, soft natural light (near a window works well)",
+  "g035": "✅ Do this",
+  "g034": "Like a human fingerprint, the creases on a pet's nose are unique to each animal. But if the photo is blurry or taken at an angle, recognition accuracy drops sharply. Follow the method below and your registration will be far more accurate.",
+  "g033": "Why does it matter?",
+  "g032": "The step people most often get wrong",
+  "g031": "How to photograph a nose print",
+  "g030": "Describe the situation however you like. You can speak it instead of typing.",
+  "g029": "❓ Other items and situations",
+  "g028": "Turn on \"Urgent alerts\" in My Page and we will let you know when a connection request arrives, even if you are not looking at the screen.",
+  "g027": "📮 Missed contact",
+  "g026": "Hang the QR on the collar, and be sure to register a nose-print photo as well (see ③ below).",
+  "g025": "🐾 Pets",
+  "g024": "Attach the QR to clothing, shoes or a bag. A voice recording (reassurance content) is also worth adding.",
+  "g023": "🧑‍🦳 Children, older adults with dementia, people with disabilities",
+  "g022": "The more distinguishing detail you write down — brand, colour, stickers — the better.",
+  "g021": "🎒 Items you might lose or have stolen",
+  "g020": "The plate number alone is enough. Stick the QR on the inside of a window.",
+  "g019": "🚗 Vehicle",
+  "g018": "Tips by category",
+  "g017": "<b>Already lost them?</b> If a child or pet has gone missing and you never put a QR tag on them, see the <a href=\"#sec-board\">⑥ Missing board</a>. You can register right now and get the word out.",
+  "g016": "<b>The finder gets in touch</b>Scanning the QR lets them pick from <b>chat, voice, video, text or photo</b> and connect right away. Your real phone number is never revealed.",
+  "g015": "<b>Print and attach</b>Print it at the size you want and stick or hang it on the subject.",
+  "g014": "<b>A QR tag is created</b>Once you finish registering, a QR code unique to that one subject is generated.",
+  "g013": "<b>Register</b>Choose one of vehicle, belongings, child or older adult, or pet, and enter the details.",
+  "g012": "How it works",
+  "g011": "⑨ FAQ",
+  "g010": "⑧ How contact works, in full ⭐",
+  "g009": "⑦ Notification settings ⭐",
+  "g008": "⑥ Missing board ⭐",
+  "g007": "⑤ For the person who finds it",
+  "g006": "④ Printing and attaching QR",
+  "g005": "③ Photographing a nose print ⭐",
+  "g004": "② Registering by category",
+  "g003": "① How it works",
+  "g002": "A guide for anyone using Aliascall for the first time. Tap any item to jump straight to it.",
+  "g001": "Alias Emergency Call — User Guide",
+  "docTitle": "Alias Emergency Call — User Guide",
+  "backAria": "Go back",
+  "langToggle": "한국어",
+  "langAria": "Change language"
+ }
+};
+
+// 공용 스크립트가 없는 페이지라 직접 감지함(키는 다른 화면과 동일).
+const LANG_KEYS = ['aliascall_lang', 'aliascall_language', 'ac_lang', 'lang'];
+function detectLang(){
+  try { const q = new URLSearchParams(location.search).get('lang');
+        if (q) return q.toLowerCase().indexOf('en') === 0 ? 'en' : 'ko'; } catch (e) {}
+  for (const k of LANG_KEYS) {
+    try { const v = localStorage.getItem(k);
+          if (v) return String(v).toLowerCase().indexOf('en') === 0 ? 'en' : 'ko'; } catch (e) {}
+  }
+  return (navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en';
+}
+let LANG = detectLang();
+function T(k){ const d = I18N[LANG] || I18N.ko; return d[k] !== undefined ? d[k] : (I18N.ko[k] !== undefined ? I18N.ko[k] : k); }
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.title = T('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = T(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', T(el.dataset.i18nAria)); });
+}
+applyI18n();
+document.getElementById('langToggleBtn').addEventListener('click', () => {
+  LANG = (LANG === 'ko') ? 'en' : 'ko';
+  LANG_KEYS.forEach((k) => { try { localStorage.setItem(k, LANG); } catch (e) {} });
+  applyI18n();
+  // 목차 암커로 이동한 상태에서 바꿔도 위치가 유지되도록 새로고침은 하지 않음
+});
+</script>
 </body>
 </html>
