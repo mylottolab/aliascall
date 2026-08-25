@@ -277,34 +277,36 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 
 <div class="room-header">
   <div>
-    <div class="room-title" id="roomTitle">핫라인</div>
+    <div class="room-title" id="roomTitle" data-i18n="roomTitleDefault">핫라인</div>
     <div class="room-meta" id="roomMeta"></div>
   </div>
-  <button type="button" id="moreMenuBtn" title="더보기">⋯</button>
+  <button type="button" id="moreMenuBtn" title="더보기" data-i18n-title="moreTitle" data-i18n-aria="moreTitle">⋯</button>
 </div>
 
 <!-- 2026-08-22 신설: 더보기 메뉴(즐겨찾기/메모함) -->
 <div class="more-menu-overlay" id="moreMenuOverlay">
   <div class="more-menu-sheet">
-    <button type="button" class="more-menu-item" id="openFavoritesBtn">⭐ 즐겨찾기 보기</button>
-    <button type="button" class="more-menu-item" id="openKeepBtn">📌 내 메모함</button>
-    <button type="button" class="more-menu-item" id="openSearchBtn">🔍 대화 검색</button>
+    <button type="button" class="more-menu-item" id="openFavoritesBtn" data-i18n="menuFavorites">⭐ 즐겨찾기 보기</button>
+    <button type="button" class="more-menu-item" id="openKeepBtn" data-i18n="menuKeep">📌 내 메모함</button>
+    <button type="button" class="more-menu-item" id="openSearchBtn" data-i18n="menuSearch">🔍 대화 검색</button>
     <!-- 2026-08-24 신설: 신고 -->
-    <button type="button" class="more-menu-item" id="openReportBtn">🚩 신고하기</button>
-    <button type="button" class="more-menu-item close" id="moreMenuCloseBtn">닫기</button>
+    <button type="button" class="more-menu-item" id="openReportBtn" data-i18n="menuReport">🚩 신고하기</button>
+    <!-- 2026-08-25 신설: 언어 전환 -->
+    <button type="button" class="more-menu-item" id="langToggleBtn" data-i18n="langToggle">🌐 English</button>
+    <button type="button" class="more-menu-item close" id="moreMenuCloseBtn" data-i18n="menuClose">닫기</button>
   </div>
 </div>
 
-<div class="state show" id="stateLoading"><div class="loading-state">불러오는 중…</div></div>
-<div class="state" id="stateError"><div class="loading-state" id="errorMsg">접근할 수 없습니다.</div></div>
+<div class="state show" id="stateLoading"><div class="loading-state" data-i18n="loading">불러오는 중…</div></div>
+<div class="state" id="stateError"><div class="loading-state" id="errorMsg" data-i18n="errorDefault">접근할 수 없습니다.</div></div>
 
 <!-- 2026-08-21 신설: 암호화 상품인데 열쇠(키)가 없을 때 — 직접 입력할 수 있게 함 -->
 <div class="state" id="stateKeyNeeded">
   <div class="loading-state" style="text-align:left;">
     <div style="font-size:32px; text-align:center; margin-bottom:10px;">🔒</div>
-    <p style="text-align:center; margin-bottom:16px;">이 대화방은 암호화되어 있어요.<br>초대링크에 포함된 열쇠가 필요합니다.</p>
-    <input type="text" id="manualKeyInput" placeholder="열쇠(#k= 뒷부분)를 붙여넣으세요" style="width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:10px; padding:12px; font-size:12.5px; margin-bottom:10px;">
-    <button id="manualKeySubmitBtn" style="width:100%; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; cursor:pointer;">입장하기</button>
+    <p style="text-align:center; margin-bottom:16px;" data-i18n-html="keyNeededMsg">이 대화방은 암호화되어 있어요.<br>초대링크에 포함된 열쇠가 필요합니다.</p>
+    <input type="text" id="manualKeyInput" placeholder="열쇠(#k= 뒷부분)를 붙여넣으세요" data-i18n-placeholder="keyPlaceholder" style="width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:10px; padding:12px; font-size:12.5px; margin-bottom:10px;">
+    <button id="manualKeySubmitBtn" style="width:100%; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; cursor:pointer;" data-i18n="keySubmit">입장하기</button>
   </div>
 </div>
 
@@ -314,18 +316,18 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
   <!-- 2026-08-22 신설: 오늘의 질문 — 조용해진 대화방에 화제를 던져줌 -->
   <!-- 2026-08-22 신설: 대화 검색 바 -->
   <div class="search-bar" id="searchBar" style="display:none;">
-    <input type="text" id="searchInput" placeholder="대화 내용 검색…">
+    <input type="text" id="searchInput" placeholder="대화 내용 검색…" data-i18n-placeholder="searchPlaceholder">
     <span class="search-count" id="searchCount"></span>
     <button type="button" id="searchPrevBtn">▲</button>
     <button type="button" id="searchNextBtn">▼</button>
     <button type="button" id="searchCloseBtn">✕</button>
   </div>
   <div class="daily-question-card" id="dailyQuestionCard" style="display:none;">
-    <div class="dq-label">💬 오늘의 질문</div>
+    <div class="dq-label" data-i18n="dqLabel">💬 오늘의 질문</div>
     <div class="dq-text" id="dailyQuestionText"></div>
     <div class="dq-actions">
-      <button type="button" id="dqSendBtn">대화 시작하기</button>
-      <button type="button" id="dqDismissBtn">닫기</button>
+      <button type="button" id="dqSendBtn" data-i18n="dqSend">대화 시작하기</button>
+      <button type="button" id="dqDismissBtn" data-i18n="dqDismiss">닫기</button>
     </div>
   </div>
   <div class="chat-messages" id="chatMessages"></div>
@@ -344,10 +346,10 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
   </div>
   <div class="chat-input-row">
     <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip" multiple>
-    <button type="button" id="plusMenuBtn" title="더보기">➕</button>
-    <button type="button" id="emojiBtn" title="이모지">😊</button>
-    <button type="button" id="voiceInputBtn" title="음성으로 입력">🎙️</button>
-    <input type="text" id="chatInput" placeholder="메시지 입력…">
+    <button type="button" id="plusMenuBtn" title="더보기" data-i18n-title="moreTitle">➕</button>
+    <button type="button" id="emojiBtn" title="이모지" data-i18n-title="emojiTitle">😊</button>
+    <button type="button" id="voiceInputBtn" title="음성으로 입력" data-i18n-title="voiceInputTitle">🎙️</button>
+    <input type="text" id="chatInput" placeholder="메시지 입력…" data-i18n-placeholder="chatPlaceholder">
     <button id="chatSendBtn">➤</button>
   </div>
 </div>
@@ -356,31 +358,31 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
      자주 안 쓰는 것들을 "+" 팝업으로 정리함 -->
 <div class="plus-menu-overlay" id="plusMenuOverlay">
   <div class="plus-menu-sheet">
-    <button type="button" class="plus-menu-item" id="attachBtn"><span>📎</span><span>파일 첨부</span></button>
-    <button type="button" class="plus-menu-item" id="cameraBtn"><span>📷</span><span>사진 촬영</span></button>
-    <button type="button" class="plus-menu-item" id="timerBtn"><span>⏱️</span><span>타이머 메시지</span></button>
-    <button type="button" class="plus-menu-item" id="voiceMsgBtn"><span>🎤</span><span>음성메시지</span></button>
-    <button type="button" class="plus-menu-item" id="guideMenuBtn"><span>❓</span><span>사용법</span></button>
+    <button type="button" class="plus-menu-item" id="attachBtn"><span>📎</span><span data-i18n="plusAttach">파일 첨부</span></button>
+    <button type="button" class="plus-menu-item" id="cameraBtn"><span>📷</span><span data-i18n="plusCamera">사진 촬영</span></button>
+    <button type="button" class="plus-menu-item" id="timerBtn"><span>⏱️</span><span data-i18n="plusTimer">타이머 메시지</span></button>
+    <button type="button" class="plus-menu-item" id="voiceMsgBtn"><span>🎤</span><span data-i18n="plusVoiceMsg">음성메시지</span></button>
+    <button type="button" class="plus-menu-item" id="guideMenuBtn"><span>❓</span><span data-i18n="plusGuide">사용법</span></button>
   </div>
 </div>
 
 <!-- 2026-08-23 신설: 채팅 사용법 안내 -->
 <div class="panel-overlay" id="guidePanelOverlay">
   <div class="panel-sheet">
-    <div class="panel-header"><span>❓ 채팅 사용법</span><button type="button" class="panel-close" data-close="guidePanelOverlay">✕</button></div>
+    <div class="panel-header"><span data-i18n="guidePanelTitle">❓ 채팅 사용법</span><button type="button" class="panel-close" data-close="guidePanelOverlay">✕</button></div>
     <div class="panel-list guide-list">
-      <div class="guide-item"><div class="guide-icon">💬</div><div><div class="guide-title">기본 채팅</div><div class="guide-desc">문자·이모지·사진·동영상·문서·음성메시지를 주고받을 수 있어요. 사진·동영상·문서는 📎, 촬영은 📷, 음성메시지는 🎤(➕ 안에 있어요).</div></div></div>
-      <div class="guide-item"><div class="guide-icon">🎙️</div><div><div class="guide-title">음성으로 입력</div><div class="guide-desc">입력창 옆 마이크를 누르고 말하면 자동으로 글자로 바뀌어요. (일부 구형 브라우저는 지원 안 할 수 있어요)</div></div></div>
-      <div class="guide-item"><div class="guide-icon">↩️</div><div><div class="guide-title">답장</div><div class="guide-desc">메시지의 "⋯"를 눌러 답장을 선택하면, 어떤 메시지에 대한 답인지 인용되어 표시돼요.</div></div></div>
-      <div class="guide-item"><div class="guide-icon">✏️</div><div><div class="guide-title">수정·삭제</div><div class="guide-desc">내가 보낸 메시지의 "⋯"에서 수정하거나 삭제할 수 있어요. 삭제하면 "삭제된 메시지입니다"로 표시돼요.</div></div></div>
-      <div class="guide-item"><div class="guide-icon">⭐</div><div><div class="guide-title">즐겨찾기</div><div class="guide-desc">중요한 메시지를 "⋯" → 즐겨찾기로 저장해두고, 우측 상단 "⋯" 메뉴에서 모아볼 수 있어요.</div></div></div>
-      <div class="guide-item"><div class="guide-icon">📌</div><div><div class="guide-title">나만의 메모함</div><div class="guide-desc">메시지를 저장하거나 직접 메모를 남길 수 있어요. 철저히 나만 보는 개인 공간이라 상대방은 절대 못 봐요.</div></div></div>
-      <div class="guide-item"><div class="guide-icon">⏱️</div><div><div class="guide-title">타이머 메시지</div><div class="guide-desc">➕ → 타이머 메시지로 시간을 정하면, 그 시간이 지난 뒤 자동으로 사라져요.</div></div></div>
-      <div class="guide-item"><div class="guide-icon">🎯</div><div><div class="guide-title">목표(D-DAY)</div><div class="guide-desc">"⏳ D-day(목표일까지)"와 "📅 D+day(그날부터)" 두 방식이 있어요. 여행처럼 앞으로 다가올 날은 D-day로, "우리 사귄 날"처럼 이미 지난 날부터 며칠째인지 세고 싶으면 D+day로 등록하세요(예: "우리" D+100). 참가자 누구나 등록할 수 있어요.</div></div></div>
-      <div class="guide-item"><div class="guide-icon">🔍</div><div><div class="guide-title">대화 검색</div><div class="guide-desc">우측 상단 "⋯" → 대화 검색으로 지난 대화 내용을 찾을 수 있어요.</div></div></div>
-      <div class="guide-item"><div class="guide-icon">✓</div><div><div class="guide-title">읽음 표시</div><div class="guide-desc">내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.</div></div></div>
-      <div class="guide-item"><div class="guide-icon">🎵</div><div><div class="guide-title">같이 듣기</div><div class="guide-desc">하단 "음악" 탭에서 유튜브 링크나 음원 파일을 올리면, 방에 있는 모두가 같은 지점에서 동시에 들을 수 있어요.</div></div></div>
-      <div class="guide-item"><div class="guide-icon">🔒</div><div><div class="guide-title">종단간 암호화(Secure 상품)</div><div class="guide-desc">Secure 상품은 문자·사진·음성 등 모든 내용이 저희 서버조차 볼 수 없게 암호화돼요. 단, 초대링크(#k= 포함)를 잃어버리면 대화도 영구히 복구할 수 없어요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">💬</div><div><div class="guide-title" data-i18n="guide1Title">기본 채팅</div><div class="guide-desc" data-i18n="guide1Desc">문자·이모지·사진·동영상·문서·음성메시지를 주고받을 수 있어요. 사진·동영상·문서는 📎, 촬영은 📷, 음성메시지는 🎤(➕ 안에 있어요).</div></div></div>
+      <div class="guide-item"><div class="guide-icon">🎙️</div><div><div class="guide-title" data-i18n="guide2Title">음성으로 입력</div><div class="guide-desc" data-i18n="guide2Desc">입력창 옆 마이크를 누르고 말하면 자동으로 글자로 바뀌어요. (일부 구형 브라우저는 지원 안 할 수 있어요)</div></div></div>
+      <div class="guide-item"><div class="guide-icon">↩️</div><div><div class="guide-title" data-i18n="guide3Title">답장</div><div class="guide-desc" data-i18n="guide3Desc">메시지의 "⋯"를 눌러 답장을 선택하면, 어떤 메시지에 대한 답인지 인용되어 표시돼요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">✏️</div><div><div class="guide-title" data-i18n="guide4Title">수정·삭제</div><div class="guide-desc" data-i18n="guide4Desc">내가 보낸 메시지의 "⋯"에서 수정하거나 삭제할 수 있어요. 삭제하면 "삭제된 메시지입니다"로 표시돼요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">⭐</div><div><div class="guide-title" data-i18n="guide5Title">즐겨찾기</div><div class="guide-desc" data-i18n="guide5Desc">중요한 메시지를 "⋯" → 즐겨찾기로 저장해두고, 우측 상단 "⋯" 메뉴에서 모아볼 수 있어요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">📌</div><div><div class="guide-title" data-i18n="guide6Title">나만의 메모함</div><div class="guide-desc" data-i18n="guide6Desc">메시지를 저장하거나 직접 메모를 남길 수 있어요. 철저히 나만 보는 개인 공간이라 상대방은 절대 못 봐요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">⏱️</div><div><div class="guide-title" data-i18n="guide7Title">타이머 메시지</div><div class="guide-desc" data-i18n="guide7Desc">➕ → 타이머 메시지로 시간을 정하면, 그 시간이 지난 뒤 자동으로 사라져요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">🎯</div><div><div class="guide-title" data-i18n="guide8Title">목표(D-DAY)</div><div class="guide-desc" data-i18n="guide8Desc">"⏳ D-day(목표일까지)"와 "📅 D+day(그날부터)" 두 방식이 있어요. 여행처럼 앞으로 다가올 날은 D-day로, "우리 사귄 날"처럼 이미 지난 날부터 며칠째인지 세고 싶으면 D+day로 등록하세요(예: "우리" D+100). 참가자 누구나 등록할 수 있어요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">🔍</div><div><div class="guide-title" data-i18n="guide9Title">대화 검색</div><div class="guide-desc" data-i18n="guide9Desc">우측 상단 "⋯" → 대화 검색으로 지난 대화 내용을 찾을 수 있어요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">✓</div><div><div class="guide-title" data-i18n="guide10Title">읽음 표시</div><div class="guide-desc" data-i18n="guide10Desc">내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">🎵</div><div><div class="guide-title" data-i18n="guide11Title">같이 듣기</div><div class="guide-desc" data-i18n="guide11Desc">하단 "음악" 탭에서 유튜브 링크나 음원 파일을 올리면, 방에 있는 모두가 같은 지점에서 동시에 들을 수 있어요.</div></div></div>
+      <div class="guide-item"><div class="guide-icon">🔒</div><div><div class="guide-title" data-i18n="guide12Title">종단간 암호화(Secure 상품)</div><div class="guide-desc" data-i18n="guide12Desc">Secure 상품은 문자·사진·음성 등 모든 내용이 저희 서버조차 볼 수 없게 암호화돼요. 단, 초대링크(#k= 포함)를 잃어버리면 대화도 영구히 복구할 수 없어요.</div></div></div>
     </div>
   </div>
 </div>
@@ -388,34 +390,34 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 <!-- 2026-08-22 신설: 타이머 메시지 선택 -->
 <div class="modal-overlay-hl" id="timerModalOverlay">
   <div class="modal-box-hl">
-    <h3 style="margin-bottom:14px;">⏱️ 타이머 메시지</h3>
-    <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">선택한 시간이 지나면 대화방에서 자동으로 사라집니다.</p>
+    <h3 style="margin-bottom:14px;" data-i18n="timerTitle">⏱️ 타이머 메시지</h3>
+    <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;" data-i18n="timerDesc">선택한 시간이 지나면 대화방에서 자동으로 사라집니다.</p>
     <div class="timer-option-grid">
-      <button type="button" class="timer-option" data-seconds="0">끄기</button>
-      <button type="button" class="timer-option" data-seconds="5">5초</button>
-      <button type="button" class="timer-option" data-seconds="10">10초</button>
-      <button type="button" class="timer-option" data-seconds="30">30초</button>
-      <button type="button" class="timer-option" data-seconds="60">1분</button>
-      <button type="button" class="timer-option" data-seconds="300">5분</button>
+      <button type="button" class="timer-option" data-seconds="0" data-i18n="timerOff">끄기</button>
+      <button type="button" class="timer-option" data-seconds="5" data-i18n="timer5">5초</button>
+      <button type="button" class="timer-option" data-seconds="10" data-i18n="timer10">10초</button>
+      <button type="button" class="timer-option" data-seconds="30" data-i18n="timer30">30초</button>
+      <button type="button" class="timer-option" data-seconds="60" data-i18n="timer60">1분</button>
+      <button type="button" class="timer-option" data-seconds="300" data-i18n="timer300">5분</button>
     </div>
-    <button id="timerModalCloseBtn" class="modal-cancel-btn">닫기</button>
+    <button id="timerModalCloseBtn" class="modal-cancel-btn" data-i18n="timerClose">닫기</button>
   </div>
 </div>
 
 <!-- 2026-08-22 신설: 음성메시지 녹음 -->
 <div class="voice-record-overlay" id="voiceRecordOverlay">
   <div class="voice-record-box">
-    <div class="voice-record-status" id="voiceRecordStatus">🎤 녹음 중…</div>
+    <div class="voice-record-status" id="voiceRecordStatus" data-i18n="voiceRecStatus">🎤 녹음 중…</div>
     <div class="voice-record-timer" id="voiceRecordTimer">0:00</div>
     <div class="voice-record-controls" id="voiceRecordLiveControls">
-      <button type="button" id="voiceRecordCancelBtn">✕ 취소</button>
-      <button type="button" id="voiceRecordStopBtn">⏹ 정지</button>
+      <button type="button" id="voiceRecordCancelBtn" data-i18n="voiceRecCancel">✕ 취소</button>
+      <button type="button" id="voiceRecordStopBtn" data-i18n="voiceRecStop">⏹ 정지</button>
     </div>
     <div class="voice-record-preview" id="voiceRecordPreview" style="display:none;">
       <audio id="voiceRecordPreviewAudio" controls></audio>
       <div class="voice-record-controls">
-        <button type="button" id="voiceRecordRetakeBtn">다시 녹음</button>
-        <button type="button" id="voiceRecordSendBtn">보내기</button>
+        <button type="button" id="voiceRecordRetakeBtn" data-i18n="voiceRecRetake">다시 녹음</button>
+        <button type="button" id="voiceRecordSendBtn" data-i18n="voiceRecSend">보내기</button>
       </div>
     </div>
   </div>
@@ -425,52 +427,52 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 <!-- 2026-08-22 신설: 메시지를 눌렀을 때 나오는 작업 메뉴(답장/즐겨찾기/메모/수정/삭제) -->
 <div class="action-sheet-overlay" id="actionSheetOverlay">
   <div class="action-sheet">
-    <button type="button" class="action-sheet-item" id="actionReply">↩️ 답장</button>
-    <button type="button" class="action-sheet-item" id="actionFavorite">⭐ 즐겨찾기</button>
-    <button type="button" class="action-sheet-item" id="actionKeep">📌 메모함에 저장</button>
-    <button type="button" class="action-sheet-item" id="actionEdit" style="display:none;">✏️ 수정</button>
-    <button type="button" class="action-sheet-item danger" id="actionDelete" style="display:none;">🗑️ 삭제</button>
-    <button type="button" class="action-sheet-item close" id="actionSheetClose">닫기</button>
+    <button type="button" class="action-sheet-item" id="actionReply" data-i18n="actionReply">↩️ 답장</button>
+    <button type="button" class="action-sheet-item" id="actionFavorite" data-i18n="actionFavorite">⭐ 즐겨찾기</button>
+    <button type="button" class="action-sheet-item" id="actionKeep" data-i18n="actionKeep">📌 메모함에 저장</button>
+    <button type="button" class="action-sheet-item" id="actionEdit" style="display:none;" data-i18n="actionEdit">✏️ 수정</button>
+    <button type="button" class="action-sheet-item danger" id="actionDelete" style="display:none;" data-i18n="actionDelete">🗑️ 삭제</button>
+    <button type="button" class="action-sheet-item close" id="actionSheetClose" data-i18n="actionClose">닫기</button>
   </div>
 </div>
 
 <!-- 2026-08-22 신설: 목표(D-DAY) 추가 모달 -->
 <div class="modal-overlay-hl" id="goalModalOverlay">
   <div class="modal-box-hl">
-    <h3 style="margin-bottom:14px;">🎯 목표 추가</h3>
-    <input type="text" id="goalTitleInput" placeholder="예: 제주여행, 우리 만난 날" maxlength="30">
+    <h3 style="margin-bottom:14px;" data-i18n="goalTitle">🎯 목표 추가</h3>
+    <input type="text" id="goalTitleInput" placeholder="예: 제주여행, 우리 만난 날" data-i18n-placeholder="goalTitlePlaceholder" maxlength="30">
     <input type="date" id="goalDateInput">
     <div class="goal-mode-tabs">
-      <button type="button" class="goal-mode-tab active" data-mode="countdown">⏳ D-day (다가올 날까지)</button>
-      <button type="button" class="goal-mode-tab" data-mode="countup">📅 D+day (지난 날부터 세기)</button>
+      <button type="button" class="goal-mode-tab active" data-mode="countdown" data-i18n="goalModeCountdown">⏳ D-day (다가올 날까지)</button>
+      <button type="button" class="goal-mode-tab" data-mode="countup" data-i18n="goalModeCountup">📅 D+day (지난 날부터 세기)</button>
     </div>
-    <div class="goal-mode-hint" id="goalModeHint">여행처럼 앞으로 다가올 날짜를 선택하세요. "며칠 남았는지" 보여줘요.</div>
-    <button id="goalSaveBtn">추가하기</button>
-    <button id="goalCancelBtn" class="modal-cancel-btn">취소</button>
+    <div class="goal-mode-hint" id="goalModeHint" data-i18n="goalHintCountdown">여행처럼 앞으로 다가올 날짜를 선택하세요. "며칠 남았는지" 보여줘요.</div>
+    <button id="goalSaveBtn" data-i18n="goalSave">추가하기</button>
+    <button id="goalCancelBtn" class="modal-cancel-btn" data-i18n="goalCancel">취소</button>
   </div>
 </div>
 
 <!-- 2026-08-22 신설: 즐겨찾기 / 내 메모함 패널 (공용 레이아웃) -->
 <div class="panel-overlay" id="favoritesPanelOverlay">
   <div class="panel-sheet">
-    <div class="panel-header"><span>⭐ 즐겨찾기</span><button type="button" class="panel-close" data-close="favoritesPanelOverlay">✕</button></div>
+    <div class="panel-header"><span data-i18n="favPanelTitle">⭐ 즐겨찾기</span><button type="button" class="panel-close" data-close="favoritesPanelOverlay">✕</button></div>
     <div class="panel-list" id="favoritesList"></div>
   </div>
 </div>
 <div class="panel-overlay" id="keepPanelOverlay">
   <div class="panel-sheet">
-    <div class="panel-header"><span>📌 내 메모함</span><button type="button" class="panel-close" data-close="keepPanelOverlay">✕</button></div>
+    <div class="panel-header"><span data-i18n="keepPanelTitle">📌 내 메모함</span><button type="button" class="panel-close" data-close="keepPanelOverlay">✕</button></div>
     <div class="panel-list" id="keepList"></div>
     <div class="keep-add-row">
-      <input type="text" id="keepFreeNoteInput" placeholder="직접 메모 남기기…">
-      <button id="keepFreeNoteSaveBtn">저장</button>
+      <input type="text" id="keepFreeNoteInput" placeholder="직접 메모 남기기…" data-i18n-placeholder="keepNotePlaceholder">
+      <button id="keepFreeNoteSaveBtn" data-i18n="keepNoteSave">저장</button>
     </div>
   </div>
 </div>
 
 <div class="state" id="stateCall">
   <div class="call-area">
-    <div class="call-status" id="callStatus">연결 중…</div>
+    <div class="call-status" id="callStatus" data-i18n="callStatusConnecting">연결 중…</div>
     <div class="tiles-grid" id="tilesGrid"></div>
   </div>
   <div class="local-tile" id="localTile" style="display:none;"><video id="localVideo" autoplay muted playsinline></video></div>
@@ -492,26 +494,26 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
         <button class="music-ctrl-btn" id="musicPlayPauseBtn">▶️</button>
         <input type="range" id="musicSeekBar" min="0" max="100" value="0">
       </div>
-      <button class="music-change-btn" id="musicChangeBtn">🔄 다른 곡으로 바꾸기</button>
+      <button class="music-change-btn" id="musicChangeBtn" data-i18n="musicChangeBtn">🔄 다른 곡으로 바꾸기</button>
     </div>
     <div id="musicEmptyState">
       <div style="font-size:36px; margin-bottom:10px;">🎵</div>
-      <p style="color:#fff; font-size:13px; margin-bottom:18px;">유튜브 링크를 붙여넣거나<br>직접 음원 파일을 올리면 다 같이 동기화되어 재생됩니다</p>
-      <input type="text" id="musicUrlInput" placeholder="유튜브 링크 붙여넣기">
-      <button id="musicLoadBtn">같이 듣기 시작</button>
-      <div class="music-or-divider">또는</div>
+      <p style="color:#fff; font-size:13px; margin-bottom:18px;" data-i18n-html="musicEmptyDesc">유튜브 링크를 붙여넣거나<br>직접 음원 파일을 올리면 다 같이 동기화되어 재생됩니다</p>
+      <input type="text" id="musicUrlInput" placeholder="유튜브 링크 붙여넣기" data-i18n-placeholder="musicUrlPlaceholder">
+      <button id="musicLoadBtn" data-i18n="musicLoadBtn">같이 듣기 시작</button>
+      <div class="music-or-divider" data-i18n="musicOr">또는</div>
       <input type="file" id="musicFileInput" accept="audio/*" style="display:none;">
-      <button id="musicFileBtn" class="music-file-btn">🎵 내 음원 파일 올리기</button>
+      <button id="musicFileBtn" class="music-file-btn" data-i18n="musicFileBtn">🎵 내 음원 파일 올리기</button>
     </div>
   </div>
 </div>
 
 <div class="bottom-nav" id="bottomNav" style="display:none;">
-  <button class="bottom-nav-btn active" id="navChat"><span class="bn-icon">💬</span><span>채팅</span></button>
-  <button class="bottom-nav-btn" id="navVoice"><span class="bn-icon">🎧</span><span>음성</span></button>
-  <button class="bottom-nav-btn" id="navVideo"><span class="bn-icon">🎥</span><span>화상</span></button>
-  <button class="bottom-nav-btn" id="navUpload"><span class="bn-icon">📎</span><span>업로드</span></button>
-  <button class="bottom-nav-btn" id="navMusic"><span class="bn-icon">🎵</span><span>음악</span></button>
+  <button class="bottom-nav-btn active" id="navChat"><span class="bn-icon">💬</span><span data-i18n="navChat">채팅</span></button>
+  <button class="bottom-nav-btn" id="navVoice"><span class="bn-icon">🎧</span><span data-i18n="navVoice">음성</span></button>
+  <button class="bottom-nav-btn" id="navVideo"><span class="bn-icon">🎥</span><span data-i18n="navVideo">화상</span></button>
+  <button class="bottom-nav-btn" id="navUpload"><span class="bn-icon">📎</span><span data-i18n="navUpload">업로드</span></button>
+  <button class="bottom-nav-btn" id="navMusic"><span class="bn-icon">🎵</span><span data-i18n="navMusic">음악</span></button>
 </div>
 
 </div>
@@ -525,6 +527,360 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// =====================================================================
+// 2026-08-25 신설: 다국어(한국어/영어) — 다른 화면들과 동일한 I18N 방식
+//   data-i18n / -html / -placeholder / -title / -aria  +  JS는 T('키')
+// console 개발자 로그와 throw new Error 내부 식별자는 의도적으로 한국어 유지.
+// =====================================================================
+const I18N = {
+  ko: {
+    docTitle: 'Aliascall — 핫라인',
+    langToggle: '🌐 English',
+    roomTitleDefault: '핫라인',
+    moreTitle: '더보기',
+    menuFavorites: '⭐ 즐겨찾기 보기',
+    menuKeep: '📌 내 메모함',
+    menuSearch: '🔍 대화 검색',
+    menuReport: '🚩 신고하기',
+    menuClose: '닫기',
+
+    loading: '불러오는 중…',
+    errorDefault: '접근할 수 없습니다.',
+    errInvalidAccess: '올바르지 않은 접근입니다.',
+    errCannotEnter: '입장할 수 없습니다.',
+    errLoadFail: '불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+
+    keyNeededMsg: '이 대화방은 암호화되어 있어요.<br>초대링크에 포함된 열쇠가 필요합니다.',
+    keyPlaceholder: '열쇠(#k= 뒷부분)를 붙여넣으세요',
+    keySubmit: '입장하기',
+
+    searchPlaceholder: '대화 내용 검색…',
+    searchZero: '0건',
+    dqLabel: '💬 오늘의 질문',
+    dqSend: '대화 시작하기',
+    dqDismiss: '닫기',
+
+    emojiTitle: '이모지',
+    voiceInputTitle: '음성으로 입력',
+    chatPlaceholder: '메시지 입력…',
+    plusAttach: '파일 첨부',
+    plusCamera: '사진 촬영',
+    plusTimer: '타이머 메시지',
+    plusVoiceMsg: '음성메시지',
+    plusGuide: '사용법',
+
+    guidePanelTitle: '❓ 채팅 사용법',
+    guide1Title: '기본 채팅',
+    guide1Desc: '문자·이모지·사진·동영상·문서·음성메시지를 주고받을 수 있어요. 사진·동영상·문서는 📎, 촬영은 📷, 음성메시지는 🎤(➕ 안에 있어요).',
+    guide2Title: '음성으로 입력',
+    guide2Desc: '입력창 옆 마이크를 누르고 말하면 자동으로 글자로 바뀌어요. (일부 구형 브라우저는 지원 안 할 수 있어요)',
+    guide3Title: '답장',
+    guide3Desc: '메시지의 "⋯"를 눌러 답장을 선택하면, 어떤 메시지에 대한 답인지 인용되어 표시돼요.',
+    guide4Title: '수정·삭제',
+    guide4Desc: '내가 보낸 메시지의 "⋯"에서 수정하거나 삭제할 수 있어요. 삭제하면 "삭제된 메시지입니다"로 표시돼요.',
+    guide5Title: '즐겨찾기',
+    guide5Desc: '중요한 메시지를 "⋯" → 즐겨찾기로 저장해두고, 우측 상단 "⋯" 메뉴에서 모아볼 수 있어요.',
+    guide6Title: '나만의 메모함',
+    guide6Desc: '메시지를 저장하거나 직접 메모를 남길 수 있어요. 철저히 나만 보는 개인 공간이라 상대방은 절대 못 봐요.',
+    guide7Title: '타이머 메시지',
+    guide7Desc: '➕ → 타이머 메시지로 시간을 정하면, 그 시간이 지난 뒤 자동으로 사라져요.',
+    guide8Title: '목표(D-DAY)',
+    guide8Desc: '"⏳ D-day(목표일까지)"와 "📅 D+day(그날부터)" 두 방식이 있어요. 여행처럼 앞으로 다가올 날은 D-day로, "우리 사귄 날"처럼 이미 지난 날부터 며칠째인지 세고 싶으면 D+day로 등록하세요(예: "우리" D+100). 참가자 누구나 등록할 수 있어요.',
+    guide9Title: '대화 검색',
+    guide9Desc: '우측 상단 "⋯" → 대화 검색으로 지난 대화 내용을 찾을 수 있어요.',
+    guide10Title: '읽음 표시',
+    guide10Desc: '내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.',
+    guide11Title: '같이 듣기',
+    guide11Desc: '하단 "음악" 탭에서 유튜브 링크나 음원 파일을 올리면, 방에 있는 모두가 같은 지점에서 동시에 들을 수 있어요.',
+    guide12Title: '종단간 암호화(Secure 상품)',
+    guide12Desc: 'Secure 상품은 문자·사진·음성 등 모든 내용이 저희 서버조차 볼 수 없게 암호화돼요. 단, 초대링크(#k= 포함)를 잃어버리면 대화도 영구히 복구할 수 없어요.',
+
+    timerTitle: '⏱️ 타이머 메시지',
+    timerDesc: '선택한 시간이 지나면 대화방에서 자동으로 사라집니다.',
+    timerOff: '끄기',
+    timer5: '5초', timer10: '10초', timer30: '30초', timer60: '1분', timer300: '5분',
+    timerClose: '닫기',
+
+    voiceRecStatus: '🎤 녹음 중…',
+    voiceRecCancel: '✕ 취소',
+    voiceRecStop: '⏹ 정지',
+    voiceRecRetake: '다시 녹음',
+    voiceRecSend: '보내기',
+
+    actionReply: '↩️ 답장',
+    actionFavorite: '⭐ 즐겨찾기',
+    actionKeep: '📌 메모함에 저장',
+    actionEdit: '✏️ 수정',
+    actionDelete: '🗑️ 삭제',
+    actionClose: '닫기',
+
+    goalTitle: '🎯 목표 추가',
+    goalTitlePlaceholder: '예: 제주여행, 우리 만난 날',
+    goalModeCountdown: '⏳ D-day (다가올 날까지)',
+    goalModeCountup: '📅 D+day (지난 날부터 세기)',
+    goalHintCountdown: '여행처럼 앞으로 다가올 날짜를 선택하세요. "며칠 남았는지" 보여줘요.',
+    goalHintCountup: '"우리 만난 날"처럼 이미 지난 날짜를 선택하세요. "그날부터 며칠째"인지(우리 1일, 2일…) 보여줘요.',
+    goalSave: '추가하기',
+    goalCancel: '취소',
+    goalAddChip: '+ 목표추가',
+
+    favPanelTitle: '⭐ 즐겨찾기',
+    keepPanelTitle: '📌 내 메모함',
+    keepNotePlaceholder: '직접 메모 남기기…',
+    keepNoteSave: '저장',
+    favEmpty: '즐겨찾기한 메시지가 없어요.',
+    keepEmpty: '저장한 메모가 없어요.',
+    panelLoadFail: '불러오지 못했어요.',
+
+    callStatusConnecting: '연결 중…',
+    callStatusInCall: '통화 중',
+    tileParticipant: '참가자',
+
+    musicEmptyDesc: '유튜브 링크를 붙여넣거나<br>직접 음원 파일을 올리면 다 같이 동기화되어 재생됩니다',
+    musicUrlPlaceholder: '유튜브 링크 붙여넣기',
+    musicLoadBtn: '같이 듣기 시작',
+    musicOr: '또는',
+    musicFileBtn: '🎵 내 음원 파일 올리기',
+    musicChangeBtn: '🔄 다른 곡으로 바꾸기',
+    musicUnknown: '누군가',
+
+    navChat: '채팅', navVoice: '음성', navVideo: '화상', navUpload: '업로드', navMusic: '음악',
+
+    meNickname: '나',
+    amLabel: '오전', pmLabel: '오후',
+    photoAlt: '사진',
+    previewPhoto: '📷 사진',
+    previewVideo: '🎥 동영상',
+    previewVoice: '🎤 음성메시지',
+    docFallback: '문서',
+    docFileFallback: '문서 파일',
+    docDownloadName: '문서파일',
+    decryptFail: '🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)',
+    deletedMsg: '삭제된 메시지입니다',
+    deletedPreview: '삭제된 메시지',
+    deletedQuoted: '(삭제된 메시지)',
+    originalMsg: '(원본 메시지)',
+    editedTag: '(수정됨)',
+    editingLabel: '✏️ 메시지 수정 중',
+    readTag: '읽음',
+    uploading: '올리는 중…',
+
+    alertKeyRequired: '열쇠를 입력해주세요.',
+    alertDecryptFail: '복호화에 실패했어요.',
+    alertEditFail: '수정하지 못했어요.',
+    alertSendFail: '메시지를 보내지 못했어요.',
+    alertKeepSaved: '메모함에 저장했어요.',
+    alertKeepSaveFail: '저장에 실패했어요.',
+    confirmDeleteMsg: '이 메시지를 삭제할까요?',
+    confirmDeleteGoal: '이 목표를 삭제할까요?',
+    alertGoalFields: '제목과 날짜를 모두 입력해주세요.',
+    alertMicPerm: '마이크 권한이 필요해요.',
+    alertMicCamPerm: '마이크(또는 카메라) 권한이 필요합니다.',
+    alertBadYoutube: '올바른 유튜브 링크가 아니에요.',
+    alertMusicTooBig: '음원 파일이 너무 커요 (최대 30MB).',
+    alertMusicUploadFail: '음원 파일을 올리지 못했어요: ',
+    alertFileSendFail: '파일을 보내지 못했어요: ',
+    alertOverCap: '이 핫라인의 이번 결제주기 사용량 한도를 초과했어요. 추가결제가 필요할 수 있습니다.',
+    alertTryLater: '잠시 후 다시 시도해주세요.',
+  },
+  en: {
+    docTitle: 'Aliascall — Hotline',
+    langToggle: '🌐 한국어',
+    roomTitleDefault: 'Hotline',
+    moreTitle: 'More',
+    menuFavorites: '⭐ View favorites',
+    menuKeep: '📌 My notes',
+    menuSearch: '🔍 Search messages',
+    menuReport: '🚩 Report',
+    menuClose: 'Close',
+
+    loading: 'Loading…',
+    errorDefault: 'You cannot access this room.',
+    errInvalidAccess: 'Invalid access.',
+    errCannotEnter: 'Unable to join this room.',
+    errLoadFail: "Couldn't load. Please try again in a moment.",
+
+    keyNeededMsg: 'This room is encrypted.<br>You need the key included in the invite link.',
+    keyPlaceholder: 'Paste the key (the part after #k=)',
+    keySubmit: 'Enter',
+
+    searchPlaceholder: 'Search messages…',
+    searchZero: '0 results',
+    dqLabel: "💬 Today's question",
+    dqSend: 'Start the conversation',
+    dqDismiss: 'Close',
+
+    emojiTitle: 'Emoji',
+    voiceInputTitle: 'Voice input',
+    chatPlaceholder: 'Type a message…',
+    plusAttach: 'Attach file',
+    plusCamera: 'Take photo',
+    plusTimer: 'Timed message',
+    plusVoiceMsg: 'Voice message',
+    plusGuide: 'How to use',
+
+    guidePanelTitle: '❓ How to use chat',
+    guide1Title: 'Basic chat',
+    guide1Desc: 'Send text, emoji, photos, videos, documents and voice messages. Use 📎 for photos, videos and documents, 📷 to take a photo, and 🎤 for voice messages (all inside ➕).',
+    guide2Title: 'Voice input',
+    guide2Desc: 'Tap the microphone next to the input box and speak — your words are turned into text automatically. (Some older browsers may not support this.)',
+    guide3Title: 'Replies',
+    guide3Desc: 'Tap "⋯" on a message and choose Reply. The original message is quoted so everyone can see what you are replying to.',
+    guide4Title: 'Edit and delete',
+    guide4Desc: 'Tap "⋯" on your own message to edit or delete it. Deleted messages appear as "This message was deleted".',
+    guide5Title: 'Favorites',
+    guide5Desc: 'Save important messages with "⋯" → Favorites, then find them all under the "⋯" menu at the top right.',
+    guide6Title: 'Your private notes',
+    guide6Desc: 'Save messages or write your own notes. This space is strictly private — the other person can never see it.',
+    guide7Title: 'Timed messages',
+    guide7Desc: 'Choose a duration under ➕ → Timed message, and the message disappears automatically once that time has passed.',
+    guide8Title: 'Goals (D-DAY)',
+    guide8Desc: 'There are two modes: "⏳ D-day" counts down to an upcoming date, and "📅 D+day" counts up from a past date. Use D-day for things like a trip, and D+day when you want to know how many days it has been since a date (for example "Us" D+100). Any participant can add one.',
+    guide9Title: 'Search messages',
+    guide9Desc: 'Use "⋯" at the top right → Search messages to find things said earlier.',
+    guide10Title: 'Read receipts',
+    guide10Desc: 'When the other person reads your message, "Read" appears next to the timestamp.',
+    guide11Title: 'Listen together',
+    guide11Desc: 'Open the "Music" tab at the bottom and paste a YouTube link or upload an audio file — everyone in the room hears the same point at the same time.',
+    guide12Title: 'End-to-end encryption (Secure plan)',
+    guide12Desc: 'On the Secure plan, everything — text, photos, voice — is encrypted so that not even our servers can read it. But if you lose the invite link (including #k=), the conversation cannot be recovered.',
+
+    timerTitle: '⏱️ Timed message',
+    timerDesc: 'The message disappears from the room automatically once the chosen time has passed.',
+    timerOff: 'Off',
+    timer5: '5 sec', timer10: '10 sec', timer30: '30 sec', timer60: '1 min', timer300: '5 min',
+    timerClose: 'Close',
+
+    voiceRecStatus: '🎤 Recording…',
+    voiceRecCancel: '✕ Cancel',
+    voiceRecStop: '⏹ Stop',
+    voiceRecRetake: 'Record again',
+    voiceRecSend: 'Send',
+
+    actionReply: '↩️ Reply',
+    actionFavorite: '⭐ Favorite',
+    actionKeep: '📌 Save to notes',
+    actionEdit: '✏️ Edit',
+    actionDelete: '🗑️ Delete',
+    actionClose: 'Close',
+
+    goalTitle: '🎯 Add a goal',
+    goalTitlePlaceholder: 'e.g. Jeju trip, the day we met',
+    goalModeCountdown: '⏳ D-day (until an upcoming date)',
+    goalModeCountup: '📅 D+day (counting from a past date)',
+    goalHintCountdown: 'Pick an upcoming date, like a trip. It shows how many days are left.',
+    goalHintCountup: 'Pick a date that has already passed, like the day you met. It shows how many days it has been (day 1, day 2, …).',
+    goalSave: 'Add',
+    goalCancel: 'Cancel',
+    goalAddChip: '+ Add goal',
+
+    favPanelTitle: '⭐ Favorites',
+    keepPanelTitle: '📌 My notes',
+    keepNotePlaceholder: 'Write your own note…',
+    keepNoteSave: 'Save',
+    favEmpty: 'No favorited messages yet.',
+    keepEmpty: 'No saved notes yet.',
+    panelLoadFail: "Couldn't load.",
+
+    callStatusConnecting: 'Connecting…',
+    callStatusInCall: 'In call',
+    tileParticipant: 'Participant',
+
+    musicEmptyDesc: 'Paste a YouTube link or upload an audio file<br>and everyone will hear it in sync',
+    musicUrlPlaceholder: 'Paste a YouTube link',
+    musicLoadBtn: 'Start listening together',
+    musicOr: 'or',
+    musicFileBtn: '🎵 Upload my own audio file',
+    musicChangeBtn: '🔄 Change track',
+    musicUnknown: 'Someone',
+
+    navChat: 'Chat', navVoice: 'Voice', navVideo: 'Video', navUpload: 'Upload', navMusic: 'Music',
+
+    meNickname: 'Me',
+    amLabel: 'AM', pmLabel: 'PM',
+    photoAlt: 'Photo',
+    previewPhoto: '📷 Photo',
+    previewVideo: '🎥 Video',
+    previewVoice: '🎤 Voice message',
+    docFallback: 'Document',
+    docFileFallback: 'Document file',
+    docDownloadName: 'document',
+    decryptFail: "🔒 Couldn't decrypt (the key doesn't seem to match)",
+    deletedMsg: 'This message was deleted',
+    deletedPreview: 'Deleted message',
+    deletedQuoted: '(Deleted message)',
+    originalMsg: '(Original message)',
+    editedTag: '(edited)',
+    editingLabel: '✏️ Editing message',
+    readTag: 'Read',
+    uploading: 'Uploading…',
+
+    alertKeyRequired: 'Please enter the key.',
+    alertDecryptFail: "Couldn't decrypt this file.",
+    alertEditFail: "Couldn't edit the message.",
+    alertSendFail: "Couldn't send the message.",
+    alertKeepSaved: 'Saved to your notes.',
+    alertKeepSaveFail: "Couldn't save.",
+    confirmDeleteMsg: 'Delete this message?',
+    confirmDeleteGoal: 'Delete this goal?',
+    alertGoalFields: 'Please enter both a title and a date.',
+    alertMicPerm: 'Microphone permission is required.',
+    alertMicCamPerm: 'Microphone (or camera) permission is required.',
+    alertBadYoutube: "That doesn't look like a valid YouTube link.",
+    alertMusicTooBig: 'That audio file is too large (30MB maximum).',
+    alertMusicUploadFail: "Couldn't upload the audio file: ",
+    alertFileSendFail: "Couldn't send the file: ",
+    alertOverCap: "This hotline has gone over its usage limit for the current billing cycle. Additional charges may apply.",
+    alertTryLater: 'Please try again in a moment.',
+  },
+};
+
+// ── 언어 결정 ──
+// 공용 스크립트(aliascall_report.js 등)가 window.getAliascallLang을 이미 정의해 뒀으면
+// 그것을 그대로 씀 — 화면마다 언어가 따로 노는 것을 막기 위함.
+let LANG = (typeof window.getAliascallLang === 'function')
+  ? window.getAliascallLang()
+  : ((navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en');
+
+function T(key){
+  const d = I18N[LANG] || I18N.ko;
+  return (d[key] !== undefined) ? d[key] : (I18N.ko[key] !== undefined ? I18N.ko[key] : key);
+}
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.title = T('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = T(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = T(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => { el.title = T(el.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', T(el.dataset.i18nAria)); });
+}
+applyI18n();
+document.getElementById('langToggleBtn').addEventListener('click', () => {
+  const next = (LANG === 'ko') ? 'en' : 'ko';
+  if (typeof window.setAliascallLang === 'function') window.setAliascallLang(next);
+  else ['aliascall_lang','aliascall_language','ac_lang','lang'].forEach((k) => { try { localStorage.setItem(k, next); } catch (e) {} });
+  // ⚠ 통화/녹음/음악 재생 중 상태가 꼬이지 않도록 새로고침으로 깔끔히 전환.
+  // 암호화 방의 열쇠는 #k= 조각에 있으므로 location.href 그대로 다시 불러야 함.
+  location.reload();
+});
+
+// ── 통화 기록은 DB(hotline_messages)에 한국어로 저장됨 ──
+// 참가자마다 언어가 다를 수 있어 저장은 한국어로 고정하고, 화면에 보여줄 때만 번역함.
+// 형태: "{닉네임}님이 영상통화를 시작했어요"
+function localizeSystemNote(text){
+  if (LANG !== 'en' || !text) return text;
+  const s = String(text);
+  const m = s.match(/^(.+)님이 (영상|음성)통화를 (시작했어요|종료했어요)$/);
+  if (m) {
+    const kind = (m[2] === '영상') ? 'video' : 'voice';
+    const verb = (m[3] === '시작했어요') ? 'started' : 'ended';
+    return m[1] + ' ' + verb + ' a ' + kind + ' call';
+  }
+  return s; // 서버가 만든 다른 안내문(입장·퇴장 등)은 원문 그대로
+}
+
 
 const RTC_CONFIG = { iceServers: [
   { urls: 'stun:stun.relay.metered.ca:80' },
@@ -566,7 +922,7 @@ async function init(){
   const params = new URLSearchParams(window.location.search);
   const inviteToken = params.get('t');
   const directHotlineId = params.get('hotline');
-  if (!inviteToken && !directHotlineId) { document.getElementById('errorMsg').textContent = '올바르지 않은 접근입니다.'; showState('stateError'); return; }
+  if (!inviteToken && !directHotlineId) { document.getElementById('errorMsg').textContent = T('errInvalidAccess'); showState('stateError'); return; }
 
   const { data: { session } } = await sb.auth.getSession();
   if (session) accessToken = session.access_token;
@@ -577,13 +933,13 @@ async function init(){
       body: JSON.stringify({ hotlineId: directHotlineId || undefined, inviteToken: inviteToken || undefined, memberAnonId: hotlineAnonId }),
     });
     const data = await res.json();
-    if (!res.ok) { document.getElementById('errorMsg').textContent = data.error || '입장할 수 없습니다.'; showState('stateError'); return; }
+    if (!res.ok) { document.getElementById('errorMsg').textContent = data.error || T('errCannotEnter'); showState('stateError'); return; }
 
     hotlineId = data.hotlineId;
     mySenderAnonId = data.mySenderAnonId;
     roomIsSecure = isSecureTier(data.tier);
     (data.members || []).forEach((m) => { memberNicknames[m.member_anon_id] = m.nickname; });
-    myNickname = memberNicknames[mySenderAnonId] || '나';
+    myNickname = memberNicknames[mySenderAnonId] || T('meNickname');
 
     // 2026-08-21 신설: 암호화 상품이면, URL의 #k=(가장 우선) 또는 이 브라우저에 저장된 열쇠를 찾음
     if (roomIsSecure) {
@@ -602,7 +958,8 @@ async function init(){
     }
 
     document.getElementById('roomTitle').textContent = data.title + (roomIsSecure ? ' 🔒' : '');
-    document.getElementById('roomMeta').textContent = `${(data.members || []).length} / ${data.maxParticipants}명`;
+    // 2026-08-25: 인원 표기 — 한국어 "3 / 8명", 영어 "3 / 8 people"
+    document.getElementById('roomMeta').textContent = `${(data.members || []).length} / ${data.maxParticipants}` + (LANG === 'en' ? ' people' : '명');
     document.getElementById('bottomNav').style.display = 'flex';
 
     // 2026-08-22 신설: "같이 듣기" 현재 재생 상태를 화면에 반영해둠(음악 탭 눌렀을 때 바로 이어짐)
@@ -624,7 +981,7 @@ async function init(){
     markAsRead(); // 2026-08-22 신설: 방에 들어온 시점 = 여기까지 다 읽은 것으로 처리
   } catch (e) {
     console.error('[hotline-room] 초기화 실패', e);
-    document.getElementById('errorMsg').textContent = '불러오지 못했어요. 잠시 후 다시 시도해주세요.';
+    document.getElementById('errorMsg').textContent = T('errLoadFail');
     showState('stateError');
   }
 }
@@ -632,7 +989,7 @@ async function init(){
 // 2026-08-21 신설: "열쇠 직접 입력" 화면의 입장 버튼 — URL에 열쇠를 붙인 뒤 처음부터 다시 시도함
 document.getElementById('manualKeySubmitBtn').addEventListener('click', () => {
   const val = document.getElementById('manualKeyInput').value.trim().replace(/^#?k=/, '');
-  if (!val) { alert('열쇠를 입력해주세요.'); return; }
+  if (!val) { alert(T('alertKeyRequired')); return; }
   window.location.hash = 'k=' + val;
   showState('stateLoading');
   init();
@@ -691,17 +1048,22 @@ let currentActionMessageId = null;
 
 // 2026-08-23 신설: 날짜 구분선 + 메시지 시간 표시
 let lastRenderedDateKey = null;
-function formatKoreanTime(dateStr){
+// 2026-08-25: 언어별 표기 (한국어 "오후 3:05" / 영어 "3:05 PM")
+function formatMsgTime(dateStr){
   if (!dateStr) return '';
   const d = new Date(dateStr);
   let h = d.getHours();
   const m = String(d.getMinutes()).padStart(2, '0');
-  const ampm = h < 12 ? '오전' : '오후';
+  const ampm = h < 12 ? T('amLabel') : T('pmLabel');
   h = h % 12; if (h === 0) h = 12;
-  return ampm + ' ' + h + ':' + m;
+  return (LANG === 'en') ? (h + ':' + m + ' ' + ampm) : (ampm + ' ' + h + ':' + m);
 }
-function formatKoreanDateDivider(dateStr){
+// 한국어: "2026년 8월 25일 화요일" / 영어: "Tuesday, August 25, 2026"
+function formatDateDivider(dateStr){
   const d = new Date(dateStr);
+  if (LANG === 'en') {
+    return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
   const days = ['일', '월', '화', '수', '목', '금', '토'];
   return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + days[d.getDay()] + '요일';
 }
@@ -712,7 +1074,7 @@ function insertDateDividerIfNeeded(list, createdAt){
   lastRenderedDateKey = dateKey;
   const divider = document.createElement('div');
   divider.className = 'date-divider';
-  divider.textContent = formatKoreanDateDivider(createdAt);
+  divider.textContent = formatDateDivider(createdAt);
   list.appendChild(divider);
   return true;
 }
@@ -733,7 +1095,7 @@ function renderPhotoGroupGrid(state){
     const thumb = document.createElement('img');
     thumb.className = 'photo-group-thumb';
     thumb.src = items[i].url;
-    thumb.alt = '사진';
+    thumb.alt = T('photoAlt');
     thumb.loading = 'lazy';
     if (isLastVisibleWithMore) {
       const wrap = document.createElement('div');
@@ -775,7 +1137,7 @@ async function appendChatMessage(msg){
     photoGroupState = null;
     const sysEl = document.createElement('div');
     sysEl.className = 'chat-system-note';
-    sysEl.textContent = msg.content;
+    sysEl.textContent = localizeSystemNote(msg.content); // 2026-08-25: 저장은 한국어, 표시만 번역
     list.appendChild(sysEl);
     list.scrollTop = list.scrollHeight;
     return;
@@ -791,10 +1153,10 @@ async function appendChatMessage(msg){
       if (oldTimeRow) {
         oldTimeRow.dataset.messageId = msg.id;
         const timeText = oldTimeRow.querySelector('.msg-time-text');
-        if (timeText) timeText.textContent = formatKoreanTime(msg.created_at);
+        if (timeText) timeText.textContent = formatMsgTime(msg.created_at);
       }
       photoGroupState.lastMessageId = msg.id;
-      messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: 'photo', previewText: '📷 사진', deleted: false, createdAt: msg.created_at });
+      messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: 'photo', previewText: T('previewPhoto'), deleted: false, createdAt: msg.created_at });
       if (isMe) refreshReadTags();
       list.scrollTop = list.scrollHeight;
       return;
@@ -818,8 +1180,8 @@ async function appendChatMessage(msg){
   // 2026-08-22 신설: 삭제된 메시지 — 내용은 안 보여주고 자리만 남겨둠
   if (msg.deleted_at) {
     el.classList.add('deleted');
-    el.textContent = '삭제된 메시지입니다';
-    messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: msg.message_type, previewText: '삭제된 메시지', deleted: true, createdAt: msg.created_at });
+    el.textContent = T('deletedMsg');
+    messageCache.set(msg.id, { sender_nickname: msg.sender_nickname, sender_anon_id: msg.sender_anon_id, message_type: msg.message_type, previewText: T('deletedPreview'), deleted: true, createdAt: msg.created_at });
     list.appendChild(el);
     list.scrollTop = list.scrollHeight;
     return;
@@ -830,16 +1192,16 @@ async function appendChatMessage(msg){
     const quoted = messageCache.get(msg.reply_to_message_id);
     const quoteEl = document.createElement('div');
     quoteEl.className = 'bubble-reply-quote';
-    quoteEl.textContent = quoted ? (quoted.sender_nickname + ': ' + quoted.previewText) : '(원본 메시지)';
+    quoteEl.textContent = quoted ? (quoted.sender_nickname + ': ' + quoted.previewText) : T('originalMsg');
     el.appendChild(quoteEl);
   }
 
   let previewText = '';
 
   if (msg.message_type === 'photo') {
-    previewText = '📷 사진';
+    previewText = T('previewPhoto');
     const src = await resolveMediaUrl(msg.content, msg.original_mime_type);
-    if (!src) { el.appendChild(document.createTextNode('🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)')); }
+    if (!src) { el.appendChild(document.createTextNode(T('decryptFail'))); }
     else {
       // 2026-08-23 수정: 이 사진이 앞으로 더 늘어날 수도 있는 "묶음의 시작"이 됨(1장이면 그냥 사진처럼 보이고, 더 오면 타일로 바뀜)
       el.classList.add('photo-group');
@@ -849,34 +1211,34 @@ async function appendChatMessage(msg){
       renderPhotoGroupGrid(photoGroupState);
     }
   } else if (msg.message_type === 'video') {
-    previewText = '🎥 동영상';
+    previewText = T('previewVideo');
     const src = await resolveMediaUrl(msg.content, msg.original_mime_type);
-    if (!src) { el.appendChild(document.createTextNode('🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)')); }
+    if (!src) { el.appendChild(document.createTextNode(T('decryptFail'))); }
     else {
       const vid = document.createElement('video');
       vid.src = src; vid.className = 'chat-video'; vid.controls = true;
       el.appendChild(vid);
     }
   } else if (msg.message_type === 'document') {
-    const fileName = roomIsSecure ? await safeDecryptText(msg.file_name) : (msg.file_name || '문서 파일');
-    previewText = '📄 ' + (fileName || '문서');
+    const fileName = roomIsSecure ? await safeDecryptText(msg.file_name) : (msg.file_name || T('docFileFallback'));
+    previewText = '📄 ' + (fileName || T('docFallback'));
     // 문서는 클릭하는 순간에 복호화(미리 다 받아두면 낭비라서) — 클릭 핸들러 안에서 처리
     const a = document.createElement('a');
     a.href = 'javascript:void(0)'; a.className = 'chat-doc';
-    a.innerHTML = '📄 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (fileName || '문서 파일') + '</span>';
+    a.innerHTML = '📄 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (fileName || T('docFileFallback')) + '</span>';
     a.addEventListener('click', async () => {
       a.style.opacity = '.5';
       const src = await resolveMediaUrl(msg.content, msg.original_mime_type);
       a.style.opacity = '1';
-      if (!src) { alert('복호화에 실패했어요.'); return; }
+      if (!src) { alert(T('alertDecryptFail')); return; }
       const dl = document.createElement('a');
-      dl.href = src; dl.download = fileName || '문서파일'; dl.click();
+      dl.href = src; dl.download = fileName || T('docDownloadName'); dl.click();
     });
     el.appendChild(a);
   } else if (msg.message_type === 'voice') {
-    previewText = '🎤 음성메시지';
+    previewText = T('previewVoice');
     const src = await resolveMediaUrl(msg.content, msg.original_mime_type || 'audio/webm');
-    if (!src) { el.appendChild(document.createTextNode('🔒 복호화 실패 (열쇠가 안 맞는 것 같아요)')); }
+    if (!src) { el.appendChild(document.createTextNode(T('decryptFail'))); }
     else {
       const audioEl = document.createElement('audio');
       audioEl.src = src; audioEl.controls = true;
@@ -905,7 +1267,7 @@ async function appendChatMessage(msg){
     if (msg.edited_at) {
       const editTag = document.createElement('span');
       editTag.className = 'bubble-edited-tag';
-      editTag.textContent = '(수정됨)';
+      editTag.textContent = T('editedTag');
       el.appendChild(editTag);
     }
   }
@@ -945,7 +1307,7 @@ async function appendChatMessage(msg){
   const timeRow = document.createElement('div');
   timeRow.className = 'msg-time-row ' + (isMe ? 'me' : 'them');
   timeRow.dataset.messageId = msg.id;
-  timeRow.innerHTML = `<span class="msg-time-text">${formatKoreanTime(msg.created_at)}</span><span class="msg-read-status"></span>`;
+  timeRow.innerHTML = `<span class="msg-time-text">${formatMsgTime(msg.created_at)}</span><span class="msg-read-status"></span>`;
   list.appendChild(timeRow);
 
   list.scrollTop = list.scrollHeight;
@@ -998,7 +1360,7 @@ async function sendChatMessage(){
       applyMessageEdited({ id: targetId, content: payloadText, edited_at: data.editedAt });
     } catch (e) {
       console.error('[hotline-room] 수정 실패', e);
-      alert('수정하지 못했어요.');
+      alert(T('alertEditFail'));
     }
     return;
   }
@@ -1024,7 +1386,7 @@ async function sendChatMessage(){
     renderedMsgIds.add(data.messageId);
   } catch (e) {
     console.error('[hotline-room] 메시지 전송 실패', e);
-    alert('메시지를 보내지 못했어요.');
+    alert(T('alertSendFail'));
   }
 }
 document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
@@ -1038,7 +1400,9 @@ function startReply(messageId){
   const cached = messageCache.get(messageId);
   if (!cached) return;
   replyingToMessageInfo = { id: messageId, sender_nickname: cached.sender_nickname, previewText: cached.previewText };
-  document.getElementById('replyBarLabel').textContent = '↩️ ' + cached.sender_nickname + '님에게 답장';
+  document.getElementById('replyBarLabel').textContent = (LANG === 'en')
+    ? ('↩️ Reply to ' + cached.sender_nickname)
+    : ('↩️ ' + cached.sender_nickname + '님에게 답장');
   document.getElementById('replyBarText').textContent = cached.previewText;
   document.getElementById('replyBar').style.display = 'flex';
   document.getElementById('chatInput').focus();
@@ -1058,7 +1422,7 @@ async function startEdit(messageId){
   clone.querySelectorAll('.bubble-edited-tag, .bubble-reply-quote, .bubble-favorite-star, .bubble-action-trigger').forEach((n) => n.remove());
   const currentText = clone.textContent.trim();
   editingMessageId = messageId;
-  document.getElementById('replyBarLabel').textContent = '✏️ 메시지 수정 중';
+  document.getElementById('replyBarLabel').textContent = T('editingLabel');
   document.getElementById('replyBarText').textContent = currentText;
   document.getElementById('replyBar').style.display = 'flex';
   const input = document.getElementById('chatInput');
@@ -1085,7 +1449,7 @@ function applyMessageEdited(payload){
     textSpan.textContent = text;
     const editTag = document.createElement('span');
     editTag.className = 'bubble-edited-tag';
-    editTag.textContent = '(수정됨)';
+    editTag.textContent = T('editedTag');
     const star = el.querySelector('.bubble-favorite-star');
     const actionBtn = el.querySelector('.bubble-action-trigger');
     if (star) el.insertBefore(textSpan, star); else if (actionBtn) el.insertBefore(textSpan, actionBtn); else el.appendChild(textSpan);
@@ -1097,8 +1461,8 @@ function applyMessageEdited(payload){
 function applyMessageDeleted(payload){
   const el = document.querySelector('.chat-bubble[data-message-id="' + payload.id + '"]');
   const cached = messageCache.get(payload.id);
-  if (el) { el.className = el.className.split(' ')[0] + ' ' + (el.classList.contains('me') ? 'me' : 'them') + ' deleted'; el.innerHTML = ''; el.textContent = '삭제된 메시지입니다'; }
-  if (cached) { cached.deleted = true; cached.previewText = '삭제된 메시지'; }
+  if (el) { el.className = el.className.split(' ')[0] + ' ' + (el.classList.contains('me') ? 'me' : 'them') + ' deleted'; el.innerHTML = ''; el.textContent = T('deletedMsg'); }
+  if (cached) { cached.deleted = true; cached.previewText = T('deletedPreview'); }
 }
 
 // ── 즐겨찾기 ──
@@ -1135,8 +1499,8 @@ async function saveMessageToKeep(messageId){
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-    alert('메모함에 저장했어요.');
-  } catch (e) { console.error('[hotline-room] 메모 저장 실패', e); alert('저장에 실패했어요.'); }
+    alert(T('alertKeepSaved'));
+  } catch (e) { console.error('[hotline-room] 메모 저장 실패', e); alert(T('alertKeepSaveFail')); }
 }
 
 // ── 메시지 작업 메뉴(⋯ 눌렀을 때) ──
@@ -1162,7 +1526,7 @@ document.getElementById('actionEdit').addEventListener('click', () => { const id
 document.getElementById('actionDelete').addEventListener('click', async () => {
   const id = currentActionMessageId; closeActionSheet();
   if (!id) return;
-  if (!confirm('이 메시지를 삭제할까요?')) return;
+  if (!confirm(T('confirmDeleteMsg'))) return;
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message-delete`, {
       method: 'POST', headers: authHeaders(),
@@ -1188,12 +1552,12 @@ document.getElementById('openFavoritesBtn').addEventListener('click', () => {
 function renderFavoritesPanel(){
   const list = document.getElementById('favoritesList');
   const ids = Array.from(myFavoriteMessageIds);
-  if (ids.length === 0) { list.innerHTML = '<div class="panel-empty">즐겨찾기한 메시지가 없어요.</div>'; return; }
+  if (ids.length === 0) { list.innerHTML = '<div class="panel-empty">' + T('favEmpty') + '</div>'; return; }
   list.innerHTML = ids.map((id) => {
     const c = messageCache.get(id);
     if (!c) return '';
     return `<div class="panel-item"><div class="panel-item-text">${c.sender_nickname}: ${c.previewText}</div></div>`;
-  }).join('') || '<div class="panel-empty">즐겨찾기한 메시지가 없어요.</div>';
+  }).join('') || '<div class="panel-empty">' + T('favEmpty') + '</div>';
 }
 
 // ── 내 메모함 패널 ──
@@ -1204,7 +1568,7 @@ document.getElementById('openKeepBtn').addEventListener('click', async () => {
 });
 async function loadKeepNotes(){
   const list = document.getElementById('keepList');
-  list.innerHTML = '<div class="panel-empty">불러오는 중…</div>';
+  list.innerHTML = '<div class="panel-empty">' + T('loading') + '</div>';
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-keep-list`, {
       method: 'POST', headers: authHeaders(),
@@ -1212,13 +1576,13 @@ async function loadKeepNotes(){
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-    if (!data.notes || data.notes.length === 0) { list.innerHTML = '<div class="panel-empty">저장한 메모가 없어요.</div>'; return; }
+    if (!data.notes || data.notes.length === 0) { list.innerHTML = '<div class="panel-empty">' + T('keepEmpty') + '</div>'; return; }
     const rows = await Promise.all(data.notes.map(async (n) => {
       let text;
       if (n.note_text) text = roomIsSecure ? await safeDecryptText(n.note_text) : n.note_text;
       else if (n.hotline_messages) text = n.hotline_messages.sender_nickname + ': ' + (n.hotline_messages.message_type === 'text' ? (roomIsSecure ? await safeDecryptText(n.hotline_messages.content) : n.hotline_messages.content) : '(' + n.hotline_messages.message_type + ')');
-      else text = '(삭제된 메시지)';
-      return `<div class="panel-item"><div class="panel-item-text">${text}<div class="panel-item-meta">${new Date(n.created_at).toLocaleDateString('ko-KR')}</div></div><button class="panel-item-del" data-note-id="${n.id}">✕</button></div>`;
+      else text = T('deletedQuoted');
+      return `<div class="panel-item"><div class="panel-item-text">${text}<div class="panel-item-meta">${new Date(n.created_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR')}</div></div><button class="panel-item-del" data-note-id="${n.id}">✕</button></div>`;
     }));
     list.innerHTML = rows.join('');
     list.querySelectorAll('.panel-item-del').forEach((btn) => {
@@ -1230,7 +1594,7 @@ async function loadKeepNotes(){
         loadKeepNotes();
       });
     });
-  } catch (e) { console.error('[hotline-room] 메모함 조회 실패', e); list.innerHTML = '<div class="panel-empty">불러오지 못했어요.</div>'; }
+  } catch (e) { console.error('[hotline-room] 메모함 조회 실패', e); list.innerHTML = '<div class="panel-empty">' + T('panelLoadFail') + '</div>'; }
 }
 document.getElementById('keepFreeNoteSaveBtn').addEventListener('click', async () => {
   const input = document.getElementById('keepFreeNoteInput');
@@ -1244,7 +1608,7 @@ document.getElementById('keepFreeNoteSaveBtn').addEventListener('click', async (
       body: JSON.stringify({ hotlineId, noteText: payloadText, memberAnonId: accessToken ? undefined : hotlineAnonId }),
     });
     loadKeepNotes();
-  } catch (e) { console.error('[hotline-room] 메모 저장 실패', e); alert('저장에 실패했어요.'); }
+  } catch (e) { console.error('[hotline-room] 메모 저장 실패', e); alert(T('alertKeepSaveFail')); }
 });
 
 // 패널 공통 닫기 버튼
@@ -1268,11 +1632,11 @@ function renderGoalsStrip(){
     else label = diffDays <= 0 ? ('D+' + Math.abs(diffDays)) : ('D-' + diffDays); // countup인데 아직 그날 전이면 역시 D- 로 보여줌
     return `<div class="goal-chip"><span class="goal-days">${label}</span><span>${g.title}</span><button class="goal-del" data-goal-id="${g.id}">✕</button></div>`;
   }).join('');
-  strip.innerHTML = chips + '<button type="button" class="goal-add-chip" id="goalAddChip">+ 목표추가</button>';
+  strip.innerHTML = chips + '<button type="button" class="goal-add-chip" id="goalAddChip">' + T('goalAddChip') + '</button>';
   document.getElementById('goalAddChip').addEventListener('click', openGoalModal);
   strip.querySelectorAll('.goal-del').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      if (!confirm('이 목표를 삭제할까요?')) return;
+      if (!confirm(T('confirmDeleteGoal'))) return;
       try {
         await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-goal-delete`, {
           method: 'POST', headers: authHeaders(),
@@ -1289,7 +1653,7 @@ function openGoalModal(){
   document.getElementById('goalDateInput').value = '';
   document.querySelectorAll('.goal-mode-tab').forEach((t) => t.classList.remove('active'));
   document.querySelector('.goal-mode-tab[data-mode="countdown"]').classList.add('active');
-  document.getElementById('goalModeHint').textContent = '여행처럼 앞으로 다가올 날짜를 선택하세요. "며칠 남았는지" 보여줘요.'; // 2026-08-23 신설: 모달 새로 열 때 힌트도 초기화
+  document.getElementById('goalModeHint').textContent = T('goalHintCountdown'); // 2026-08-23 신설: 모달 새로 열 때 힌트도 초기화
   document.getElementById('goalModalOverlay').classList.add('show');
 }
 document.getElementById('goalCancelBtn').addEventListener('click', () => document.getElementById('goalModalOverlay').classList.remove('show'));
@@ -1299,15 +1663,15 @@ document.querySelectorAll('.goal-mode-tab').forEach((tab) => {
     tab.classList.add('active');
     // 2026-08-23 신설: 방식에 따라 안내문구도 같이 바뀌도록 — 헷갈리기 쉬운 부분이라 명확히 함
     document.getElementById('goalModeHint').textContent = tab.dataset.mode === 'countdown'
-      ? '여행처럼 앞으로 다가올 날짜를 선택하세요. "며칠 남았는지" 보여줘요.'
-      : '"우리 만난 날"처럼 이미 지난 날짜를 선택하세요. "그날부터 며칠째"인지(우리 1일, 2일…) 보여줘요.';
+      ? T('goalHintCountdown')
+      : T('goalHintCountup');
   });
 });
 document.getElementById('goalSaveBtn').addEventListener('click', async () => {
   const title = document.getElementById('goalTitleInput').value.trim();
   const targetDate = document.getElementById('goalDateInput').value;
   const mode = document.querySelector('.goal-mode-tab.active').dataset.mode;
-  if (!title || !targetDate) { alert('제목과 날짜를 모두 입력해주세요.'); return; }
+  if (!title || !targetDate) { alert(T('alertGoalFields')); return; }
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-goal-create`, {
       method: 'POST', headers: authHeaders(),
@@ -1363,7 +1727,7 @@ document.getElementById('chatInput').addEventListener('input', () => {
 });
 function showTypingIndicator(nickname){
   const el = document.getElementById('typingIndicator');
-  el.textContent = nickname + '님이 입력 중…';
+  el.textContent = (LANG === 'en') ? (nickname + ' is typing…') : (nickname + '님이 입력 중…');
   el.style.display = 'block';
   clearTimeout(typingIndicatorTimeout);
   typingIndicatorTimeout = setTimeout(() => { el.style.display = 'none'; }, 3000);
@@ -1383,7 +1747,7 @@ function refreshReadTags(){
     // 2026-08-23 수정: 시간 표시 행 안의 읽음상태 칸에 채워 넣음(이제 시간과 같은 줄에 표시됨)
     const statusEl = document.querySelector('.msg-time-row[data-message-id="' + el.dataset.messageId + '"] .msg-read-status');
     if (!statusEl) return;
-    statusEl.textContent = isReadByOthers(cached.createdAt) ? '읽음' : '';
+    statusEl.textContent = isReadByOthers(cached.createdAt) ? T('readTag') : '';
   });
 }
 async function markAsRead(){
@@ -1396,22 +1760,80 @@ async function markAsRead(){
 }
 
 // ── 오늘의 질문 ──
-const DAILY_QUESTIONS = [
-  '오늘 가장 웃겼던 일은?', '요즘 가장 듣고 싶은 노래는?', '이번 주말에 하고 싶은 것 한 가지는?',
-  '최근에 감동받았던 순간은?', '요즘 가장 자주 먹는 음식은?', '어릴 때 꿈꿨던 직업은?',
-  '지금 가장 가고 싶은 여행지는?', '오늘 하루를 색깔로 표현한다면?', '최근에 산 물건 중 가장 만족스러운 건?',
-  '스트레스 풀 때 뭐 해?', '요즘 빠져있는 취미가 있다면?', '기억에 남는 선물은?',
-  '오늘 점심(저녁)엔 뭐 먹었어?', '최근에 본 영화나 드라마 추천해줄래?', '지금 날씨 어때? 뭐 하고 싶어져?',
-  '어릴 때 별명이 뭐였어?', '요즘 잠은 잘 자?', '오늘 컨디션 1~10점 중 몇 점이야?',
-  '최근에 새로 배운 것이 있다면?', '지금 당장 떠날 수 있다면 어디로 가고 싶어?',
-  '오늘 하루 중 가장 좋았던 순간은?', '요즘 고민이 있다면 뭐야?', '최근에 웃참했던 순간이 있어?',
-  '만약 하루 휴가가 생긴다면 뭐 할래?', '지금 듣고 있는 노래(또는 최근 애청곡)는?',
-  '오늘 날씨처럼 기분도 그래?', '최근에 다녀온 곳 중 좋았던 곳은?', '요즘 관심있는 뉴스나 화제가 있어?',
-  '지금 제일 먹고 싶은 음식은?', '오늘 나한테 칭찬 한마디 해줄래?',
+// ⚠ 2026-08-25: 두 배열의 순서와 개수를 반드시 맞춰둘 것.
+//    같은 날짜에는 같은 번호를 꺼내므로, 어긋나면 참가자끼리 서로 다른 질문을 보게 됨.
+const DAILY_QUESTIONS_KO = [
+  '오늘 가장 웃겼던 일은?',
+  '요즘 가장 듣고 싶은 노래는?',
+  '이번 주말에 하고 싶은 것 한 가지는?',
+  '최근에 감동받았던 순간은?',
+  '요즘 가장 자주 먹는 음식은?',
+  '어릴 때 꿈꿨던 직업은?',
+  '지금 가장 가고 싶은 여행지는?',
+  '오늘 하루를 색깔로 표현한다면?',
+  '최근에 산 물건 중 가장 만족스러운 건?',
+  '스트레스 풀 때 뭐 해?',
+  '요즘 빠져있는 취미가 있다면?',
+  '기억에 남는 선물은?',
+  '오늘 점심(저녁)엔 뭐 먹었어?',
+  '최근에 본 영화나 드라마 추천해줄래?',
+  '지금 날씨 어때? 뭐 하고 싶어져?',
+  '어릴 때 별명이 뭐였어?',
+  '요즘 잠은 잘 자?',
+  '오늘 컨디션 1~10점 중 몇 점이야?',
+  '최근에 새로 배운 것이 있다면?',
+  '지금 당장 떠날 수 있다면 어디로 가고 싶어?',
+  '오늘 하루 중 가장 좋았던 순간은?',
+  '요즘 고민이 있다면 뭐야?',
+  '최근에 웃참했던 순간이 있어?',
+  '만약 하루 휴가가 생긴다면 뭐 할래?',
+  '지금 듣고 있는 노래(또는 최근 애청곡)는?',
+  '오늘 날씨처럼 기분도 그래?',
+  '최근에 다녀온 곳 중 좋았던 곳은?',
+  '요즘 관심있는 뉴스나 화제가 있어?',
+  '지금 제일 먹고 싶은 음식은?',
+  '오늘 나한테 칭찬 한마디 해줄래?',
 ];
+const DAILY_QUESTIONS_EN = [
+  'What was the funniest thing that happened today?',
+  'What song do you most want to listen to lately?',
+  'Name one thing you want to do this weekend.',
+  'What recently moved you?',
+  'What food have you been eating most lately?',
+  'What did you want to be when you were little?',
+  'Where do you most want to travel right now?',
+  'If you painted today one colour, which would it be?',
+  'What\'s the best thing you\'ve bought recently?',
+  'What do you do to relieve stress?',
+  'Any hobby you\'re really into right now?',
+  'What\'s a gift you still remember?',
+  'What did you have for lunch (or dinner) today?',
+  'Seen any film or show lately you\'d recommend?',
+  'How\'s the weather there? Does it make you want to do anything?',
+  'What was your nickname as a kid?',
+  'Have you been sleeping well lately?',
+  'How would you rate today, 1 to 10?',
+  'Have you learned anything new recently?',
+  'If you could leave right now, where would you go?',
+  'What was the best moment of your day?',
+  'Is anything weighing on your mind lately?',
+  'When did you last try not to laugh and fail?',
+  'If you got a day off tomorrow, what would you do?',
+  'What are you listening to right now (or on repeat lately)?',
+  'Does your mood match the weather today?',
+  'What\'s the best place you\'ve been to recently?',
+  'Any news or topic you\'re curious about lately?',
+  'What do you most want to eat right now?',
+  'Say one nice thing about yourself today.',
+];
+function dailyQuestionList(){
+  return (LANG === 'en') ? DAILY_QUESTIONS_EN : DAILY_QUESTIONS_KO;
+}
+
 function getTodayQuestion(){
+  const list = dailyQuestionList();
   const dayIndex = Math.floor(Date.now() / 86400000);
-  return DAILY_QUESTIONS[dayIndex % DAILY_QUESTIONS.length];
+  return list[dayIndex % list.length];
 }
 function initDailyQuestion(){
   const dateKey = new Date().toISOString().slice(0, 10);
@@ -1466,13 +1888,13 @@ document.getElementById('searchInput').addEventListener('input', () => {
     if (el.textContent.toLowerCase().includes(query)) { el.classList.add('search-match'); searchMatches.push(el); }
   });
   if (searchMatches.length > 0) { searchCurrentIndex = 0; focusSearchMatch(); }
-  else document.getElementById('searchCount').textContent = '0건';
+  else document.getElementById('searchCount').textContent = T('searchZero');
 });
 function focusSearchMatch(){
   document.querySelectorAll('.search-current').forEach((el) => el.classList.remove('search-current'));
   const el = searchMatches[searchCurrentIndex];
   if (el) { el.classList.add('search-current'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-  document.getElementById('searchCount').textContent = searchMatches.length > 0 ? (searchCurrentIndex + 1) + '/' + searchMatches.length : '0건';
+  document.getElementById('searchCount').textContent = searchMatches.length > 0 ? (searchCurrentIndex + 1) + '/' + searchMatches.length : T('searchZero');
 }
 document.getElementById('searchNextBtn').addEventListener('click', () => {
   if (searchMatches.length === 0) return;
@@ -1583,7 +2005,7 @@ async function startVoiceRecording(){
     }, 500);
   } catch (e) {
     console.error('[hotline-room] 녹음 시작 실패', e);
-    alert('마이크 권한이 필요해요.');
+    alert(T('alertMicPerm'));
   }
 }
 document.getElementById('voiceMsgBtn').addEventListener('click', () => { closePlusMenu(); startVoiceRecording(); });
@@ -1727,7 +2149,8 @@ async function applyMusicSync(payload){
     document.getElementById('musicEmptyState').style.display = 'none';
   }
 
-  document.getElementById('musicNowLabel').textContent = (payload.setByNickname || '누군가') + '님이 튼 노래';
+  const setBy = payload.setByNickname || T('musicUnknown');
+  document.getElementById('musicNowLabel').textContent = (LANG === 'en') ? (setBy + ' picked this track') : (setBy + '님이 튼 노래');
 
   // 네트워크 지연 보정: 신호를 보낸 시점 이후로 흐른 시간만큼 위치를 앞으로 당겨줌
   let targetPosition = payload.positionSeconds || 0;
@@ -1755,7 +2178,7 @@ document.getElementById('navMusic').addEventListener('click', () => { showState(
 document.getElementById('musicLoadBtn').addEventListener('click', async () => {
   const url = document.getElementById('musicUrlInput').value.trim();
   const videoId = extractYoutubeId(url);
-  if (!videoId) { alert('올바른 유튜브 링크가 아니에요.'); return; }
+  if (!videoId) { alert(T('alertBadYoutube')); return; }
   await sendMusicSync('load', { youtubeId: videoId });
   document.getElementById('musicUrlInput').value = '';
 });
@@ -1766,11 +2189,11 @@ document.getElementById('musicFileInput').addEventListener('change', async (e) =
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
-  if (file.size > 30 * 1024 * 1024) { alert('음원 파일이 너무 커요 (최대 30MB).'); return; }
+  if (file.size > 30 * 1024 * 1024) { alert(T('alertMusicTooBig')); return; }
 
   const btn = document.getElementById('musicFileBtn');
   const original = btn.textContent;
-  btn.textContent = '올리는 중…'; btn.disabled = true;
+  btn.textContent = T('uploading'); btn.disabled = true;
   try {
     let base64Data;
     if (roomIsSecure) {
@@ -1794,7 +2217,7 @@ document.getElementById('musicFileInput').addEventListener('change', async (e) =
     await sendMusicSync('load', { audioUrl: uploadData.url });
   } catch (e) {
     console.error('[hotline-room] 음원 업로드 실패', e);
-    alert('음원 파일을 올리지 못했어요: ' + (e.message || ''));
+    alert(T('alertMusicUploadFail') + (e.message || ''));
   } finally {
     btn.textContent = original; btn.disabled = false;
   }
@@ -1850,7 +2273,7 @@ async function uploadAndSendFile(file){
   // 2026-08-22 신설: 사진이면 업로드 전에 압축(카톡과 비슷한 방식) — 용량 제한에 덜 걸리고 빨라짐
   if (fileType === 'photo') file = await aliascallCompressImage(file);
   const limitMb = fileType === 'video' ? 80 : fileType === 'photo' ? 8 : fileType === 'voice' ? 15 : 20;
-  if (file.size > limitMb * 1024 * 1024) { alert(`파일이 너무 커요 (최대 ${limitMb}MB).`); return; }
+  if (file.size > limitMb * 1024 * 1024) { alert(LANG === 'en' ? `That file is too large (${limitMb}MB maximum).` : `파일이 너무 커요 (최대 ${limitMb}MB).`); return; }
 
   try {
     let base64Data;
@@ -1890,7 +2313,7 @@ async function uploadAndSendFile(file){
     showState('stateChat'); updateNavActive('navChat');
   } catch (e) {
     console.error('[hotline-room] 파일 전송 실패', e);
-    alert('파일을 보내지 못했어요: ' + (e.message || ''));
+    alert(T('alertFileSendFail') + (e.message || ''));
   }
 }
 
@@ -1915,7 +2338,7 @@ let isMuted = false;
 async function startCall(mode){
   if (activeCall) return;
   activeCall = mode;
-  document.getElementById('callStatus').textContent = '연결 중…';
+  document.getElementById('callStatus').textContent = T('callStatusConnecting');
   document.getElementById('tilesGrid').innerHTML = '';
   document.getElementById('muteBtn').textContent = '🎤';
   isMuted = false;
@@ -1926,7 +2349,7 @@ async function startCall(mode){
       video: mode === 'video',
     });
   } catch (e) {
-    alert('마이크(또는 카메라) 권한이 필요합니다.');
+    alert(T('alertMicCamPerm'));
     activeCall = null;
     showState('stateChat'); updateNavActive('navChat');
     return;
@@ -1954,7 +2377,7 @@ async function startCall(mode){
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         await callChannel.track({ nickname: myNickname, mode });
-        document.getElementById('callStatus').textContent = '통화 중';
+        document.getElementById('callStatus').textContent = T('callStatusInCall');
       }
     });
 
@@ -2026,7 +2449,7 @@ function ensureTilePlaceholder(anonId){
   const tile = document.createElement('div');
   tile.className = 'peer-tile';
   tile.id = 'tile-' + anonId;
-  tile.innerHTML = '<div class="avatar-fallback">🎧</div><div class="tile-label">' + (memberNicknames[anonId] || '참가자') + '</div>';
+  tile.innerHTML = '<div class="avatar-fallback">🎧</div><div class="tile-label">' + (memberNicknames[anonId] || T('tileParticipant')) + '</div>';
   document.getElementById('tilesGrid').appendChild(tile);
 }
 
@@ -2047,7 +2470,7 @@ function renderPeerTile(anonId, stream){
     tile.appendChild(fallback);
   }
   const label = document.createElement('div');
-  label.className = 'tile-label'; label.textContent = memberNicknames[anonId] || '참가자';
+  label.className = 'tile-label'; label.textContent = memberNicknames[anonId] || T('tileParticipant');
   tile.appendChild(label);
 }
 
@@ -2096,7 +2519,7 @@ async function endCall(){
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ hotlineId, reportedByAnonId: mySenderAnonId, bytesRelayed: totalBytes }),
     }).then((r) => r.json()).then((d) => {
-      if (d.isOverCap) alert('이 핫라인의 이번 결제주기 사용량 한도를 초과했어요. 추가결제가 필요할 수 있습니다.');
+      if (d.isOverCap) alert(T('alertOverCap'));
     }).catch(() => {});
   }
 
@@ -2127,7 +2550,7 @@ document.getElementById('muteBtn').addEventListener('click', () => {
 // 2026-08-24 신설: 신고 — 더보기(⋯) 메뉴에서 열림
 document.getElementById('openReportBtn').addEventListener('click', () => {
   document.getElementById('moreMenuOverlay').classList.remove('show');
-  if (!hotlineId) { alert('잠시 후 다시 시도해주세요.'); return; }
+  if (!hotlineId) { alert(T('alertTryLater')); return; }
   aliascallOpenReport({ context: 'hotline', targetId: hotlineId });
 });
 
