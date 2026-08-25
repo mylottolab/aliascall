@@ -111,6 +111,19 @@ main{ max-width:600px; margin:0 auto; padding:24px 20px 60px; }
 .status-ribbon.found{ background:rgba(46,125,79,.1); color:var(--found); }
 .post-desc{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 
+/* 2026-08-25 신설: 목록 썸네일 + 게시글 번호
+   ⚠ QR코드와 연결 토큰은 목록에 절대 노출하지 않음. 토큰이 노출되면 봇이 긁어가
+   실종자 보호자에게 스팸·사기 연락이 갈 수 있음. 연락은 "제보하기" 버튼으로만. */
+.post-thumb{ width:56px; height:56px; border-radius:10px; object-fit:cover; background:var(--paper); flex-shrink:0; }
+.post-thumb-empty{ width:56px; height:56px; border-radius:10px; background:var(--paper); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+.post-code{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft); letter-spacing:.5px; margin-top:4px; }
+.detail-photos{ display:flex; gap:8px; overflow-x:auto; margin-bottom:18px; padding-bottom:4px; }
+.detail-photos img{ width:120px; height:120px; border-radius:12px; object-fit:cover; flex-shrink:0; cursor:pointer; background:var(--paper); }
+.detail-code{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); margin-bottom:14px; letter-spacing:.5px; }
+.photo-lightbox{ display:none; position:fixed; inset:0; background:rgba(18,48,46,.9); z-index:80; align-items:center; justify-content:center; padding:20px; }
+.photo-lightbox.show{ display:flex; }
+.photo-lightbox img{ max-width:100%; max-height:85vh; border-radius:12px; }
+
 .empty-state{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13px; }
 .empty-state .big{ font-size:36px; margin-bottom:12px; }
 
@@ -186,6 +199,9 @@ main{ max-width:600px; margin:0 auto; padding:24px 20px 60px; }
   <div id="postsArea"></div>
 </main>
 
+<!-- 2026-08-25 신설: 사진 확대보기 -->
+<div class="photo-lightbox" id="photoLightbox"><img id="photoLightboxImg" src="" alt=""></div>
+
 <!-- 2026-08-25 신설: 글쓰기 -->
 <button type="button" class="write-fab" id="writeFab" data-i18n="writeFab">✏️ 글쓰기</button>
 
@@ -253,6 +269,8 @@ main{ max-width:600px; margin:0 auto; padding:24px 20px 60px; }
     <div class="detail-emoji" id="dEmoji"></div>
     <div class="detail-title" id="dTitle"></div>
     <div class="status-ribbon searching" id="dStatus"></div>
+    <div class="detail-code" id="dCode"></div>
+    <div class="detail-photos" id="dPhotos" style="display:none;"></div>
 
     <div class="sixw-grid">
       <div class="sixw-item"><div class="sixw-label" data-i18n="labelWhen">언제</div><div class="sixw-value" id="dWhen"></div></div>
@@ -291,6 +309,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // 언어 선택값은 다른 화면과 동일하게 localStorage('aliascall_lang')를 공유함.
 const I18N = {
   ko: {
+    postCodeLabel: '게시글번호',
     howtoHtml: '<div class="howto-title">📢 분실·실종 소식을 올리고 싶으신가요?</div><ol class="howto-steps"><li><b>마이페이지</b>에서 닉네임과 비밀번호만으로 간단히 가입합니다.</li><li>찾고 계신 <b>아이·어르신·반려동물·물건</b>을 등록합니다.</li><li>이 화면 오른쪽 아래 <b>✏️ 글쓰기</b>를 눌러 게시합니다.</li></ol><div class="howto-note">가입과 게시는 <b>모두 무료</b>입니다. 등록을 거치는 이유는, 제보하시는 분이 <b>전화번호 노출 없이</b> 연락드릴 수 있게 하기 위해서입니다. <a href="aliascall_my_account.html">가입하러 가기 →</a></div>',
     emptyHint: '분실·실종 소식을 올리시려면 위 안내를 참고해주세요.',
     writeFab: '✏️ 글쓰기',
@@ -347,6 +366,7 @@ const I18N = {
     contactAlert: '브라우저에서 음성/영상 연결이 시작됩니다. (WebRTC, 실제번호 비노출)',
   },
   en: {
+    postCodeLabel: 'Post no.',
     howtoHtml: '<div class="howto-title">📢 Want to post a missing or lost report?</div><ol class="howto-steps"><li>Sign up on <b>My Page</b> — just a nickname and a password.</li><li>Register the <b>child, elderly person, pet, or item</b> you are looking for.</li><li>Tap <b>✏️ New post</b> at the bottom right of this screen.</li></ol><div class="howto-note">Signing up and posting are <b>completely free</b>. Registration is required so that anyone with a tip can reach you <b>without your phone number being exposed</b>. <a href="aliascall_my_account.html">Go to sign up →</a></div>',
     emptyHint: 'To post a missing or lost report, see the guide above.',
     writeFab: '✏️ New post',
@@ -463,6 +483,49 @@ async function fetchPosts(){
   return data || [];
 }
 
+// =====================================================
+// 2026-08-25 신설: 목록/상세 사진, 게시글 번호
+// ⚠ QR코드와 qr_code_token은 여기서 절대 다루지 않음.
+//   토큰은 소유자에게 연락이 닿는 열쇠라, 목록에 뿌리면 봇이 긁어가
+//   실종자 보호자에게 스팸·사기 연락이 갈 수 있음.
+//   연락은 "제보하기 · 지금 연결하기" 버튼에서 그 순간에만 토큰을 조회해 처리함.
+// =====================================================
+const photoCache = {};   // registration_id -> [url, ...]
+
+// 게시글 번호: 사람이 전화로 불러줄 수 있게 UUID 앞 6자리를 대문자로
+function postCode(id){
+  return String(id).replace(/-/g, '').slice(0, 6).toUpperCase();
+}
+
+// 목록에 보이는 글들의 공개 사진을 한 번에 조회 (글마다 따로 부르면 느려짐)
+async function loadPhotosFor(posts){
+  const ids = posts.map((p) => p.registration_id).filter(Boolean);
+  if (ids.length === 0) return;
+
+  const { data, error } = await sb.from('media_files')
+    .select('registration_id, storage_path, created_at')
+    .in('registration_id', ids)
+    .eq('media_type', 'photo')
+    .eq('is_public', true)          // 비문 등 비공개 생체정보는 다른 버킷이라 애초에 안 나옴
+    .order('created_at', { ascending: true });
+
+  if (error || !data) { console.error('[board] 사진 조회 실패', error); return; }
+
+  data.forEach((f) => {
+    const { data: pub } = sb.storage.from('aliascall-media').getPublicUrl(f.storage_path);
+    if (!photoCache[f.registration_id]) photoCache[f.registration_id] = [];
+    if (photoCache[f.registration_id].length < 5) photoCache[f.registration_id].push(pub.publicUrl);
+  });
+}
+
+function photoThumbHtml(p){
+  const urls = photoCache[p.registration_id] || [];
+  if (urls.length > 0) {
+    return '<img class="post-thumb" src="' + urls[0] + '" alt="" loading="lazy">';
+  }
+  return '<div class="post-thumb-empty">' + (CATEGORY_EMOJI[p.category] || '❓') + '</div>';
+}
+
 function fmtWhen(iso){
   if (!iso) return T().unknownTime;
   const d = new Date(iso);
@@ -475,6 +538,7 @@ async function renderPosts(){
   area.innerHTML = '<div class="empty-state"><div class="big">⏳</div>' + T().loading + '</div>';
 
   currentPosts = await fetchPosts();
+  await loadPhotosFor(currentPosts);   // 2026-08-25: 썸네일용 사진 확보
 
   if (currentPosts.length === 0) {
     area.innerHTML = '<div class="empty-state"><div class="big">📋</div>' + T().emptyList
@@ -485,10 +549,11 @@ async function renderPosts(){
   area.innerHTML = currentPosts.map(p => `
     <div class="post-card" data-id="${p.id}">
       <div class="post-head">
-        <span class="post-emoji">${CATEGORY_EMOJI[p.category] || '❓'}</span>
+        ${photoThumbHtml(p)}
         <span class="post-titles">
           <div class="post-title">${(p.registrations && p.registrations.title) || CATEGORY_TITLE_FALLBACK_OF(p.category) || T().fallbackPost}</div>
           <div class="post-meta">${fmtWhen(p.occurred_at)} · ${p.last_seen_location || T().unknownPlace}</div>
+          <div class="post-code">${T().postCodeLabel} ${postCode(p.id)}</div>
         </span>
         <span class="status-ribbon ${p.status}">${p.status === 'searching' ? T().statusSearching : T().statusFound}</span>
       </div>
@@ -516,6 +581,26 @@ function openDetail(id){
   document.getElementById('dWhere').textContent = p.last_seen_location || T().unknownPlace;
   document.getElementById('dHow').textContent = p.circumstance || '';
   document.getElementById('dDesc').textContent = p.public_description || '';
+
+  // 2026-08-25: 게시글 번호 — 제보자가 전화로 불러줄 수 있게
+  document.getElementById('dCode').textContent = T().postCodeLabel + ' ' + postCode(p.id);
+
+  // 2026-08-25: 사진 (최대 5장, 눌러서 확대)
+  const photosEl = document.getElementById('dPhotos');
+  const urls = photoCache[p.registration_id] || [];
+  if (urls.length > 0) {
+    photosEl.innerHTML = urls.map((u) => '<img src="' + u + '" alt="" loading="lazy">').join('');
+    photosEl.style.display = 'flex';
+    photosEl.querySelectorAll('img').forEach((img) => {
+      img.addEventListener('click', () => {
+        document.getElementById('photoLightboxImg').src = img.src;
+        document.getElementById('photoLightbox').classList.add('show');
+      });
+    });
+  } else {
+    photosEl.innerHTML = '';
+    photosEl.style.display = 'none';
+  }
   // 2026-08-25: 내가 올린 글이면 "찾았어요 / 글 내리기" 버튼 노출
   const isMine = myRegistrationIdSet.has(String(p.registration_id));
   const actions = document.getElementById('myPostActions');
@@ -527,6 +612,10 @@ function openDetail(id){
   }
   document.getElementById('detailOverlay').classList.add('show');
 }
+document.getElementById('photoLightbox').addEventListener('click', (e) => {
+  e.currentTarget.classList.remove('show');
+});
+
 document.getElementById('detailClose').addEventListener('click', () => {
   document.getElementById('detailOverlay').classList.remove('show');
 });
