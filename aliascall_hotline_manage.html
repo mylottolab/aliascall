@@ -70,6 +70,42 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 /* 2026-08-25 신설: 언어 전환 버튼 */
 .lang-toggle{ margin-left:auto; background:var(--card,#fff); color:inherit; border:1.5px solid var(--line); border-radius:20px; padding:6px 13px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; }
 .lang-toggle:active{ opacity:.6; }
+
+/* 2026-08-26 신설(v51): 전문관리용 구독 관리 */
+.section-head{ font-size:13px; font-weight:700; color:var(--teal-deep); margin:18px 0 10px; }
+.sub-card{ background:var(--card); border:1.5px solid var(--teal); border-radius:14px; padding:16px; margin-bottom:14px; }
+.sub-top{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.sub-name{ font-size:15px; font-weight:700; flex:1; min-width:0; }
+.sub-badge{ font-size:11px; font-weight:700; padding:3px 9px; border-radius:11px; background:var(--teal-tint); color:var(--teal-deep); white-space:nowrap; }
+.sub-badge.warn{ background:#FDF0D5; color:#8A6A1F; }
+.sub-badge.danger{ background:#FCE9E6; color:var(--danger); }
+.sub-meta{ display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--ink-soft); margin-bottom:12px; }
+.sub-meta b{ color:var(--ink); }
+.sub-bar{ height:5px; background:var(--line); border-radius:3px; overflow:hidden; margin-bottom:12px; }
+.sub-bar i{ display:block; height:100%; background:var(--teal); }
+.sub-bar i.warn{ background:#D9A441; }
+.sub-bar i.danger{ background:var(--danger); }
+.sub-tools{ display:flex; gap:7px; margin-bottom:12px; flex-wrap:wrap; }
+.sub-tools input{ flex:1; min-width:140px; border:1.5px solid var(--line); border-radius:9px; padding:9px 11px; font-size:13px; font-family:inherit; }
+.sub-tools button{ border:none; border-radius:9px; padding:9px 14px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; background:var(--teal); color:#fff; white-space:nowrap; }
+.sub-tools button:disabled{ opacity:.45; cursor:default; }
+.sub-tools button.ghost{ background:var(--teal-tint); color:var(--teal-deep); }
+.new-room-box{ display:none; background:var(--teal-tint); border-radius:11px; padding:12px; margin-bottom:12px; }
+.new-room-box.show{ display:block; }
+.new-room-box label{ font-size:11.5px; color:var(--ink-soft); display:block; margin-bottom:5px; }
+.new-room-box input{ width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:9px; padding:9px 11px; font-size:13px; font-family:inherit; margin-bottom:8px; }
+.room-row{ display:flex; align-items:center; gap:9px; padding:10px 2px; border-top:1px solid var(--line); }
+.room-row.dim{ opacity:.55; }
+.room-info{ flex:1; min-width:0; }
+.room-name{ font-size:13px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.room-sub{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+.room-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.room-dot.on{ background:var(--found,#2E7D4F); }
+.room-dot.off{ background:var(--line); }
+.room-acts{ display:flex; gap:5px; flex-shrink:0; }
+.room-acts button{ border:1.5px solid var(--line); background:#fff; border-radius:8px; padding:6px 9px; font-size:11px; cursor:pointer; font-family:inherit; color:var(--ink); white-space:nowrap; }
+.rooms-more{ text-align:center; font-size:12px; color:var(--teal); background:none; border:none; cursor:pointer; padding:10px; width:100%; font-family:inherit; }
+.sub-status{ font-size:11.5px; color:var(--ink-soft); min-height:15px; margin-top:6px; }
 </style>
 </head>
 <body>
@@ -86,7 +122,14 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
   <div class="page-title" data-i18n="pageTitle">핫라인 관리</div>
   <div class="login-needed" id="loginNeeded" data-i18n="loginNeeded">로그인이 필요합니다.</div>
   <div id="content">
-    <div id="hlList"><div class="empty-state" data-i18n="loading">불러오는 중…</div></div>
+    <!-- 2026-08-26 신설(v51): 전문관리용 구독 -->
+  <div id="subsSection" style="display:none;">
+    <div class="section-head" data-i18n="subsTitle">📁 전문관리용 구독</div>
+    <div id="subsList"></div>
+  </div>
+
+  <div id="legacyHead" class="section-head" style="display:none;" data-i18n="legacyTitle">📌 개별 핫라인</div>
+  <div id="hlList"><div class="empty-state" data-i18n="loading">불러오는 중…</div></div>
   </div>
 </main>
 
@@ -109,6 +152,36 @@ const I18N = {
     loading: '불러오는 중…',
     loadFail: '불러오지 못했어요: ',
     empty: '아직 개설한 핫라인이 없어요.',
+    subsTitle: '📁 전문관리용 구독',
+    subExpires: '만료',
+    subUsage: '사용량',
+    subActive: '활성',
+    subArchived: '접어둠',
+    newRoomBtn: '+ 새 방 만들기',
+    newRoomLabel: '의뢰인 이름 (선택)',
+    newRoomPlaceholder: '예: 김철수 의뢰인',
+    newRoomCreate: '만들기',
+    newRoomCancel: '취소',
+    roomSearch: '이름으로 찾기…',
+    roomsNone: '아직 만든 방이 없어요. "+ 새 방 만들기"를 눌러보세요.',
+    roomsNoMatch: '찾는 방이 없어요.',
+    roomLastTalk: '마지막 대화',
+    roomNever: '대화 없음',
+    roomOpen: '열기',
+    roomCopy: '초대링크',
+    roomArchive: '접어두기',
+    roomUnarchive: '다시 열기',
+    roomRename: '이름 바꾸기',
+    roomUnnamed: '(이름 없음)',
+    showArchived: '접어둔 방 보기',
+    hideArchived: '접어둔 방 숨기기',
+    limitFull: '방 한도를 모두 사용 중입니다. 오래된 방을 접어두거나 한도를 늘려주세요.',
+    subExpired: '구독이 만료되었습니다. 연장 후 이용해주세요.',
+    renewSub: '연장하기',
+    legacyTitle: '📌 개별 핫라인',
+    createFail: '방을 만들지 못했어요.',
+    archiveFail: '처리하지 못했어요.',
+    renamePrompt: '이 방의 이름을 입력하세요',
     stage1: '1차 안내', stage2: '2차 안내', stage3: '마지막 안내 ⚠️',
     renewBtn: '지금 연장하기',
     approve: '승인', reject: '거절',
@@ -131,6 +204,36 @@ const I18N = {
     loading: 'Loading…',
     loadFail: "Couldn't load: ",
     empty: "You haven't created any hotlines yet.",
+    subsTitle: '📁 Pro Business subscriptions',
+    subExpires: 'Expires',
+    subUsage: 'Usage',
+    subActive: 'Active',
+    subArchived: 'Archived',
+    newRoomBtn: '+ New room',
+    newRoomLabel: 'Client name (optional)',
+    newRoomPlaceholder: 'e.g. Kim Chulsoo',
+    newRoomCreate: 'Create',
+    newRoomCancel: 'Cancel',
+    roomSearch: 'Search by name…',
+    roomsNone: 'No rooms yet. Tap "+ New room" to start.',
+    roomsNoMatch: 'No matching rooms.',
+    roomLastTalk: 'Last message',
+    roomNever: 'No messages',
+    roomOpen: 'Open',
+    roomCopy: 'Invite link',
+    roomArchive: 'Archive',
+    roomUnarchive: 'Reopen',
+    roomRename: 'Rename',
+    roomUnnamed: '(No name)',
+    showArchived: 'Show archived',
+    hideArchived: 'Hide archived',
+    limitFull: 'All rooms are in use. Archive an old room or raise your limit.',
+    subExpired: 'Your subscription has expired. Please renew to continue.',
+    renewSub: 'Renew',
+    legacyTitle: '📌 Individual hotlines',
+    createFail: "Couldn't create the room.",
+    archiveFail: "Couldn't complete that.",
+    renamePrompt: 'Enter a name for this room',
     stage1: 'First notice', stage2: 'Second notice', stage3: 'Final notice ⚠️',
     renewBtn: 'Renew now',
     approve: 'Approve', reject: 'Decline',
@@ -181,14 +284,364 @@ document.getElementById('langToggleBtn').addEventListener('click', () => {
 const TIER_LABEL = { hotline_1to1: '핫라인 (2명)', hotline_everybody: '핫라인 에브리바디 (2명)', economy_4: '이코노미 (4명)', premium_4: '프리미엄 (4명)',
   hotline_1to1_secure: '핫라인 Secure (2명)', hotline_everybody_secure: '에브리바디 Secure (2명)', economy_4_secure: '이코노미 Secure (4명)', premium_4_secure: '프리미엄 Secure (4명)' };
 
+
+// =====================================================================
+// 2026-08-26 신설(v51·v55): 전문관리용 구독 관리
+//
+// 기존 8종은 "결제 1건 = 방 1개"라 아래 hlList에 그대로 나옵니다.
+// 전문관리용은 "구독 1건 = 방 여러 개"라 구독 카드 안에 방 목록이 들어갑니다.
+//
+// ⚠ 방이 120개까지 갑니다. 전부 나열하면 못 씁니다. 그래서:
+//   · 기본은 활성 방만, 접어둔 방은 접혀 있음
+//   · 이름 검색이 주 인터페이스
+//   · 처음에는 15개만 보여주고 "더 보기"로 늘림
+// =====================================================================
+
+const PRO_TIER_LABEL = {
+  ko: { pro_starter: '프로 스타터', pro_business: '프로 비즈니스', pro_enterprise: '프로 엔터프라이즈' },
+  en: { pro_starter: 'Pro Starter', pro_business: 'Pro Business', pro_enterprise: 'Pro Enterprise' },
+};
+const ROOMS_PAGE = 15;
+
+let subsCache = [];
+let roomsBySub = {};              // subId -> 방 배열
+const subViewState = {};          // subId -> { keyword, showArchived, shown }
+
+function proTierLabel(tier){
+  return (PRO_TIER_LABEL[LANG] || PRO_TIER_LABEL.ko)[tier] || tier;
+}
+
+// 마지막 대화가 언제였는지 사람이 읽기 쉽게
+function relTime(iso){
+  if (!iso) return T('roomNever');
+  const diff = Date.now() - new Date(iso).getTime();
+  const day = Math.floor(diff / 86400000);
+  if (day <= 0) return (LANG === 'en') ? 'today' : '오늘';
+  if (day === 1) return (LANG === 'en') ? 'yesterday' : '어제';
+  if (day < 30) return (LANG === 'en') ? (day + ' days ago') : (day + '일 전');
+  const mon = Math.floor(day / 30);
+  return (LANG === 'en') ? (mon + ' months ago') : (mon + '개월 전');
+}
+
+// 활성 = 최근 N개월 안에 대화가 있었고 접어두지 않은 방
+// ⚠ 판정 기준(개월)은 관리자 환경설정에서 바뀔 수 있어 서버 값을 그대로 씁니다.
+let activeMonths = 3;
+function isRoomActive(r){
+  if (r.archived_at) return false;
+  if (!r.last_activity_at) return false;
+  return (Date.now() - new Date(r.last_activity_at).getTime()) < activeMonths * 30 * 86400000;
+}
+
+async function loadSubscriptions(){
+  try {
+    const { data: setting } = await sb.rpc('get_setting_number', { p_key: 'active_room_months', p_default: 3 });
+    if (setting) activeMonths = Number(setting) || 3;
+  } catch (e) { /* 기본값 3 사용 */ }
+
+  const { data: subs, error } = await sb.rpc('my_subscriptions_summary');
+  if (error) { console.error('[subs] 조회 실패', error); return; }
+  subsCache = subs || [];
+  if (subsCache.length === 0) { document.getElementById('subsSection').style.display = 'none'; return; }
+
+  // 구독에 속한 방 전부 (한 번에 받아서 화면에서 나눔 — 요청 수를 줄이기 위함)
+  const ids = subsCache.map((s) => s.id);
+  const { data: rooms } = await sb.from('hotlines')
+    .select('id, subscription_id, invite_token, client_label, title, last_activity_at, archived_at, created_at')
+    .in('subscription_id', ids)
+    .order('last_activity_at', { ascending: false });
+
+  roomsBySub = {};
+  (rooms || []).forEach((r) => {
+    if (!roomsBySub[r.subscription_id]) roomsBySub[r.subscription_id] = [];
+    roomsBySub[r.subscription_id].push(r);
+  });
+
+  document.getElementById('subsSection').style.display = 'block';
+  renderSubscriptions();
+}
+
+function renderSubscriptions(){
+  const box = document.getElementById('subsList');
+  box.innerHTML = '';
+  subsCache.forEach((sub) => box.appendChild(renderSubCard(sub)));
+}
+
+function renderSubCard(sub){
+  if (!subViewState[sub.id]) subViewState[sub.id] = { keyword: '', showArchived: false, shown: ROOMS_PAGE };
+  const st = subViewState[sub.id];
+
+  const limit = (sub.max_rooms || 0) + (sub.extra_rooms || 0);
+  const active = sub.active_rooms || 0;
+  const expired = new Date(sub.expires_at) < new Date() || sub.status !== 'active';
+  const ratio = limit > 0 ? Math.min(100, Math.round(active / limit * 100)) : 0;
+  const level = expired ? 'danger' : (ratio >= 100 ? 'danger' : ratio >= 80 ? 'warn' : '');
+
+  const card = document.createElement('div');
+  card.className = 'sub-card';
+
+  // ── 머리 ──
+  const top = document.createElement('div');
+  top.className = 'sub-top';
+  const name = document.createElement('div');
+  name.className = 'sub-name';
+  name.textContent = sub.business_name || proTierLabel(sub.tier);
+  top.appendChild(name);
+  const badge = document.createElement('span');
+  badge.className = 'sub-badge' + (level ? ' ' + level : '');
+  badge.textContent = expired ? T('subExpired').split('.')[0] : `${T('subActive')} ${active}/${limit}`;
+  top.appendChild(badge);
+  card.appendChild(top);
+
+  const meta = document.createElement('div');
+  meta.className = 'sub-meta';
+  const locale = (LANG === 'en') ? 'en-US' : 'ko-KR';
+  meta.innerHTML =
+    `<span>${T('subExpires')} <b>${new Date(sub.expires_at).toLocaleDateString(locale)}</b></span>` +
+    `<span>${T('subUsage')} <b>${sub.usage_cap_gb}GB</b></span>` +
+    `<span>${T('subArchived')} <b>${sub.archived_rooms || 0}</b></span>`;
+  card.appendChild(meta);
+
+  const bar = document.createElement('div');
+  bar.className = 'sub-bar';
+  bar.innerHTML = `<i class="${level}" style="width:${ratio}%"></i>`;
+  card.appendChild(bar);
+
+  // ── 도구줄 ──
+  const tools = document.createElement('div');
+  tools.className = 'sub-tools';
+
+  const search = document.createElement('input');
+  search.type = 'text';
+  search.placeholder = T('roomSearch');
+  search.value = st.keyword;
+  search.addEventListener('input', () => {
+    st.keyword = search.value;
+    st.shown = ROOMS_PAGE;
+    redrawRooms(sub, card);
+  });
+  tools.appendChild(search);
+
+  const newBtn = document.createElement('button');
+  newBtn.type = 'button';
+  newBtn.textContent = T('newRoomBtn');
+  newBtn.disabled = expired || active >= limit;
+  tools.appendChild(newBtn);
+
+  if (expired) {
+    const renew = document.createElement('button');
+    renew.type = 'button'; renew.className = 'ghost';
+    renew.textContent = T('renewSub');
+    renew.addEventListener('click', () => { window.location.href = `aliascall_hotline_purchase.html?tier=${sub.tier}`; });
+    tools.appendChild(renew);
+  }
+  card.appendChild(tools);
+
+  // ── 새 방 만들기 ──
+  const nb = document.createElement('div');
+  nb.className = 'new-room-box';
+  nb.innerHTML =
+    `<label>${T('newRoomLabel')}</label>` +
+    `<input type="text" placeholder="${T('newRoomPlaceholder')}" maxlength="40">`;
+  const nbActs = document.createElement('div');
+  nbActs.className = 'sub-tools';
+  const okBtn = document.createElement('button');
+  okBtn.type = 'button'; okBtn.textContent = T('newRoomCreate');
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button'; cancelBtn.className = 'ghost'; cancelBtn.textContent = T('newRoomCancel');
+  nbActs.appendChild(okBtn); nbActs.appendChild(cancelBtn);
+  nb.appendChild(nbActs);
+  card.appendChild(nb);
+
+  newBtn.addEventListener('click', () => {
+    nb.classList.add('show');
+    nb.querySelector('input').focus();
+  });
+  cancelBtn.addEventListener('click', () => nb.classList.remove('show'));
+
+  const status = document.createElement('div');
+  status.className = 'sub-status';
+
+  okBtn.addEventListener('click', async () => {
+    okBtn.disabled = true;
+    status.textContent = T('loading');
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-room-create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ subscriptionId: sub.id, clientLabel: nb.querySelector('input').value.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        // ⚠ 서버가 reason을 함께 주므로 안내를 갈라서 보여줍니다.
+        status.textContent = (data.reason === 'room_limit') ? T('limitFull')
+                           : (data.reason === 'expired') ? T('subExpired')
+                           : (data.error || T('createFail'));
+        okBtn.disabled = false;
+        return;
+      }
+      nb.classList.remove('show');
+      nb.querySelector('input').value = '';
+      status.textContent = '';
+      await loadSubscriptions();
+    } catch (e) {
+      console.error('[subs] 방 생성 실패', e);
+      status.textContent = T('createFail');
+    }
+    okBtn.disabled = false;
+  });
+
+  const roomsBox = document.createElement('div');
+  roomsBox.className = 'rooms-box';
+  card.appendChild(roomsBox);
+  card.appendChild(status);
+
+  drawRooms(sub, roomsBox);
+  return card;
+}
+
+function redrawRooms(sub, card){
+  drawRooms(sub, card.querySelector('.rooms-box'));
+}
+
+function drawRooms(sub, box){
+  const st = subViewState[sub.id];
+  const all = roomsBySub[sub.id] || [];
+  box.innerHTML = '';
+
+  if (all.length === 0) {
+    const e = document.createElement('div');
+    e.className = 'sub-status';
+    e.textContent = T('roomsNone');
+    box.appendChild(e);
+    return;
+  }
+
+  const kw = st.keyword.trim().toLowerCase();
+  let list = all.filter((r) => {
+    if (!st.showArchived && r.archived_at) return false;
+    if (!kw) return true;
+    return String(r.client_label || r.title || '').toLowerCase().includes(kw);
+  });
+
+  if (list.length === 0) {
+    const e = document.createElement('div');
+    e.className = 'sub-status';
+    e.textContent = T('roomsNoMatch');
+    box.appendChild(e);
+  }
+
+  list.slice(0, st.shown).forEach((r) => box.appendChild(renderRoomRow(sub, r)));
+
+  if (list.length > st.shown) {
+    const more = document.createElement('button');
+    more.type = 'button'; more.className = 'rooms-more';
+    more.textContent = `+ ${list.length - st.shown}`;
+    more.addEventListener('click', () => { st.shown += ROOMS_PAGE; drawRooms(sub, box); });
+    box.appendChild(more);
+  }
+
+  const archivedCount = all.filter((r) => r.archived_at).length;
+  if (archivedCount > 0) {
+    const tog = document.createElement('button');
+    tog.type = 'button'; tog.className = 'rooms-more';
+    tog.textContent = st.showArchived ? T('hideArchived') : `${T('showArchived')} (${archivedCount})`;
+    tog.addEventListener('click', () => { st.showArchived = !st.showArchived; st.shown = ROOMS_PAGE; drawRooms(sub, box); });
+    box.appendChild(tog);
+  }
+}
+
+function renderRoomRow(sub, r){
+  const row = document.createElement('div');
+  row.className = 'room-row' + (r.archived_at ? ' dim' : '');
+
+  const dot = document.createElement('span');
+  dot.className = 'room-dot ' + (isRoomActive(r) ? 'on' : 'off');
+  row.appendChild(dot);
+
+  const info = document.createElement('div');
+  info.className = 'room-info';
+  const nm = document.createElement('div');
+  nm.className = 'room-name';
+  nm.textContent = r.client_label || r.title || T('roomUnnamed');
+  const sb2 = document.createElement('div');
+  sb2.className = 'room-sub';
+  sb2.textContent = `${T('roomLastTalk')} ${relTime(r.last_activity_at)}`
+    + (r.archived_at ? ` · ${T('subArchived')}` : '');
+  info.appendChild(nm); info.appendChild(sb2);
+  row.appendChild(info);
+
+  const acts = document.createElement('div');
+  acts.className = 'room-acts';
+
+  const openBtn = document.createElement('button');
+  openBtn.type = 'button'; openBtn.textContent = T('roomOpen');
+  openBtn.addEventListener('click', () => {
+    window.location.href = `aliascall_hotline_room.html?hotline=${r.id}`;
+  });
+  acts.appendChild(openBtn);
+
+  const copyBtn = document.createElement('button');
+  copyBtn.type = 'button'; copyBtn.textContent = T('roomCopy');
+  copyBtn.addEventListener('click', () => {
+    const url = `${window.location.origin}/aliascall_hotline_join.html?t=${r.invite_token}`;
+    navigator.clipboard.writeText(url).then(() => {
+      const o = copyBtn.textContent;
+      copyBtn.textContent = T('copied');
+      setTimeout(() => { copyBtn.textContent = o; }, 1400);
+    });
+  });
+  acts.appendChild(copyBtn);
+
+  const renameBtn = document.createElement('button');
+  renameBtn.type = 'button'; renameBtn.textContent = T('roomRename');
+  renameBtn.addEventListener('click', async () => {
+    const v = prompt(T('renamePrompt'), r.client_label || '');
+    if (v === null) return;
+    const { data, error } = await sb.rpc('set_room_label', { p_hotline_id: r.id, p_label: v });
+    if (error || !data?.ok) { alert(data?.error || T('archiveFail')); return; }
+    r.client_label = v.trim() || null;
+    nm.textContent = r.client_label || T('roomUnnamed');
+  });
+  acts.appendChild(renameBtn);
+
+  const arcBtn = document.createElement('button');
+  arcBtn.type = 'button';
+  arcBtn.textContent = r.archived_at ? T('roomUnarchive') : T('roomArchive');
+  arcBtn.addEventListener('click', async () => {
+    const next = !r.archived_at;
+    const { data, error } = await sb.rpc('set_room_archived', { p_hotline_id: r.id, p_archived: next });
+    if (error || !data?.ok) { alert(data?.error || T('archiveFail')); return; }
+    await loadSubscriptions();
+  });
+  acts.appendChild(arcBtn);
+
+  row.appendChild(acts);
+  return row;
+}
+
 async function loadHotlines(){
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { document.getElementById('loginNeeded').style.display = 'block'; document.getElementById('content').style.display = 'none'; return; }
 
-  const { data: hotlines, error } = await sb.from('hotlines').select('*').eq('owner_user_id', session.user.id).order('created_at', { ascending: false });
+  // 2026-08-26(v51): 전문관리용 구독을 먼저 그림
+  await loadSubscriptions();
+
+  // ⚠ 구독에 속한 방(subscription_id 있음)은 위 구독 카드 안에 들어가므로 여기서 제외합니다.
+  //   기존 8종만 이 목록에 남습니다.
+  const { data: hotlines, error } = await sb.from('hotlines').select('*')
+    .eq('owner_user_id', session.user.id).is('subscription_id', null)
+    .order('created_at', { ascending: false });
   const listEl = document.getElementById('hlList');
+  const legacyHead = document.getElementById('legacyHead');
   if (error) { listEl.innerHTML = '<div class="empty-state">' + T('loadFail') + error.message + '</div>'; return; }
-  if (!hotlines || hotlines.length === 0) { listEl.innerHTML = '<div class="empty-state">' + T('empty') + '</div>'; return; }
+  if (!hotlines || hotlines.length === 0) {
+    // 구독이 있으면 "핫라인이 없다"는 안내가 오히려 혼란스러우므로 목록 자체를 숨깁니다.
+    listEl.innerHTML = subsCache.length > 0 ? '' : '<div class="empty-state">' + T('empty') + '</div>';
+    legacyHead.style.display = 'none';
+    return;
+  }
+  legacyHead.style.display = subsCache.length > 0 ? 'block' : 'none';
 
   const html = await Promise.all(hotlines.map((h) => renderHotlineItem(h)));
   listEl.innerHTML = html.join('');
