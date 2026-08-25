@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Aliascall — 찾습니다 / Lost &amp; Found</title>
+<meta name="theme-color" content="#1F6F6B">
+<!-- 2026-08-25 신설: 카카오톡·문자로 공유했을 때 미리보기가 뜨도록 (내용은 JS가 채움) -->
+<meta property="og:type" content="article">
+<meta property="og:title" id="ogTitle" content="Aliascall — 찾습니다 게시판">
+<meta property="og:description" id="ogDesc" content="분실·실종 소식입니다. 보신 분은 번호 노출 없이 제보하실 수 있습니다.">
+<meta property="og:image" id="ogImage" content="https://aliascall.com/aliascall_icon_512.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --amber:#D9A441; --amber-tint:#FBF1DE;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all;
+  padding-top:var(--safe-top);
+}
+h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+
+header{ padding:16px 20px; border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:20; }
+.brand-row{ display:flex; align-items:center; gap:9px; }
+.back-btn{ background:none; border:none; font-size:19px; color:var(--ink); cursor:pointer; padding:2px 6px 2px 0; line-height:1; }
+.brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
+.brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:16px; font-weight:600; }
+.brand-name em{ font-style:normal; color:var(--coral); }
+.lang-toggle{ display:flex; gap:4px; background:var(--teal-tint); border-radius:20px; padding:3px; margin-left:auto; }
+.lang-toggle button{ border:none; background:none; color:var(--ink-soft); font-size:11px; font-weight:700; padding:5px 10px; border-radius:16px; cursor:pointer; }
+.lang-toggle button.active{ background:var(--teal); color:#fff; }
+
+main{ max-width:600px; margin:0 auto; padding:22px 20px 90px; }
+.state-msg{ text-align:center; padding:70px 20px; color:var(--ink-soft); font-size:13.5px; }
+.state-msg .big{ font-size:38px; margin-bottom:12px; }
+
+/* ── 사진 스와이프 뷰어 ── */
+.photo-swiper{ position:relative; margin-bottom:18px; border-radius:16px; overflow:hidden; background:var(--card); }
+.photo-track{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; -ms-overflow-style:none; }
+.photo-track::-webkit-scrollbar{ display:none; }
+.photo-track img{ width:100%; flex:0 0 100%; scroll-snap-align:center; aspect-ratio:4/3; object-fit:cover; cursor:zoom-in; background:var(--paper); }
+.photo-dots{ position:absolute; bottom:10px; left:0; right:0; display:flex; justify-content:center; gap:6px; }
+.photo-dots span{ width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.55); transition:background .2s, width .2s; }
+.photo-dots span.on{ background:#fff; width:18px; border-radius:4px; }
+.photo-nav{ position:absolute; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:none; background:rgba(18,48,46,.45); color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.photo-nav.prev{ left:9px; } .photo-nav.next{ right:9px; }
+.photo-count{ position:absolute; top:10px; right:10px; background:rgba(18,48,46,.55); color:#fff; font-size:11px; font-weight:700; border-radius:12px; padding:4px 10px; }
+
+.detail-emoji{ font-size:40px; margin-bottom:8px; }
+.detail-title{ font-size:22px; margin-bottom:6px; line-height:1.35; }
+.status-ribbon{ display:inline-block; font-size:11px; font-weight:700; padding:4px 11px; border-radius:8px; }
+.status-ribbon.searching{ background:var(--coral-tint); color:var(--coral); }
+.status-ribbon.found{ background:rgba(46,125,79,.1); color:var(--found); }
+.detail-code{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); margin-top:10px; letter-spacing:.5px; }
+
+.sixw-grid{ display:flex; flex-direction:column; gap:14px; margin:22px 0; }
+.sixw-item{ display:flex; gap:12px; }
+.sixw-label{ flex:0 0 68px; font-size:12px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:8px; padding:6px 0; text-align:center; height:fit-content; }
+.sixw-value{ flex:1; font-size:13.5px; line-height:1.6; padding-top:5px; }
+
+.contact-cta{ background:var(--teal-deep); color:#fff; border-radius:14px; padding:18px; text-align:center; }
+.contact-cta p{ margin:0 0 12px; font-size:12.5px; color:rgba(255,255,255,.8); line-height:1.6; }
+.contact-cta button{ width:100%; border:none; border-radius:10px; padding:14px; background:var(--coral); color:#fff; font-weight:700; font-size:14.5px; cursor:pointer; }
+.contact-cta button:disabled{ opacity:.6; cursor:default; }
+
+.share-row{ display:flex; gap:8px; margin-top:14px; }
+.share-row button{ flex:1; border:1.5px solid var(--line); background:var(--card); color:var(--teal-deep); border-radius:10px; padding:12px; font-size:13px; font-weight:700; cursor:pointer; }
+.share-row button:hover{ border-color:var(--teal); }
+
+.report-row{ text-align:center; margin-top:16px; }
+.report-row button{ background:none; border:none; color:var(--danger); font-size:12.5px; cursor:pointer; padding:6px 10px; }
+
+.my-post-actions{ display:flex; gap:8px; margin-top:16px; }
+.my-post-actions button{ flex:1; padding:12px; border-radius:10px; border:none; font-size:13px; font-weight:700; cursor:pointer; }
+.btn-found{ background:rgba(46,125,79,.12); color:var(--found); }
+.btn-close-post{ background:var(--danger); color:#fff; }
+
+.back-to-list{ display:block; text-align:center; margin-top:22px; font-size:13px; color:var(--teal-deep); font-weight:700; text-decoration:none; }
+
+.zoom-overlay{ display:none; position:fixed; inset:0; background:rgba(18,48,46,.92); z-index:90; align-items:center; justify-content:center; padding:16px; }
+.zoom-overlay.show{ display:flex; }
+.zoom-overlay img{ max-width:100%; max-height:88vh; border-radius:12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <button class="back-btn" id="backBtn" data-i18n-aria="backBtn" aria-label="뒤로가기">←</button>
+    <a href="index.html" class="brand-home-link">
+      <div class="brand-mark">A</div>
+      <div class="brand-name">Alias<em>call</em></div>
+    </a>
+    <div class="lang-toggle">
+      <button type="button" data-lang="ko">KR</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="state-msg" id="stateLoading"><div class="big">⏳</div><span data-i18n="loading">불러오는 중…</span></div>
+  <div class="state-msg" id="stateNotFound" style="display:none;"><div class="big">🔍</div><span data-i18n="notFound">게시글을 찾을 수 없습니다. 이미 내려간 글일 수 있어요.</span></div>
+
+  <div id="postBody" style="display:none;">
+    <!-- 사진 스와이프 -->
+    <div class="photo-swiper" id="photoSwiper" style="display:none;">
+      <div class="photo-track" id="photoTrack"></div>
+      <div class="photo-count" id="photoCount"></div>
+      <button type="button" class="photo-nav prev" id="photoPrev" aria-label="이전 사진">‹</button>
+      <button type="button" class="photo-nav next" id="photoNext" aria-label="다음 사진">›</button>
+      <div class="photo-dots" id="photoDots"></div>
+    </div>
+
+    <div class="detail-emoji" id="dEmoji"></div>
+    <div class="detail-title" id="dTitle"></div>
+    <div class="status-ribbon searching" id="dStatus"></div>
+    <div class="detail-code" id="dCode"></div>
+
+    <div class="sixw-grid">
+      <div class="sixw-item"><div class="sixw-label" data-i18n="labelWhen">언제</div><div class="sixw-value" id="dWhen"></div></div>
+      <div class="sixw-item"><div class="sixw-label" data-i18n="labelWhere">어디서</div><div class="sixw-value" id="dWhere"></div></div>
+      <div class="sixw-item"><div class="sixw-label" data-i18n="labelHow">어떻게</div><div class="sixw-value" id="dHow"></div></div>
+      <div class="sixw-item"><div class="sixw-label" data-i18n="labelDesc">특징</div><div class="sixw-value" id="dDesc"></div></div>
+    </div>
+
+    <div class="contact-cta">
+      <p data-i18n="ctaDesc">여기서 연락하면 실제 전화번호는 보이지 않습니다. 브라우저에서 바로 음성·영상으로 연결됩니다.</p>
+      <button id="contactBtn" data-i18n="contactBtn">제보하기 · 지금 연결하기</button>
+    </div>
+
+    <div class="share-row">
+      <button type="button" id="shareBtn" data-i18n="shareBtn">🔗 공유하기</button>
+      <button type="button" id="copyLinkBtn" data-i18n="copyLinkBtn">📋 주소 복사</button>
+    </div>
+
+    <div class="my-post-actions" id="myPostActions" style="display:none;">
+      <button type="button" class="btn-found" id="markFoundBtn" data-i18n="markFound">✅ 찾았어요</button>
+      <button type="button" class="btn-close-post" id="closePostBtn" data-i18n="closePost">글 내리기</button>
+    </div>
+
+    <div class="report-row">
+      <button type="button" id="acReportBtn" data-i18n="reportBtn">🚩 이 게시물 신고하기</button>
+    </div>
+
+    <a href="aliascall_public_board_mockup.html" class="back-to-list" data-i18n="backToList">← 목록으로 돌아가기</a>
+  </div>
+</main>
+
+<div class="zoom-overlay" id="zoomOverlay"><img id="zoomImg" src="" alt=""></div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const CATEGORY_EMOJI = { vulnerable_person:'🧑‍🦳', pet:'🐾', lost_item:'🎒', misc_incident:'❓', vehicle:'🚗', callback_contact:'📮' };
+
+// ── 언어 ──
+const I18N = {
+  ko: {
+    backBtn: '뒤로가기',
+    loading: '불러오는 중…',
+    notFound: '게시글을 찾을 수 없습니다. 이미 내려간 글일 수 있어요.',
+    labelWhen: '언제', labelWhere: '어디서', labelHow: '어떻게', labelDesc: '특징',
+    statusSearching: '찾는 중', statusFound: '발견됨',
+    postCodeLabel: '게시글번호',
+    unknownTime: '시점 미상', unknownPlace: '위치 미상', noInfo: '-',
+    fallbackPost: '게시물',
+    fb_vulnerable_person: '실종', fb_pet: '반려동물 실종', fb_lost_item: '분실물', fb_misc_incident: '기타 사건',
+    fb_vehicle: '차량', fb_callback_contact: '연락 요청',
+    ctaDesc: '여기서 연락하면 실제 전화번호는 보이지 않습니다. 브라우저에서 바로 음성·영상으로 연결됩니다.',
+    contactBtn: '제보하기 · 지금 연결하기',
+    contactConnecting: '연결하는 중…',
+    contactUnavailable: '지금은 연결할 수 없어요. 잠시 후 다시 시도해주세요.',
+    contactExpired: '이 등록물은 더 이상 연결할 수 없어요. 소유자에게 갱신을 안내해주세요.',
+    shareBtn: '🔗 공유하기', copyLinkBtn: '📋 주소 복사',
+    linkCopied: '주소가 복사되었습니다. 많은 분들이 볼 수 있도록 공유해주세요.',
+    shareText: (t) => '[Aliascall 찾습니다] ' + t,
+    markFound: '✅ 찾았어요', closePost: '글 내리기',
+    confirmClosePost: '이 글을 내릴까요? 게시판에서 더 이상 보이지 않습니다.',
+    markedFound: '축하드립니다! 발견됨으로 변경했습니다.',
+    postClosed: '글을 내렸습니다.',
+    updateFail: '변경하지 못했어요: ',
+    reportBtn: '🚩 이 게시물 신고하기',
+    backToList: '← 목록으로 돌아가기',
+    photoCount: (i, n) => i + ' / ' + n,
+  },
+  en: {
+    backBtn: 'Back',
+    loading: 'Loading…',
+    notFound: 'This post could not be found. It may have been taken down.',
+    labelWhen: 'When', labelWhere: 'Where', labelHow: 'How', labelDesc: 'Details',
+    statusSearching: 'Searching', statusFound: 'Found',
+    postCodeLabel: 'Post no.',
+    unknownTime: 'Time unknown', unknownPlace: 'Location unknown', noInfo: '-',
+    fallbackPost: 'Post',
+    fb_vulnerable_person: 'Missing person', fb_pet: 'Missing pet', fb_lost_item: 'Lost item', fb_misc_incident: 'Other incident',
+    fb_vehicle: 'Vehicle', fb_callback_contact: 'Contact request',
+    ctaDesc: 'Contacting from here never reveals a real phone number. Voice and video connect right in your browser.',
+    contactBtn: 'Send a tip · Connect now',
+    contactConnecting: 'Connecting…',
+    contactUnavailable: 'Cannot connect right now. Please try again shortly.',
+    contactExpired: 'This item can no longer be contacted. Please let the owner know to renew.',
+    shareBtn: '🔗 Share', copyLinkBtn: '📋 Copy link',
+    linkCopied: 'Link copied. Please share it so more people can see it.',
+    shareText: (t) => '[Aliascall Lost & Found] ' + t,
+    markFound: '✅ Found', closePost: 'Take down',
+    confirmClosePost: 'Take this post down? It will no longer appear on the board.',
+    markedFound: 'Congratulations! Marked as found.',
+    postClosed: 'The post has been taken down.',
+    updateFail: 'Could not update: ',
+    reportBtn: '🚩 Report this post',
+    backToList: '← Back to the board',
+    photoCount: (i, n) => i + ' / ' + n,
+  },
+};
+let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
+function T(){ return I18N[currentLang] || I18N.ko; }
+
+function applyLang(lang){
+  currentLang = lang;
+  localStorage.setItem('aliascall_lang', lang);
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.dataset.i18n;
+    if (typeof I18N[lang][key] === 'string') el.textContent = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+    const key = el.dataset.i18nAria;
+    if (typeof I18N[lang][key] === 'string') el.setAttribute('aria-label', I18N[lang][key]);
+  });
+  document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+  if (currentPost) renderPost(currentPost);   // 이미 그린 내용도 새 언어로
+}
+document.querySelectorAll('.lang-toggle button').forEach((btn) => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+});
+
+// ── 유틸 ──
+function postCode(id){ return String(id).replace(/-/g, '').slice(0, 6).toUpperCase(); }
+function fmtWhen(iso){
+  if (!iso) return T().unknownTime;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return T().unknownTime;
+  return currentLang === 'en'
+    ? d.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' })
+    : d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function fallbackTitle(cat){ return T()['fb_' + cat] || T().fallbackPost; }
+
+// ── 조회 ──
+let currentPost = null;
+let photoUrls = [];
+let myRegistrationIdSet = new Set();
+
+function getPostId(){
+  return new URLSearchParams(location.search).get('id');
+}
+
+async function load(){
+  const id = getPostId();
+  if (!id) { showNotFound(); return; }
+
+  const { data, error } = await sb.from('public_board_posts')
+    .select('id, registration_id, category, occurred_at, last_seen_location, circumstance, public_description, status, registrations(title)')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error || !data) { showNotFound(); return; }
+
+  // 공개 사진 (비문 등 비공개 생체정보는 다른 버킷이라 여기 나오지 않음)
+  const { data: files } = await sb.from('media_files')
+    .select('storage_path, created_at')
+    .eq('registration_id', data.registration_id)
+    .eq('media_type', 'photo')
+    .eq('is_public', true)
+    .order('created_at', { ascending: true })
+    .limit(5);
+
+  photoUrls = (files || []).map((f) => sb.storage.from('aliascall-media').getPublicUrl(f.storage_path).data.publicUrl);
+
+  // 내가 올린 글인지 (관리 버튼 노출용)
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    const { data: regs } = await sb.from('registrations').select('id').eq('user_id', session.user.id);
+    myRegistrationIdSet = new Set((regs || []).map((r) => String(r.id)));
+  }
+
+  currentPost = data;
+  document.getElementById('stateLoading').style.display = 'none';
+  document.getElementById('postBody').style.display = 'block';
+  renderPost(data);
+  updateOgTags(data);
+}
+
+function showNotFound(){
+  document.getElementById('stateLoading').style.display = 'none';
+  document.getElementById('stateNotFound').style.display = 'block';
+}
+
+function renderPost(p){
+  const title = (p.registrations && p.registrations.title) || fallbackTitle(p.category);
+  document.getElementById('dEmoji').textContent = CATEGORY_EMOJI[p.category] || '❓';
+  document.getElementById('dTitle').textContent = title;
+  const st = document.getElementById('dStatus');
+  st.textContent = p.status === 'searching' ? T().statusSearching : T().statusFound;
+  st.className = 'status-ribbon ' + p.status;
+  document.getElementById('dCode').textContent = T().postCodeLabel + ' ' + postCode(p.id);
+  document.getElementById('dWhen').textContent = fmtWhen(p.occurred_at);
+  document.getElementById('dWhere').textContent = p.last_seen_location || T().unknownPlace;
+  document.getElementById('dHow').textContent = p.circumstance || T().noInfo;
+  document.getElementById('dDesc').textContent = p.public_description || T().noInfo;
+
+  renderPhotos();
+
+  const isMine = myRegistrationIdSet.has(String(p.registration_id));
+  const actions = document.getElementById('myPostActions');
+  actions.style.display = isMine ? 'flex' : 'none';
+  document.getElementById('markFoundBtn').style.display = (p.status === 'found') ? 'none' : 'block';
+}
+
+// ── 사진 스와이프 ──
+let photoIndex = 0;
+function renderPhotos(){
+  const swiper = document.getElementById('photoSwiper');
+  if (photoUrls.length === 0) { swiper.style.display = 'none'; return; }
+  swiper.style.display = 'block';
+
+  const track = document.getElementById('photoTrack');
+  track.innerHTML = photoUrls.map((u) => '<img src="' + u + '" alt="" loading="lazy">').join('');
+  track.querySelectorAll('img').forEach((img) => {
+    img.addEventListener('click', () => {
+      document.getElementById('zoomImg').src = img.src;
+      document.getElementById('zoomOverlay').classList.add('show');
+    });
+  });
+
+  const dots = document.getElementById('photoDots');
+  dots.innerHTML = photoUrls.map((_, i) => '<span class="' + (i === 0 ? 'on' : '') + '"></span>').join('');
+
+  const single = photoUrls.length <= 1;
+  document.getElementById('photoPrev').style.display = single ? 'none' : 'flex';
+  document.getElementById('photoNext').style.display = single ? 'none' : 'flex';
+  dots.style.display = single ? 'none' : 'flex';
+
+  photoIndex = 0;
+  updatePhotoUi();
+
+  // 손가락으로 밀었을 때도 표시가 따라가도록
+  track.addEventListener('scroll', () => {
+    const i = Math.round(track.scrollLeft / track.clientWidth);
+    if (i !== photoIndex) { photoIndex = i; updatePhotoUi(); }
+  });
+}
+function updatePhotoUi(){
+  document.getElementById('photoCount').textContent = T().photoCount(photoIndex + 1, photoUrls.length);
+  document.querySelectorAll('#photoDots span').forEach((d, i) => d.classList.toggle('on', i === photoIndex));
+}
+function goPhoto(delta){
+  const track = document.getElementById('photoTrack');
+  photoIndex = Math.max(0, Math.min(photoUrls.length - 1, photoIndex + delta));
+  track.scrollTo({ left: photoIndex * track.clientWidth, behavior: 'smooth' });
+  updatePhotoUi();
+}
+document.getElementById('photoPrev').addEventListener('click', () => goPhoto(-1));
+document.getElementById('photoNext').addEventListener('click', () => goPhoto(1));
+document.getElementById('zoomOverlay').addEventListener('click', (e) => e.currentTarget.classList.remove('show'));
+
+// ── 공유 미리보기(og) 채우기 ──
+function updateOgTags(p){
+  const title = (p.registrations && p.registrations.title) || fallbackTitle(p.category);
+  document.title = title + ' — Aliascall';
+  document.getElementById('ogTitle').setAttribute('content', T().shareText(title));
+  if (p.public_description) document.getElementById('ogDesc').setAttribute('content', p.public_description.slice(0, 100));
+  if (photoUrls.length > 0) document.getElementById('ogImage').setAttribute('content', photoUrls[0]);
+}
+
+// ── 공유 ──
+document.getElementById('shareBtn').addEventListener('click', async () => {
+  const title = document.getElementById('dTitle').textContent;
+  const shareData = { title: T().shareText(title), text: document.getElementById('dDesc').textContent, url: location.href };
+  try {
+    if (navigator.share) { await navigator.share(shareData); return; }
+  } catch (e) { return; }   // 사용자가 취소한 경우 — 아무것도 안 함
+  copyLink();
+});
+document.getElementById('copyLinkBtn').addEventListener('click', copyLink);
+async function copyLink(){
+  try {
+    await navigator.clipboard.writeText(location.href);
+    alert(T().linkCopied);
+  } catch (e) {
+    prompt(T().linkCopied, location.href);
+  }
+}
+
+// ── 제보하기 · 지금 연결하기 ──
+// 연결 토큰은 이 버튼을 눌렀을 때만 조회함. 화면이나 주소에 절대 담지 않음.
+document.getElementById('contactBtn').addEventListener('click', async () => {
+  if (!currentPost || !currentPost.registration_id) { alert(T().contactUnavailable); return; }
+  const btn = document.getElementById('contactBtn');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = T().contactConnecting;
+  try {
+    const { data, error } = await sb.from('registrations')
+      .select('qr_code_token, status')
+      .eq('id', currentPost.registration_id)
+      .maybeSingle();
+    if (error || !data || !data.qr_code_token) throw new Error('token not found');
+    if (data.status !== 'active') { alert(T().contactExpired); return; }
+    location.href = 'aliascall_connect.html?t=' + encodeURIComponent(data.qr_code_token);
+  } catch (e) {
+    console.error('[post] 연결 토큰 조회 실패', e);
+    alert(T().contactUnavailable);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+});
+
+// ── 내 글 관리 ──
+async function updateMyPostStatus(newStatus){
+  if (!currentPost) return;
+  const patch = { status: newStatus };
+  if (newStatus === 'found') patch.resolved_at = new Date().toISOString();
+  const { error } = await sb.from('public_board_posts').update(patch).eq('id', currentPost.id);
+  if (error) { alert(T().updateFail + error.message); return; }
+  alert(newStatus === 'found' ? T().markedFound : T().postClosed);
+  location.href = 'aliascall_public_board_mockup.html';
+}
+document.getElementById('markFoundBtn').addEventListener('click', () => updateMyPostStatus('found'));
+document.getElementById('closePostBtn').addEventListener('click', () => {
+  if (confirm(T().confirmClosePost)) updateMyPostStatus('closed');
+});
+
+// ── 신고 ──
+document.getElementById('acReportBtn').addEventListener('click', () => {
+  if (!currentPost) return;
+  aliascallOpenReport({ context: 'board', targetId: currentPost.id });
+});
+
+// ── 뒤로가기: 목록에서 왔으면 히스토리로, 공유 링크로 바로 들어왔으면 목록으로 ──
+document.getElementById('backBtn').addEventListener('click', () => {
+  if (history.length > 1) history.back();
+  else location.href = 'aliascall_public_board_mockup.html';
+});
+
+applyLang(currentLang);
+load();
+</script>
+<script src="aliascall_report.js"></script>
+</body>
+</html>
