@@ -54,6 +54,7 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
 .highlight-box .tag{ display:inline-block; font-size:10.5px; font-weight:700; background:var(--coral); padding:3px 10px; border-radius:8px; margin-bottom:10px; }
 .highlight-box h3{ font-size:18px; margin-bottom:8px; }
 .highlight-box p{ font-size:13px; color:rgba(255,255,255,.8); line-height:1.6; margin:0; }
+.highlight-box a{ color:#fff; font-weight:700; }
 
 .dodont-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0; }
 .dodont-col .head{ display:flex; align-items:center; gap:6px; font-weight:700; font-size:14px; margin-bottom:10px; }
@@ -70,6 +71,23 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
 
 .tip-callout{ background:var(--amber-tint); border-left:4px solid var(--amber); border-radius:0 10px 10px 0; padding:14px 16px; font-size:12.5px; line-height:1.6; margin-top:14px; }
 .tip-callout b{ color:#8a6416; }
+
+/* 2026-08-25 신설: 게시판 섹션용 */
+.urgent-callout{ background:var(--danger-tint); border-left:4px solid var(--danger); border-radius:0 10px 10px 0; padding:14px 16px; font-size:12.5px; line-height:1.65; margin-top:14px; }
+.urgent-callout b{ color:var(--danger); }
+.urgent-callout a{ color:var(--teal-deep); font-weight:700; }
+.status-demo{ display:flex; gap:10px; margin:16px 0; }
+.status-demo > div{ flex:1; border:1.5px solid var(--line); border-radius:12px; padding:14px; background:var(--card); }
+.status-demo .lbl{ display:inline-block; font-size:11px; font-weight:700; padding:4px 10px; border-radius:8px; margin-bottom:8px; }
+.status-demo .searching .lbl{ background:var(--coral-tint); color:var(--coral); }
+.status-demo .found .lbl{ background:var(--found-tint); color:var(--found); }
+.status-demo .d{ font-size:12px; color:var(--ink-soft); line-height:1.55; }
+.share-emphasis{ background:var(--card); border:2px solid var(--coral); border-radius:14px; padding:18px 20px; margin-top:16px; }
+.share-emphasis .h{ font-size:14.5px; font-weight:700; color:var(--coral); margin-bottom:8px; }
+.share-emphasis .d{ font-size:12.5px; line-height:1.7; color:var(--ink-soft); }
+.share-emphasis .d b{ color:var(--ink); }
+.privacy-warn{ background:var(--amber-tint); border-radius:10px; padding:12px 14px; font-size:12px; line-height:1.6; margin-top:12px; }
+.privacy-warn b{ color:#8a6416; }
 
 .faq-item{ border-bottom:1px solid var(--line); padding:16px 0; }
 .faq-item:last-child{ border-bottom:none; }
@@ -103,9 +121,10 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
     <a href="#sec-noseprint">③ 비문 촬영법 ⭐</a>
     <a href="#sec-print">④ QR 인쇄·부착</a>
     <a href="#sec-finder">⑤ 발견자는 이렇게</a>
-    <a href="#sec-notify">⑥ 알림 설정 ⭐</a>
-    <a href="#sec-comm">⑦ 통신 방법 완전정리 ⭐</a>
-    <a href="#sec-faq">⑧ 자주 묻는 질문</a>
+    <a href="#sec-board">⑥ 찾습니다 게시판 ⭐</a>
+    <a href="#sec-notify">⑦ 알림 설정 ⭐</a>
+    <a href="#sec-comm">⑧ 통신 방법 완전정리 ⭐</a>
+    <a href="#sec-faq">⑨ 자주 묻는 질문</a>
   </div>
 
   <section id="sec-overview">
@@ -116,6 +135,7 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
       <div class="step-item"><span class="n">3</span><span class="t"><b>인쇄해서 부착</b>원하는 크기로 인쇄해 대상에 붙이거나 걸어둡니다.</span></div>
       <div class="step-item"><span class="n">4</span><span class="t"><b>발견자가 연락</b>QR을 스캔하면 <b>채팅·음성·영상·문자·사진</b> 5가지 중 원하는 방법을 골라 바로 연결됩니다. 실제 전화번호는 절대 노출되지 않아요.</span></div>
     </div>
+    <div class="tip-callout"><b>이미 잃어버리셨다면?</b> QR을 미리 붙여두지 못한 상태에서 아이나 반려동물이 사라졌다면, <a href="#sec-board">⑥ 찾습니다 게시판</a>을 봐주세요. 지금 바로 등록하고 소식을 알리실 수 있습니다.</div>
   </section>
 
   <section id="sec-category">
@@ -208,19 +228,84 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
     <div class="tip-callout"><b>Tip.</b> 채팅과 사진은 대화 이력이 최대 14일(아동·치매어르신·장애우·반려동물은 30일) 저장됩니다. 같은 QR/링크로 다시 들어오면 이전 대화가 이어져서 보여요.</div>
   </section>
 
+  <!-- ⭐⭐⭐ 2026-08-25 신설: 찾습니다 게시판 ⭐⭐⭐ -->
+  <section id="sec-board">
+    <div class="sec-title"><span class="sec-num">6</span>찾습니다 게시판</div>
+
+    <div class="highlight-box">
+      <div class="tag">QR을 미리 못 붙였을 때</div>
+      <h3>이미 잃어버린 뒤에도 쓸 수 있어요</h3>
+      <p>QR 태그는 <b>미리 붙여두는</b> 대비책입니다. 하지만 아무것도 준비하지 못한 채 아이나 반려동물이 사라졌다면, 찾습니다 게시판에 소식을 올려 <b>여러 사람의 눈</b>을 빌릴 수 있습니다. 목격하신 분은 실제 전화번호를 몰라도 바로 제보할 수 있어요.</p>
+      <p style="margin-top:10px;"><a href="aliascall_public_board_mockup.html">게시판 열어보기 →</a></p>
+    </div>
+
+    <div class="step-title" style="font-size:14px; font-weight:700; margin:18px 0 10px;">📢 글 올리는 법</div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t"><b>가입하기</b>마이페이지에서 <b>닉네임과 비밀번호</b>만 정하면 끝입니다. 실명도, 전화번호도 필요 없어요.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t"><b>등록하기</b>찾고 계신 아이·어르신·반려동물·물건을 등록합니다. 사진을 함께 올리시면 알아보기 훨씬 쉬워요.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t"><b>게시하기</b>게시판 오른쪽 아래 <b>✏️ 글쓰기</b>를 누르고, 등록해둔 항목을 고른 뒤 언제·어디서·어떻게·특징을 적으면 됩니다.</span></div>
+    </div>
+
+    <div class="urgent-callout">
+      <b>🚨 급하신 분께.</b> 가입 직후 구독 결제 화면이 나와도 당황하지 마세요. 그 화면 아래쪽의 <b>"비상시(중요한 분실 및 발견시) 결제없이 바로 등록하기"</b> 버튼을 누르시면 결제를 건너뛰고 곧바로 등록하실 수 있습니다.<br><br>
+      <b>가입도 게시도 모두 무료입니다.</b> 아동·치매어르신·장애우·반려동물은 구독 여부와 상관없이 언제나 연결됩니다. 등록을 거치는 이유는 단 하나 — 제보하시는 분이 <b>전화번호 노출 없이</b> 연락드릴 수 있게 하기 위해서입니다.
+    </div>
+
+    <div class="privacy-warn">
+      <b>⚠️ 적으실 때 주의.</b> 게시글은 <b>로그인하지 않은 누구나</b> 볼 수 있습니다. 주민등록번호, 집 주소, 전화번호 같은 정보는 절대 적지 마세요. 연락은 게시글의 "제보하기" 버튼이 안전하게 대신해 줍니다.
+    </div>
+
+    <div class="step-title" style="font-size:14px; font-weight:700; margin:22px 0 10px;">🔖 "찾는 중"과 "발견됨"</div>
+    <div class="status-demo">
+      <div class="searching">
+        <span class="lbl">찾는 중</span>
+        <div class="d">아직 찾지 못한 상태입니다. 글을 올리면 처음에 여기로 들어갑니다.</div>
+      </div>
+      <div class="found">
+        <span class="lbl">발견됨</span>
+        <div class="d">무사히 찾았거나 되찾은 경우입니다. 다른 분들께도 좋은 소식이 됩니다.</div>
+      </div>
+    </div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">✅</span><span class="t"><b>찾으셨다면 "찾았어요"를 눌러주세요</b>내가 올린 글을 열면 <b>✅ 찾았어요</b> 버튼이 보입니다. 누르면 "발견됨" 탭으로 옮겨집니다. 이걸 안 누르면 이미 찾았는데도 계속 "찾는 중"으로 남아, 다른 분들이 헛되이 찾아다니게 됩니다.</span></div>
+      <div class="step-item"><span class="n">🗑️</span><span class="t"><b>다 끝났으면 "글 내리기"</b>더 이상 게시할 이유가 없으면 <b>글 내리기</b>를 눌러주세요. 게시판에서 사라집니다. 등록물 자체는 그대로 남으니 QR은 계속 쓰실 수 있어요.</span></div>
+    </div>
+
+    <div class="share-emphasis">
+      <div class="h">🔗 공유하기 — 가장 중요한 기능입니다</div>
+      <div class="d">
+        게시글마다 <b>고유한 주소</b>가 있습니다. 글을 열고 <b>🔗 공유하기</b>를 누르면 카카오톡·문자로 바로 보낼 수 있어요.<br><br>
+        게시판을 찾아오는 사람은 많지 않습니다. 하지만 <b>동네 단톡방에 링크 하나를 던지는 것</b>만으로 수십 명이 사진을 보게 됩니다. 실종 상황에서는 이게 가장 큰 힘이 됩니다.<br><br>
+        공유된 링크에는 <b>사진과 제목이 미리보기</b>로 함께 뜹니다. 받는 분이 열어보지 않아도 무슨 일인지 알 수 있어요.
+      </div>
+    </div>
+
+    <div class="step-title" style="font-size:14px; font-weight:700; margin:22px 0 10px;">🔍 목격하셨다면</div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t"><b>국가와 분류로 찾아보세요</b>게시판 위쪽에서 국가를 고르고, 아동·노인 / 반려동물 / 분실물 / 기타로 걸러볼 수 있습니다.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t"><b>글을 열어 사진을 확인하세요</b>사진은 좌우로 넘겨가며 볼 수 있고, 누르면 크게 볼 수 있습니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t"><b>"제보하기 · 지금 연결하기"</b>이 버튼을 누르면 QR을 스캔한 것과 똑같이 연결됩니다. 문자·음성·영상 중 편한 방법을 고르시면 되고, <b>서로의 전화번호는 노출되지 않습니다.</b></span></div>
+    </div>
+
+    <div class="tip-callout"><b>게시글번호란?</b> 글마다 <span class="mono">A3F2C1</span> 같은 6자리 번호가 붙습니다. 전화나 대화로 "몇 번 글이요"라고 알려주실 때 쓰시면 됩니다. 이 번호로는 연락이 되지 않으니 안심하고 알려주셔도 됩니다.</div>
+
+    <div class="tip-callout" style="border-left-color:var(--danger); background:var(--danger-tint);"><b style="color:var(--danger);">부적절한 글을 보셨다면.</b> 글 아래쪽 <b>🚩 신고하기</b>를 눌러주세요. 확인 후 조치합니다. 신고하신 사실은 상대에게 알려지지 않습니다.</div>
+  </section>
+
   <section id="sec-notify">
-    <div class="sec-title"><span class="sec-num">6</span>알림 설정</div>
+    <div class="sec-title"><span class="sec-num">7</span>알림 설정</div>
     <div class="step-list">
       <div class="step-item"><span class="n">1</span><span class="t"><b>통화·문자 알림음</b>전화벨, 딩동 소리 등 그 화면을 열어두고 있을 때만 울리는 소리예요. 마이페이지·수신대기 화면 상단 토글로 켜세요.</span></div>
       <div class="step-item"><span class="n">2</span><span class="t"><b>긴급 알림 (푸시)</b>화면을 완전히 닫아놔도 폰 알림창에 뜨는 진짜 알림이에요. 최초 1회 브라우저의 "허용" 팝업을 눌러주셔야 켜집니다.</span></div>
       <div class="step-item"><span class="n">3</span><span class="t"><b>PC에서 쓰신다면</b>크롬의 "백그라운드 실행" 옵션을 켜두셔야, 창을 닫아도 알림을 확실히 받을 수 있어요.</span></div>
     </div>
     <div class="tip-callout"><b>Tip.</b> 두 알림 다 각자의 브라우저·기기별로 따로 설정해야 해요. 폰을 바꾸시면 새로 켜주셔야 합니다.</div>
+    <div class="tip-callout"><b>게시판에 글을 올리셨다면 꼭 켜주세요.</b> 제보는 언제 올지 모릅니다. 긴급 알림을 켜두시면 화면을 닫아두셔도 제보가 도착한 순간 폰으로 알려드립니다.</div>
   </section>
 
   <!-- ⭐ 신설: 소유자·발견자 통신 방법 완전정리 -->
   <section id="sec-comm">
-    <div class="sec-title"><span class="sec-num">7</span>통신 방법 완전정리</div>
+    <div class="sec-title"><span class="sec-num">8</span>통신 방법 완전정리</div>
     <div class="highlight-box">
       <div class="tag">헷갈리기 쉬운 부분</div>
       <h3>누가, 언제, 어떻게 알게 되나요?</h3>
@@ -258,7 +343,7 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
   </section>
 
   <section id="sec-faq">
-    <div class="sec-title"><span class="sec-num">8</span>자주 묻는 질문</div>
+    <div class="sec-title"><span class="sec-num">9</span>자주 묻는 질문</div>
     <div class="faq-item">
       <div class="faq-q"><span>Q.</span>비문 사진을 안 올리면 반려동물 등록이 안 되나요?</div>
       <div class="faq-a">아니요, 비문 사진은 권장사항이지 필수가 아닙니다. 다만 등록해두시면 발견 시 신원 확인 정확도가 크게 올라가요.</div>
@@ -282,6 +367,26 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
     <div class="faq-item">
       <div class="faq-q"><span>Q.</span>알림음이 안 울려요.</div>
       <div class="faq-a">마이페이지·수신대기 화면 상단의 "통화·문자 알림음" 토글이 켜져 있는지 확인해주세요. 브라우저 정책상 최초 1회는 직접 눌러서 켜셔야 합니다.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>게시판에 글을 올리려면 돈을 내야 하나요?</div>
+      <div class="faq-a">아니요. 가입도 게시도 모두 무료입니다. 결제 화면이 나오더라도 아래쪽 "비상시 결제없이 바로 등록하기" 버튼으로 건너뛰실 수 있어요. 아동·치매어르신·장애우·반려동물은 구독과 무관하게 언제나 연결됩니다.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>왜 등록을 먼저 해야 게시글을 쓸 수 있나요?</div>
+      <div class="faq-a">게시글의 "제보하기" 버튼이 등록물에 연결되어 있기 때문입니다. 등록 없이 글만 올리면 목격하신 분이 연락할 방법이 없어져요. 등록이 곧 연락받는 창구입니다.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>아이를 찾았어요. 글은 어떻게 하나요?</div>
+      <div class="faq-a">글을 열고 "✅ 찾았어요"를 눌러주세요. "발견됨" 탭으로 옮겨져 다른 분들께 좋은 소식이 전해집니다. 완전히 내리고 싶으시면 "글 내리기"를 누르시면 됩니다.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>게시글을 카카오톡으로 공유하면 사진도 같이 보이나요?</div>
+      <div class="faq-a">네. 링크를 보내면 사진과 제목이 미리보기로 함께 표시됩니다. 받는 분이 열어보지 않아도 무슨 일인지 알 수 있어요.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span>게시글에 올린 사진은 누가 볼 수 있나요?</div>
+      <div class="faq-a">로그인하지 않은 누구나 볼 수 있습니다. 그래야 많은 분들이 알아봐 주실 수 있으니까요. 다만 반려동물 비문(코무늬) 사진은 예외로, 비공개 저장소에 따로 보관되어 게시판에 노출되지 않습니다.</div>
     </div>
   </section>
 </main>
