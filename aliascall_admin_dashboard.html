@@ -84,6 +84,11 @@ tr:hover td{ background:rgba(31,111,107,.03); }
 .set-status.ok{ color:var(--found,#2E7D4F); }
 .set-status.err{ color:var(--danger,#C1483A); }
 .set-preview{ font-size:11.5px; color:var(--ink-soft); background:rgba(0,0,0,.03); border-radius:8px; padding:9px 11px; margin-top:9px; line-height:1.7; }
+
+/* 2026-08-26 신설(v53): 수동 부여 */
+.grant-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; }
+.grant-grid label{ font-size:12px; color:var(--ink-soft); display:flex; flex-direction:column; gap:5px; }
+.grant-grid input, .grant-grid select{ padding:9px 11px; border:1.5px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit; }
 </style>
 </head>
 <body>
@@ -121,6 +126,7 @@ tr:hover td{ background:rgba(31,111,107,.03); }
   <div class="nav-tab" data-tab="deletions">탈퇴 현황</div>
   <div class="nav-tab" data-tab="products">상품 관리</div>
   <div class="nav-tab" data-tab="hotlinePricing">핫라인 요금정책</div>
+  <div class="nav-tab" data-tab="grants">🎁 수동 부여</div>
   <div class="nav-tab" data-tab="settings">⚙️ 환경설정</div>
 </div>
 
@@ -289,6 +295,66 @@ tr:hover td{ background:rgba(31,111,107,.03); }
 
     <button id="hlConfirmBtn" style="margin-top:16px; padding:12px 24px; border:none; border-radius:8px; background:var(--teal); color:#fff; font-weight:700; font-size:13px; cursor:pointer;">✓ 이 내용으로 확정 (저장 + 요금체계 반영)</button>
     <span id="hlSaveStatus" style="margin-left:12px; font-size:12px; color:var(--ink-soft);"></span>
+  </div>
+
+  <!-- 2026-08-26 신설(v53): 관리자 수동 부여 — 테스트 / 검증자 무료제공 / 무통장 입금 처리 -->
+  <div class="tab-panel" data-panel="grants">
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">
+      결제 없이 상품을 직접 부여합니다. <b>테스트</b>, <b>검증자 무료 제공</b>, <b>무통장 입금 확인 후 처리</b>에 씁니다.<br>
+      ⚠ 부여 내역은 모두 기록되며 <b>매출로 잡히지 않습니다</b>(결제금액 0원으로 저장).
+    </p>
+
+    <div class="set-card">
+      <div class="set-label">부여하기</div>
+      <div class="set-desc">닉네임은 "회원 관리" 탭에서 확인하실 수 있습니다.</div>
+
+      <div class="grant-grid">
+        <label>회원 닉네임
+          <input type="text" id="grNickname" placeholder="정확히 입력">
+        </label>
+        <label>무엇을
+          <select id="grType">
+            <option value="hotline_pro">전문관리용 구독</option>
+            <option value="subscription">등록물 구독</option>
+            <option value="points">포인트</option>
+          </select>
+        </label>
+        <label id="grTierWrap">등급
+          <select id="grTier">
+            <option value="pro_starter">스타터 (방50 / 50GB)</option>
+            <option value="pro_business">프로 (방100 / 150GB)</option>
+            <option value="pro_enterprise">비즈니스 (방150 / 400GB)</option>
+          </select>
+        </label>
+        <label id="grMonthsWrap">기간
+          <select id="grMonths">
+            <option value="1">1개월</option>
+            <option value="6">6개월</option>
+            <option value="12">12개월</option>
+          </select>
+        </label>
+        <label id="grAmountWrap" style="display:none;">포인트 수량
+          <input type="number" id="grAmount" placeholder="예: 5000">
+        </label>
+      </div>
+
+      <label style="display:block; margin-top:12px; font-size:12px; color:var(--ink-soft);">사유 (필수)
+        <input type="text" id="grMemo" placeholder="예: 검증용 무료 제공 / 무통장 입금 확인(홍길동, 8/26)" style="width:100%; box-sizing:border-box; margin-top:5px;">
+      </label>
+
+      <div class="set-row" style="margin-top:14px;">
+        <button type="button" id="grSubmitBtn">부여하기</button>
+        <span class="set-status" id="grStatus"></span>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;">
+      <div style="font-size:13px; font-weight:700; margin-bottom:10px;">최근 부여 내역</div>
+      <table>
+        <thead><tr><th>회원</th><th>내용</th><th>사유</th><th>일시</th></tr></thead>
+        <tbody id="grantHistoryBody"><tr class="empty-row"><td colspan="4">불러오는 중…</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- 2026-08-26 신설(v52): 환경설정 — 코드에 박혀 있던 값들을 여기서 바꿈 -->
@@ -674,6 +740,115 @@ let hlPlansCache = {}; // key: tier|duration -> { price_krw, usage_cap_gb }
 
 
 // =====================================================================
+// 2026-08-26 신설(v53): 관리자 수동 부여
+// 테스트 / 검증자 무료 제공 / 무통장 입금 확인 후 처리에 씁니다.
+//
+// ⚠ 돈을 받지 않고 상품을 주는 기능이라, 사유를 반드시 적게 하고
+//   모든 부여를 admin_grants에 기록합니다. price_paid_krw는 0으로 저장되어
+//   매출 집계에서 걸러집니다.
+// =====================================================================
+
+const GRANT_TYPE_KO = {
+  hotline_pro: '전문관리용',
+  subscription: '등록물 구독',
+  points: '포인트',
+};
+const GRANT_TIER_KO = {
+  pro_starter: '스타터', pro_business: '프로', pro_enterprise: '비즈니스',
+};
+
+// 부여 유형에 따라 필요한 입력칸만 보여줌
+function updateGrantForm(){
+  const type = document.getElementById('grType').value;
+  const show = (id, on) => { document.getElementById(id).style.display = on ? '' : 'none'; };
+  show('grTierWrap', type === 'hotline_pro');
+  show('grAmountWrap', type === 'points');
+  show('grMonthsWrap', type !== 'points');
+
+  // 등록물 구독은 1~36개월, 전문관리용은 1/6/12개월만 가능
+  const monthsSel = document.getElementById('grMonths');
+  const prev = monthsSel.value;
+  const opts = (type === 'hotline_pro') ? [1, 6, 12] : [1, 3, 6, 12, 24, 36];
+  monthsSel.innerHTML = opts.map((m) => `<option value="${m}">${m}개월</option>`).join('');
+  if (opts.includes(Number(prev))) monthsSel.value = prev;
+}
+document.getElementById('grType').addEventListener('change', updateGrantForm);
+
+document.getElementById('grSubmitBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('grSubmitBtn');
+  const status = document.getElementById('grStatus');
+  const nickname = document.getElementById('grNickname').value.trim();
+  const type = document.getElementById('grType').value;
+  const memo = document.getElementById('grMemo').value.trim();
+
+  if (!nickname) { status.className = 'set-status err'; status.textContent = '닉네임을 입력해주세요.'; return; }
+  if (!memo) { status.className = 'set-status err'; status.textContent = '사유를 반드시 적어주세요.'; return; }
+
+  const months = (type === 'points') ? null : Number(document.getElementById('grMonths').value);
+  const tier = (type === 'hotline_pro') ? document.getElementById('grTier').value : null;
+  const amount = (type === 'points') ? Number(document.getElementById('grAmount').value) : null;
+
+  if (type === 'points' && (!amount || isNaN(amount))) {
+    status.className = 'set-status err'; status.textContent = '포인트 수량을 입력해주세요.'; return;
+  }
+
+  // ⚠ 무상 부여라 되돌리기가 번거롭습니다. 한 번 더 확인받습니다.
+  const what = (type === 'hotline_pro') ? `${GRANT_TIER_KO[tier]} ${months}개월`
+             : (type === 'points') ? `${Number(amount).toLocaleString()}P`
+             : `등록물 구독 ${months}개월`;
+  if (!confirm(`"${nickname}" 회원에게\n${GRANT_TYPE_KO[type]} — ${what}\n을(를) 결제 없이 부여합니다.\n\n계속할까요?`)) return;
+
+  btn.disabled = true;
+  status.className = 'set-status';
+  status.textContent = '처리 중…';
+  try {
+    const { data, error } = await sb.rpc('admin_grant', {
+      p_nickname: nickname, p_grant_type: type, p_memo: memo,
+      p_tier: tier, p_months: months, p_amount: amount,
+    });
+    if (error) throw error;
+    if (!data?.ok) {
+      status.className = 'set-status err';
+      status.textContent = data?.error || '부여하지 못했습니다.';
+      btn.disabled = false;
+      return;
+    }
+    status.className = 'set-status ok';
+    status.textContent = '✓ 부여 완료' + (data.expires_at ? ` (만료 ${new Date(data.expires_at).toLocaleDateString('ko-KR')})` : '');
+    document.getElementById('grMemo').value = '';
+    loadGrantHistory();
+  } catch (e) {
+    console.error('[grant] 실패', e);
+    status.className = 'set-status err';
+    status.textContent = e.message || '부여하지 못했습니다.';
+  }
+  btn.disabled = false;
+});
+
+async function loadGrantHistory(){
+  const body = document.getElementById('grantHistoryBody');
+  try {
+    const { data: rows, error } = await sb.rpc('admin_grant_history', { p_limit: 30 });
+    if (error) throw error;
+    if (!rows || rows.length === 0) {
+      body.innerHTML = '<tr class="empty-row"><td colspan="4">부여 내역이 없습니다.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map((r) => {
+      const what = (r.grant_type === 'points')
+        ? `${Number(r.amount || 0).toLocaleString()}P`
+        : `${GRANT_TIER_KO[r.tier] || GRANT_TYPE_KO[r.grant_type] || r.grant_type} ${r.months || ''}개월`;
+      return `<tr><td>${r.nickname || '-'}</td><td>${GRANT_TYPE_KO[r.grant_type] || r.grant_type} · ${what}</td>` +
+             `<td style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.memo || '-'}</td>` +
+             `<td>${new Date(r.granted_at).toLocaleString('ko-KR')}</td></tr>`;
+    }).join('');
+  } catch (e) {
+    console.error('[grant] 이력 조회 실패', e);
+    body.innerHTML = '<tr class="empty-row"><td colspan="4">불러오지 못했습니다.</td></tr>';
+  }
+}
+
+// =====================================================================
 // 2026-08-26 신설(v52): 환경설정
 // 코드에 박혀 있던 값(PayPal 환율 등)을 여기서 바꿉니다. 즉시 반영되고,
 // 변경 이력은 app_settings_history에 자동으로 남습니다.
@@ -1009,6 +1184,8 @@ function loadAllTabs(){
   loadProducts();
   loadHotlinePricing(); // 2026-08-21 신설
   loadSettings();        // 2026-08-26 신설(v52)
+  updateGrantForm();     // 2026-08-26 신설(v53)
+  loadGrantHistory();
 }
 
 (async () => {
