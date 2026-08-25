@@ -103,7 +103,8 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
     <a href="#sec-invite" data-i18n-html="s005">③ 초대·참가하기</a>
     <a href="#sec-chat" data-i18n-html="s006">④ 대화방 기능 ⭐</a>
     <a href="#sec-secure" data-i18n-html="s007">⑤ 암호화(Secure) 주의사항 ⭐</a>
-    <a href="#sec-faq" data-i18n-html="s008">⑥ 자주 묻는 질문</a>
+    <a href="#sec-export" data-i18n-html="x10">⑥ 대화 내보내기 ⭐</a>
+    <a href="#sec-faq" data-i18n-html="s008">⑦ 자주 묻는 질문</a>
   </div>
 
   <section id="sec-overview">
@@ -158,6 +159,7 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
       <div class="category-card"><div class="h" data-i18n-html="s048">✓ 읽음 표시</div><div class="d" data-i18n-html="s049">내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.</div></div>
       <div class="category-card"><div class="h" data-i18n-html="s050">🎵 같이 듣기</div><div class="d" data-i18n-html="s051">유튜브 링크나 음원 파일을 올리면, 방에 있는 모두가 같은 지점에서 동시에 들을 수 있어요.</div></div>
       <div class="category-card"><div class="h" data-i18n-html="s052">🎧 음성통화 · 🎥 영상통화</div><div class="d" data-i18n-html="s053">최대 4인까지 다자간 통화가 가능해요.</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="x01">🖨️ 대화 내보내기</div><div class="d" data-i18n-html="x02">주고받은 대화를 종이로 인쇄하거나 PDF로 저장할 수 있어요. 기간과 참가자를 골라서 필요한 부분만 뽑을 수 있습니다.</div></div>
     </div>
   </section>
 
@@ -180,8 +182,46 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
     </div>
   </section>
 
+
+  <section id="sec-export">
+    <div class="sec-title"><span class="sec-num">6</span><span data-i18n-html="x11">대화 내보내기 (인쇄 · PDF)</span></div>
+
+    <div class="highlight-box">
+      <div class="tag" data-i18n-html="x12">상담 기록을 남겨야 할 때</div>
+      <p data-i18n-html="x13">변호사·의사·세무사처럼 <b>기록을 보관할 의무</b>가 있는 분들을 위해 만들었습니다. 대화방 오른쪽 위 <b>"⋯" → 🖨️ 대화 내보내기</b>에서 바로 뽑으실 수 있어요.</p>
+    </div>
+
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="x20"><b>기간 고르기</b>시작일과 종료일을 지정합니다. 하루치만 뽑는 것도 됩니다.</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="x21"><b>참가자 고르기</b>"전체"를 그대로 두거나, 특정 참가자만 골라서 그 사람과의 대화만 뽑을 수 있습니다. 여러 명을 함께 고르셔도 됩니다.</span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="x22"><b>인쇄 / PDF로 저장</b>인쇄창이 열립니다. 프린터로 바로 뽑으셔도 되고, "PDF로 저장"을 고르시면 파일로 남습니다.</span></div>
+    </div>
+
+    <div class="dodont">
+      <div class="dodont-col do">
+        <div class="head" data-i18n-html="x30">📎 사진과 파일은 어떻게 되나요?</div>
+        <div class="dodont-item"><span class="icon">🖼️</span><span><span data-i18n-html="x31"><b>사진</b>은 인쇄물 안에 그대로 실립니다.</span></span></div>
+        <div class="dodont-item"><span class="icon">📄</span><span><span data-i18n-html="x32"><b>동영상·음성메시지·문서</b>는 종이에 담을 수 없습니다. 대신 문서 맨 뒤에 <b>첨부파일 목록</b>이 붙어서, 언제 누가 어떤 파일을 주고받았는지가 기록으로 남습니다.</span></span></div>
+        <div class="dodont-item"><span class="icon">⬇️</span><span><span data-i18n-html="x33">파일 실물이 필요하시면 같은 화면의 <b>"첨부파일 내려받기"</b>를 누르세요. 고르신 기간·참가자 조건이 그대로 적용됩니다.</span></span></div>
+      </div>
+      <div class="dodont-col dont">
+        <div class="head" data-i18n-html="x40">🔒 암호화 방에서도 됩니다</div>
+        <div class="dodont-item"><span class="icon">🔐</span><span><span data-i18n-html="x41">Secure 상품은 저희 서버가 대화 내용을 볼 수 없습니다. 그래서 내보내기도 <b>회원님의 브라우저 안에서</b> 만들어집니다. 저희를 거치지 않고 바로 인쇄물이 됩니다.</span></span></div>
+        <div class="dodont-item"><span class="icon">⚠️</span><span><span data-i18n-html="x42">⚠️ 다만 그렇기 때문에 <b>초대링크(열쇠)를 잃어버리면 내보내기도 불가능합니다.</b> 기록을 남겨야 하는 용도라면 링크를 반드시 안전한 곳에 보관해주세요.</span></span></div>
+      </div>
+    </div>
+  </section>
+
   <section id="sec-faq">
-    <div class="sec-title"><span class="sec-num">6</span><span data-i18n-html="s063">자주 묻는 질문</span></div>
+    <div class="sec-title"><span class="sec-num">7</span><span data-i18n-html="s063">자주 묻는 질문</span></div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="x50">상담 기록을 나중에 볼 수 있나요?</span></div>
+      <div class="faq-a" data-i18n-html="x51">네. 대화방은 구독 기간 동안 그대로 남아 있고, 언제든 "⋯ → 🖨️ 대화 내보내기"로 인쇄하거나 PDF로 저장하실 수 있습니다. 다만 구독이 만료되고 30일이 지나면 사진·동영상·음성 파일이 삭제되니, 보관이 필요하시면 그 전에 내보내두세요.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="x52">단톡방에서 특정 사람과의 대화만 뽑을 수 있나요?</span></div>
+      <div class="faq-a" data-i18n-html="x53">네. 내보내기 화면에서 참가자를 골라주시면 그 사람의 메시지만 나옵니다. 여러 명을 함께 고르셔도 됩니다. 다만 통화 기록과 입퇴장 기록은 특정인의 발언이 아니라 방 전체에서 일어난 일이라, 사람을 골라도 그대로 포함됩니다(체크박스로 끄실 수 있어요).</div>
+    </div>
     <div class="faq-item">
       <div class="faq-q"><span>Q.</span><span data-i18n-html="s064">사용량 한도를 넘으면 어떻게 되나요?</span></div>
       <div class="faq-a" data-i18n-html="s065">한도를 넘는 시점에 추가결제 안내가 뜹니다. 한도 이하로 쓰시면 별도 알림 없이 그대로 이용하실 수 있어요.</div>
@@ -209,6 +249,26 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
 // =====================================================================
 const I18N = {
  "ko": {
+  "x01": "🖨️ 대화 내보내기",
+  "x02": "주고받은 대화를 종이로 인쇄하거나 PDF로 저장할 수 있어요. 기간과 참가자를 골라서 필요한 부분만 뽑을 수 있습니다.",
+  "x10": "⑥ 대화 내보내기 ⭐",
+  "x11": "대화 내보내기 (인쇄 · PDF)",
+  "x12": "상담 기록을 남겨야 할 때",
+  "x13": "변호사·의사·세무사처럼 <b>기록을 보관할 의무</b>가 있는 분들을 위해 만들었습니다. 대화방 오른쪽 위 <b>\"⋯\" → 🖨️ 대화 내보내기</b>에서 바로 뽑으실 수 있어요.",
+  "x20": "<b>기간 고르기</b>시작일과 종료일을 지정합니다. 하루치만 뽑는 것도 됩니다.",
+  "x21": "<b>참가자 고르기</b>\"전체\"를 그대로 두거나, 특정 참가자만 골라서 그 사람과의 대화만 뽑을 수 있습니다. 여러 명을 함께 고르셔도 됩니다.",
+  "x22": "<b>인쇄 / PDF로 저장</b>인쇄창이 열립니다. 프린터로 바로 뽑으셔도 되고, \"PDF로 저장\"을 고르시면 파일로 남습니다.",
+  "x30": "📎 사진과 파일은 어떻게 되나요?",
+  "x31": "<b>사진</b>은 인쇄물 안에 그대로 실립니다.",
+  "x32": "<b>동영상·음성메시지·문서</b>는 종이에 담을 수 없습니다. 대신 문서 맨 뒤에 <b>첨부파일 목록</b>이 붙어서, 언제 누가 어떤 파일을 주고받았는지가 기록으로 남습니다.",
+  "x33": "파일 실물이 필요하시면 같은 화면의 <b>\"첨부파일 내려받기\"</b>를 누르세요. 고르신 기간·참가자 조건이 그대로 적용됩니다.",
+  "x40": "🔒 암호화 방에서도 됩니다",
+  "x41": "Secure 상품은 저희 서버가 대화 내용을 볼 수 없습니다. 그래서 내보내기도 <b>회원님의 브라우저 안에서</b> 만들어집니다. 저희를 거치지 않고 바로 인쇄물이 됩니다.",
+  "x42": "⚠️ 다만 그렇기 때문에 <b>초대링크(열쇠)를 잃어버리면 내보내기도 불가능합니다.</b> 기록을 남겨야 하는 용도라면 링크를 반드시 안전한 곳에 보관해주세요.",
+  "x50": "상담 기록을 나중에 볼 수 있나요?",
+  "x51": "네. 대화방은 구독 기간 동안 그대로 남아 있고, 언제든 \"⋯ → 🖨️ 대화 내보내기\"로 인쇄하거나 PDF로 저장하실 수 있습니다. 다만 구독이 만료되고 30일이 지나면 사진·동영상·음성 파일이 삭제되니, 보관이 필요하시면 그 전에 내보내두세요.",
+  "x52": "단톡방에서 특정 사람과의 대화만 뽑을 수 있나요?",
+  "x53": "네. 내보내기 화면에서 참가자를 골라주시면 그 사람의 메시지만 나옵니다. 여러 명을 함께 고르셔도 됩니다. 다만 통화 기록과 입퇴장 기록은 특정인의 발언이 아니라 방 전체에서 일어난 일이라, 사람을 골라도 그대로 포함됩니다(체크박스로 끄실 수 있어요).",
   "s071": "결제하신 기간이 끝나면 회선이 종료됩니다. 연장하시려면 만료 전에 재결제해주세요.",
   "s070": "기간이 만료되면 대화 내용은 어떻게 되나요?",
   "s069": "타이머 메시지는 방을 실제로 열어보고 있는 쪽 화면이 삭제를 처리합니다. 양쪽 다 탭을 닫아버리면, 다음에 누군가 다시 들어올 때 정리됩니다.",
@@ -272,7 +332,7 @@ const I18N = {
   "s011": "<b>초대링크 발급</b>결제가 끝나면 관리 화면에서 초대링크가 만들어집니다.",
   "s010": "<b>상품 선택·결제</b>2인용부터 4인용까지, 일반 상품과 암호화(Secure) 상품 중 원하는 걸 고릅니다.",
   "s009": "전체 흐름",
-  "s008": "⑥ 자주 묻는 질문",
+  "s008": "⑦ 자주 묻는 질문",
   "s007": "⑤ 암호화(Secure) 주의사항 ⭐",
   "s006": "④ 대화방 기능 ⭐",
   "s005": "③ 초대·참가하기",
@@ -286,6 +346,26 @@ const I18N = {
   "langAria": "언어 바꾸기"
  },
  "en": {
+  "x01": "🖨️ Export conversation",
+  "x02": "Print the conversation on paper or save it as a PDF. Choose a period and which participants to include, so you only export the part you need.",
+  "x10": "⑥ Exporting a conversation ⭐",
+  "x11": "Exporting a conversation (print · PDF)",
+  "x12": "When you need to keep a record",
+  "x13": "We built this for people who have a <b>duty to retain records</b> — lawyers, doctors, tax accountants. Open it from <b>\"⋯\" → 🖨️ Export conversation</b> at the top right of the room.",
+  "x20": "<b>Choose a period</b>Set a start and end date. A single day works too.",
+  "x21": "<b>Choose participants</b>Leave it on \"Everyone\", or pick specific people to export only their messages. You can select several at once.",
+  "x22": "<b>Print / Save as PDF</b>The print dialog opens. Send it straight to a printer, or choose \"Save as PDF\" to keep it as a file.",
+  "x30": "📎 What happens to photos and files?",
+  "x31": "<b>Photos</b> are printed directly into the document.",
+  "x32": "<b>Videos, voice messages and documents</b> cannot be put on paper. Instead an <b>attachment list</b> is added at the end of the document, recording who sent which file and when.",
+  "x33": "If you need the files themselves, tap <b>\"Download attachments\"</b> on the same screen. The period and participants you chose are applied there too.",
+  "x40": "🔒 It works in encrypted rooms too",
+  "x41": "On Secure plans our servers cannot read your conversation, so the export is assembled <b>inside your own browser</b>. It becomes a printout without ever passing through us.",
+  "x42": "⚠️ For that same reason, <b>if you lose the invite link (the key), you cannot export either.</b> If you are keeping records, be sure to store the link somewhere safe.",
+  "x50": "Can I look at consultation records later?",
+  "x51": "Yes. The room stays as it is for the length of your subscription, and you can print or save it as a PDF at any time from \"⋯ → 🖨️ Export conversation\". Note that photos, videos and voice files are deleted 30 days after a subscription expires, so export anything you need to keep before then.",
+  "x52": "In a group room, can I export only one person's messages?",
+  "x53": "Yes. Pick the participants on the export screen and only their messages appear. You can select several. Call records and join/leave records are events for the whole room rather than one person's messages, so they stay included even when you filter by person — you can turn them off with the checkbox.",
   "s071": "The line closes when the period you paid for ends. To keep it, renew before it expires.",
   "s070": "What happens to our messages when the plan expires?",
   "s069": "Timed messages are deleted by whichever screen is actually open in the room. If both sides close the tab, they are cleaned up the next time someone comes back in.",
@@ -349,7 +429,7 @@ const I18N = {
   "s011": "<b>Get your invite link</b>Once payment is complete, an invite link is created on your management screen.",
   "s010": "<b>Choose and pay</b>Pick a plan for two to four people, in either the standard or the encrypted (Secure) version.",
   "s009": "How it works",
-  "s008": "⑥ FAQ",
+  "s008": "⑦ FAQ",
   "s007": "⑤ Encryption (Secure) notes ⭐",
   "s006": "④ Room features ⭐",
   "s005": "③ Inviting and joining",
