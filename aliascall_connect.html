@@ -1721,7 +1721,8 @@ async function attemptFinderPushSubscribe(caseId){
     await fetch(`${SUPABASE_URL}/functions/v1/aliascall-finder-push-subscribe`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ caseId, finderAnonId, endpoint: subJson.endpoint, p256dh: subJson.keys.p256dh, auth_key: subJson.keys.auth }),
+      // 2026-08-25: lang 동봉 — 발견자는 계정이 없어서, 이 값이 알림 언어를 정하는 유일한 근거(v49)
+      body: JSON.stringify({ caseId, finderAnonId, endpoint: subJson.endpoint, p256dh: subJson.keys.p256dh, auth_key: subJson.keys.auth, lang: (typeof pushLang === 'function' ? pushLang() : 'ko') }),
     });
   } catch (e) { console.warn('[push] 발견자 익명 알림 구독 시도 실패(대화 자체엔 영향 없음)', e); }
 }

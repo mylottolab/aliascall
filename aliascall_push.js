@@ -83,9 +83,24 @@ const PUSH_I18N = {
   },
 };
 
-// 각 화면이 언어를 localStorage('aliascall_lang')에 저장하므로 그 값을 그대로 따라감
+// 각 화면이 언어를 localStorage에 저장하므로 그 값을 그대로 따라감.
+// ⚠ 2026-08-25: 공용 스크립트(report/emoji/camera/zoom/payments)가 window.getAliascallLang을
+//    먼저 정의해 뒀으면 그것을 씀. 없으면 쓰일 수 있는 키를 전부 확인함 —
+//    화면마다 언어가 따로 노는 것을 막기 위함.
 function pushLang(){
-  return localStorage.getItem('aliascall_lang') === 'en' ? 'en' : 'ko';
+  try {
+    if (typeof window.getAliascallLang === 'function') {
+      return window.getAliascallLang() === 'en' ? 'en' : 'ko';
+    }
+  } catch (e) {}
+  var KEYS = ['aliascall_lang', 'aliascall_language', 'ac_lang', 'lang'];
+  for (var i = 0; i < KEYS.length; i++) {
+    try {
+      var v = localStorage.getItem(KEYS[i]);
+      if (v) return String(v).toLowerCase().indexOf('en') === 0 ? 'en' : 'ko';
+    } catch (e) {}
+  }
+  return (navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en';
 }
 function PT(){ return PUSH_I18N[pushLang()]; }
 
@@ -282,6 +297,7 @@ async function _subscribeCoreNative(sb){
         platform: 'android_fcm',
         token,
         user_agent: navigator.userAgent,
+        lang: pushLang(), // 2026-08-25: 알림 문구를 이 기기 언어로 보내기 위함(v49)
       }),
     });
     if (!res.ok) throw new Error('토큰 저장 실패');
@@ -343,6 +359,7 @@ async function _subscribeCoreWeb(sb){
         p256dh: subJson.keys.p256dh,
         auth_key: subJson.keys.auth,
         user_agent: navigator.userAgent,
+        lang: pushLang(), // 2026-08-25: 알림 문구를 이 기기 언어로 보내기 위함(v49)
       }),
     });
     if (!res.ok) throw new Error('구독 정보 저장 실패');
