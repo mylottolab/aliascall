@@ -233,6 +233,11 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 .toggle-knob{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:left .15s ease; }
 .toggle-switch.on .toggle-knob{ left:23px; }
 .notify-pc-note{ font-size:11px; color:var(--ink-soft); padding:10px 0 12px; border-top:1px solid var(--line); line-height:1.5; }
+
+/* 2026-08-25 신설: 언어 전환 버튼 (다른 화면과 동일 위치·형태) */
+.header-right{ display:flex; align-items:center; gap:8px; }
+.lang-toggle{ background:var(--teal-tint); color:var(--teal-deep); border:1px solid var(--line); border-radius:20px; padding:5px 11px; font-size:11px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; white-space:nowrap; flex-shrink:0; }
+.lang-toggle:active{ background:var(--teal); color:#fff; }
 </style>
 </head>
 <body>
@@ -241,23 +246,26 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 
 <header>
   <div class="brand-row">
-    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기" data-i18n-aria="backAria">←</button>
     <a href="index.html" class="brand-home-link">
       <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
     </a>
   </div>
-  <div class="listen-badge" id="listenBadge" style="display:none;">수신 대기중</div>
+  <div class="header-right">
+    <button type="button" class="lang-toggle" id="langToggle" data-i18n="langToggle" data-i18n-aria="langToggleAria" aria-label="언어 바꾸기 (English)">EN</button>
+    <div class="listen-badge" id="listenBadge" style="display:none;" data-i18n="listenBadge">수신 대기중</div>
+  </div>
 </header>
 
 <main>
-  <div class="page-title">수신 대기</div>
-  <div class="page-desc">이 화면을 열어두시면, 회원님의 등록물로 누군가 연결을 시도할 때 여기로 바로 알림이 뜹니다.</div>
+  <div class="page-title" data-i18n="pageTitle">수신 대기</div>
+  <div class="page-desc" data-i18n="pageDesc">이 화면을 열어두시면, 회원님의 등록물로 누군가 연결을 시도할 때 여기로 바로 알림이 뜹니다.</div>
 
   <!-- 2026-08-19 (2차): "알림음 켜기" 배너 + 없던 긴급알림 토글을 하나로 통합 -->
   <div id="notifySettingsContainer" style="margin-bottom:18px;"></div>
 
-  <div class="login-needed" id="loginNeeded">로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.</div>
+  <div class="login-needed" id="loginNeeded" data-i18n="loginNeeded">로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.</div>
 
   <div id="waitContent" style="display:none;">
     <!-- 2026-08-20 (3차) 신설: 사건함 — 문자/채팅/사진/통화기록이 다 여기 시간순으로 모임.
@@ -265,14 +273,14 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
          겹치고 방향이 갈려서 혼란스럽다는 피드백을 반영 — 이제 사건함이 유일한 소통 기록임) -->
     <div class="card" id="caseInboxCard" style="margin-bottom:16px;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-        <b style="font-size:14px;" id="caseInboxTitle">📂 진행 중인 소통함</b>
-        <button type="button" id="toggleClosedCasesBtn" style="background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;">지난 소통 보기</button>
+        <b style="font-size:14px;" id="caseInboxTitle" data-i18n="inboxTitleOpen">📂 진행 중인 소통함</b>
+        <button type="button" id="toggleClosedCasesBtn" style="background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;" data-i18n="inboxToggleShowClosed">지난 소통 보기</button>
       </div>
-      <div id="caseInboxList"><div class="case-inbox-empty">불러오는 중…</div></div>
+      <div id="caseInboxList"><div class="case-inbox-empty" data-i18n="inboxLoading">불러오는 중…</div></div>
     </div>
     <div class="empty-wait" id="emptyWait">
       <div class="big">📞</div>
-      <p>이 화면을 열어두시면, 연결 요청이 오면 바로 알림이 뜹니다.</p>
+      <p data-i18n="emptyWaitText">이 화면을 열어두시면, 연결 요청이 오면 바로 알림이 뜹니다.</p>
     </div>
   </div>
 </main>
@@ -282,7 +290,7 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 <div class="global-toast" id="globalToast">
   <button class="global-toast-close" id="globalToastClose">✕</button>
   <div class="global-toast-body" id="globalToastBody">
-    <div class="global-toast-title" id="globalToastTitle">💬 새 메시지가 왔어요</div>
+    <div class="global-toast-title" id="globalToastTitle" data-i18n="toastNewMsgTitle">💬 새 메시지가 왔어요</div>
     <div class="global-toast-preview" id="globalToastPreview"></div>
   </div>
 </div>
@@ -292,8 +300,8 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
     <!-- 링잉 상태: 수락 전 -->
     <div id="ringState">
       <div class="ring-avatar" id="ringAvatar">📞</div>
-      <h3 id="ringTitle">연결 요청이 왔어요</h3>
-      <p id="ringSub">음성으로 연결 요청</p>
+      <h3 id="ringTitle" data-i18n="ringTitle">연결 요청이 왔어요</h3>
+      <p id="ringSub" data-i18n="ringSubVoice">음성으로 연결 요청</p>
       <div class="ring-btns">
         <button class="ring-btn decline" id="declineBtn">✕</button>
         <button class="ring-btn accept" id="acceptBtn">✓</button>
@@ -307,13 +315,13 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
         <video id="localVideo" autoplay playsinline muted></video>
         <audio id="remoteAudio" autoplay></audio>
       </div>
-      <h3 id="inCallStatus">연결 확인 중…</h3>
+      <h3 id="inCallStatus" data-i18n="inCallChecking">연결 확인 중…</h3>
       <p id="inCallSub"></p>
       <div class="call-controls show" id="callControls">
         <button class="ctrl-btn" id="muteBtn">🎤</button>
         <button class="ctrl-btn hangup" id="hangupBtn">📵</button>
       </div>
-      <button class="unmute-btn" id="unmuteBtn">🔊 소리가 안 들리면 여기를 탭하세요</button>
+      <button class="unmute-btn" id="unmuteBtn" data-i18n="unmuteBtn">🔊 소리가 안 들리면 여기를 탭하세요</button>
     </div>
   </div>
 
@@ -321,27 +329,27 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
        항상 열려있음. 통화 UI(session-topbar)는 "채팅 요청"모드에선 아예 숨김. -->
   <div class="session-chat" id="chatPanel">
     <div class="chat-only-header" id="chatOnlyHeader">
-      <b>💬 문자 채팅</b>
+      <b><span>💬 </span><span id="chatHeaderTitle" data-i18n="chatHeaderDefault">문자 채팅</span></b>
       <div style="display:flex; align-items:center; gap:8px;">
         <!-- 2026-08-24 신설: 신고 버튼.
              .chat-only-header button 규칙이 빨간 배경을 강제하므로 !important로 덮어씀 -->
-        <button type="button" id="acReportBtn" title="신고하기"
+        <button type="button" id="acReportBtn" title="신고하기" data-i18n-title="reportTitle"
           style="background:none !important; color:var(--danger) !important; font-size:16px; padding:4px 8px !important;">🚩</button>
-        <button id="chatOnlyEndBtn">채팅 종료</button>
+        <button id="chatOnlyEndBtn" data-i18n="chatEndBtn">채팅 종료</button>
       </div>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-closed-note" id="chatClosedNote">
-      🔒 이 소통은 종료되어 더 이상 메시지를 보낼 수 없어요.
-      <button type="button" id="reopenCaseBtn" style="margin-left:8px; background:var(--teal); color:#fff; border:none; border-radius:8px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;">다시 열기</button>
+      <span data-i18n="chatClosedNote">🔒 이 소통은 종료되어 더 이상 메시지를 보낼 수 없어요.</span>
+      <button type="button" id="reopenCaseBtn" style="margin-left:8px; background:var(--teal); color:#fff; border:none; border-radius:8px; padding:5px 12px; font-size:11.5px; font-weight:700; cursor:pointer;" data-i18n="reopenBtn">다시 열기</button>
     </div>
     <!-- 2026-08-22 신설: 이모지 선택 패널 -->
     <div class="emoji-panel" id="emojiPanel"></div>
     <div class="chat-input-row">
       <input type="file" id="chatPhotoInput" accept="image/*" multiple style="display:none;">
-      <button type="button" id="plusMenuBtn" title="더보기">➕</button>
-      <button type="button" id="emojiBtn" title="이모지">😊</button>
-      <input type="text" id="chatInput" placeholder="메시지 입력…">
+      <button type="button" id="plusMenuBtn" title="더보기" data-i18n-title="plusMoreTitle">➕</button>
+      <button type="button" id="emojiBtn" title="이모지" data-i18n-title="emojiTitle">😊</button>
+      <input type="text" id="chatInput" placeholder="메시지 입력…" data-i18n-placeholder="chatPlaceholder">
       <button id="chatSendBtn">➤</button>
     </div>
   </div>
@@ -350,22 +358,22 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
        "+" 팝업으로 정리함 -->
   <div class="plus-menu-overlay" id="plusMenuOverlay">
     <div class="plus-menu-sheet">
-      <button type="button" class="plus-menu-item" id="chatAttachBtn"><span>📎</span><span>사진 첨부</span></button>
-      <button type="button" class="plus-menu-item" id="chatCameraBtn"><span>📷</span><span>사진 촬영</span></button>
-      <button type="button" class="plus-menu-item" id="guideMenuBtn"><span>❓</span><span>사용법</span></button>
+      <button type="button" class="plus-menu-item" id="chatAttachBtn"><span>📎</span><span data-i18n="plusAttach">사진 첨부</span></button>
+      <button type="button" class="plus-menu-item" id="chatCameraBtn"><span>📷</span><span data-i18n="plusCamera">사진 촬영</span></button>
+      <button type="button" class="plus-menu-item" id="guideMenuBtn"><span>❓</span><span data-i18n="plusGuide">사용법</span></button>
     </div>
   </div>
 
   <!-- 2026-08-23 신설: 채팅 사용법 안내 -->
   <div class="panel-overlay" id="guidePanelOverlay">
     <div class="panel-sheet">
-      <div class="panel-header"><span>❓ 채팅 사용법</span><button type="button" class="panel-close" data-close="guidePanelOverlay">✕</button></div>
+      <div class="panel-header"><span data-i18n="guidePanelTitle">❓ 채팅 사용법</span><button type="button" class="panel-close" data-close="guidePanelOverlay">✕</button></div>
       <div class="panel-list guide-list">
-        <div class="guide-item"><div class="guide-icon">💬</div><div><div class="guide-title">기본 채팅</div><div class="guide-desc">문자·이모지·사진을 주고받을 수 있어요. 사진은 ➕ 안의 "사진 첨부"(갤러리) 또는 "사진 촬영"(바로 찍기)으로 보낼 수 있어요.</div></div></div>
-        <div class="guide-item"><div class="guide-icon">😊</div><div><div class="guide-title">이모지</div><div class="guide-desc">움직이는 이모지 584개를 카테고리별로 골라 보낼 수 있어요. 이모지 1~3개로만 된 메시지는 큰 스티커로 보여요.</div></div></div>
-        <div class="guide-item"><div class="guide-icon">🔍</div><div><div class="guide-title">사진 확대해서 보기</div><div class="guide-desc">보낸 사진을 누르면, 손가락 두 개(핀치줌)나 더블탭으로 확대해서 볼 수 있어요.</div></div></div>
-        <div class="guide-item"><div class="guide-icon">✓</div><div><div class="guide-title">읽음 표시</div><div class="guide-desc">내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.</div></div></div>
-        <div class="guide-item"><div class="guide-icon">🔒</div><div><div class="guide-title">번호 노출 없이 안전하게</div><div class="guide-desc">Aliascall은 실제 전화번호를 노출하지 않는 연결 서비스예요. 실시간 위치추적 기능은 없어요.</div></div></div>
+        <div class="guide-item"><div class="guide-icon">💬</div><div><div class="guide-title" data-i18n="guide1Title">기본 채팅</div><div class="guide-desc" data-i18n="guide1Desc">문자·이모지·사진을 주고받을 수 있어요. 사진은 ➕ 안의 "사진 첨부"(갤러리) 또는 "사진 촬영"(바로 찍기)으로 보낼 수 있어요.</div></div></div>
+        <div class="guide-item"><div class="guide-icon">😊</div><div><div class="guide-title" data-i18n="guide2Title">이모지</div><div class="guide-desc" data-i18n="guide2Desc">움직이는 이모지 584개를 카테고리별로 골라 보낼 수 있어요. 이모지 1~3개로만 된 메시지는 큰 스티커로 보여요.</div></div></div>
+        <div class="guide-item"><div class="guide-icon">🔍</div><div><div class="guide-title" data-i18n="guide3Title">사진 확대해서 보기</div><div class="guide-desc" data-i18n="guide3Desc">보낸 사진을 누르면, 손가락 두 개(핀치줌)나 더블탭으로 확대해서 볼 수 있어요.</div></div></div>
+        <div class="guide-item"><div class="guide-icon">✓</div><div><div class="guide-title" data-i18n="guide4Title">읽음 표시</div><div class="guide-desc" data-i18n="guide4Desc">내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.</div></div></div>
+        <div class="guide-item"><div class="guide-icon">🔒</div><div><div class="guide-title" data-i18n="guide5Title">번호 노출 없이 안전하게</div><div class="guide-desc" data-i18n="guide5Desc">Aliascall은 실제 전화번호를 노출하지 않는 연결 서비스예요. 실시간 위치추적 기능은 없어요.</div></div></div>
       </div>
     </div>
   </div>
@@ -376,19 +384,19 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
      소통 화면이 열려있는 동안 항상 보이며, 채팅/음성/영상/문자/사진 어디로든 바로 전환 가능 -->
 <div class="bottom-nav" id="ownerBottomNav" style="display:none;">
   <button class="bottom-nav-btn" id="ownerNavChat">
-    <span class="bn-icon">💬</span><span>채팅</span>
+    <span class="bn-icon">💬</span><span data-i18n="navChat">채팅</span>
   </button>
   <button class="bottom-nav-btn" id="ownerNavVoice">
-    <span class="bn-icon">🎧</span><span>음성</span>
+    <span class="bn-icon">🎧</span><span data-i18n="navVoice">음성</span>
   </button>
   <button class="bottom-nav-btn" id="ownerNavVideo">
-    <span class="bn-icon">🎥</span><span>영상</span>
+    <span class="bn-icon">🎥</span><span data-i18n="navVideo">영상</span>
   </button>
   <button class="bottom-nav-btn" id="ownerNavMessage">
-    <span class="bn-icon">✉️</span><span>문자</span>
+    <span class="bn-icon">✉️</span><span data-i18n="navMessage">문자</span>
   </button>
   <button class="bottom-nav-btn" id="ownerNavPhoto">
-    <span class="bn-icon">📷</span><span>사진</span>
+    <span class="bn-icon">📷</span><span data-i18n="navPhoto">사진</span>
   </button>
 </div>
 
@@ -402,6 +410,260 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// =====================================================================
+// 2026-08-25 신설: 다국어(한국어/영어) — 다른 화면들과 동일한 I18N 방식
+//  · data-i18n            → textContent
+//  · data-i18n-html       → innerHTML
+//  · data-i18n-placeholder→ 입력칸 안내
+//  · data-i18n-title      → 아이콘 툴팁
+//  · data-i18n-aria       → 스크린리더 라벨
+//  · JS가 그려내는 문자열은 T('키')로 처리
+// (console.log 개발자 로그와 throw new Error 내부 식별자는 의도적으로 한국어 유지)
+// =====================================================================
+const I18N = {
+  ko: {
+    docTitle: 'Aliascall — 수신 대기',
+    backAria: '뒤로가기',
+    langToggle: 'EN',
+    langToggleAria: '언어 바꾸기 (English)',
+    listenBadge: '수신 대기중',
+    pageTitle: '수신 대기',
+    pageDesc: '이 화면을 열어두시면, 회원님의 등록물로 누군가 연결을 시도할 때 여기로 바로 알림이 뜹니다.',
+    loginNeeded: '로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.',
+
+    inboxTitleOpen: '📂 진행 중인 소통함',
+    inboxTitleClosed: '📂 지난 소통함',
+    inboxToggleShowClosed: '지난 소통 보기',
+    inboxToggleShowOpen: '진행중인 소통만 보기',
+    inboxLoading: '불러오는 중…',
+    inboxEmptyOpen: '확인해야 할 알림이 없어요.',
+    inboxEmptyClosed: '지난 소통이 없어요.',
+    inboxAlertTitle: '확인해야 할 알림입니다',
+    inboxMePrefix: '나: ',
+    inboxNoMessage: '(메시지 없음)',
+    inboxClosedBadge: '종료됨',
+    inboxUntitled: '등록물',
+    inboxLoadFail: '불러오지 못했어요.',
+
+    emptyWaitText: '이 화면을 열어두시면, 연결 요청이 오면 바로 알림이 뜹니다.',
+
+    toastNewMsgTitle: '💬 새 메시지가 왔어요',
+    toastFinderReplied: '👤 발견자가 답장했어요. 응답을 원하시면 여기를 클릭하세요',
+    previewPhoto: '📷 사진을 보냈어요',
+
+    ringTitle: '연결 요청이 왔어요',
+    ringSubVoice: '음성으로 연결 요청',
+    ringSubVideo: '영상으로 연결 요청',
+    inCallChecking: '연결 확인 중…',
+    inCallConnected: '연결됨',
+    inCallCalling: '전화 거는 중…',
+    inCallCallingSub: '발견자에게 알림을 보내고 있어요.',
+    unmuteBtn: '🔊 소리가 안 들리면 여기를 탭하세요',
+
+    chatHeaderDefault: '문자 채팅',
+    reportTitle: '신고하기',
+    chatEndBtn: '채팅 종료',
+    chatClosedNote: '🔒 이 소통은 종료되어 더 이상 메시지를 보낼 수 없어요.',
+    reopenBtn: '다시 열기',
+    plusMoreTitle: '더보기',
+    emojiTitle: '이모지',
+    chatPlaceholder: '메시지 입력…',
+    plusAttach: '사진 첨부',
+    plusCamera: '사진 촬영',
+    plusGuide: '사용법',
+
+    guidePanelTitle: '❓ 채팅 사용법',
+    guide1Title: '기본 채팅',
+    guide1Desc: '문자·이모지·사진을 주고받을 수 있어요. 사진은 ➕ 안의 "사진 첨부"(갤러리) 또는 "사진 촬영"(바로 찍기)으로 보낼 수 있어요.',
+    guide2Title: '이모지',
+    guide2Desc: '움직이는 이모지 584개를 카테고리별로 골라 보낼 수 있어요. 이모지 1~3개로만 된 메시지는 큰 스티커로 보여요.',
+    guide3Title: '사진 확대해서 보기',
+    guide3Desc: '보낸 사진을 누르면, 손가락 두 개(핀치줌)나 더블탭으로 확대해서 볼 수 있어요.',
+    guide4Title: '읽음 표시',
+    guide4Desc: '내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.',
+    guide5Title: '번호 노출 없이 안전하게',
+    guide5Desc: 'Aliascall은 실제 전화번호를 노출하지 않는 연결 서비스예요. 실시간 위치추적 기능은 없어요.',
+
+    navChat: '채팅',
+    navVoice: '음성',
+    navVideo: '영상',
+    navMessage: '문자',
+    navPhoto: '사진',
+
+    photoAlt: '사진',
+    readTag: '읽음',
+    amLabel: '오전',
+    pmLabel: '오후',
+
+    alertMicPerm: '마이크(또는 카메라) 권한이 필요합니다.',
+    alertCaseLoading: '소통 정보를 아직 불러오는 중이에요. 잠시 후 다시 시도해주세요.',
+    alertLoginRequired: '로그인이 필요합니다.',
+    alertConnectFail: '연결에 실패했어요. 잠시 후 다시 시도해주세요.',
+    alertReopenFail: '다시 열지 못했어요. 잠시 후 다시 시도해주세요.',
+    alertPhotoTooBig: '사진 용량이 너무 커요 (최대 8MB).',
+    alertPhotoSendFail: '사진을 보내지 못했어요. 잠시 후 다시 시도해주세요.',
+    alertMsgSendFail: '메시지를 보내지 못했어요. 잠시 후 다시 시도해주세요.',
+    alertReportNeedChat: '대화를 연 뒤에 신고할 수 있어요.',
+    confirmEndChat: '이 대화를 종료하시겠어요? 종료하면 더 이상 메시지를 주고받을 수 없어요.',
+  },
+  en: {
+    docTitle: 'Aliascall — Waiting for Calls',
+    backAria: 'Go back',
+    langToggle: '한국어',
+    langToggleAria: 'Change language (한국어)',
+    listenBadge: 'Listening',
+    pageTitle: 'Waiting for Calls',
+    pageDesc: 'Keep this screen open and you will be alerted here the moment someone tries to reach you through one of your registered items.',
+    loginNeeded: 'Please sign in first. Use your nickname and password on the registration screen.',
+
+    inboxTitleOpen: '📂 Active conversations',
+    inboxTitleClosed: '📂 Past conversations',
+    inboxToggleShowClosed: 'View past conversations',
+    inboxToggleShowOpen: 'View active only',
+    inboxLoading: 'Loading…',
+    inboxEmptyOpen: 'Nothing needs your attention right now.',
+    inboxEmptyClosed: 'No past conversations.',
+    inboxAlertTitle: 'These need your attention',
+    inboxMePrefix: 'You: ',
+    inboxNoMessage: '(No messages)',
+    inboxClosedBadge: 'Closed',
+    inboxUntitled: 'Registered item',
+    inboxLoadFail: "Couldn't load. Please try again.",
+
+    emptyWaitText: 'Keep this screen open and you will be alerted as soon as a connection request arrives.',
+
+    toastNewMsgTitle: '💬 New message',
+    toastFinderReplied: '👤 The finder replied. Tap here to respond.',
+    previewPhoto: '📷 Sent a photo',
+
+    ringTitle: 'Incoming connection request',
+    ringSubVoice: 'Voice call request',
+    ringSubVideo: 'Video call request',
+    inCallChecking: 'Checking connection…',
+    inCallConnected: 'Connected',
+    inCallCalling: 'Calling…',
+    inCallCallingSub: 'Notifying the finder.',
+    unmuteBtn: "🔊 Tap here if you can't hear anything",
+
+    chatHeaderDefault: 'Text chat',
+    reportTitle: 'Report',
+    chatEndBtn: 'End chat',
+    chatClosedNote: '🔒 This conversation is closed. No further messages can be sent.',
+    reopenBtn: 'Reopen',
+    plusMoreTitle: 'More',
+    emojiTitle: 'Emoji',
+    chatPlaceholder: 'Type a message…',
+    plusAttach: 'Attach photo',
+    plusCamera: 'Take photo',
+    plusGuide: 'How to use',
+
+    guidePanelTitle: '❓ How to use chat',
+    guide1Title: 'Basic chat',
+    guide1Desc: 'You can exchange text, emoji and photos. Send photos with "Attach photo" (gallery) or "Take photo" (shoot now) inside the ➕ menu.',
+    guide2Title: 'Emoji',
+    guide2Desc: 'Choose from 584 animated emoji sorted by category. A message made of only 1–3 emoji is shown as a large sticker.',
+    guide3Title: 'Zoom into photos',
+    guide3Desc: 'Tap a photo to open it, then pinch with two fingers or double-tap to zoom in.',
+    guide4Title: 'Read receipts',
+    guide4Desc: 'When the other person reads your message, "Read" appears next to the timestamp.',
+    guide5Title: 'Safe — your number stays hidden',
+    guide5Desc: 'Aliascall connects people without revealing real phone numbers. There is no real-time location tracking.',
+
+    navChat: 'Chat',
+    navVoice: 'Voice',
+    navVideo: 'Video',
+    navMessage: 'Text',
+    navPhoto: 'Photo',
+
+    photoAlt: 'Photo',
+    readTag: 'Read',
+    amLabel: 'AM',
+    pmLabel: 'PM',
+
+    alertMicPerm: 'Microphone (or camera) permission is required.',
+    alertCaseLoading: 'Still loading the conversation details. Please try again in a moment.',
+    alertLoginRequired: 'Please sign in.',
+    alertConnectFail: "Couldn't connect. Please try again in a moment.",
+    alertReopenFail: "Couldn't reopen the conversation. Please try again in a moment.",
+    alertPhotoTooBig: 'That photo is too large (8MB maximum).',
+    alertPhotoSendFail: "Couldn't send the photo. Please try again in a moment.",
+    alertMsgSendFail: "Couldn't send the message. Please try again in a moment.",
+    alertReportNeedChat: 'Open a conversation first to report it.',
+    confirmEndChat: 'End this conversation? Once ended, neither side can send messages.',
+  },
+};
+
+// ── 언어 결정 ──
+// 다른 화면에서 이미 고른 언어를 그대로 이어받도록, 쓰일 가능성이 있는 저장 키를
+// 모두 확인함. (?lang=en 으로 들어오는 경우도 지원)
+const LANG_KEYS = ['aliascall_lang', 'aliascall_language', 'ac_lang', 'lang'];
+function detectAliascallLang(){
+  try {
+    const q = new URLSearchParams(location.search).get('lang');
+    if (q) return q.toLowerCase().indexOf('en') === 0 ? 'en' : 'ko';
+  } catch (e) {}
+  try {
+    if (typeof window.getAliascallLang === 'function') {
+      const v = window.getAliascallLang();
+      if (v) return String(v).toLowerCase().indexOf('en') === 0 ? 'en' : 'ko';
+    }
+  } catch (e) {}
+  for (const k of LANG_KEYS) {
+    try {
+      const v = localStorage.getItem(k);
+      if (v) return String(v).toLowerCase().indexOf('en') === 0 ? 'en' : 'ko';
+    } catch (e) {}
+  }
+  return (navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en';
+}
+let LANG = detectAliascallLang();
+function saveAliascallLang(lang){
+  LANG_KEYS.forEach((k) => { try { localStorage.setItem(k, lang); } catch (e) {} });
+}
+function T(key){
+  const dict = I18N[LANG] || I18N.ko;
+  return (dict[key] !== undefined) ? dict[key] : (I18N.ko[key] !== undefined ? I18N.ko[key] : key);
+}
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.title = T('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = T(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = T(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => { el.title = T(el.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', T(el.dataset.i18nAria)); });
+}
+applyI18n();
+document.getElementById('langToggle').addEventListener('click', () => {
+  LANG = (LANG === 'ko') ? 'en' : 'ko';
+  saveAliascallLang(LANG);
+  location.reload(); // 통화/채팅 중 상태가 꼬이지 않도록 새로고침으로 깔끔하게 전환
+});
+
+// ── 통화 기록(call_log)은 DB에 한국어로 저장됨 ──
+// 발견자 화면과 데이터를 공유하는 값이라 저장은 한국어 그대로 두고,
+// 화면에 보여줄 때만 영어로 바꿔줌. 모르는 문구는 원문 그대로 표시.
+const CALL_LOG_EN_MAP = [
+  ['🎥 영상통화', '🎥 Video call'],
+  ['🎧 음성통화', '🎧 Voice call'],
+  ['📞 통화', '📞 Call'],
+  [' 종료 (연결됨)', ' ended (connected)'],
+  [' 응답 없음', ' — no answer'],
+  [' 걸었음', ' placed'],
+  ['부재중', 'missed'],
+  ['통화 요청', 'call request'],
+  ['연결됨', 'connected'],
+];
+function localizeCallLog(text){
+  if (LANG !== 'en' || !text) return text;
+  let out = String(text);
+  CALL_LOG_EN_MAP.forEach((pair) => { out = out.split(pair[0]).join(pair[1]); });
+  return out;
+}
+
+let incomingCallConnected = false; // 2026-08-25: 화면 문구를 문자열로 비교하던 버그 대체(아래 참고)
+
 // Metered.ca TURN 서버 연동 (2026-08-17, Free 500MB 플랜, Global 리전) —
 // STUN만으로 연결 안 되는 이동통신사 데이터망 등에서 이 TURN 서버가 중계를 맡아줌
 const RTC_CONFIG = { iceServers: [
@@ -623,10 +885,10 @@ async function init(){
       const m = payload.new;
       if (m.sender === 'owner' || m.message_type === 'call_log') return;
       if (currentCaseId === m.case_id) return; // 이미 그 대화를 보고 있으면 토스트 불필요(실시간으로 이미 반영됨)
-      const preview = m.message_type === 'photo' ? '📷 사진을 보냈어요' : (m.content || '').slice(0, 60);
+      const preview = m.message_type === 'photo' ? T('previewPhoto') : (m.content || '').slice(0, 60);
       playDoorbell();
       loadCaseInbox();
-      showGlobalToast('👤 발견자가 답장했어요. 응답을 원하시면 여기를 클릭하세요', preview, () => openCaseChat(m.case_id));
+      showGlobalToast(T('toastFinderReplied'), preview, () => openCaseChat(m.case_id));
     })
     .subscribe();
 
@@ -661,17 +923,17 @@ async function loadCaseInbox(){
     if (!res.ok) throw new Error(data.error || '조회 실패');
 
     if (!data.cases || data.cases.length === 0) {
-      listEl.innerHTML = '<div class="case-inbox-empty">' + (showingClosedCases ? '지난 소통이 없어요.' : '확인해야 할 알림이 없어요.') + '</div>';
+      listEl.innerHTML = '<div class="case-inbox-empty">' + (showingClosedCases ? T('inboxEmptyClosed') : T('inboxEmptyOpen')) + '</div>';
       return;
     }
 
-    const alertTitleHtml = !showingClosedCases ? '<div class="case-inbox-alert-title">확인해야 할 알림입니다</div>' : '';
+    const alertTitleHtml = !showingClosedCases ? '<div class="case-inbox-alert-title">' + T('inboxAlertTitle') + '</div>' : '';
     const isFirstLoad = Object.keys(caseInboxSnapshot).length === 0; // 2026-08-21: 첫 로딩 때는 전부 반짝이면 안 되니 구분
     listEl.innerHTML = alertTitleHtml + data.cases.map((c) => {
       const emoji = CATEGORY_EMOJI[c.category] || '❓';
       const preview = c.lastMessage
-        ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? '나: ' : '') + c.lastMessage.preview)
-        : '(메시지 없음)';
+        ? (c.lastMessage.type === 'call_log' ? localizeCallLog(c.lastMessage.preview) : (c.lastMessage.sender === 'owner' ? T('inboxMePrefix') : '') + c.lastMessage.preview)
+        : T('inboxNoMessage');
       // 2026-08-21 신설: 이전에 봤던 내용과 다르고(=새 활동), 내가 보낸 게 아니고, 첫 로딩이 아니면 반짝임
       const snapKey = c.lastMessage ? c.lastMessage.createdAt + '|' + c.lastMessage.preview : '';
       const isNewActivity = !isFirstLoad && c.lastMessage && c.lastMessage.sender !== 'owner' && caseInboxSnapshot[c.caseId] !== snapKey;
@@ -681,16 +943,17 @@ async function loadCaseInbox(){
         const now = new Date();
         const isToday = d.toDateString() === now.toDateString();
         // 2026-08-20: 오늘이면 시:분까지, 아니면 날짜만 (둘 다 보여주면 길어져서 오늘/이전을 구분해서 표시)
+        const loc = (LANG === 'en') ? 'en-US' : 'ko-KR'; // 2026-08-25: 언어별 시간·날짜 표기
         return isToday
-          ? d.toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: true })
-          : d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
+          ? d.toLocaleTimeString(loc, { hour: 'numeric', minute: '2-digit', hour12: true })
+          : d.toLocaleDateString(loc, { month: 'numeric', day: 'numeric' });
       })() : '';
-      const closedBadge = c.status === 'closed' ? '<span class="ci-badge">종료됨</span>' : '';
+      const closedBadge = c.status === 'closed' ? '<span class="ci-badge">' + T('inboxClosedBadge') + '</span>' : '';
       return `
         <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}${isNewActivity ? ' new-highlight' : ''}" data-case-id="${c.caseId}">
           <span class="ci-emoji">${emoji}</span>
           <span class="ci-body">
-            <span class="ci-title">${c.registrationTitle || '등록물'} ${closedBadge}</span>
+            <span class="ci-title">${c.registrationTitle || T('inboxUntitled')} ${closedBadge}</span>
             <span class="ci-preview">${preview}</span>
           </span>
           <span class="ci-time">${time}</span>
@@ -705,13 +968,13 @@ async function loadCaseInbox(){
     });
   } catch (e) {
     console.error('[case] 사건함 조회 실패', e);
-    listEl.innerHTML = '<div class="case-inbox-empty">불러오지 못했어요.</div>';
+    listEl.innerHTML = '<div class="case-inbox-empty">' + T('inboxLoadFail') + '</div>';
   }
 }
 document.getElementById('toggleClosedCasesBtn').addEventListener('click', () => {
   showingClosedCases = !showingClosedCases;
-  document.getElementById('toggleClosedCasesBtn').textContent = showingClosedCases ? '진행중인 소통만 보기' : '지난 소통 보기';
-  document.getElementById('caseInboxTitle').textContent = showingClosedCases ? '📂 지난 소통함' : '📂 진행 중인 소통함';
+  document.getElementById('toggleClosedCasesBtn').textContent = showingClosedCases ? T('inboxToggleShowOpen') : T('inboxToggleShowClosed');
+  document.getElementById('caseInboxTitle').textContent = showingClosedCases ? T('inboxTitleClosed') : T('inboxTitleOpen');
   loadCaseInbox();
 });
 
@@ -730,7 +993,7 @@ async function showIncomingCall(row){
     return;
   }
 
-  document.getElementById('ringSub').textContent = row.call_type === 'video' ? '영상으로 연결 요청' : '음성으로 연결 요청';
+  document.getElementById('ringSub').textContent = row.call_type === 'video' ? T('ringSubVideo') : T('ringSubVoice');
   document.getElementById('sessionView').classList.add('show');
   document.getElementById('sessionTopbar').style.display = 'flex';
   document.getElementById('chatOnlyHeader').style.display = 'none';
@@ -827,7 +1090,7 @@ async function refreshCaseMessages(caseId, accessToken, silent){
     finderLastReadAt = data.finderLastReadAt || finderLastReadAt; // 2026-08-23 신설
     refreshReadTags();
 
-    if (!silent) document.getElementById('chatOnlyHeader').querySelector('b').textContent = '💬 ' + (data.registrationTitle || '문자 채팅');
+    if (!silent) document.getElementById('chatHeaderTitle').textContent = data.registrationTitle || T('chatHeaderDefault');
     if (data.registrationId) currentCaseRegistrationId = data.registrationId; // 2026-08-20 (3단계)
     let lastEl = null, lastMsg = null;
     let gotNewFromFinder = false;
@@ -906,7 +1169,8 @@ async function answerCall(session){
   document.getElementById('incallState').style.display = 'block';
   document.getElementById('chatOnlyHeader').style.display = 'none';
   document.getElementById('chatToggleMiniBtn').style.display = 'flex';
-  document.getElementById('inCallStatus').textContent = '연결 확인 중…';
+  incomingCallConnected = false; // 2026-08-25: 새 통화 시작마다 초기화
+  document.getElementById('inCallStatus').textContent = T('inCallChecking');
   document.getElementById('inCallSub').textContent = '';
   if (mode === 'video') document.getElementById('callVideoArea').classList.add('show');
   else document.getElementById('voiceAvatar').classList.add('show');
@@ -945,7 +1209,8 @@ async function answerCall(session){
         if (!pc) return;
         console.log('[webrtc] connectionState:', pc.connectionState);
         if (pc.connectionState === 'connected') {
-          document.getElementById('inCallStatus').textContent = '연결됨';
+          incomingCallConnected = true;
+          document.getElementById('inCallStatus').textContent = T('inCallConnected');
           if (answerResendInterval) { clearInterval(answerResendInterval); answerResendInterval = null; } // 2026-08-19
         }
         if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
@@ -957,8 +1222,11 @@ async function answerCall(session){
       pc.oniceconnectionstatechange = () => {
         if (!pc) return;
         console.log('[webrtc] iceConnectionState:', pc.iceConnectionState);
-        if ((pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') && document.getElementById('inCallStatus').textContent !== '연결됨') {
-          document.getElementById('inCallStatus').textContent = '연결됨';
+        // 2026-08-25 수정: 화면 문구('연결됨')를 문자열로 비교하던 것을 상태값으로 교체.
+        // 번역하면 문구가 바뀌어 비교가 깨지는 자리였음.
+        if ((pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') && !incomingCallConnected) {
+          incomingCallConnected = true;
+          document.getElementById('inCallStatus').textContent = T('inCallConnected');
           if (answerResendInterval) { clearInterval(answerResendInterval); answerResendInterval = null; } // 2026-08-19
         }
       };
@@ -973,7 +1241,7 @@ async function answerCall(session){
     });
       } catch (e) {
         console.error('[webrtc] ④ 마이크 권한 실패:', e);
-        alert('마이크(또는 카메라) 권한이 필요합니다.');
+        alert(T('alertMicPerm'));
         hangup(true);
         return;
       }
@@ -1059,7 +1327,7 @@ let ownerOfferResendInterval = null, ownerCallWasConnected = false;
 let ownerCallSessionToken = null;
 
 async function startOwnerCall(mode){
-  if (!currentCaseId || !currentCaseRegistrationId) { alert('소통 정보를 아직 불러오는 중이에요. 잠시 후 다시 시도해주세요.'); return; }
+  if (!currentCaseId || !currentCaseRegistrationId) { alert(T('alertCaseLoading')); return; }
   if (activeCallDirection) return; // 2026-08-21: 이미 통화 진행 중이면 중복 시도 방지
 
   activeCallDirection = 'outgoing';
@@ -1073,12 +1341,12 @@ async function startOwnerCall(mode){
   document.getElementById('ringState').style.display = 'none';
   document.getElementById('incallState').style.display = 'block';
   document.getElementById('chatToggleMiniBtn').style.display = 'flex';
-  document.getElementById('inCallStatus').textContent = '전화 거는 중…';
-  document.getElementById('inCallSub').textContent = '발견자에게 알림을 보내고 있어요.';
+  document.getElementById('inCallStatus').textContent = T('inCallCalling');
+  document.getElementById('inCallSub').textContent = T('inCallCallingSub');
   document.getElementById('callControls').classList.add('show');
 
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { alert('로그인이 필요합니다.'); endOwnerCall(true); return; }
+  if (!session) { alert(T('alertLoginRequired')); endOwnerCall(true); return; }
 
   // 1) webrtc_sessions에 콜백 기록 (방향: owner_to_finder)
   const { error: insertErr } = await sb.from('webrtc_sessions').insert({
@@ -1090,7 +1358,7 @@ async function startOwnerCall(mode){
   });
   if (insertErr) {
     console.error('[webrtc] 콜백 세션 생성 실패', insertErr);
-    alert('연결에 실패했어요. 잠시 후 다시 시도해주세요.');
+    alert(T('alertConnectFail'));
     endOwnerCall(true);
     return;
   }
@@ -1099,7 +1367,7 @@ async function startOwnerCall(mode){
   fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-finder-call-push`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-    body: JSON.stringify({ caseId: currentCaseId, sessionToken: ownerCallSessionToken, mode, registrationTitle: document.getElementById('chatOnlyHeader').querySelector('b').textContent.replace('💬 ', '') }),
+    body: JSON.stringify({ caseId: currentCaseId, sessionToken: ownerCallSessionToken, mode, registrationTitle: document.getElementById('chatHeaderTitle').textContent }),
   }).catch((e) => console.warn('[push] 발견자 알림 발송 실패(통화 자체엔 영향 없음)', e));
 
   // 3) 사건 타임라인에도 기록
@@ -1121,7 +1389,7 @@ async function startOwnerCall(mode){
         try { await ownerPc.addIceCandidate(candidate); } catch (e) { console.error('[webrtc] 지연 ICE 추가 오류', e); }
       }
       pendingIceCandidates = [];
-      document.getElementById('inCallStatus').textContent = '연결 확인 중…';
+      document.getElementById('inCallStatus').textContent = T('inCallChecking');
       document.getElementById('inCallSub').textContent = '';
     })
     .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
@@ -1149,7 +1417,7 @@ async function createOwnerOffer(mode){
   ownerPc.onconnectionstatechange = () => {
     if (!ownerPc) return;
     if (ownerPc.connectionState === 'connected') {
-      document.getElementById('inCallStatus').textContent = '연결됨';
+      document.getElementById('inCallStatus').textContent = T('inCallConnected');
       document.getElementById('inCallSub').textContent = '';
       ownerCallWasConnected = true;
     }
@@ -1165,7 +1433,7 @@ async function createOwnerOffer(mode){
     });
   } catch (e) {
     console.error('[webrtc] 마이크 권한 실패', e);
-    alert('마이크(또는 카메라) 권한이 필요합니다.');
+    alert(T('alertMicPerm'));
     endOwnerCall(true);
     return;
   }
@@ -1191,6 +1459,9 @@ function endOwnerCall(silent){
 
   // 통화 종료 기록 (연결됐었는지/부재중이었는지 구분)
   if (currentCaseId) {
+    // ⚠ 2026-08-25: 이 문구는 DB(case_messages)에 저장되어 발견자 화면에도 그대로 쓰임.
+    // 언어별로 다르게 저장하면 데이터가 섞이므로 저장은 한국어로 고정하고,
+    // 화면에 보여줄 때만 localizeCallLog()로 번역함.
     const modeLabel = document.getElementById('callVideoArea').classList.contains('show') ? '🎥 영상통화' : '🎧 음성통화';
     const outcome = ownerCallWasConnected ? (modeLabel + ' 종료 (연결됨)') : (modeLabel + ' 응답 없음');
     sb.auth.getSession().then(({ data: { session } }) => {
@@ -1257,12 +1528,12 @@ document.getElementById('reopenCaseBtn').addEventListener('click', async () => {
     loadCaseInbox(); // 사건함 목록의 "종료됨" 배지도 갱신
   } catch (e) {
     console.error('[case] 사건 재개 실패', e);
-    alert('다시 열지 못했어요. 잠시 후 다시 시도해주세요.');
+    alert(T('alertReopenFail'));
   }
 });
 document.getElementById('chatOnlyEndBtn').addEventListener('click', async () => {
   // 2026-08-20: "채팅 종료" 버튼은 이제 사건 자체를 종료함 (양쪽 다 다시 메시지 못 보냄)
-  if (currentCaseId && confirm('이 대화를 종료하시겠어요? 종료하면 더 이상 메시지를 주고받을 수 없어요.')) {
+  if (currentCaseId && confirm(T('confirmEndChat'))) {
     try {
       const { data: { session } } = await sb.auth.getSession();
       if (session) {
@@ -1344,7 +1615,7 @@ document.getElementById('chatCameraBtn').addEventListener('click', () => {
 async function sendCasePhoto(file){
   if (!currentCaseId) return;
   file = await aliascallCompressImage(file); // 2026-08-22 신설: 업로드 전 압축(카톡과 비슷한 방식)
-  if (file.size > 8 * 1024 * 1024) { alert('사진 용량이 너무 커요 (최대 8MB).'); return; }
+  if (file.size > 8 * 1024 * 1024) { alert(T('alertPhotoTooBig')); return; }
 
   const attachBtn = document.getElementById('chatAttachBtn');
   attachBtn.disabled = true;
@@ -1382,7 +1653,7 @@ async function sendCasePhoto(file){
     }
   } catch (e) {
     console.error('[case] 사진 전송 실패', e);
-    alert('사진을 보내지 못했어요. 잠시 후 다시 시도해주세요.');
+    alert(T('alertPhotoSendFail'));
   } finally {
     attachBtn.disabled = false;
   }
@@ -1400,17 +1671,22 @@ document.getElementById('lightboxClose').addEventListener('click', () => {
 
 // 2026-08-23 신설: 날짜 구분선 + 메시지 시간 표시
 let lastRenderedDateKey = null;
-function formatKoreanTime(dateStr){
+// 2026-08-25: 언어별 표기로 확장 (한국어 "오후 3:05" / 영어 "3:05 PM")
+function formatMsgTime(dateStr){
   if (!dateStr) return '';
   const d = new Date(dateStr);
   let h = d.getHours();
   const m = String(d.getMinutes()).padStart(2, '0');
-  const ampm = h < 12 ? '오전' : '오후';
+  const ampm = h < 12 ? T('amLabel') : T('pmLabel');
   h = h % 12; if (h === 0) h = 12;
-  return ampm + ' ' + h + ':' + m;
+  return (LANG === 'en') ? (h + ':' + m + ' ' + ampm) : (ampm + ' ' + h + ':' + m);
 }
-function formatKoreanDateDivider(dateStr){
+// 한국어: "2026년 8월 25일 화요일" / 영어: "Tuesday, August 25, 2026"
+function formatDateDivider(dateStr){
   const d = new Date(dateStr);
+  if (LANG === 'en') {
+    return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
   const days = ['일', '월', '화', '수', '목', '금', '토'];
   return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + days[d.getDay()] + '요일';
 }
@@ -1421,7 +1697,7 @@ function insertDateDividerIfNeeded(list, createdAt){
   lastRenderedDateKey = dateKey;
   const divider = document.createElement('div');
   divider.className = 'date-divider';
-  divider.textContent = formatKoreanDateDivider(createdAt);
+  divider.textContent = formatDateDivider(createdAt);
   list.appendChild(divider);
   return true;
 }
@@ -1441,7 +1717,7 @@ function renderPhotoGroupGrid(state){
     const thumb = document.createElement('img');
     thumb.className = 'photo-group-thumb';
     thumb.src = items[i].url;
-    thumb.alt = '사진';
+    thumb.alt = T('photoAlt');
     thumb.loading = 'lazy';
     if (isLastVisibleWithMore) {
       const wrap = document.createElement('div');
@@ -1468,7 +1744,7 @@ function appendChatMessage(msg, who){
     photoGroupState = null;
     const sysEl = document.createElement('div');
     sysEl.className = 'chat-system-note';
-    sysEl.textContent = msg.content;
+    sysEl.textContent = localizeCallLog(msg.content); // 2026-08-25: 저장은 한국어, 표시만 번역
     list.appendChild(sysEl);
     list.scrollTop = list.scrollHeight;
     return null;
@@ -1484,7 +1760,7 @@ function appendChatMessage(msg, who){
     if (oldTimeRow && msg.created_at) {
       oldTimeRow.dataset.messageId = msg.id;
       const timeText = oldTimeRow.querySelector('.msg-time-text');
-      if (timeText) timeText.textContent = formatKoreanTime(msg.created_at);
+      if (timeText) timeText.textContent = formatMsgTime(msg.created_at);
     }
     photoGroupState.lastMessageId = msg.id;
     if (who === 'me' && msg.id && msg.created_at) { messageCreatedAtCache.set(msg.id, msg.created_at); refreshReadTags(); }
@@ -1525,7 +1801,7 @@ function appendChatMessage(msg, who){
     const timeRow = document.createElement('div');
     timeRow.className = 'msg-time-row ' + (who === 'me' ? 'me' : 'them');
     if (msg.id) timeRow.dataset.messageId = msg.id;
-    timeRow.innerHTML = `<span class="msg-time-text">${formatKoreanTime(msg.created_at)}</span>` + (who === 'me' ? '<span class="msg-read-status"></span>' : '');
+    timeRow.innerHTML = `<span class="msg-time-text">${formatMsgTime(msg.created_at)}</span>` + (who === 'me' ? '<span class="msg-read-status"></span>' : '');
     list.appendChild(timeRow);
     if (who === 'me' && msg.id) { messageCreatedAtCache.set(msg.id, msg.created_at); refreshReadTags(); }
   }
@@ -1543,7 +1819,7 @@ function isReadByOtherParty(createdAt){
 function refreshReadTags(){
   messageCreatedAtCache.forEach((createdAt, messageId) => {
     const statusEl = document.querySelector('.msg-time-row[data-message-id="' + messageId + '"] .msg-read-status');
-    if (statusEl) statusEl.textContent = isReadByOtherParty(createdAt) ? '읽음' : '';
+    if (statusEl) statusEl.textContent = isReadByOtherParty(createdAt) ? T('readTag') : '';
   });
 }
 async function markCaseAsRead(){
@@ -1596,7 +1872,7 @@ async function sendChatMessage(){
     input.value = '';
   } catch (e) {
     console.error('[case] 메시지 전송 실패', e);
-    alert('메시지를 보내지 못했어요. 잠시 후 다시 시도해주세요.');
+    alert(T('alertMsgSendFail'));
   } finally {
     sendBtn.disabled = false;
   }
@@ -1608,7 +1884,7 @@ init();
 
 // 2026-08-24 신설: 신고 버튼 — 낯선 발견자가 부적절한 사진·메시지를 보낼 수 있으므로
 document.getElementById('acReportBtn').addEventListener('click', () => {
-  if (!currentCaseId) { alert('대화를 연 뒤에 신고할 수 있어요.'); return; }
+  if (!currentCaseId) { alert(T('alertReportNeedChat')); return; }
   aliascallOpenReport({ context: 'case', targetId: currentCaseId });
 });
 </script>
