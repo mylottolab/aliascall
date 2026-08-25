@@ -672,6 +672,7 @@ const I18N = {
     awClose: '닫기',
     awSaved: '저장했어요.',
     awNeedBoth: '이름과 문구를 모두 입력해주세요.',
+    ownerNickname: '개설자',
     awAutoTag: '자동응답', // ⚠ 서버가 보낸 자동응답 말풍선에 붙일 꼬리표(Edge Function 연동 후 사용)
 
     bdTitle: '📋 안내판 편집',
@@ -890,6 +891,7 @@ const I18N = {
     awClose: 'Close',
     awSaved: 'Saved.',
     awNeedBoth: 'Please enter both a name and a message.',
+    ownerNickname: 'Host',
     awAutoTag: 'Auto-reply',
 
     bdTitle: '📋 Edit info board',
@@ -1112,6 +1114,14 @@ document.getElementById('langToggleBtn').addEventListener('click', () => {
   // 암호화 방의 열쇠는 #k= 조각에 있으므로 location.href 그대로 다시 불러야 함.
   location.reload();
 });
+
+// ⚠ 서버(aliascall-hotline-message)가 개설자 닉네임을 '개설자'로 고정 저장함.
+//   DB에 들어간 값이라 바꾸면 과거 메시지와 섞이므로, 화면에 보여줄 때만 번역함.
+//   통화 기록과 같은 원칙(저장은 한국어, 표시만 번역).
+function displayNickname(nick){
+  if (nick === '개설자') return T('ownerNickname');
+  return nick || '';
+}
 
 // ── 통화 기록은 DB(hotline_messages)에 한국어로 저장됨 ──
 // 참가자마다 언어가 다를 수 있어 저장은 한국어로 고정하고, 화면에 보여줄 때만 번역함.
@@ -1426,7 +1436,7 @@ async function appendChatMessage(msg){
   if (!isMe) {
     const label = document.createElement('div');
     label.className = 'sender-label';
-    label.textContent = msg.sender_nickname;
+    label.textContent = displayNickname(msg.sender_nickname);
     list.appendChild(label);
   }
 
@@ -1451,7 +1461,7 @@ async function appendChatMessage(msg){
     const quoted = messageCache.get(msg.reply_to_message_id);
     const quoteEl = document.createElement('div');
     quoteEl.className = 'bubble-reply-quote';
-    quoteEl.textContent = quoted ? (quoted.sender_nickname + ': ' + quoted.previewText) : T('originalMsg');
+    quoteEl.textContent = quoted ? (displayNickname(quoted.sender_nickname) + ': ' + quoted.previewText) : T('originalMsg');
     el.appendChild(quoteEl);
   }
 
@@ -1666,9 +1676,10 @@ function startReply(messageId){
   const cached = messageCache.get(messageId);
   if (!cached) return;
   replyingToMessageInfo = { id: messageId, sender_nickname: cached.sender_nickname, previewText: cached.previewText };
+  const replyNick = displayNickname(cached.sender_nickname);
   document.getElementById('replyBarLabel').textContent = (LANG === 'en')
-    ? ('↩️ Reply to ' + cached.sender_nickname)
-    : ('↩️ ' + cached.sender_nickname + '님에게 답장');
+    ? ('↩️ Reply to ' + replyNick)
+    : ('↩️ ' + replyNick + '님에게 답장');
   document.getElementById('replyBarText').textContent = cached.previewText;
   document.getElementById('replyBar').style.display = 'flex';
   document.getElementById('chatInput').focus();
@@ -1822,7 +1833,7 @@ function renderFavoritesPanel(){
   list.innerHTML = ids.map((id) => {
     const c = messageCache.get(id);
     if (!c) return '';
-    return `<div class="panel-item"><div class="panel-item-text">${c.sender_nickname}: ${c.previewText}</div></div>`;
+    return `<div class="panel-item"><div class="panel-item-text">${displayNickname(c.sender_nickname)}: ${c.previewText}</div></div>`;
   }).join('') || '<div class="panel-empty">' + T('favEmpty') + '</div>';
 }
 
@@ -1846,7 +1857,7 @@ async function loadKeepNotes(){
     const rows = await Promise.all(data.notes.map(async (n) => {
       let text;
       if (n.note_text) text = roomIsSecure ? await safeDecryptText(n.note_text) : n.note_text;
-      else if (n.hotline_messages) text = n.hotline_messages.sender_nickname + ': ' + (n.hotline_messages.message_type === 'text' ? (roomIsSecure ? await safeDecryptText(n.hotline_messages.content) : n.hotline_messages.content) : '(' + n.hotline_messages.message_type + ')');
+      else if (n.hotline_messages) text = displayNickname(n.hotline_messages.sender_nickname) + ': ' + (n.hotline_messages.message_type === 'text' ? (roomIsSecure ? await safeDecryptText(n.hotline_messages.content) : n.hotline_messages.content) : '(' + n.hotline_messages.message_type + ')');
       else text = T('deletedQuoted');
       return `<div class="panel-item"><div class="panel-item-text">${text}<div class="panel-item-meta">${new Date(n.created_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR')}</div></div><button class="panel-item-del" data-note-id="${n.id}">✕</button></div>`;
     }));
@@ -3297,7 +3308,7 @@ async function exBuildDocument(msgs, attachments){
     wrap.className = 'exd-msg';
     const who = document.createElement('div');
     who.className = 'exd-who';
-    who.textContent = m.sender_nickname || '';
+    who.textContent = displayNickname(m.sender_nickname);
     const time = document.createElement('span');
     time.className = 'exd-time';
     time.textContent = formatMsgTime(m.created_at);
@@ -3329,7 +3340,7 @@ async function exBuildDocument(msgs, attachments){
       chip.textContent = label + (name ? ' ' + name : '');
       body.appendChild(chip);
       attachments.push({ type: m.message_type, name, url: m.content, mime: m.original_mime_type,
-                         when: m.created_at, who: m.sender_nickname || '' });
+                         when: m.created_at, who: displayNickname(m.sender_nickname) });
     } else {
       const text = roomIsSecure ? await safeDecryptText(m.content) : m.content;
       body.textContent = text || '';
