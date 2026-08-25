@@ -75,6 +75,17 @@ main{ max-width:600px; margin:0 auto; padding:24px 20px 60px; }
 .page-title{ font-size:24px; margin-bottom:4px; }
 .page-desc{ font-size:13.5px; color:var(--ink-soft); margin-bottom:20px; line-height:1.6; }
 
+/* 2026-08-25 신설: 게시 방법 안내 — 방문자가 "어떻게 올리지?"에서 막히지 않도록 */
+.howto-card{
+  background:var(--card); border:1.5px solid var(--teal-tint); border-left:4px solid var(--teal);
+  border-radius:14px; padding:16px 18px; margin-bottom:20px;
+}
+.howto-title{ font-size:13.5px; font-weight:700; color:var(--teal-deep); margin-bottom:8px; }
+.howto-steps{ margin:0; padding-left:18px; font-size:12.5px; color:var(--ink-soft); line-height:1.85; }
+.howto-steps b{ color:var(--ink); }
+.howto-note{ font-size:11.5px; color:var(--ink-soft); margin-top:9px; line-height:1.6; }
+.howto-note b{ color:var(--teal-deep); }
+
 .control-row{ display:flex; gap:10px; margin-bottom:16px; }
 .country-select{
   flex:0 0 auto; border:1.5px solid var(--line); border-radius:12px; padding:10px 14px;
@@ -144,6 +155,9 @@ main{ max-width:600px; margin:0 auto; padding:24px 20px 60px; }
 <main>
   <div class="page-title" data-i18n="pageTitle">찾습니다 게시판</div>
   <div class="page-desc" data-i18n="pageDesc">분실·실종 소식을 국가별로 확인하고 제보할 수 있는 공익 게시판입니다. 실제 연락처는 노출되지 않습니다.</div>
+
+  <!-- 2026-08-25 신설: 게시 방법 안내 -->
+  <div class="howto-card" id="howtoCard" data-i18n-html="howtoHtml"></div>
 
   <div class="control-row">
     <select class="country-select" id="countrySelect">
@@ -277,6 +291,8 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // 언어 선택값은 다른 화면과 동일하게 localStorage('aliascall_lang')를 공유함.
 const I18N = {
   ko: {
+    howtoHtml: '<div class="howto-title">📢 분실·실종 소식을 올리고 싶으신가요?</div><ol class="howto-steps"><li><b>마이페이지</b>에서 닉네임과 비밀번호만으로 간단히 가입합니다.</li><li>찾고 계신 <b>아이·어르신·반려동물·물건</b>을 등록합니다.</li><li>이 화면 오른쪽 아래 <b>✏️ 글쓰기</b>를 눌러 게시합니다.</li></ol><div class="howto-note">가입과 게시는 <b>모두 무료</b>입니다. 등록을 거치는 이유는, 제보하시는 분이 <b>전화번호 노출 없이</b> 연락드릴 수 있게 하기 위해서입니다. <a href="aliascall_my_account.html">가입하러 가기 →</a></div>',
+    emptyHint: '분실·실종 소식을 올리시려면 위 안내를 참고해주세요.',
     writeFab: '✏️ 글쓰기',
     writeTitle: '찾습니다 게시판에 올리기',
     writeDesc: '등록해두신 항목을 게시판에 올려 더 많은 사람이 볼 수 있게 합니다. 실제 연락처는 노출되지 않습니다.',
@@ -294,7 +310,7 @@ const I18N = {
     writeSubmit: '게시하기',
     submitting: '게시하는 중…',
     needLogin: '글을 올리려면 <b>로그인</b>이 필요합니다.<br><a href="aliascall_my_account.html">로그인하러 가기 →</a>',
-    needRegistration: '먼저 <b>등록</b>을 해주세요. 게시글은 등록해두신 항목에 연결되며, 그래야 제보하는 분과 번호 노출 없이 연결됩니다.<br><a href="aliascall_registration_mockup.html">등록하러 가기 →</a>',
+    needRegistration: '먼저 <b>등록</b>을 해주세요. 게시글은 등록해두신 항목에 연결되며, 그래야 제보하는 분과 번호 노출 없이 연결됩니다.<br><a href="aliascall_registration_mockup.html?urgent=1">등록하러 가기 →</a>',
     loadRegFail: '등록물을 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
     alreadyPosted: '이 등록물은 이미 게시판에 올라와 있어요. 기존 글을 확인해주세요.',
     postSuccess: '게시되었습니다. 많은 분들이 볼 수 있도록 공유해주세요.',
@@ -331,6 +347,8 @@ const I18N = {
     contactAlert: '브라우저에서 음성/영상 연결이 시작됩니다. (WebRTC, 실제번호 비노출)',
   },
   en: {
+    howtoHtml: '<div class="howto-title">📢 Want to post a missing or lost report?</div><ol class="howto-steps"><li>Sign up on <b>My Page</b> — just a nickname and a password.</li><li>Register the <b>child, elderly person, pet, or item</b> you are looking for.</li><li>Tap <b>✏️ New post</b> at the bottom right of this screen.</li></ol><div class="howto-note">Signing up and posting are <b>completely free</b>. Registration is required so that anyone with a tip can reach you <b>without your phone number being exposed</b>. <a href="aliascall_my_account.html">Go to sign up →</a></div>',
+    emptyHint: 'To post a missing or lost report, see the guide above.',
     writeFab: '✏️ New post',
     writeTitle: 'Post to the Lost & Found Board',
     writeDesc: 'Share an item you have registered so more people can see it. Your real contact details are never shown.',
@@ -348,7 +366,7 @@ const I18N = {
     writeSubmit: 'Post',
     submitting: 'Posting…',
     needLogin: 'You need to <b>log in</b> to post.<br><a href="aliascall_my_account.html">Go to log in →</a>',
-    needRegistration: 'Please <b>register an item</b> first. A post is linked to a registered item — that link is what lets people reach you without exposing your number.<br><a href="aliascall_registration_mockup.html">Go to register →</a>',
+    needRegistration: 'Please <b>register an item</b> first. A post is linked to a registered item — that link is what lets people reach you without exposing your number.<br><a href="aliascall_registration_mockup.html?urgent=1">Go to register →</a>',
     loadRegFail: 'Could not load your registered items. Please try again shortly.',
     alreadyPosted: 'This item is already on the board. Please check your existing post.',
     postSuccess: 'Posted. Share it so more people can see it.',
@@ -396,6 +414,10 @@ function applyLang(lang){
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     const key = el.dataset.i18n;
     if (I18N[lang][key] !== undefined) el.textContent = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => {
+    const key = el.dataset.i18nHtml;
+    if (I18N[lang][key] !== undefined) el.innerHTML = I18N[lang][key];
   });
   document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
     const key = el.dataset.i18nPlaceholder;
@@ -455,7 +477,8 @@ async function renderPosts(){
   currentPosts = await fetchPosts();
 
   if (currentPosts.length === 0) {
-    area.innerHTML = '<div class="empty-state"><div class="big">📋</div>' + T().emptyList + '</div>';
+    area.innerHTML = '<div class="empty-state"><div class="big">📋</div>' + T().emptyList
+      + '<div style="margin-top:10px; font-size:12.5px; line-height:1.7;">' + T().emptyHint + '</div></div>';
     return;
   }
 

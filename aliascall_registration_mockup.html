@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aliascall — 등록하기</title>
+<title>Aliascall — 등록하기 / Register</title>
 <!-- 2026-08-19: 웹푸시(iOS 홈화면 추가 포함)를 위한 PWA 매니페스트 + 아이콘 링크 -->
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/aliascall_icon_192.png">
@@ -306,7 +306,7 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 <div class="app-shell">
 <header>
   <div class="brand-row">
-    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+    <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기" data-i18n-aria="backBtn">←</button>
     <a href="index.html" class="brand-home-link">
       <div class="brand-mark">A</div>
       <div class="brand-name">Alias<em>call</em></div>
@@ -384,7 +384,7 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     <div id="loggedOutFields">
       <div class="field">
         <label><span data-i18n="nicknameLabel">닉네임</span> <span class="optional-badge" data-i18n="nicknameBadge">수정·삭제용 ID</span></label>
-        <div class="mic-input-wrap"><input type="text" id="nickname" data-i18n-placeholder="nicknamePlaceholder" placeholder="예: 산책러버" autocomplete="off"><button type="button" class="mic-btn-sm" data-target="nickname" aria-label="음성 입력">🎤</button></div>
+        <div class="mic-input-wrap"><input type="text" id="nickname" data-i18n-placeholder="nicknamePlaceholder" placeholder="예: 산책러버" autocomplete="off"><button type="button" class="mic-btn-sm" data-target="nickname" aria-label="음성 입력" data-i18n-aria="ariaVoiceInput">🎤</button></div>
         <div class="mic-status" id="nicknameStatus"></div>
       </div>
       <div class="field">
@@ -396,13 +396,13 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     <div class="field">
       <label data-i18n="countryLabel">국가</label>
       <select id="country">
-        <option value="KR">🇰🇷 대한민국</option>
-        <option value="JP">🇯🇵 일본</option>
-        <option value="US">🇺🇸 미국</option>
-        <option value="GB">🇬🇧 영국</option>
-        <option value="FR">🇫🇷 프랑스</option>
-        <option value="IT">🇮🇹 이탈리아</option>
-        <option value="DE">🇩🇪 독일</option>
+        <option value="KR" data-i18n="countryKR">🇰🇷 대한민국</option>
+        <option value="JP" data-i18n="countryJP">🇯🇵 일본</option>
+        <option value="US" data-i18n="countryUS">🇺🇸 미국</option>
+        <option value="GB" data-i18n="countryGB">🇬🇧 영국</option>
+        <option value="FR" data-i18n="countryFR">🇫🇷 프랑스</option>
+        <option value="IT" data-i18n="countryIT">🇮🇹 이탈리아</option>
+        <option value="DE" data-i18n="countryDE">🇩🇪 독일</option>
       </select>
     </div>
     <div class="error-text" id="err1" data-i18n="err1">닉네임과 비밀번호(6자 이상)를 입력해주세요.</div>
@@ -423,13 +423,13 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     <div class="panel-desc" id="detailDesc"></div>
 
     <div id="detail-vehicle" class="cat-detail" style="display:none;">
-      <div class="field"><label data-i18n="plateLabel">차량번호</label><div class="mic-input-wrap"><input type="text" id="plateNumber" placeholder="12가 3456"><button type="button" class="mic-btn-sm" data-target="plateNumber" aria-label="음성 입력">🎤</button></div></div>
-      <div class="field"><label><span data-i18n="makeLabel">제조사 · 모델</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></label><div class="mic-input-wrap"><input type="text" id="vehicleMake" placeholder="현대 아반떼"><button type="button" class="mic-btn-sm" data-target="vehicleMake" aria-label="음성 입력">🎤</button></div></div>
-      <div class="field"><label><span data-i18n="colorLabel">색상</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></label><div class="mic-input-wrap"><input type="text" id="vehicleColor" placeholder="흰색"><button type="button" class="mic-btn-sm" data-target="vehicleColor" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label data-i18n="plateLabel">차량번호</label><div class="mic-input-wrap"><input type="text" id="plateNumber" data-i18n-placeholder="phPlate" placeholder="12가 3456"><button type="button" class="mic-btn-sm" data-target="plateNumber" aria-label="음성 입력" data-i18n-aria="ariaVoiceInput">🎤</button></div></div>
+      <div class="field"><label><span data-i18n="makeLabel">제조사 · 모델</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></label><div class="mic-input-wrap"><input type="text" id="vehicleMake" data-i18n-placeholder="phMake" placeholder="현대 아반떼"><button type="button" class="mic-btn-sm" data-target="vehicleMake" aria-label="음성 입력" data-i18n-aria="ariaVoiceInput">🎤</button></div></div>
+      <div class="field"><label><span data-i18n="colorLabel">색상</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></label><div class="mic-input-wrap"><input type="text" id="vehicleColor" data-i18n-placeholder="phColor" placeholder="흰색"><button type="button" class="mic-btn-sm" data-target="vehicleColor" aria-label="음성 입력" data-i18n-aria="ariaVoiceInput">🎤</button></div></div>
     </div>
 
     <div id="detail-lost_item" class="cat-detail" style="display:none;">
-      <div class="field"><label data-i18n="itemTypeLabel">물품 종류</label><div class="mic-input-wrap"><input type="text" id="itemType" placeholder="가방 / 노트북 / 지갑 등"><button type="button" class="mic-btn-sm" data-target="itemType" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label data-i18n="itemTypeLabel">물품 종류</label><div class="mic-input-wrap"><input type="text" id="itemType" data-i18n-placeholder="phItemType" placeholder="가방 / 노트북 / 지갑 등"><button type="button" class="mic-btn-sm" data-target="itemType" aria-label="음성 입력" data-i18n-aria="ariaVoiceInput">🎤</button></div></div>
     </div>
 
     <div id="detail-vulnerable_person" class="cat-detail" style="display:none;">
@@ -440,12 +440,12 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
           <div class="pill" data-pill="dementia_elderly" data-i18n="pillDementia">치매 어르신</div>
         </div>
       </div>
-      <div class="field"><label data-i18n="birthYearLabel">출생연도</label><input type="number" id="birthYear" placeholder="2019" style="max-width:140px;"></div>
+      <div class="field"><label data-i18n="birthYearLabel">출생연도</label><input type="number" id="birthYear" data-i18n-placeholder="phBirthYear" placeholder="2019" style="max-width:140px;"></div>
     </div>
 
     <div id="detail-pet" class="cat-detail" style="display:none;">
-      <div class="field"><label data-i18n="speciesLabel">종류</label><div class="mic-input-wrap"><input type="text" id="petSpecies" placeholder="강아지 / 고양이 등"><button type="button" class="mic-btn-sm" data-target="petSpecies" aria-label="음성 입력">🎤</button></div></div>
-      <div class="field"><label data-i18n="petNameLabel">이름</label><div class="mic-input-wrap"><input type="text" id="petName" placeholder="초코"><button type="button" class="mic-btn-sm" data-target="petName" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label data-i18n="speciesLabel">종류</label><div class="mic-input-wrap"><input type="text" id="petSpecies" data-i18n-placeholder="phSpecies" placeholder="강아지 / 고양이 등"><button type="button" class="mic-btn-sm" data-target="petSpecies" aria-label="음성 입력" data-i18n-aria="ariaVoiceInput">🎤</button></div></div>
+      <div class="field"><label data-i18n="petNameLabel">이름</label><div class="mic-input-wrap"><input type="text" id="petName" data-i18n-placeholder="phPetName" placeholder="초코"><button type="button" class="mic-btn-sm" data-target="petName" aria-label="음성 입력" data-i18n-aria="ariaVoiceInput">🎤</button></div></div>
       <div class="field">
         <label><span data-i18n="noseprintLabel">비문(코 무늬) 사진</span> <span class="recommend-badge" data-i18n="recommendBadge">권장</span></label>
         <div class="dropzone" id="noseprintDropzone"><b data-i18n="noseprintUpload">코 정면 사진 업로드</b><span data-i18n="noseprintDesc">사람 지문처럼 개체마다 고유해, 발견 시 신원 확인에 쓰입니다</span><input type="file" id="noseprintFile" accept="image/*" style="display:none;"></div>
@@ -455,8 +455,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     </div>
 
     <div id="detail-callback_contact" class="cat-detail" style="display:none;">
-      <div class="field"><label data-i18n="reasonLabel">사유</label><div class="mic-input-wrap"><input type="text" id="callbackReason" placeholder="예: 대형폐기물 수거 안내 / 이전 거주지 연락처"><button type="button" class="mic-btn-sm" data-target="callbackReason" aria-label="음성 입력">🎤</button></div></div>
-      <div class="field"><label><span data-i18n="locationLabel">부착·게시 장소</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></label><div class="mic-input-wrap"><input type="text" id="callbackLocation" placeholder="예: 아파트 분리수거장 입구"><button type="button" class="mic-btn-sm" data-target="callbackLocation" aria-label="음성 입력">🎤</button></div></div>
+      <div class="field"><label data-i18n="reasonLabel">사유</label><div class="mic-input-wrap"><input type="text" id="callbackReason" data-i18n-placeholder="phReason" placeholder="예: 대형폐기물 수거 안내 / 이전 거주지 연락처"><button type="button" class="mic-btn-sm" data-target="callbackReason" aria-label="음성 입력" data-i18n-aria="ariaVoiceInput">🎤</button></div></div>
+      <div class="field"><label><span data-i18n="locationLabel">부착·게시 장소</span> <span class="optional-badge" data-i18n="optionalBadge">선택</span></label><div class="mic-input-wrap"><input type="text" id="callbackLocation" data-i18n-placeholder="phLocation" placeholder="예: 아파트 분리수거장 입구"><button type="button" class="mic-btn-sm" data-target="callbackLocation" aria-label="음성 입력" data-i18n-aria="ariaVoiceInput">🎤</button></div></div>
       <div class="hint" style="margin-top:-6px; margin-bottom:18px;" data-i18n="callbackHint">이 카테고리는 실시간 응답보다 나중에 연락이 닿는 게 중요해서, 다음 화면의 백업 알림용 전화번호를 등록해두시길 특히 권해드려요.</div>
     </div>
 
@@ -467,7 +467,7 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
       <label><span id="descLabelText">설명</span> <span class="optional-badge" id="descOptionalBadge" data-i18n="optionalBadge">선택</span></label>
       <div class="desc-input-wrap">
         <textarea id="descriptionText" placeholder=""></textarea>
-        <button type="button" class="mic-btn" id="micBtn" aria-label="음성으로 입력하기">
+        <button type="button" class="mic-btn" id="micBtn" aria-label="음성으로 입력하기" data-i18n-aria="ariaVoiceInputLong">
           <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="1.8"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
       </div>
@@ -544,16 +544,16 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 
     <!-- 2026-08-23 신설: 반려동물 + 비문사진 등록한 경우에만, AI 자동 비문인식 옵션 안내 -->
     <div class="pet-ai-upsell" id="petAiUpsell" style="display:none;">
-      <div class="pet-ai-upsell-title">🤖 AI 자동 비문인식 켜기 (선택)</div>
-      <div class="pet-ai-upsell-desc">지금은 사진이 비공개로 안전하게 보관되어 대조용으로만 쓰입니다. 이 옵션을 켜면 (Aliascall 앱에서) AI가 자동으로 비문을 인식·대조해줍니다.</div>
+      <div class="pet-ai-upsell-title" data-i18n="petAiTitle">🤖 AI 자동 비문인식 켜기 (선택)</div>
+      <div class="pet-ai-upsell-desc" data-i18n="petAiDesc">지금은 사진이 비공개로 안전하게 보관되어 대조용으로만 쓰입니다. 이 옵션을 켜면 (Aliascall 앱에서) AI가 자동으로 비문을 인식·대조해줍니다.</div>
       <div class="pet-ai-duration-grid" id="petAiDurationGrid"></div>
       <div class="pet-ai-pay-tabs">
-        <div class="pet-ai-pay-tab active" data-method="inicis">💳 국내카드</div>
+        <div class="pet-ai-pay-tab active" data-method="inicis" data-i18n="payInicis">💳 국내카드</div>
         <div class="pet-ai-pay-tab" data-method="paypal">🌐 PayPal</div>
       </div>
-      <button class="pet-ai-pay-btn" id="petAiInicisBtn">결제하고 AI 인식 켜기</button>
+      <button class="pet-ai-pay-btn" id="petAiInicisBtn" data-i18n="petAiPayBtn">결제하고 AI 인식 켜기</button>
       <div id="petAiPaypalContainer" style="display:none;"></div>
-      <div class="pet-ai-skip-note">지금 안 켜셔도 나중에 마이페이지에서 언제든 추가하실 수 있어요.</div>
+      <div class="pet-ai-skip-note" data-i18n="petAiSkipNote">지금 안 켜셔도 나중에 마이페이지에서 언제든 추가하실 수 있어요.</div>
     </div>
 
     <!-- 2026-08-19 신설: 예전엔 여기서 전화번호를 받아 SMS로 긴급알림을 보내려 했으나,
@@ -600,6 +600,42 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 // ── 언어 전환 (KR/EN) ──
 const I18N = {
   ko: {
+    btnDone: '완료',
+    tokenFailed: '(생성 실패, 새로고침 후 다시 시도해주세요)',
+    qrFailed: 'QR 생성 실패',
+    titleSuffix: ' 님의 등록',
+    reassuranceLabel: '보호자 목소리',
+    listening: '🎙️ 듣고 있어요…',
+    monthsSuffix: '개월',
+    wonSuffix: '원',
+    preparingPayment: '결제 준비 중…',
+    memberFallback: '회원',
+    petAiEnabled: '✅ AI 비문인식 옵션이 켜졌어요! (Aliascall 앱 출시 후 자동 인식이 시작됩니다)',
+    backBtn: '뒤로가기',
+    ariaVoiceInput: '음성 입력',
+    ariaVoiceInputLong: '음성으로 입력하기',
+    countryKR: '🇰🇷 대한민국',
+    countryJP: '🇯🇵 일본',
+    countryUS: '🇺🇸 미국',
+    countryGB: '🇬🇧 영국',
+    countryFR: '🇫🇷 프랑스',
+    countryIT: '🇮🇹 이탈리아',
+    countryDE: '🇩🇪 독일',
+    phPlate: '12가 3456',
+    phMake: '현대 아반떼',
+    phColor: '흰색',
+    phItemType: '가방 / 노트북 / 지갑 등',
+    phSpecies: '강아지 / 고양이 등',
+    phPetName: '초코',
+    phReason: '예: 대형폐기물 수거 안내 / 이전 거주지 연락처',
+    phLocation: '예: 아파트 분리수거장 입구',
+    phBirthYear: '2019',
+    petAiTitle: '🤖 AI 자동 비문인식 켜기 (선택)',
+    petAiDesc: '지금은 사진이 비공개로 안전하게 보관되어 대조용으로만 쓰입니다. 이 옵션을 켜면 (Aliascall 앱에서) AI가 자동으로 비문을 인식·대조해줍니다.',
+    payInicis: '💳 국내카드',
+    petAiPayBtn: '결제하고 AI 인식 켜기',
+    petAiSkipNote: '지금 안 켜셔도 나중에 마이페이지에서 언제든 추가하실 수 있어요.',
+    urgentBanner: '🚨 긴급 등록 모드입니다. <b>결제 없이 바로 등록</b>하실 수 있어요. 등록을 마치면 <a href="aliascall_public_board_mockup.html">찾습니다 게시판</a>에 올리실 수 있습니다.',
     guideLink: '📖 사용설명서',
     step0Title: '무엇을 등록할까요?', step0Desc: '등록 대상에 따라 다음 화면에서 필요한 정보만 물어봅니다.',
     catVehicleTitle: '차량', catVehicleSub: '주차 연락 · 파손 안내',
@@ -695,6 +731,42 @@ const I18N = {
     },
   },
   en: {
+    btnDone: "Done",
+    tokenFailed: "(Creation failed — please refresh and try again)",
+    qrFailed: "QR generation failed",
+    titleSuffix: "'s registration",
+    reassuranceLabel: "Owner's voice",
+    listening: "🎙️ Listening…",
+    monthsSuffix: " months",
+    wonSuffix: " KRW",
+    preparingPayment: "Preparing payment…",
+    memberFallback: "Member",
+    petAiEnabled: "✅ AI nose-print recognition is on! Automatic matching starts once the Aliascall app launches.",
+    backBtn: 'Back',
+    ariaVoiceInput: 'Voice input',
+    ariaVoiceInputLong: 'Enter by voice',
+    countryKR: '🇰🇷 South Korea',
+    countryJP: '🇯🇵 Japan',
+    countryUS: '🇺🇸 United States',
+    countryGB: '🇬🇧 United Kingdom',
+    countryFR: '🇫🇷 France',
+    countryIT: '🇮🇹 Italy',
+    countryDE: '🇩🇪 Germany',
+    phPlate: 'e.g. 12A 3456',
+    phMake: 'e.g. Hyundai Avante',
+    phColor: 'e.g. White',
+    phItemType: 'Bag / laptop / wallet, etc.',
+    phSpecies: 'Dog / cat, etc.',
+    phPetName: 'e.g. Choco',
+    phReason: 'e.g. Bulk waste pickup notice / previous resident contact',
+    phLocation: 'e.g. Entrance of the apartment recycling area',
+    phBirthYear: '2019',
+    petAiTitle: '🤖 Turn on AI nose-print recognition (optional)',
+    petAiDesc: 'Right now the photo is stored privately for manual comparison only. Turn this on and AI will recognize and match nose prints automatically (in the Aliascall app).',
+    payInicis: '💳 Korean card',
+    petAiPayBtn: 'Pay and turn on AI recognition',
+    petAiSkipNote: 'You can add this anytime later from My Page.',
+    urgentBanner: '🚨 Urgent registration mode. You can <b>register now without any payment</b>. Once done, you can post it to the <a href="aliascall_public_board_mockup.html">Lost &amp; Found Board</a>.',
     guideLink: '📖 User Guide',
     step0Title: 'What would you like to register?', step0Desc: "The next screen will only ask what's needed for your choice.",
     catVehicleTitle: 'Vehicle', catVehicleSub: 'Parking contact · damage notice',
@@ -804,6 +876,11 @@ function applyLang(lang){
     const key = el.dataset.i18nPlaceholder;
     if (I18N[lang][key] !== undefined) el.placeholder = I18N[lang][key];
   });
+  // 2026-08-25 신설: 스크린리더용 라벨
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+    const key = el.dataset.i18nAria;
+    if (I18N[lang][key] !== undefined) el.setAttribute('aria-label', I18N[lang][key]);
+  });
   document.querySelectorAll('.lang-toggle button').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.lang === lang);
   });
@@ -844,7 +921,7 @@ function renderStep(){
   stepNum.textContent = currentStep + 1;
   stepName.textContent = stepNames[currentStep];
   btnBack.style.visibility = currentStep === 0 ? 'hidden' : 'visible';
-  btnNext.textContent = currentStep === panels.length - 1 ? '완료' : '다음';
+  btnNext.textContent = currentStep === panels.length - 1 ? I18N[currentLang].btnDone : I18N[currentLang].btnNext;
 
   if (currentStep === 2 && selectedCategory) {
     const cfg = categoryLabels[selectedCategory];
@@ -872,7 +949,7 @@ function renderStep(){
     document.getElementById('doneTitle').textContent = categoryLabels[selectedCategory].done;
     document.getElementById('doneToken').textContent = createdRegistration
       ? 'TOKEN · ' + createdRegistration.qr_code_token
-      : 'TOKEN · (생성 실패, 새로고침 후 다시 시도해주세요)';
+      : 'TOKEN · ' + I18N[currentLang].tokenFailed;
     // 2026-08-19: 등록·계정 생성이 다 끝난 시점이라 로그인 세션이 확실히 있어서, 여기서 웹푸시
     // "긴급 알림" 켜기 UI를 렌더링함 (아이폰이면 자동으로 "홈화면에 추가" 안내로 대체됨)
     renderPushOptIn(sb, 'pushOptInContainer');
@@ -1269,7 +1346,7 @@ function generateRealQrCode(token){
     });
   } catch (e) {
     console.error('[qr] QR 생성 실패', e);
-    box.innerHTML = '<div style="font-size:11px;color:#c1483a;padding:8px;text-align:center;">QR 생성 실패</div>';
+    box.innerHTML = '<div style="font-size:11px;color:#c1483a;padding:8px;text-align:center;">' + I18N[currentLang].qrFailed + '</div>';
   }
 }
 
@@ -1308,7 +1385,7 @@ async function submitRegistration(){
     const { data, error } = await sb.rpc('create_registration_full', {
       p_category: selectedCategory,
       p_country_code: document.getElementById('country').value,
-      p_title: document.getElementById('nickname').value.trim() + ' 님의 등록',
+      p_title: (isAlreadyLoggedIn ? (document.getElementById('loggedInNickname').textContent || '') : document.getElementById('nickname').value.trim()) + I18N[currentLang].titleSuffix,
       p_description: document.getElementById('descriptionText').value.trim() || null,
       p_search_key: buildSearchKey(),
       p_guest_password: null,          // 계정 비밀번호는 이제 Supabase Auth가 직접 관리 (signUpOrLoginGuestAccount 참고)
@@ -1384,7 +1461,7 @@ async function uploadStagedFiles(registrationId){
         registration_id: registrationId,
         content_type: 'voice',
         storage_path: path,
-        label: '보호자 목소리',
+        label: I18N[currentLang].reassuranceLabel,
       });
     } catch (e) {
       console.error('[upload] 안심콘텐츠 업로드 실패:', e);
@@ -1415,12 +1492,25 @@ btnNext.addEventListener('click', async () => {
 
   // STEP 4(동의, index 4) -> STEP 5(완료) 전환 시점에 구독 확인 후 실제 등록 생성
   if (currentStep === 4) {
-    const { data: { session } } = await sb.auth.getSession();
-    const { data: profile } = await sb.from('profiles').select('subscription_expires_at').eq('id', session.user.id).maybeSingle();
-    const hasActiveSub = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) > new Date();
-    if (!hasActiveSub) {
-      alert(I18N[currentLang].needSubscriptionAtSubmit);
-      return; // 여기서 멈춤 — 입력한 내용은 그대로 남아있음. 다른 탭에서 구독 후 다시 "완료" 눌러주면 됨
+    // 2026-08-25 수정: 구독 관문을 서버 정책(check_registration_connectable)에 맞춤.
+    //  - 아동·치매어르신·장애우, 반려동물은 서버가 항상 연결을 허용하므로 등록도 막지 않음
+    //  - 구독한 적이 아예 없는 계정(subscription_expires_at is null)도 서버가 허용하므로 막지 않음
+    //  - 긴급 진입(?urgent=1)으로 들어온 경우도 통과
+    //    (분실·실종 게시판에 급히 올려야 하는 상황에서 결제 화면에 막히면 안 되므로)
+    //  예전에는 모든 카테고리를 일괄로 막아서, 화면 안내문("아동·반려동물은 항상 무료")과
+    //  실제 동작이 서로 어긋나 있었음.
+    const FREE_CATEGORIES = ['vulnerable_person', 'pet'];
+    const isUrgentEntry = new URLSearchParams(location.search).get('urgent') === '1';
+
+    if (!FREE_CATEGORIES.includes(selectedCategory) && !isUrgentEntry) {
+      const { data: { session } } = await sb.auth.getSession();
+      const { data: profile } = await sb.from('profiles').select('subscription_expires_at').eq('id', session.user.id).maybeSingle();
+      const neverSubscribed = !profile?.subscription_expires_at;
+      const hasActiveSub = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) > new Date();
+      if (!neverSubscribed && !hasActiveSub) {
+        alert(I18N[currentLang].needSubscriptionAtSubmit);
+        return; // 여기서 멈춤 — 입력한 내용은 그대로 남아있음. 다른 탭에서 구독 후 다시 "완료" 눌러주면 됨
+      }
     }
 
     const ok = await submitRegistration();
@@ -1435,6 +1525,20 @@ btnBack.addEventListener('click', () => {
 
 renderStep();
 applyLang(currentLang);
+
+// 2026-08-25 신설: 긴급 진입(?urgent=1) 처리.
+// 아이나 반려동물을 잃어버린 사람에게 결제 안내부터 보여주면 그 자리에서 이탈합니다.
+// 구독 권유 배너를 감추고, 대신 "지금은 결제 없이 등록하실 수 있다"고 안심시킵니다.
+(function handleUrgentEntry(){
+  if (new URLSearchParams(location.search).get('urgent') !== '1') return;
+  const banner = document.getElementById('subReminderBanner');
+  if (!banner) return;
+  banner.style.background = 'var(--coral-tint)';
+  banner.style.color = 'var(--danger)';
+  banner.innerHTML = I18N[currentLang].urgentBanner;
+  banner.removeAttribute('data-i18n');
+  banner.setAttribute('data-i18n', 'urgentBanner');
+})();
 
 // ── 이미 로그인된 상태로 등록화면에 온 경우: 닉네임/비번 입력칸을 감추고 안내만 표시 ──
 let isAlreadyLoggedIn = false;
@@ -1493,7 +1597,7 @@ function attachVoiceInput(inputEl, btnEl, statusEl, mode){
     recognition.start();
     listening = true;
     btnEl.classList.add('listening');
-    if (statusEl) statusEl.textContent = '🎙️ 듣고 있어요…';
+    if (statusEl) statusEl.textContent = I18N[currentLang].listening;
   });
 }
 
@@ -1526,7 +1630,7 @@ document.getElementById('printModeFill').addEventListener('click', () => {
   document.getElementById('printModeSample').classList.remove('selected');
   document.getElementById('sizeGrid').classList.remove('disabled'); // 2026-08-23 신설
   document.querySelectorAll('.size-card').forEach((c) => c.classList.toggle('selected', c.dataset.size === selectedSize));
-  document.getElementById('printHint').textContent = 'A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다.';
+  document.getElementById('printHint').textContent = I18N[currentLang].printHintFill;
 });
 document.getElementById('printModeSample').addEventListener('click', () => {
   printMode = 'sample';
@@ -1534,7 +1638,7 @@ document.getElementById('printModeSample').addEventListener('click', () => {
   document.getElementById('printModeFill').classList.remove('selected');
   document.getElementById('sizeGrid').classList.add('disabled'); // 2026-08-23 신설: 4종혼합에선 사이즈 선택이 무의미하므로 흐리게 처리
   document.querySelectorAll('.size-card').forEach((c) => c.classList.remove('selected')); // 2026-08-23 신설: 선택 표시 해제
-  document.getElementById('printHint').textContent = '4개 사이즈를 한 장에 소량씩 섞어 찍어서, 잘라보고 어느 사이즈가 맞는지 먼저 확인하실 수 있어요.';
+  document.getElementById('printHint').textContent = I18N[currentLang].printHintSample;
 });
 
 function buildPrintCell(mm){
@@ -1622,8 +1726,8 @@ function initPetAiUpsell(registrationId){
   const grid = document.getElementById('petAiDurationGrid');
   grid.innerHTML = PET_AI_DURATION_PLANS.map((p) => `
     <div class="pet-ai-duration-card ${p.months === petAiSelectedDuration ? 'selected' : ''}" data-months="${p.months}">
-      <div class="m">${p.months}개월</div>
-      <div class="p">${p.priceKrw.toLocaleString()}원</div>
+      <div class="m">${p.months}${I18N[currentLang].monthsSuffix}</div>
+      <div class="p">${p.priceKrw.toLocaleString()}${I18N[currentLang].wonSuffix}</div>
     </div>
   `).join('');
   grid.querySelectorAll('.pet-ai-duration-card').forEach((card) => {
@@ -1644,7 +1748,7 @@ function initPetAiUpsell(registrationId){
       if (petAiSelectedMethod === 'paypal' && !petAiPaypalRendered) {
         petAiPaypalRendered = true;
         renderPetAiPayPalButtons(sb, 'petAiPaypalContainer', { registrationId, durationMonths: petAiSelectedDuration }, (data) => {
-          document.getElementById('petAiUpsell').innerHTML = '<div style="text-align:center; padding:16px; font-size:13px; font-weight:700; color:#8a6416;">✅ AI 비문인식 옵션이 켜졌어요! (Aliascall 앱 출시 후 자동 인식이 시작됩니다)</div>';
+          document.getElementById('petAiUpsell').innerHTML = '<div style="text-align:center; padding:16px; font-size:13px; font-weight:700; color:#8a6416;">' + I18N[currentLang].petAiEnabled + '</div>';
         });
       }
     });
@@ -1653,19 +1757,19 @@ function initPetAiUpsell(registrationId){
   document.getElementById('petAiInicisBtn').addEventListener('click', async () => {
     const btn = document.getElementById('petAiInicisBtn');
     btn.disabled = true;
-    btn.textContent = '결제 준비 중…';
+    btn.textContent = I18N[currentLang].preparingPayment;
     try {
       const { data: { session } } = await sb.auth.getSession();
       await startPetAiInicisPayment(sb, {
         registrationId,
         durationMonths: petAiSelectedDuration,
-        buyername: session?.user?.user_metadata?.nickname || '회원',
+        buyername: session?.user?.user_metadata?.nickname || I18N[currentLang].memberFallback,
         buyertel: '',
         buyeremail: session?.user?.email || '',
       });
     } finally {
       btn.disabled = false;
-      btn.textContent = '결제하고 AI 인식 켜기';
+      btn.textContent = I18N[currentLang].petAiPayBtn;
     }
   });
 }
