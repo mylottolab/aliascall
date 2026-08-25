@@ -82,6 +82,14 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 /* 2026-08-25 신설: 언어 전환 버튼 */
 .lang-toggle{ margin-left:auto; background:var(--card,#fff); color:inherit; border:1.5px solid var(--line); border-radius:20px; padding:6px 13px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; }
 .lang-toggle:active{ opacity:.6; }
+
+/* 2026-08-26 신설(v51): 전문관리용 탭 */
+.pro-row-label{ margin:18px 0 8px; }
+.pro-row-label b{ display:block; font-size:13px; color:var(--teal-deep); }
+.pro-row-label span{ display:block; font-size:11.5px; color:var(--ink-soft); line-height:1.6; margin-top:3px; }
+.tier-tab.pro{ border-color:var(--teal); }
+.tier-tab.pro.active{ border-color:var(--teal-deep); background:var(--teal-tint); }
+.pro-note{ font-size:11.5px; color:var(--ink-soft); line-height:1.7; background:var(--teal-tint); border-radius:10px; padding:11px 13px; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -117,11 +125,24 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
       <div class="tier-tab secure" data-tier="premium_4_secure"><div class="t-name" data-i18n="tPremiumSec">프리미엄🔒</div><div class="t-sub" data-i18n="sub4sec">4인·암호화</div></div>
     </div>
 
+    <!-- 2026-08-26 신설(v51): 전문관리용 — 구독 1건 = 방 여러 개 -->
+    <div class="pro-row-label">
+      <b data-i18n="proRowLabel">프로 비즈니스 · 전문관리용</b>
+      <span data-i18n="proRowDesc">의뢰인·환자·단골을 한 계정으로 관리합니다. 구독 하나로 방을 여러 개 만들 수 있어요.</span>
+    </div>
+    <div class="tier-tabs pro-row" id="tierTabsPro">
+      <div class="tier-tab pro" data-tier="pro_starter"><div class="t-name" data-i18n="tProStarter">스타터</div><div class="t-sub" data-i18n="subProStarter">방 50 · 50GB</div></div>
+      <div class="tier-tab pro" data-tier="pro_business"><div class="t-name" data-i18n="tProBusiness">프로</div><div class="t-sub" data-i18n="subProBusiness">방 100 · 150GB</div></div>
+      <div class="tier-tab pro" data-tier="pro_enterprise"><div class="t-name" data-i18n="tProEnterprise">비즈니스</div><div class="t-sub" data-i18n="subProEnterprise">방 150 · 400GB</div></div>
+    </div>
+    <div class="pro-note" id="proNote" style="display:none;" data-i18n-html="proNote"></div>
+
     <div class="duration-grid" id="durationGrid"><div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:12.5px; padding:20px;" data-i18n="loading">불러오는 중…</div></div>
 
     <div class="summary-card" id="summaryCard" style="display:none;">
       <div class="summary-row"><span data-i18n="sumProduct">상품</span><span id="sumTier">-</span></div>
       <div class="summary-row"><span data-i18n="sumPeriod">기간</span><span id="sumDuration">-</span></div>
+      <div class="summary-row" id="sumRoomsRow" style="display:none;"><span data-i18n="sumRooms">방 개수</span><span id="sumRooms">-</span></div>
       <div class="summary-row"><span data-i18n="sumCap">포함 사용량</span><span id="sumCap">-</span></div>
       <div class="summary-row total"><span data-i18n="sumPrice">결제 금액</span><span id="sumPrice">-</span></div>
     </div>
@@ -191,6 +212,12 @@ const I18N = {
     loading: '불러오는 중…',
     noPlans: '요금 정보가 없어요.',
     planLoadFail: '요금 정보를 불러오지 못했어요.',
+    proRowLabel: '프로 비즈니스 · 전문관리용',
+    proRowDesc: '의뢰인·환자·단골을 한 계정으로 관리합니다. 구독 하나로 방을 여러 개 만들 수 있어요.',
+    tProStarter: '스타터', tProBusiness: '프로', tProEnterprise: '비즈니스',
+    subProStarter: '방 50 · 50GB', subProBusiness: '방 100 · 150GB', subProEnterprise: '방 150 · 400GB',
+    sumRooms: '방 개수',
+    proNote: '⚠️ 전문관리용은 <b>구독 1건으로 방을 여러 개</b> 만드는 상품입니다. 결제 후 관리 화면에서 의뢰인마다 방을 만드세요.<br>방 개수는 <b>최근 3개월 안에 대화가 오간 방</b>만 셉니다. 조용한 방은 세지 않습니다.',
     sumProduct: '상품', sumPeriod: '기간', sumCap: '포함 사용량', sumPrice: '결제 금액',
     noticeTitle: '⚠️ 결제 전 꼭 확인해주세요',
     notice1: '구독을 연장하지 않고 <b>만료 후 30일이 지나면</b>, 개인정보 보호 차원에서 그동안 주고받은 사진·동영상·음성 등 <b>파일이 자동으로 삭제</b>됩니다. (문자 대화 기록은 유지)',
@@ -219,6 +246,12 @@ const I18N = {
     loading: 'Loading…',
     noPlans: 'No pricing available.',
     planLoadFail: "Couldn't load the pricing information.",
+    proRowLabel: 'Pro Business · for professionals',
+    proRowDesc: 'Manage clients, patients or regulars from one account. One subscription lets you open many rooms.',
+    tProStarter: 'Starter', tProBusiness: 'Pro', tProEnterprise: 'Business',
+    subProStarter: '50 rooms · 50GB', subProBusiness: '100 rooms · 150GB', subProEnterprise: '150 rooms · 400GB',
+    sumRooms: 'Rooms',
+    proNote: '⚠️ Pro Business gives you <b>many rooms from a single subscription</b>. After paying, create a room for each client on the management screen.<br>Only rooms with activity <b>in the last 3 months</b> count toward the limit. Quiet rooms are not counted.',
     sumProduct: 'Plan', sumPeriod: 'Period', sumCap: 'Included usage', sumPrice: 'Total',
     noticeTitle: '⚠️ Please read before paying',
     notice1: 'If you do not renew and <b>30 days pass after expiry</b>, the photos, videos, voice files and other <b>files you exchanged are deleted automatically</b> for privacy reasons. (Text history is kept.)',
@@ -281,7 +314,13 @@ document.getElementById('langToggleBtn').addEventListener('click', () => {
 const TIER_LABEL = {
   hotline_1to1: '핫라인 (2인)', hotline_everybody: '핫라인 에브리바디 (2인)', economy_4: '이코노미 (4인)', premium_4: '프리미엄 (4인)',
   hotline_1to1_secure: '핫라인 Secure (2인)', hotline_everybody_secure: '핫라인 에브리바디 Secure (2인)', economy_4_secure: '이코노미 Secure (4인)', premium_4_secure: '프리미엄 Secure (4인)',
+  // 2026-08-26 신설(v51): 전문관리용
+  pro_starter: '프로 스타터', pro_business: '프로 비즈니스', pro_enterprise: '프로 엔터프라이즈',
 };
+
+// 2026-08-26(v51): 전문관리용은 "구독 1건 = 방 여러 개"라 결제 후 흐름이 다름
+const PRO_TIERS = ['pro_starter', 'pro_business', 'pro_enterprise'];
+const isProTier = (t) => PRO_TIERS.includes(t);
 let allPlans = [];
 let selectedTier = 'hotline_1to1'; // 2026-08-22 수정: 8개 상품 중 하나를 직접 고름(더 이상 "기본+토글" 조합이 아님)
 let selectedDuration = 3;
@@ -305,6 +344,8 @@ document.querySelectorAll('.tier-tab').forEach((tab) => {
     document.querySelectorAll('.tier-tab').forEach((t) => t.classList.remove('active'));
     tab.classList.add('active');
     selectedTier = tab.dataset.tier;
+    // 2026-08-26(v51): 전문관리용을 고르면 "방을 여러 개 만드는 상품"임을 안내
+    document.getElementById('proNote').style.display = isProTier(selectedTier) ? 'block' : 'none';
     renderDurations();
   });
 });
@@ -356,6 +397,16 @@ function updateSummary(){
   document.getElementById('sumDuration').textContent = monthsLabel(selectedDuration);
   document.getElementById('sumCap').textContent = plan.usage_cap_gb + 'GB';
   document.getElementById('sumPrice').textContent = priceLabel(plan.price_krw);
+  // 2026-08-26(v51): 전문관리용만 방 개수를 함께 보여줌
+  const roomsRow = document.getElementById('sumRoomsRow');
+  if (isProTier(selectedTier) && plan.max_rooms) {
+    roomsRow.style.display = '';
+    document.getElementById('sumRooms').textContent = (LANG === 'en')
+      ? (plan.max_rooms + ' rooms')
+      : (plan.max_rooms + '개');
+  } else {
+    roomsRow.style.display = 'none';
+  }
   updatePayButtonState();
 }
 
@@ -428,6 +479,10 @@ function renderPaypalButton(){
       document.getElementById('content').style.display = 'none';
       document.getElementById('secureKeyReveal').style.display = 'block';
       try { localStorage.setItem('aliascall_hotline_key_' + data.hotlineId, pendingKey); } catch (e) {}
+    } else if (data.purpose === 'hotline_pro' || isProTier(selectedTier)) {
+      // 2026-08-26(v51): 전문관리용은 방이 아니라 "구독"이 만들어짐.
+      // 방은 관리 화면에서 의뢰인마다 직접 만들게 되므로 그쪽으로 보냄.
+      window.location.href = `aliascall_payment_result.html?status=success&purpose=hotline_pro&subscriptionId=${data.subscriptionId || ''}`;
     } else {
       window.location.href = `aliascall_payment_result.html?status=success&purpose=hotline&hotlineId=${data.hotlineId || ''}`;
     }
