@@ -270,6 +270,54 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .lightbox.show{ display:flex; }
 .lightbox img, .lightbox video{ max-width:100%; max-height:85vh; border-radius:8px; }
 .lightbox-close{ position:absolute; top:20px; right:20px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.15); color:#fff; border:none; font-size:18px; cursor:pointer; }
+
+/* ===== 2026-08-25 신설: 대화 내보내기(인쇄/PDF) ===== */
+.ex-panel{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:700; align-items:flex-end; justify-content:center; }
+.ex-panel.show{ display:flex; }
+.ex-box{ background:#fff; width:100%; max-width:430px; border-radius:18px 18px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px)); max-height:88vh; overflow-y:auto; }
+.ex-box h3{ font-size:16px; margin-bottom:14px; }
+.ex-row{ margin-bottom:14px; }
+.ex-label{ font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:6px; }
+.ex-dates{ display:flex; align-items:center; gap:8px; }
+.ex-dates input{ flex:1; min-width:0; border:1.5px solid var(--line); border-radius:10px; padding:9px 10px; font-size:13px; font-family:inherit; }
+.ex-who{ display:flex; flex-wrap:wrap; gap:7px; }
+.ex-chip{ border:1.5px solid var(--line); background:#fff; border-radius:20px; padding:7px 13px; font-size:12.5px; cursor:pointer; font-family:inherit; color:var(--ink); }
+.ex-chip.on{ background:var(--teal); color:#fff; border-color:var(--teal); }
+.ex-toggle{ display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:8px; cursor:pointer; }
+.ex-actions{ display:flex; gap:8px; margin-top:16px; }
+.ex-actions button{ flex:1; padding:13px; border-radius:11px; border:none; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+.ex-run{ background:var(--teal-deep); color:#fff; }
+.ex-files{ background:var(--teal-tint); color:var(--teal-deep); }
+.ex-cancel{ background:#f0f0f0; color:#444; }
+.ex-status{ font-size:12px; color:var(--ink-soft); text-align:center; margin-top:10px; min-height:16px; }
+
+/* 인쇄용 문서 — 화면에서는 완전히 숨기고, 인쇄할 때만 나타남 */
+#exDoc{ display:none; font-family:'Inter',sans-serif; color:#111; font-size:11pt; line-height:1.6; }
+@media print{
+  body > *{ display:none !important; }
+  #exDoc{ display:block !important; }
+  @page{ margin:14mm; }
+  body{ background:#fff !important; }
+}
+.exd-head{ border-bottom:2px solid #111; padding-bottom:10px; margin-bottom:16px; }
+.exd-head h1{ font-size:16pt; margin:0 0 8px; }
+.exd-meta{ font-size:9pt; color:#444; line-height:1.8; }
+.exd-meta b{ display:inline-block; min-width:70px; color:#111; }
+.exd-date{ text-align:center; font-size:9pt; color:#555; margin:16px 0 8px; padding:4px; background:#f2f2f2; border-radius:4px; }
+.exd-msg{ margin-bottom:9px; page-break-inside:avoid; }
+.exd-who{ font-size:9pt; font-weight:700; color:#111; }
+.exd-time{ font-size:8pt; color:#777; margin-left:6px; font-weight:400; }
+.exd-body{ margin-left:2px; white-space:pre-wrap; word-break:break-word; }
+.exd-sys{ text-align:center; font-size:8.5pt; color:#666; margin:8px 0; font-style:italic; }
+.exd-img{ max-width:62mm; max-height:62mm; margin:4px 6px 0 0; border:1px solid #ddd; vertical-align:top; }
+.exd-file{ display:inline-block; border:1px solid #bbb; border-radius:4px; padding:3px 8px; font-size:9pt; background:#fafafa; }
+.exd-del{ color:#999; font-style:italic; }
+.exd-attach{ margin-top:22px; border-top:1px solid #999; padding-top:12px; }
+.exd-attach h2{ font-size:12pt; margin:0 0 6px; }
+.exd-attach .note{ font-size:8.5pt; color:#666; margin-bottom:8px; }
+.exd-attach table{ width:100%; border-collapse:collapse; font-size:9pt; }
+.exd-attach th,.exd-attach td{ border-bottom:1px solid #ddd; padding:5px 6px; text-align:left; }
+.exd-foot{ margin-top:20px; padding-top:8px; border-top:1px solid #ccc; font-size:8pt; color:#777; text-align:center; }
 </style>
 </head>
 <body>
@@ -290,6 +338,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
     <button type="button" class="more-menu-item" id="openKeepBtn" data-i18n="menuKeep">📌 내 메모함</button>
     <button type="button" class="more-menu-item" id="openSearchBtn" data-i18n="menuSearch">🔍 대화 검색</button>
     <!-- 2026-08-24 신설: 신고 -->
+    <button type="button" class="more-menu-item" id="openExportBtn" data-i18n="menuExport">🖨️ 대화 내보내기</button>
     <button type="button" class="more-menu-item" id="openReportBtn" data-i18n="menuReport">🚩 신고하기</button>
     <!-- 2026-08-25 신설: 언어 전환 -->
     <button type="button" class="more-menu-item" id="langToggleBtn" data-i18n="langToggle">🌐 English</button>
@@ -543,6 +592,37 @@ const I18N = {
     menuKeep: '📌 내 메모함',
     menuSearch: '🔍 대화 검색',
     menuReport: '🚩 신고하기',
+    menuExport: '🖨️ 대화 내보내기',
+    exTitle: '🖨️ 대화 내보내기',
+    exPeriod: '기간',
+    exWho: '참가자',
+    exAll: '전체',
+    exIncPhotos: '사진 포함',
+    exIncCalls: '통화·입퇴장 기록 포함',
+    exRun: '인쇄 / PDF로 저장',
+    exDownloadFiles: '첨부파일 내려받기',
+    exClose: '닫기',
+    exPreparing: '준비 중…',
+    exEmpty: '해당 조건에 맞는 대화가 없어요.',
+    exDocTitle: '대화 기록',
+    exRoom: '대화방',
+    exRange: '기간',
+    exMembers: '참가자',
+    exPrintedAt: '출력일시',
+    exCount: '메시지 수',
+    exAttachTitle: '첨부파일 목록',
+    exAttachNote: '아래 파일들은 인쇄물에 담기지 않습니다. "첨부파일 내려받기"로 따로 보관하세요.',
+    exNoAttach: '첨부파일 없음',
+    exDownloading: '내려받는 중…',
+    exDownloadDone: '내려받기 완료',
+    exFooter: '이 문서는 Aliascall 대화방에서 출력한 기록입니다.',
+    exDeleted: '(삭제된 메시지)',
+    exPhoto: '[사진]',
+    exVideo: '[동영상]',
+    exVoice: '[음성메시지]',
+    exDoc: '[문서]',
+    exDecryptFail: '[복호화 실패]',
+    exAlertNoRange: '시작일이 종료일보다 늦습니다.',
     menuClose: '닫기',
 
     loading: '불러오는 중…',
@@ -693,6 +773,37 @@ const I18N = {
     menuKeep: '📌 My notes',
     menuSearch: '🔍 Search messages',
     menuReport: '🚩 Report',
+    menuExport: '🖨️ Export conversation',
+    exTitle: '🖨️ Export conversation',
+    exPeriod: 'Period',
+    exWho: 'Participants',
+    exAll: 'Everyone',
+    exIncPhotos: 'Include photos',
+    exIncCalls: 'Include call and join/leave records',
+    exRun: 'Print / Save as PDF',
+    exDownloadFiles: 'Download attachments',
+    exClose: 'Close',
+    exPreparing: 'Preparing…',
+    exEmpty: 'No messages match those settings.',
+    exDocTitle: 'Conversation record',
+    exRoom: 'Room',
+    exRange: 'Period',
+    exMembers: 'Participants',
+    exPrintedAt: 'Printed',
+    exCount: 'Messages',
+    exAttachTitle: 'Attachments',
+    exAttachNote: 'These files are not included in the printout. Use "Download attachments" to keep them.',
+    exNoAttach: 'No attachments',
+    exDownloading: 'Downloading…',
+    exDownloadDone: 'Download complete',
+    exFooter: 'This document was exported from an Aliascall room.',
+    exDeleted: '(Deleted message)',
+    exPhoto: '[Photo]',
+    exVideo: '[Video]',
+    exVoice: '[Voice message]',
+    exDoc: '[Document]',
+    exDecryptFail: '[Could not decrypt]',
+    exAlertNoRange: 'The start date is later than the end date.',
     menuClose: 'Close',
 
     loading: 'Loading…',
@@ -2555,7 +2666,317 @@ document.getElementById('openReportBtn').addEventListener('click', () => {
 });
 
 init();
+
+// =====================================================================
+// 2026-08-25 신설: 대화 내보내기 (인쇄 / PDF로 저장)
+//
+// ⚠ 반드시 브라우저에서 조립해야 함 — 암호화 방(Secure)은 서버가 내용을 못 읽고,
+//   열쇠는 이 브라우저에만 있기 때문. 서버로 내보내기를 시키는 건 불가능함.
+//
+// ⚠ 첨부파일 처리 원칙 (법적 기록 관점)
+//   사진  → 인쇄물에 그대로 실림 (본문의 일부로 봄)
+//   동영상·음성·문서 → 종이에 담을 수 없음. 대신 "언제 누가 무슨 파일을 주고받았는지"를
+//                      첨부파일 목록 표에 남겨 증빙이 끊기지 않게 하고,
+//                      실제 파일은 "첨부파일 내려받기"로 따로 저장하게 함.
+// =====================================================================
+
+let exSelectedAnonIds = null; // null = 전체
+
+function exToday(){ return new Date(); }
+function exYmd(d){
+  const p = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+
+function exRenderWhoChips(){
+  const box = document.getElementById('exWho');
+  box.innerHTML = '';
+  const mk = (label, anonId) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ex-chip' + ((anonId === null && exSelectedAnonIds === null) ? ' on' : '');
+    b.textContent = label;
+    if (anonId !== null && exSelectedAnonIds && exSelectedAnonIds.has(anonId)) b.classList.add('on');
+    b.addEventListener('click', () => {
+      if (anonId === null) { exSelectedAnonIds = null; }
+      else {
+        if (!exSelectedAnonIds) exSelectedAnonIds = new Set();
+        if (exSelectedAnonIds.has(anonId)) exSelectedAnonIds.delete(anonId);
+        else exSelectedAnonIds.add(anonId);
+        if (exSelectedAnonIds.size === 0) exSelectedAnonIds = null;
+      }
+      exRenderWhoChips();
+    });
+    box.appendChild(b);
+  };
+  mk(T('exAll'), null);
+  Object.keys(memberNicknames).forEach((anonId) => mk(memberNicknames[anonId], anonId));
+}
+
+function openExportPanel(){
+  document.getElementById('moreMenu').classList.remove('show');
+  const to = exToday();
+  const from = new Date(to.getTime() - 30 * 86400000); // 기본값: 최근 30일
+  document.getElementById('exFrom').value = exYmd(from);
+  document.getElementById('exTo').value = exYmd(to);
+  exSelectedAnonIds = null;
+  exRenderWhoChips();
+  document.getElementById('exStatus').textContent = '';
+  document.getElementById('exPanel').classList.add('show');
+}
+
+// ── 조건에 맞는 메시지만 서버에서 다시 받아와 추림 ──
+async function exFetchFiltered(){
+  const fromVal = document.getElementById('exFrom').value;
+  const toVal = document.getElementById('exTo').value;
+  const fromTs = fromVal ? new Date(fromVal + 'T00:00:00').getTime() : -Infinity;
+  const toTs = toVal ? new Date(toVal + 'T23:59:59.999').getTime() : Infinity;
+  if (fromTs > toTs) { alert(T('exAlertNoRange')); return null; }
+
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-messages`, {
+    method: 'POST', headers: authHeaders(),
+    body: JSON.stringify({ hotlineId, memberAnonId: hotlineAnonId }),
+  });
+  const data = await res.json();
+  if (!res.ok) { alert(data.error || T('errLoadFail')); return null; }
+
+  const incCalls = document.getElementById('exIncCalls').checked;
+  const SYSTEM_TYPES = ['call_log', 'partner_joined', 'partner_left'];
+
+  return (data.messages || []).filter((m) => {
+    const t = new Date(m.created_at).getTime();
+    if (t < fromTs || t > toTs) return false;
+    const isSystem = SYSTEM_TYPES.indexOf(m.message_type) >= 0;
+    if (isSystem) return incCalls; // 시스템 기록은 사람 필터를 적용하지 않음(방 전체의 사건이라)
+    if (exSelectedAnonIds && !exSelectedAnonIds.has(m.sender_anon_id)) return false;
+    return true;
+  });
+}
+
+// ── 인쇄용 문서 조립 ──
+async function exBuildDocument(msgs, attachments){
+  const doc = document.getElementById('exDoc');
+  doc.innerHTML = '';
+  const incPhotos = document.getElementById('exIncPhotos').checked;
+
+  // 머리말
+  const head = document.createElement('div');
+  head.className = 'exd-head';
+  const h1 = document.createElement('h1');
+  h1.textContent = T('exDocTitle');
+  head.appendChild(h1);
+  const meta = document.createElement('div');
+  meta.className = 'exd-meta';
+  const whoLabel = exSelectedAnonIds
+    ? Array.from(exSelectedAnonIds).map((a) => memberNicknames[a] || a).join(', ')
+    : Object.keys(memberNicknames).map((a) => memberNicknames[a]).join(', ');
+  const rows = [
+    [T('exRoom'), document.getElementById('roomTitle').textContent],
+    [T('exRange'), document.getElementById('exFrom').value + ' ~ ' + document.getElementById('exTo').value],
+    [T('exMembers'), whoLabel],
+    [T('exCount'), String(msgs.length)],
+    [T('exPrintedAt'), formatDateDivider(new Date().toISOString()) + ' ' + formatMsgTime(new Date().toISOString())],
+  ];
+  rows.forEach(([k, v]) => {
+    const line = document.createElement('div');
+    const b = document.createElement('b'); b.textContent = k;
+    line.appendChild(b);
+    line.appendChild(document.createTextNode(' ' + v));
+    meta.appendChild(line);
+  });
+  head.appendChild(meta);
+  doc.appendChild(head);
+
+  // 본문
+  let lastKey = null;
+  for (const m of msgs) {
+    const key = new Date(m.created_at).toDateString();
+    if (key !== lastKey) {
+      lastKey = key;
+      const d = document.createElement('div');
+      d.className = 'exd-date';
+      d.textContent = formatDateDivider(m.created_at);
+      doc.appendChild(d);
+    }
+
+    if (['call_log', 'partner_joined', 'partner_left'].indexOf(m.message_type) >= 0) {
+      const sys = document.createElement('div');
+      sys.className = 'exd-sys';
+      sys.textContent = localizeSystemNote(m.content) + '  (' + formatMsgTime(m.created_at) + ')';
+      doc.appendChild(sys);
+      continue;
+    }
+
+    const wrap = document.createElement('div');
+    wrap.className = 'exd-msg';
+    const who = document.createElement('div');
+    who.className = 'exd-who';
+    who.textContent = m.sender_nickname || '';
+    const time = document.createElement('span');
+    time.className = 'exd-time';
+    time.textContent = formatMsgTime(m.created_at);
+    who.appendChild(time);
+    wrap.appendChild(who);
+
+    const body = document.createElement('div');
+    body.className = 'exd-body';
+
+    if (m.deleted_at) {
+      body.classList.add('exd-del');
+      body.textContent = T('exDeleted');
+    } else if (m.message_type === 'photo') {
+      if (incPhotos) {
+        const src = await resolveMediaUrl(m.content, m.original_mime_type);
+        if (src) { const img = document.createElement('img'); img.className = 'exd-img'; img.src = src; body.appendChild(img); }
+        else body.textContent = T('exDecryptFail');
+      } else {
+        body.textContent = T('exPhoto');
+      }
+    } else if (m.message_type === 'video' || m.message_type === 'voice' || m.message_type === 'document') {
+      let name = '';
+      if (m.message_type === 'document') {
+        name = roomIsSecure ? await safeDecryptText(m.file_name) : (m.file_name || '');
+      }
+      const label = m.message_type === 'video' ? T('exVideo') : m.message_type === 'voice' ? T('exVoice') : T('exDoc');
+      const chip = document.createElement('span');
+      chip.className = 'exd-file';
+      chip.textContent = label + (name ? ' ' + name : '');
+      body.appendChild(chip);
+      attachments.push({ type: m.message_type, name, url: m.content, mime: m.original_mime_type,
+                         when: m.created_at, who: m.sender_nickname || '' });
+    } else {
+      const text = roomIsSecure ? await safeDecryptText(m.content) : m.content;
+      body.textContent = text || '';
+      if (m.edited_at) body.textContent += ' ' + T('editedTag');
+    }
+    wrap.appendChild(body);
+    doc.appendChild(wrap);
+  }
+
+  // 첨부파일 목록 — 인쇄물에 담을 수 없는 파일들의 증빙
+  const at = document.createElement('div');
+  at.className = 'exd-attach';
+  const h2 = document.createElement('h2'); h2.textContent = T('exAttachTitle'); at.appendChild(h2);
+  const note = document.createElement('div'); note.className = 'note'; note.textContent = T('exAttachNote'); at.appendChild(note);
+  if (attachments.length === 0) {
+    const p = document.createElement('div'); p.textContent = T('exNoAttach'); at.appendChild(p);
+  } else {
+    const tbl = document.createElement('table');
+    const thead = document.createElement('tr');
+    ['#', T('exMembers'), T('exPrintedAt'), T('exDoc')].forEach((h, i) => {
+      const th = document.createElement('th');
+      th.textContent = (i === 2) ? T('exPeriod') : h;
+      thead.appendChild(th);
+    });
+    tbl.appendChild(thead);
+    attachments.forEach((a, i) => {
+      const tr = document.createElement('tr');
+      const label = a.type === 'video' ? T('exVideo') : a.type === 'voice' ? T('exVoice') : T('exDoc');
+      [String(i + 1), a.who, formatDateDivider(a.when) + ' ' + formatMsgTime(a.when), label + (a.name ? ' ' + a.name : '')]
+        .forEach((v) => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+      tbl.appendChild(tr);
+    });
+    at.appendChild(tbl);
+  }
+  doc.appendChild(at);
+
+  const foot = document.createElement('div');
+  foot.className = 'exd-foot';
+  foot.textContent = T('exFooter');
+  doc.appendChild(foot);
+}
+
+let exLastAttachments = [];
+
+document.getElementById('openExportBtn').addEventListener('click', openExportPanel);
+document.getElementById('exCloseBtn').addEventListener('click', () => document.getElementById('exPanel').classList.remove('show'));
+document.getElementById('exPanel').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('exPanel')) document.getElementById('exPanel').classList.remove('show');
+});
+
+document.getElementById('exRunBtn').addEventListener('click', async () => {
+  const status = document.getElementById('exStatus');
+  status.textContent = T('exPreparing');
+  try {
+    const msgs = await exFetchFiltered();
+    if (!msgs) { status.textContent = ''; return; }
+    if (msgs.length === 0) { status.textContent = T('exEmpty'); return; }
+    exLastAttachments = [];
+    await exBuildDocument(msgs, exLastAttachments);
+    status.textContent = '';
+    document.getElementById('exPanel').classList.remove('show');
+    setTimeout(() => window.print(), 250); // 이미지가 그려질 틈을 조금 줌
+  } catch (e) {
+    console.error('[export] 실패', e);
+    status.textContent = '';
+    alert(T('alertTryLater'));
+  }
+});
+
+// 동영상·음성·문서를 하나씩 복호화해서 내려받음
+document.getElementById('exFilesBtn').addEventListener('click', async () => {
+  const status = document.getElementById('exStatus');
+  status.textContent = T('exPreparing');
+  try {
+    const msgs = await exFetchFiltered();
+    if (!msgs) { status.textContent = ''; return; }
+    const files = msgs.filter((m) => !m.deleted_at && ['video', 'voice', 'document'].indexOf(m.message_type) >= 0);
+    if (files.length === 0) { status.textContent = T('exNoAttach'); return; }
+
+    for (let i = 0; i < files.length; i++) {
+      const m = files[i];
+      status.textContent = T('exDownloading') + ' (' + (i + 1) + '/' + files.length + ')';
+      const src = await resolveMediaUrl(m.content, m.original_mime_type);
+      if (!src) continue;
+      let name = '';
+      if (m.message_type === 'document') name = roomIsSecure ? await safeDecryptText(m.file_name) : (m.file_name || '');
+      if (!name) {
+        const ext = m.message_type === 'video' ? '.mp4' : '.webm';
+        name = m.message_type + '_' + new Date(m.created_at).getTime() + ext;
+      }
+      const a = document.createElement('a');
+      a.href = src; a.download = name; a.click();
+      await new Promise((r) => setTimeout(r, 400)); // 브라우저가 연속 다운로드를 막지 않도록 간격을 둠
+    }
+    status.textContent = T('exDownloadDone');
+  } catch (e) {
+    console.error('[export] 첨부 내려받기 실패', e);
+    status.textContent = '';
+    alert(T('alertTryLater'));
+  }
+});
+
 </script>
+<!-- 2026-08-25 신설: 대화 내보내기 -->
+<div class="ex-panel" id="exPanel">
+  <div class="ex-box">
+    <h3 data-i18n="exTitle">🖨️ 대화 내보내기</h3>
+    <div class="ex-row">
+      <div class="ex-label" data-i18n="exPeriod">기간</div>
+      <div class="ex-dates">
+        <input type="date" id="exFrom"><span>~</span><input type="date" id="exTo">
+      </div>
+    </div>
+    <div class="ex-row">
+      <div class="ex-label" data-i18n="exWho">참가자</div>
+      <div class="ex-who" id="exWho"></div>
+    </div>
+    <div class="ex-row">
+      <label class="ex-toggle"><input type="checkbox" id="exIncPhotos" checked><span data-i18n="exIncPhotos">사진 포함</span></label>
+      <label class="ex-toggle"><input type="checkbox" id="exIncCalls" checked><span data-i18n="exIncCalls">통화·입퇴장 기록 포함</span></label>
+    </div>
+    <div class="ex-actions">
+      <button type="button" class="ex-run" id="exRunBtn" data-i18n="exRun">인쇄 / PDF로 저장</button>
+      <button type="button" class="ex-files" id="exFilesBtn" data-i18n="exDownloadFiles">첨부파일 내려받기</button>
+    </div>
+    <div class="ex-actions">
+      <button type="button" class="ex-cancel" id="exCloseBtn" data-i18n="exClose">닫기</button>
+    </div>
+    <div class="ex-status" id="exStatus"></div>
+  </div>
+</div>
+<div id="exDoc"></div>
+
 <script src="aliascall_report.js"></script>
 </body>
 </html>
