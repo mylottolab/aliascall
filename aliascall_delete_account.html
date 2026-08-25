@@ -81,6 +81,11 @@ td.keep{ color:var(--ink-soft); }
 .mail{ color:var(--teal-deep); font-weight:600; }
 footer{ text-align:center; font-size:11.5px; color:var(--ink-soft); line-height:1.9; margin-top:28px; }
 footer a{ color:var(--teal-deep); }
+/* 2026-08-25 신설: 언어 전환 버튼 + 안내 */
+.lang-toggle{ background:var(--card); color:var(--ink); border:1.5px solid var(--line); border-radius:20px; padding:6px 13px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; }
+.lang-toggle:active{ opacity:.6; }
+.header-right{ display:flex; align-items:center; gap:8px; }
+.lang-note{ display:none; font-size:11.5px; color:var(--ink-soft); background:var(--teal-tint); border-radius:10px; padding:10px 12px; line-height:1.6; margin-bottom:18px; }
 </style>
 </head>
 <body>
@@ -88,116 +93,266 @@ footer a{ color:var(--teal-deep); }
 <header>
   <div class="brand-row">
     <div class="brand-left">
-      <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기">←</button>
+      <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기" data-i18n-aria="backAria">←</button>
       <a href="index.html" class="brand-home-link">
         <div class="brand-mark">A</div>
         <div class="brand-name">Alias<em>call</em></div>
       </a>
     </div>
-    <div class="public-badge">로그인 없이 열람 가능</div>
+    <div class="header-right">
+      <button type="button" class="lang-toggle" id="langToggleBtn" data-i18n="langToggle" data-i18n-aria="langAria" aria-label="언어 바꾸기">EN</button>
+      <div class="public-badge" data-i18n="publicBadge">로그인 없이 열람 가능</div>
+    </div>
   </div>
 </header>
 
 <main>
-  <h1 class="page-title">계정 및 데이터 삭제 안내</h1>
-  <p class="app-line">
+  <h1 class="page-title" data-i18n="pageTitle">계정 및 데이터 삭제 안내</h1>
+  <p class="app-line" data-i18n-html="appLine">
     앱 이름: <b>에일리어스콜 - 번호 없는 안심연락</b> (Aliascall)<br>
     개발자: <b>위브앱솔루션</b> · 대표 이미화 · 사업자등록번호 206-08-71754
   </p>
+  <div class="lang-note" id="langNote"></div>
 
   <div class="card">
-    <h2>🗑️ 계정을 삭제하는 방법</h2>
-    <p>앱 또는 웹사이트에서 직접 삭제하실 수 있습니다. 별도로 요청하실 필요가 없습니다.</p>
+    <h2 data-i18n="howTitle">🗑️ 계정을 삭제하는 방법</h2>
+    <p data-i18n="howIntro">앱 또는 웹사이트에서 직접 삭제하실 수 있습니다. 별도로 요청하실 필요가 없습니다.</p>
     <ol class="steps">
-      <li>
+      <li data-i18n-html="step1">
         <b>에일리어스콜 앱을 실행하거나 aliascall.com에 접속합니다.</b>
       </li>
-      <li>
+      <li data-i18n-html="step2">
         <b>첫 화면에서 "로그인 · 마이페이지"를 선택합니다.</b>
         <span class="sub">닉네임과 비밀번호로 로그인합니다.</span>
       </li>
-      <li>
+      <li data-i18n-html="step3">
         <b>마이페이지 화면을 아래로 내립니다.</b>
         <span class="sub">등록물 목록이 끝나는 지점에 붉은색 "회원 탈퇴" 영역이 있습니다.</span>
       </li>
-      <li>
+      <li data-i18n-html="step4">
         <b>"회원 탈퇴하기" 버튼을 누릅니다.</b>
       </li>
-      <li>
+      <li data-i18n-html="step5">
         <b>안내를 확인하고 동의하면 즉시 삭제가 진행됩니다.</b>
         <span class="sub">삭제는 되돌릴 수 없습니다.</span>
       </li>
     </ol>
-    <a class="cta" href="aliascall_my_account.html">마이페이지로 이동하기</a>
-    <p class="cta-sub">로그인 화면이 먼저 나타납니다. 로그인 후 화면 하단에서 탈퇴하실 수 있습니다.</p>
+    <a class="cta" href="aliascall_my_account.html" data-i18n="cta">마이페이지로 이동하기</a>
+    <p class="cta-sub" data-i18n="ctaSub">로그인 화면이 먼저 나타납니다. 로그인 후 화면 하단에서 탈퇴하실 수 있습니다.</p>
   </div>
 
   <div class="notice">
-    <h2>⚠️ 삭제 전 확인해 주세요</h2>
-    <p>
+    <h2 data-i18n="noticeTitle">⚠️ 삭제 전 확인해 주세요</h2>
+    <p data-i18n-html="noticeP1">
       탈퇴하시면 등록해두신 <b>QR 태그가 즉시 작동을 멈춥니다.</b>
       차량이나 반려동물 인식표에 붙여둔 QR을 누군가 스캔해도 연결되지 않습니다.
       실물에 부착한 QR 스티커는 직접 제거해 주세요.
     </p>
-    <p>보유하신 포인트는 함께 소멸되며 환불되지 않습니다.</p>
+    <p data-i18n="noticeP2">보유하신 포인트는 함께 소멸되며 환불되지 않습니다.</p>
   </div>
 
   <div class="card">
-    <h2>📋 삭제되는 데이터</h2>
-    <p>회원 탈퇴 시 아래 데이터가 삭제됩니다.</p>
+    <h2 data-i18n="delTitle">📋 삭제되는 데이터</h2>
+    <p data-i18n="delIntro">회원 탈퇴 시 아래 데이터가 삭제됩니다.</p>
     <table>
       <thead>
-        <tr><th>데이터 종류</th><th>처리</th></tr>
+        <tr><th data-i18n="thKind">데이터 종류</th><th data-i18n="thAction">처리</th></tr>
       </thead>
       <tbody>
-        <tr><td>계정 정보 (닉네임, 이메일, 비밀번호)</td><td>즉시 삭제</td></tr>
-        <tr><td>등록물 정보 (차량·분실물·반려동물·아동/어르신 등)</td><td>즉시 삭제</td></tr>
-        <tr><td>발급된 QR 코드 및 연결 토큰</td><td>즉시 삭제 (연결 불가)</td></tr>
-        <tr><td>반려동물 비문(코무늬) 사진</td><td>즉시 삭제</td></tr>
-        <tr><td>사건함 대화 기록 및 주고받은 사진</td><td>즉시 삭제</td></tr>
-        <tr><td>안심보안회선(핫라인) 대화 및 첨부 파일</td><td>즉시 삭제</td></tr>
-        <tr><td>보유 포인트</td><td>즉시 소멸</td></tr>
-        <tr><td>알림 수신 정보 (푸시 토큰)</td><td>즉시 삭제</td></tr>
+        <tr><td data-i18n="d1">계정 정보 (닉네임, 이메일, 비밀번호)</td><td data-i18n="d1a">즉시 삭제</td></tr>
+        <tr><td data-i18n="d2">등록물 정보 (차량·분실물·반려동물·아동/어르신 등)</td><td data-i18n="d2a">즉시 삭제</td></tr>
+        <tr><td data-i18n="d3">발급된 QR 코드 및 연결 토큰</td><td data-i18n="d3a">즉시 삭제 (연결 불가)</td></tr>
+        <tr><td data-i18n="d4">반려동물 비문(코무늬) 사진</td><td data-i18n="d4a">즉시 삭제</td></tr>
+        <tr><td data-i18n="d5">사건함 대화 기록 및 주고받은 사진</td><td data-i18n="d5a">즉시 삭제</td></tr>
+        <tr><td data-i18n="d6">안심보안회선(핫라인) 대화 및 첨부 파일</td><td data-i18n="d6a">즉시 삭제</td></tr>
+        <tr><td data-i18n="d7">보유 포인트</td><td data-i18n="d7a">즉시 소멸</td></tr>
+        <tr><td data-i18n="d8">알림 수신 정보 (푸시 토큰)</td><td data-i18n="d8a">즉시 삭제</td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="card">
-    <h2>🗄️ 삭제 후에도 보관되는 데이터</h2>
-    <p>아래 항목은 법령에 따라 일정 기간 보관한 뒤 파기됩니다. 이 데이터는 회원님을 식별할 수 없는 형태이거나, 법적 의무로 보관이 요구되는 항목입니다.</p>
+    <h2 data-i18n="keepTitle">🗄️ 삭제 후에도 보관되는 데이터</h2>
+    <p data-i18n="keepIntro">아래 항목은 법령에 따라 일정 기간 보관한 뒤 파기됩니다. 이 데이터는 회원님을 식별할 수 없는 형태이거나, 법적 의무로 보관이 요구되는 항목입니다.</p>
     <table>
       <thead>
-        <tr><th>항목</th><th>보관 기간</th><th>근거</th></tr>
+        <tr><th data-i18n="thItem">항목</th><th data-i18n="thPeriod">보관 기간</th><th data-i18n="thBasis">근거</th></tr>
       </thead>
       <tbody>
-        <tr><td>결제 및 거래 기록</td><td class="keep">5년</td><td class="keep">전자상거래법</td></tr>
-        <tr><td>대금 결제 및 재화 공급 기록</td><td class="keep">5년</td><td class="keep">전자상거래법</td></tr>
-        <tr><td>소비자 불만 및 분쟁 처리 기록</td><td class="keep">3년</td><td class="keep">전자상거래법</td></tr>
-        <tr><td>접속 기록 (로그인 IP 등)</td><td class="keep">3개월</td><td class="keep">통신비밀보호법</td></tr>
+        <tr><td data-i18n="k1">결제 및 거래 기록</td><td class="keep" data-i18n="k1p">5년</td><td class="keep" data-i18n="k1b">전자상거래법</td></tr>
+        <tr><td data-i18n="k2">대금 결제 및 재화 공급 기록</td><td class="keep" data-i18n="k2p">5년</td><td class="keep" data-i18n="k2b">전자상거래법</td></tr>
+        <tr><td data-i18n="k3">소비자 불만 및 분쟁 처리 기록</td><td class="keep" data-i18n="k3p">3년</td><td class="keep" data-i18n="k3b">전자상거래법</td></tr>
+        <tr><td data-i18n="k4">접속 기록 (로그인 IP 등)</td><td class="keep" data-i18n="k4p">3개월</td><td class="keep" data-i18n="k4b">통신비밀보호법</td></tr>
       </tbody>
     </table>
-    <p style="margin-top:14px;">보관 기간이 지나면 지체 없이 파기합니다.</p>
+    <p style="margin-top:14px;" data-i18n="keepOutro">보관 기간이 지나면 지체 없이 파기합니다.</p>
   </div>
 
   <div class="card">
-    <h2>💬 직접 삭제가 어려우신 경우</h2>
-    <p>
+    <h2 data-i18n="helpTitle">💬 직접 삭제가 어려우신 경우</h2>
+    <p data-i18n-html="helpP1">
       비밀번호를 잊으셨거나 앱에 접속할 수 없는 등 직접 탈퇴가 어려우시면
       아래로 연락해 주세요. 본인 확인 후 처리해 드립니다.
     </p>
-    <p>
+    <p data-i18n-html="helpContact">
       이메일 <a class="mail" href="mailto:djlee0827@gmail.com">djlee0827@gmail.com</a><br>
       전화 <span class="mail">010-9237-9042</span>
     </p>
-    <p>요청을 받은 날로부터 <b>영업일 기준 10일 이내</b>에 처리하고 결과를 알려드립니다.</p>
+    <p data-i18n-html="helpP3">요청을 받은 날로부터 <b>영업일 기준 10일 이내</b>에 처리하고 결과를 알려드립니다.</p>
   </div>
 
-  <footer>
+  <footer data-i18n-html="footer">
     위브앱솔루션 · 대표 이미화 · 사업자등록번호 206-08-71754<br>
     경기도 수원시 권선구 수성로47 10동 501호 · 통신판매업신고 2022-수원권선-1701<br>
     <a href="aliascall_privacy.html">개인정보처리방침</a> · <a href="aliascall_terms.html">이용약관</a>
   </footer>
 </main>
+
+<script>
+// =====================================================================
+// 2026-08-25 신설: 다국어(한국어/영어)
+// ⚠ 사업자 표시사항(상호·대표자·사업자등록번호·주소·통신판매업신고번호)은
+//    전자상거래법상 한국어 표기가 원칙이라 번역하지 않고 그대로 둠.
+//    영어 화면에는 라벨만 영어로 바꾸고, 한국어가 정본이라는 안내를 한 줄 넣음.
+// =====================================================================
+const I18N = {
+  ko: {
+    docTitle: '계정 및 데이터 삭제 안내 — 에일리어스콜 (Aliascall)',
+    metaDesc: '에일리어스콜(Aliascall) 계정과 등록 데이터를 삭제하는 방법, 삭제되는 데이터의 종류와 보관 기간을 안내합니다.',
+    backAria: '뒤로가기',
+    langToggle: 'EN', langAria: '언어 바꾸기',
+    publicBadge: '로그인 없이 열람 가능',
+    pageTitle: '계정 및 데이터 삭제 안내',
+    appLine: '앱 이름: <b>에일리어스콜 - 번호 없는 안심연락</b> (Aliascall)<br>개발자: <b>위브앱솔루션</b> · 대표 이미화 · 사업자등록번호 206-08-71754',
+    langNote: '',
+
+    howTitle: '🗑️ 계정을 삭제하는 방법',
+    howIntro: '앱 또는 웹사이트에서 직접 삭제하실 수 있습니다. 별도로 요청하실 필요가 없습니다.',
+    step1: '<b>에일리어스콜 앱을 실행하거나 aliascall.com에 접속합니다.</b>',
+    step2: '<b>첫 화면에서 "로그인 · 마이페이지"를 선택합니다.</b>\n        <span class="sub">닉네임과 비밀번호로 로그인합니다.</span>',
+    step3: '<b>마이페이지 화면을 아래로 내립니다.</b>\n        <span class="sub">등록물 목록이 끝나는 지점에 붉은색 "회원 탈퇴" 영역이 있습니다.</span>',
+    step4: '<b>"회원 탈퇴하기" 버튼을 누릅니다.</b>',
+    step5: '<b>안내를 확인하고 동의하면 즉시 삭제가 진행됩니다.</b>\n        <span class="sub">삭제는 되돌릴 수 없습니다.</span>',
+    cta: '마이페이지로 이동하기',
+    ctaSub: '로그인 화면이 먼저 나타납니다. 로그인 후 화면 하단에서 탈퇴하실 수 있습니다.',
+
+    noticeTitle: '⚠️ 삭제 전 확인해 주세요',
+    noticeP1: '탈퇴하시면 등록해두신 <b>QR 태그가 즉시 작동을 멈춥니다.</b>\n      차량이나 반려동물 인식표에 붙여둔 QR을 누군가 스캔해도 연결되지 않습니다.\n      실물에 부착한 QR 스티커는 직접 제거해 주세요.',
+    noticeP2: '보유하신 포인트는 함께 소멸되며 환불되지 않습니다.',
+
+    delTitle: '📋 삭제되는 데이터',
+    delIntro: '회원 탈퇴 시 아래 데이터가 삭제됩니다.',
+    thKind: '데이터 종류', thAction: '처리',
+    d1: '계정 정보 (닉네임, 이메일, 비밀번호)', d1a: '즉시 삭제',
+    d2: '등록물 정보 (차량·분실물·반려동물·아동/어르신 등)', d2a: '즉시 삭제',
+    d3: '발급된 QR 코드 및 연결 토큰', d3a: '즉시 삭제 (연결 불가)',
+    d4: '반려동물 비문(코무늬) 사진', d4a: '즉시 삭제',
+    d5: '사건함 대화 기록 및 주고받은 사진', d5a: '즉시 삭제',
+    d6: '안심보안회선(핫라인) 대화 및 첨부 파일', d6a: '즉시 삭제',
+    d7: '보유 포인트', d7a: '즉시 소멸',
+    d8: '알림 수신 정보 (푸시 토큰)', d8a: '즉시 삭제',
+
+    keepTitle: '🗄️ 삭제 후에도 보관되는 데이터',
+    keepIntro: '아래 항목은 법령에 따라 일정 기간 보관한 뒤 파기됩니다. 이 데이터는 회원님을 식별할 수 없는 형태이거나, 법적 의무로 보관이 요구되는 항목입니다.',
+    thItem: '항목', thPeriod: '보관 기간', thBasis: '근거',
+    k1: '결제 및 거래 기록', k1p: '5년', k1b: '전자상거래법',
+    k2: '대금 결제 및 재화 공급 기록', k2p: '5년', k2b: '전자상거래법',
+    k3: '소비자 불만 및 분쟁 처리 기록', k3p: '3년', k3b: '전자상거래법',
+    k4: '접속 기록 (로그인 IP 등)', k4p: '3개월', k4b: '통신비밀보호법',
+    keepOutro: '보관 기간이 지나면 지체 없이 파기합니다.',
+
+    helpTitle: '💬 직접 삭제가 어려우신 경우',
+    helpP1: '비밀번호를 잊으셨거나 앱에 접속할 수 없는 등 직접 탈퇴가 어려우시면\n      아래로 연락해 주세요. 본인 확인 후 처리해 드립니다.',
+    helpContact: '이메일 <a class="mail" href="mailto:djlee0827@gmail.com">djlee0827@gmail.com</a><br>전화 <span class="mail">010-9237-9042</span>',
+    helpP3: '요청을 받은 날로부터 <b>영업일 기준 10일 이내</b>에 처리하고 결과를 알려드립니다.',
+
+    footer: '위브앱솔루션 · 대표 이미화 · 사업자등록번호 206-08-71754<br>\n    경기도 수원시 권선구 수성로47 10동 501호 · 통신판매업신고 2022-수원권선-1701<br>\n    <a href="aliascall_privacy.html">개인정보처리방침</a> · <a href="aliascall_terms.html">이용약관</a>',
+  },
+  en: {
+    docTitle: 'Account and Data Deletion — Aliascall',
+    metaDesc: 'How to delete your Aliascall account and registered data, what is deleted, and how long anything is retained.',
+    backAria: 'Go back',
+    langToggle: '한국어', langAria: 'Change language',
+    publicBadge: 'Viewable without signing in',
+    pageTitle: 'Account and Data Deletion',
+    appLine: 'App name: <b>에일리어스콜 - 번호 없는 안심연락</b> (Aliascall)<br>Developer: <b>위브앱솔루션 (Weave App Solution)</b> · CEO 이미화 (Lee Mi-hwa) · Business registration no. 206-08-71754',
+    langNote: 'This page is provided in English for convenience. Business details are shown in Korean as required by Korean e-commerce law, and the Korean version prevails.',
+
+    howTitle: '🗑️ How to delete your account',
+    howIntro: 'You can delete it yourself in the app or on the website. There is no need to submit a separate request.',
+    step1: '<b>Open the Aliascall app, or go to aliascall.com.</b>',
+    step2: '<b>On the first screen, choose "Sign in · My Page".</b>\n        <span class="sub">Sign in with your nickname and password.</span>',
+    step3: '<b>Scroll down the My Page screen.</b>\n        <span class="sub">Below the end of your registration list there is a red "Delete account" section.</span>',
+    step4: '<b>Tap the "Delete my account" button.</b>',
+    step5: '<b>Read the notice and confirm, and deletion happens immediately.</b>\n        <span class="sub">Deletion cannot be undone.</span>',
+    cta: 'Go to My Page',
+    ctaSub: 'The sign-in screen appears first. After signing in, you can delete your account at the bottom of the screen.',
+
+    noticeTitle: '⚠️ Please check before deleting',
+    noticeP1: 'Once you delete your account, <b>your QR tags stop working immediately.</b>\n      If someone scans a QR you attached to a vehicle or a pet tag, it will no longer connect.\n      Please remove any physical QR stickers yourself.',
+    noticeP2: 'Any points you hold are forfeited at the same time and are not refunded.',
+
+    delTitle: '📋 Data that is deleted',
+    delIntro: 'The following data is deleted when you close your account.',
+    thKind: 'Type of data', thAction: 'Handling',
+    d1: 'Account details (nickname, email, password)', d1a: 'Deleted immediately',
+    d2: 'Registration details (vehicles, lost items, pets, children and older adults, etc.)', d2a: 'Deleted immediately',
+    d3: 'Issued QR codes and connection tokens', d3a: 'Deleted immediately (no longer connects)',
+    d4: 'Pet nose-print photos', d4a: 'Deleted immediately',
+    d5: 'Conversation history and photos exchanged', d5a: 'Deleted immediately',
+    d6: 'Alias Secure Call (hotline) conversations and attachments', d6a: 'Deleted immediately',
+    d7: 'Points held', d7a: 'Forfeited immediately',
+    d8: 'Notification details (push tokens)', d8a: 'Deleted immediately',
+
+    keepTitle: '🗄️ Data retained after deletion',
+    keepIntro: 'The items below are retained for a set period as required by law, then destroyed. This data is either in a form that cannot identify you, or is something we are legally obliged to keep.',
+    thItem: 'Item', thPeriod: 'Retention period', thBasis: 'Legal basis',
+    k1: 'Payment and transaction records', k1p: '5 years', k1b: 'Act on Consumer Protection in Electronic Commerce (전자상거래법)',
+    k2: 'Records of payment and supply of goods', k2p: '5 years', k2b: 'Act on Consumer Protection in Electronic Commerce (전자상거래법)',
+    k3: 'Records of consumer complaints and dispute handling', k3p: '3 years', k3b: 'Act on Consumer Protection in Electronic Commerce (전자상거래법)',
+    k4: 'Access logs (sign-in IP and similar)', k4p: '3 months', k4b: 'Protection of Communications Secrets Act (통신비밀보호법)',
+    keepOutro: 'Once the retention period ends, the data is destroyed without delay.',
+
+    helpTitle: '💬 If you cannot delete it yourself',
+    helpP1: "If you have forgotten your password or cannot access the app, contact us below.\n      We will verify your identity and handle it for you.",
+    helpContact: 'Email <a class="mail" href="mailto:djlee0827@gmail.com">djlee0827@gmail.com</a><br>Phone <span class="mail">+82 10-9237-9042</span>',
+    helpP3: 'We process requests and inform you of the outcome <b>within 10 business days</b> of receiving them.',
+
+    footer: '위브앱솔루션 (Weave App Solution) · CEO 이미화 · Business registration no. 206-08-71754<br>\n    경기도 수원시 권선구 수성로47 10동 501호 · Mail-order business no. 2022-수원권선-1701<br>\n    <a href="aliascall_privacy.html">Privacy Policy</a> · <a href="aliascall_terms.html">Terms of Service</a>',
+  },
+};
+
+const LANG_KEYS = ['aliascall_lang', 'aliascall_language', 'ac_lang', 'lang'];
+function detectLang(){
+  try { const q = new URLSearchParams(location.search).get('lang');
+        if (q) return q.toLowerCase().indexOf('en') === 0 ? 'en' : 'ko'; } catch (e) {}
+  for (const k of LANG_KEYS) {
+    try { const v = localStorage.getItem(k);
+          if (v) return String(v).toLowerCase().indexOf('en') === 0 ? 'en' : 'ko'; } catch (e) {}
+  }
+  return (navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en';
+}
+let LANG = detectLang();
+function T(k){ const d = I18N[LANG] || I18N.ko; return d[k] !== undefined ? d[k] : (I18N.ko[k] !== undefined ? I18N.ko[k] : k); }
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.title = T('docTitle');
+  const md = document.querySelector('meta[name="description"]');
+  if (md) md.setAttribute('content', T('metaDesc'));
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = T(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', T(el.dataset.i18nAria)); });
+  const note = document.getElementById('langNote');
+  note.textContent = T('langNote');
+  note.style.display = T('langNote') ? 'block' : 'none';
+}
+applyI18n();
+document.getElementById('langToggleBtn').addEventListener('click', () => {
+  LANG = (LANG === 'ko') ? 'en' : 'ko';
+  LANG_KEYS.forEach((k) => { try { localStorage.setItem(k, LANG); } catch (e) {} });
+  applyI18n();
+});
+</script>
 
 </body>
 </html>
