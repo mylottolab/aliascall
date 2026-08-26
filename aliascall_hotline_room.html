@@ -1387,6 +1387,17 @@ function openPhotoGallery(items, startIndex){
 
 async function appendChatMessage(msg){
   const list = document.getElementById('chatMessages');
+
+  // ⚠ 2026-08-27: 같은 메시지를 두 번 그리지 않도록 여기서 최종 방어합니다.
+  //   보낸 직후 로컬로 한 번 그리고, 서버 방송으로 또 오는 경로가 있어
+  //   ("반소제기를 바로 하셔야지요"가 두 번 뜨던 증상) 실제 DOM을 기준으로 막습니다.
+  //   renderedMsgIds만으로는 타이밍에 따라 새는 경우가 있었습니다.
+  // 일반 말풍선·사진묶음·시간줄 어디에 붙어 있든 같은 id가 이미 있으면 그리지 않습니다.
+  if (msg.id && list.querySelector('[data-message-id="' + msg.id + '"]')) return;
+  // 통화기록 같은 시스템 안내는 말풍선이 아니라 별도 요소라 따로 표시해둡니다.
+  if (msg.id && msg.message_type === 'call_log') {
+    if (list.querySelector('[data-sys-id="' + msg.id + '"]')) return;
+  }
   const isMe = msg.sender_anon_id === mySenderAnonId;
   const newDate = insertDateDividerIfNeeded(list, msg.created_at); // 2026-08-23 신설
   if (newDate) photoGroupState = null; // 날짜가 바뀌면 사진 묶음도 새로 시작
@@ -1407,6 +1418,7 @@ async function appendChatMessage(msg){
     photoGroupState = null;
     const sysEl = document.createElement('div');
     sysEl.className = 'chat-system-note';
+    if (msg.id) sysEl.dataset.sysId = msg.id; // 2026-08-27: 중복 방지용 표식
     sysEl.textContent = localizeSystemNote(msg.content); // 2026-08-25: 저장은 한국어, 표시만 번역
     list.appendChild(sysEl);
     list.scrollTop = list.scrollHeight;
