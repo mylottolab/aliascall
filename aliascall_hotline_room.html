@@ -1242,7 +1242,7 @@ async function init(){
     (data.members || []).forEach((m) => { memberLastReadAt[m.member_anon_id] = m.last_read_at; });
     initDailyQuestion();
 
-    for (const m of (data.messages || [])) { await appendChatMessage(m); renderedMsgIds.add(m.id); }
+    for (const m of (data.messages || [])) { renderedMsgIds.add(m.id); await appendChatMessage(m); }
     showState('stateChat');
     subscribeChat();
     markAsRead(); // 2026-08-22 신설: 방에 들어온 시점 = 여기까지 다 읽은 것으로 처리
@@ -1658,8 +1658,12 @@ async function sendChatMessage(){
     if (!res.ok) throw new Error(data.error);
     // ⚠ 화면에 바로 보여줄 때도 암호문(payloadText)을 넘김 — appendChatMessage가 암호화 상품이면
     // 항상 복호화를 시도하므로, 평문을 그대로 넘기면 오히려 복호화 실패로 처리됨
-    await appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: 'text', content: payloadText, reply_to_message_id: replyToMessageId, expires_at: data.expiresAt, created_at: data.createdAt });
+    // ⚠ 2026-08-26 수정: renderedMsgIds에 먼저 넣어야 합니다.
+    //   appendChatMessage가 await이라 그리는 동안 서버 방송이 도착할 수 있는데,
+    //   표시를 나중에 하면 방송 쪽 중복 검사를 통과해 같은 메시지가 두 번 그려집니다.
+    //   ("엔터 한 번에 메시지가 두 개" 증상의 원인)
     renderedMsgIds.add(data.messageId);
+    await appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: 'text', content: payloadText, reply_to_message_id: replyToMessageId, expires_at: data.expiresAt, created_at: data.createdAt });
   } catch (e) {
     console.error('[hotline-room] 메시지 전송 실패', e);
     alert(T('alertSendFail'));
@@ -2585,8 +2589,9 @@ async function uploadAndSendFile(file){
     const msgData = await msgRes.json();
     if (!msgRes.ok) throw new Error(msgData.error);
 
-    await appendChatMessage({ id: msgData.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: fileType, content: uploadData.url, file_name: fileNamePayload, original_mime_type: file.type, created_at: msgData.createdAt });
+    // ⚠ 2026-08-26: 문자 전송과 같은 이유로 표시를 먼저 합니다(중복 렌더 방지).
     renderedMsgIds.add(msgData.messageId);
+    await appendChatMessage({ id: msgData.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: fileType, content: uploadData.url, file_name: fileNamePayload, original_mime_type: file.type, created_at: msgData.createdAt });
     showState('stateChat'); updateNavActive('navChat');
   } catch (e) {
     console.error('[hotline-room] 파일 전송 실패', e);
