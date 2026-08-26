@@ -1246,6 +1246,7 @@ async function init(){
     showState('stateChat');
     subscribeChat();
     markAsRead(); // 2026-08-22 신설: 방에 들어온 시점 = 여기까지 다 읽은 것으로 처리
+    startReadSync(); // 2026-08-27 신설: 읽음 표시 보정 시작
   } catch (e) {
     console.error('[hotline-room] 초기화 실패', e);
     document.getElementById('errorMsg').textContent = T('errLoadFail');
@@ -2037,7 +2038,37 @@ async function markAsRead(){
       method: 'POST', headers: authHeaders(),
       body: JSON.stringify({ hotlineId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
     });
+    // ⚠ 2026-08-27: 내 읽음 시각을 로컬에도 바로 반영합니다.
+    //   서버 방송만 믿으면, 방송을 한 번 놓쳤을 때 읽음 표시가 영영 안 갱신됩니다.
+    memberLastReadAt[mySenderAnonId] = new Date().toISOString();
+    refreshReadTags();
   } catch (e) { /* 읽음표시 실패는 조용히 무시 — 대화 자체엔 지장 없음 */ }
+}
+
+// ⚠ 2026-08-27 신설: 읽음 표시 보정
+//   read-receipt 방송은 잠깐 연결이 끊기면 놓칠 수 있습니다.
+//   그러면 상대가 읽었는데도 "읽음"이 안 뜨고, 새로고침해야만 보입니다.
+//   ("읽음 표시가 나왔다 안 나왔다" 하는 증상의 원인)
+//   그래서 20초마다 서버에서 참가자들의 마지막 읽은 시각을 다시 받아 맞춥니다.
+let readSyncTimer = null;
+async function syncReadState(){
+  if (!hotlineId || document.hidden) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall_hotline_messages`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ hotlineId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    (data.members || []).forEach((m) => { memberLastReadAt[m.member_anon_id] = m.last_read_at; });
+    refreshReadTags();
+  } catch (e) { /* 보정 실패는 조용히 넘어감 */ }
+}
+function startReadSync(){
+  if (readSyncTimer) clearInterval(readSyncTimer);
+  readSyncTimer = setInterval(syncReadState, 20000);
+  // 다른 창을 보다가 돌아오면 즉시 한 번 맞춥니다.
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) syncReadState(); });
 }
 
 // ── 오늘의 질문 ──
