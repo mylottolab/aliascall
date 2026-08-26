@@ -1163,6 +1163,15 @@ let myNickname = null;
 let memberNicknames = {};
 let accessToken = null;
 let renderedMsgIds = new Set();
+
+// ⚠ 2026-08-27: 전문관리용(프로 비즈니스) 방인지 판단.
+//   목표(D+day)·오늘의 질문은 연인·가족용 기능입니다.
+//   변호사가 의뢰인과 공탁금을 상의하는 화면에 "요즘 고민이 있다면 뭐야?"가 뜨면
+//   신뢰가 상품인 시장에서 치명적이라, 이 방들에서는 숨깁니다.
+//   (음악 "같이 듣기"는 상담 중에도 쓸 일이 있어 그대로 둡니다)
+//   ⚠ let은 끌어올려지지 않으므로, 값을 넣는 init()보다 반드시 위에 있어야 합니다.
+const PRO_TIERS = ['pro_starter', 'pro_business', 'pro_enterprise'];
+let roomIsPro = false;
 let chatChannel = null;
 
 function showState(name){
@@ -1195,6 +1204,7 @@ async function init(){
     hotlineId = data.hotlineId;
     mySenderAnonId = data.mySenderAnonId;
     roomIsSecure = isSecureTier(data.tier);
+    roomIsPro = PRO_TIERS.includes(data.tier); // 2026-08-27
     (data.members || []).forEach((m) => { memberNicknames[m.member_anon_id] = m.nickname; });
     myNickname = memberNicknames[mySenderAnonId] || T('meNickname');
 
@@ -1916,6 +1926,12 @@ document.querySelectorAll('.panel-overlay').forEach((overlay) => {
 // ── 목표(D-DAY) ──
 let currentGoals = [];
 function renderGoalsStrip(){
+  // 2026-08-27: 전문관리용에서는 목표(D+day)를 쓰지 않음
+  if (roomIsPro) {
+    const strip = document.getElementById('goalsStrip');
+    if (strip) strip.style.display = 'none';
+    return;
+  }
   const strip = document.getElementById('goalsStrip');
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const chips = currentGoals.map((g) => {
@@ -2160,6 +2176,7 @@ function getTodayQuestion(){
   return list[dayIndex % list.length];
 }
 function initDailyQuestion(){
+  if (roomIsPro) return; // 2026-08-27: 전문관리용에서는 오늘의 질문을 띄우지 않음
   const dateKey = new Date().toISOString().slice(0, 10);
   const dismissKey = 'aliascall_dq_dismissed_' + hotlineId + '_' + dateKey;
   if (localStorage.getItem(dismissKey)) return;
