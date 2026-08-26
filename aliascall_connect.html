@@ -379,7 +379,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
     </div>
     <button class="unmute-btn" id="unmuteBtn" data-i18n="unmuteBtn">🔊 소리가 안 들리면 여기를 탭하세요</button>
     <div class="leave-msg-block" id="leaveMsgBlock">
-      <input type="text" id="leaveMsgInput" data-i18n-placeholder="leaveMsgPlaceholder" data-i18n-placeholder="leaveMsgPlaceholder" placeholder="예: 지금 못 받으시면 010-0000-0000으로 연락주세요">
+      <input type="text" id="leaveMsgInput" data-i18n-placeholder="leaveMsgPlaceholder" data-i18n-placeholder="leaveMsgPlaceholder" placeholder="예: 지금 못 받으시면 010-0000-0000으로 연락주세요" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button id="leaveMsgSendBtn" data-i18n="leaveMsgSend">메시지 남기기</button>
     </div>
     <button class="end-btn" id="endCallBtnInitial" data-i18n="endCall">연결 종료</button>
@@ -408,7 +408,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
       <input type="file" id="chatPhotoInput" accept="image/*" multiple style="display:none;">
       <button type="button" id="plusMenuBtn" data-i18n-title="titleMore" title="더보기">➕</button>
       <button type="button" id="emojiBtn" data-i18n-title="titleEmoji" title="이모지">😊</button>
-      <input type="text" id="chatInput" data-i18n-placeholder="chatInputPlaceholder" placeholder="메시지 입력…">
+      <input type="text" id="chatInput" data-i18n-placeholder="chatInputPlaceholder" placeholder="메시지 입력…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button id="chatSendBtn">➤</button>
     </div>
   </div>

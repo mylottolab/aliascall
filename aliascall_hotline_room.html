@@ -402,7 +402,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
   <div class="loading-state" style="text-align:left;">
     <div style="font-size:32px; text-align:center; margin-bottom:10px;">🔒</div>
     <p style="text-align:center; margin-bottom:16px;" data-i18n-html="keyNeededMsg">이 대화방은 암호화되어 있어요.<br>초대링크에 포함된 열쇠가 필요합니다.</p>
-    <input type="text" id="manualKeyInput" placeholder="열쇠(#k= 뒷부분)를 붙여넣으세요" data-i18n-placeholder="keyPlaceholder" style="width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:10px; padding:12px; font-size:12.5px; margin-bottom:10px;">
+    <input type="text" id="manualKeyInput" placeholder="열쇠(#k= 뒷부분)를 붙여넣으세요" data-i18n-placeholder="keyPlaceholder" style="width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:10px; padding:12px; font-size:12.5px; margin-bottom:10px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <button id="manualKeySubmitBtn" style="width:100%; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; cursor:pointer;" data-i18n="keySubmit">입장하기</button>
   </div>
 </div>
@@ -427,7 +427,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
   <!-- 2026-08-22 신설: 오늘의 질문 — 조용해진 대화방에 화제를 던져줌 -->
   <!-- 2026-08-22 신설: 대화 검색 바 -->
   <div class="search-bar" id="searchBar" style="display:none;">
-    <input type="text" id="searchInput" placeholder="대화 내용 검색…" data-i18n-placeholder="searchPlaceholder">
+    <input type="text" id="searchInput" placeholder="대화 내용 검색…" data-i18n-placeholder="searchPlaceholder" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <span class="search-count" id="searchCount"></span>
     <button type="button" id="searchPrevBtn">▲</button>
     <button type="button" id="searchNextBtn">▼</button>
@@ -460,7 +460,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
     <button type="button" id="plusMenuBtn" title="더보기" data-i18n-title="moreTitle">➕</button>
     <button type="button" id="emojiBtn" title="이모지" data-i18n-title="emojiTitle">😊</button>
     <button type="button" id="voiceInputBtn" title="음성으로 입력" data-i18n-title="voiceInputTitle">🎙️</button>
-    <input type="text" id="chatInput" placeholder="메시지 입력…" data-i18n-placeholder="chatPlaceholder">
+    <input type="text" id="chatInput" placeholder="메시지 입력…" data-i18n-placeholder="chatPlaceholder" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <button id="chatSendBtn">➤</button>
   </div>
 </div>
@@ -551,8 +551,8 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 <div class="modal-overlay-hl" id="goalModalOverlay">
   <div class="modal-box-hl">
     <h3 style="margin-bottom:14px;" data-i18n="goalTitle">🎯 목표 추가</h3>
-    <input type="text" id="goalTitleInput" placeholder="예: 제주여행, 우리 만난 날" data-i18n-placeholder="goalTitlePlaceholder" maxlength="30">
-    <input type="date" id="goalDateInput">
+    <input type="text" id="goalTitleInput" placeholder="예: 제주여행, 우리 만난 날" data-i18n-placeholder="goalTitlePlaceholder" maxlength="30" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <input type="date" id="goalDateInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <div class="goal-mode-tabs">
       <button type="button" class="goal-mode-tab active" data-mode="countdown" data-i18n="goalModeCountdown">⏳ D-day (다가올 날까지)</button>
       <button type="button" class="goal-mode-tab" data-mode="countup" data-i18n="goalModeCountup">📅 D+day (지난 날부터 세기)</button>
@@ -575,7 +575,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
     <div class="panel-header"><span data-i18n="keepPanelTitle">📌 내 메모함</span><button type="button" class="panel-close" data-close="keepPanelOverlay">✕</button></div>
     <div class="panel-list" id="keepList"></div>
     <div class="keep-add-row">
-      <input type="text" id="keepFreeNoteInput" placeholder="직접 메모 남기기…" data-i18n-placeholder="keepNotePlaceholder">
+      <input type="text" id="keepFreeNoteInput" placeholder="직접 메모 남기기…" data-i18n-placeholder="keepNotePlaceholder" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button id="keepFreeNoteSaveBtn" data-i18n="keepNoteSave">저장</button>
     </div>
   </div>
@@ -610,7 +610,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
     <div id="musicEmptyState">
       <div style="font-size:36px; margin-bottom:10px;">🎵</div>
       <p style="color:#fff; font-size:13px; margin-bottom:18px;" data-i18n-html="musicEmptyDesc">유튜브 링크를 붙여넣거나<br>직접 음원 파일을 올리면 다 같이 동기화되어 재생됩니다</p>
-      <input type="text" id="musicUrlInput" placeholder="유튜브 링크 붙여넣기" data-i18n-placeholder="musicUrlPlaceholder">
+      <input type="text" id="musicUrlInput" placeholder="유튜브 링크 붙여넣기" data-i18n-placeholder="musicUrlPlaceholder" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button id="musicLoadBtn" data-i18n="musicLoadBtn">같이 듣기 시작</button>
       <div class="music-or-divider" data-i18n="musicOr">또는</div>
       <input type="file" id="musicFileInput" accept="audio/*" style="display:none;">
@@ -3566,8 +3566,8 @@ on('exFilesBtn', 'click', async () => {
     <div class="cfg-label" data-i18n="awPresets">문구 고르기</div>
     <div class="cfg-list" id="awPresetList"></div>
 
-    <div class="cfg-row"><input type="text" id="awNewLabel" placeholder="이름 (예: 진료 중)" data-i18n-placeholder="awNewLabel" maxlength="20"></div>
-    <div class="cfg-row"><input type="text" id="awNewMsg" placeholder="나갈 문구" data-i18n-placeholder="awNewMsg" maxlength="200"></div>
+    <div class="cfg-row"><input type="text" id="awNewLabel" placeholder="이름 (예: 진료 중)" data-i18n-placeholder="awNewLabel" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+    <div class="cfg-row"><input type="text" id="awNewMsg" placeholder="나갈 문구" data-i18n-placeholder="awNewMsg" maxlength="200" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
     <div class="cfg-actions">
       <button type="button" class="cfg-sub" id="awAddBtn" data-i18n="awAdd">문구 추가</button>
     </div>
@@ -3585,7 +3585,7 @@ on('exFilesBtn', 'click', async () => {
     <h3 data-i18n="bdTitle">📋 안내판 편집</h3>
     <div class="cfg-desc" data-i18n="bdDesc">방 상단에 항상 보이는 안내판입니다. 메뉴판, 진료 안내, 상담료 안내 등에 쓰세요.</div>
 
-    <input type="text" id="bdTitleInput" placeholder="제목 (예: 오늘의 메뉴)" data-i18n-placeholder="bdCardTitle" maxlength="40">
+    <input type="text" id="bdTitleInput" placeholder="제목 (예: 오늘의 메뉴)" data-i18n-placeholder="bdCardTitle" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <div style="height:7px;"></div>
     <textarea id="bdBodyInput" placeholder="설명 (선택)" data-i18n-placeholder="bdCardBody" maxlength="500"></textarea>
     <label class="cfg-toggle"><input type="checkbox" id="bdOpenDefault"><span data-i18n="bdOpenDefault">처음 열 때 펼쳐두기</span></label>
@@ -3593,9 +3593,9 @@ on('exFilesBtn', 'click', async () => {
     <div class="cfg-label" data-i18n="bdItems">항목</div>
     <div class="cfg-list" id="bdItemList"></div>
 
-    <div class="cfg-row"><input type="text" id="bdNewName" placeholder="이름" data-i18n-placeholder="bdItemName" maxlength="40"></div>
-    <div class="cfg-row"><input type="text" id="bdNewPrice" placeholder="가격 (예: 15,000원)" data-i18n-placeholder="bdItemPrice" maxlength="20"></div>
-    <div class="cfg-row"><input type="text" id="bdNewDesc" placeholder="설명 (선택)" data-i18n-placeholder="bdItemDesc" maxlength="100"></div>
+    <div class="cfg-row"><input type="text" id="bdNewName" placeholder="이름" data-i18n-placeholder="bdItemName" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+    <div class="cfg-row"><input type="text" id="bdNewPrice" placeholder="가격 (예: 15,000원)" data-i18n-placeholder="bdItemPrice" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+    <div class="cfg-row"><input type="text" id="bdNewDesc" placeholder="설명 (선택)" data-i18n-placeholder="bdItemDesc" maxlength="100" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
     <div class="cfg-actions">
       <button type="button" class="cfg-sub" id="bdPickImageBtn" data-i18n="bdItemImage">사진 넣기</button>
       <button type="button" class="cfg-sub" id="bdAddItemBtn" data-i18n="bdAddItem">항목 추가</button>
@@ -3617,7 +3617,7 @@ on('exFilesBtn', 'click', async () => {
     <div class="ex-row">
       <div class="ex-label" data-i18n="exPeriod">기간</div>
       <div class="ex-dates">
-        <input type="date" id="exFrom"><span>~</span><input type="date" id="exTo">
+        <input type="date" id="exFrom" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><span>~</span><input type="date" id="exTo" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
     <div class="ex-row">

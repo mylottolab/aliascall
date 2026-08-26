@@ -495,7 +495,7 @@ function renderSubCard(sub){
   nb.className = 'new-room-box';
   nb.innerHTML =
     `<label>${T('newRoomLabel')}</label>` +
-    `<input type="text" placeholder="${T('newRoomPlaceholder')}" maxlength="40">`;
+    `<input type="text" placeholder="${T('newRoomPlaceholder')}" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">`;
   const nbActs = document.createElement('div');
   nbActs.className = 'sub-tools';
   const okBtn = document.createElement('button');
@@ -783,13 +783,13 @@ async function renderHotlineItem(h){
     <div class="key-missing-box">
       ${T('keyMissing')}
       <div class="invite-row" style="margin-top:8px;">
-        <input type="text" placeholder="${T('keyPlaceholder')}" data-key-input="${h.id}">
+        <input type="text" placeholder="${T('keyPlaceholder')}" data-key-input="${h.id}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         <button data-action="save-key" data-hotline="${h.id}">${T('keySave')}</button>
       </div>
     </div>
   ` : `
     <div class="invite-row">
-      <input type="text" readonly value="${inviteUrl}">
+      <input type="text" readonly value="${inviteUrl}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button data-action="copy-invite" data-url="${inviteUrl}">${T('copy')}</button>
     </div>
     <button class="req-btn approve" style="width:100%; margin-bottom:12px; padding:9px;" onclick="window.location.href='${roomUrl}'">${T('openRoom')}</button>

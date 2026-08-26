@@ -145,7 +145,7 @@ tr:hover td{ background:rgba(31,111,107,.03); }
 
   <div class="tab-panel" data-panel="members">
     <div class="toolbar">
-      <input type="text" id="memberSearch" placeholder="닉네임으로 검색">
+      <input type="text" id="memberSearch" placeholder="닉네임으로 검색" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button id="memberSearchBtn">검색</button>
     </div>
     <table>
@@ -156,7 +156,7 @@ tr:hover td{ background:rgba(31,111,107,.03); }
 
   <div class="tab-panel" data-panel="registrations">
     <div class="toolbar">
-      <input type="text" id="regSearch" placeholder="search_key로 검색">
+      <input type="text" id="regSearch" placeholder="search_key로 검색" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <select id="regCategoryFilter">
         <option value="">전체 카테고리</option>
         <option value="vehicle">차량</option>
@@ -239,21 +239,21 @@ tr:hover td{ background:rgba(31,111,107,.03); }
     <div class="card" style="background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:18px; margin-bottom:20px;">
       <div style="font-size:13px; font-weight:700; margin-bottom:12px;" id="prodFormTitle">새 상품 추가</div>
       <div class="toolbar" style="flex-wrap:wrap;">
-        <input type="text" id="prodName" placeholder="상품명" style="flex:1 1 200px;">
-        <input type="text" id="prodPrice" placeholder="가격 표시 (예: 약 15,000원)" style="flex:1 1 160px;">
-        <input type="number" id="prodOrder" placeholder="표시순서(작을수록 위)" style="flex:0 0 160px;">
+        <input type="text" id="prodName" placeholder="상품명" style="flex:1 1 200px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <input type="text" id="prodPrice" placeholder="가격 표시 (예: 약 15,000원)" style="flex:1 1 160px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <input type="number" id="prodOrder" placeholder="표시순서(작을수록 위)" style="flex:0 0 160px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </div>
       <div class="toolbar" style="flex-wrap:wrap;">
-        <input type="text" id="prodDesc" placeholder="짧은 설명 (충전소 화면에 노출됨)" style="flex:1;">
+        <input type="text" id="prodDesc" placeholder="짧은 설명 (충전소 화면에 노출됨)" style="flex:1;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </div>
       <div style="font-size:11px; color:var(--ink-soft); margin:2px 0 4px;">이미지 URL (최대 3장, 1번이 대표이미지 · 2장 이상 입력시 충전소 화면에서 캐러셀로 넘겨볼 수 있음)</div>
       <div class="toolbar" style="flex-wrap:wrap;">
-        <input type="text" id="prodImageUrl1" placeholder="이미지 URL 1 (대표)" style="flex:1 1 160px;">
-        <input type="text" id="prodImageUrl2" placeholder="이미지 URL 2 (선택)" style="flex:1 1 160px;">
-        <input type="text" id="prodImageUrl3" placeholder="이미지 URL 3 (선택)" style="flex:1 1 160px;">
+        <input type="text" id="prodImageUrl1" placeholder="이미지 URL 1 (대표)" style="flex:1 1 160px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <input type="text" id="prodImageUrl2" placeholder="이미지 URL 2 (선택)" style="flex:1 1 160px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <input type="text" id="prodImageUrl3" placeholder="이미지 URL 3 (선택)" style="flex:1 1 160px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </div>
       <div class="toolbar" style="flex-wrap:wrap;">
-        <input type="text" id="prodExternalUrl" placeholder="https://판매사이트.com/상품페이지" style="flex:1;">
+        <input type="text" id="prodExternalUrl" placeholder="https://판매사이트.com/상품페이지" style="flex:1;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </div>
       <button id="prodAddBtn" style="padding:10px 20px; border:none; border-radius:8px; background:var(--teal); color:#fff; font-weight:700; font-size:12.5px; cursor:pointer;">상품 추가</button>
       <button id="prodCancelEditBtn" style="display:none; padding:10px 20px; border:1.5px solid var(--line); border-radius:8px; background:transparent; color:var(--ink-soft); font-weight:700; font-size:12.5px; cursor:pointer; margin-left:8px;">수정 취소</button>
@@ -276,10 +276,10 @@ tr:hover td{ background:rgba(31,111,107,.03); }
       <div style="font-size:13px; font-weight:700; margin-bottom:12px;">기준값 설정</div>
       <div class="toolbar" style="flex-wrap:wrap; align-items:center;">
         <label style="font-size:12px; color:var(--ink-soft);">회사 마진율 (%)
-          <input type="number" id="hlMarginRatio" value="40" min="0" max="100" step="1" style="width:80px; margin-left:6px;">
+          <input type="number" id="hlMarginRatio" value="40" min="0" max="100" step="1" style="width:80px; margin-left:6px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </label>
         <label style="font-size:12px; color:var(--ink-soft);">GB당 원가 (원)
-          <input type="number" id="hlCostPerGb" value="560" min="1" step="1" style="width:100px; margin-left:6px;">
+          <input type="number" id="hlCostPerGb" value="560" min="1" step="1" style="width:100px; margin-left:6px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </label>
         <span style="font-size:11px; color:var(--ink-soft);">(참고: Metered Growth 요금제 기준 $0.40/GB × 환율)</span>
       </div>
@@ -326,7 +326,7 @@ tr:hover td{ background:rgba(31,111,107,.03); }
 
       <div class="grant-grid">
         <label>회원 닉네임
-          <input type="text" id="grNickname" placeholder="정확히 입력">
+          <input type="text" id="grNickname" placeholder="정확히 입력" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </label>
         <label>무엇을
           <select id="grType">
@@ -350,12 +350,12 @@ tr:hover td{ background:rgba(31,111,107,.03); }
           </select>
         </label>
         <label id="grAmountWrap" style="display:none;">포인트 수량
-          <input type="number" id="grAmount" placeholder="예: 5000">
+          <input type="number" id="grAmount" placeholder="예: 5000" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </label>
       </div>
 
       <label style="display:block; margin-top:12px; font-size:12px; color:var(--ink-soft);">사유 (필수)
-        <input type="text" id="grMemo" placeholder="예: 검증용 무료 제공 / 무통장 입금 확인(홍길동, 8/26)" style="width:100%; box-sizing:border-box; margin-top:5px;">
+        <input type="text" id="grMemo" placeholder="예: 검증용 무료 제공 / 무통장 입금 확인(홍길동, 8/26)" style="width:100%; box-sizing:border-box; margin-top:5px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </label>
 
       <div class="set-row" style="margin-top:14px;">
@@ -790,7 +790,7 @@ function renderPlPrices(){
   body.innerHTML = plPrices.map((p) => `
     <tr data-months="${p.duration_months}">
       <td>${p.duration_months}개월</td>
-      <td><input type="number" class="pl-price" data-months="${p.duration_months}" value="${p.price_krw}" min="0" step="100" style="width:110px;"></td>
+      <td><input type="number" class="pl-price" data-months="${p.duration_months}" value="${p.price_krw}" min="0" step="100" style="width:110px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></td>
       <td class="mono pl-permonth">-</td>
       <td class="mono pl-discount">-</td>
     </tr>
@@ -1157,7 +1157,7 @@ function renderHlPricingTable(){
         <tr data-tier="${tier}" data-duration="${dur}">
           <td>${HL_TIER_LABEL[tier]}</td>
           <td>${dur}개월</td>
-          <td><input type="number" class="hl-price-input" value="${price}" style="width:100px;"></td>
+          <td><input type="number" class="hl-price-input" value="${price}" style="width:100px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></td>
           <td class="hl-cap-cell" style="font-weight:700; color:var(--teal-deep);">-</td>
         </tr>`;
     });
