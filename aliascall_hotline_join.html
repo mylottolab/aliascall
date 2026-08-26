@@ -79,7 +79,7 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
       <div class="hl-meta" id="hlMeta" data-i18n="metaChecking">인원 확인 중…</div>
       <input type="text" class="nickname-input" id="nicknameInput" placeholder="사용하실 별명을 입력하세요" data-i18n-placeholder="nicknamePlaceholder" maxlength="20">
       <button class="join-btn" id="joinBtn" data-i18n="joinBtn">참가 신청하기</button>
-      <p style="font-size:11px; color:var(--ink-soft); margin-top:12px; line-height:1.5;" data-i18n="entryNote">별명 외 개인정보는 필요 없습니다. 개설자가 승인하면 바로 대화에 참여할 수 있어요.</p>
+      <p style="font-size:11px; color:var(--ink-soft); margin-top:12px; line-height:1.5;" id="entryNote" data-i18n="entryNote">별명 외 개인정보는 필요 없습니다. 개설자가 승인하면 바로 대화에 참여할 수 있어요.</p>
     </div>
   </div>
 
@@ -134,6 +134,7 @@ const I18N = {
     nicknamePlaceholder: '사용하실 별명을 입력하세요',
     joinBtn: '참가 신청하기',
     entryNote: '별명 외 개인정보는 필요 없습니다. 개설자가 승인하면 바로 대화에 참여할 수 있어요.',
+    entryNoteAuto: '별명 외 개인정보는 필요 없습니다. 별명을 입력하시면 바로 대화가 시작됩니다.',
     waitingTitle: '대기 중이에요',
     waitingDesc: '개설자가 승인하면 바로 대화가 시작됩니다.<br>이 화면을 닫지 말고 잠시만 기다려주세요.',
     approvedTitle: '참가가 승인됐어요',
@@ -159,6 +160,7 @@ const I18N = {
     nicknamePlaceholder: 'Enter the nickname you want to use',
     joinBtn: 'Request to join',
     entryNote: 'No personal details beyond a nickname are needed. Once the owner approves you, you can join the conversation right away.',
+    entryNoteAuto: 'No personal details beyond a nickname are needed. Enter a nickname and the conversation starts right away.',
     waitingTitle: 'Waiting for approval',
     waitingDesc: 'The conversation starts as soon as the owner approves you.<br>Please keep this screen open for a moment.',
     approvedTitle: "You're approved",
@@ -275,6 +277,12 @@ async function init(){
       document.getElementById('errorMsg').textContent = T('errNoKey');
       showState('stateError');
       return;
+    }
+    // 2026-08-26(v51): 전문관리용 방은 자동 승인이라 "승인을 기다리라"는 안내가 맞지 않음
+    if (data.autoApprove) {
+      const note = document.getElementById('entryNote');
+      note.setAttribute('data-i18n', 'entryNoteAuto');
+      note.textContent = T('entryNoteAuto');
     }
     showState('stateEntry');
   } catch (e) {
