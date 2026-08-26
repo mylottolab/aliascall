@@ -1106,7 +1106,7 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', T(el.dataset.i18nAria)); });
 }
 applyI18n();
-document.getElementById('langToggleBtn').addEventListener('click', () => {
+on('langToggleBtn', 'click', () => {
   const next = (LANG === 'ko') ? 'en' : 'ko';
   if (typeof window.setAliascallLang === 'function') window.setAliascallLang(next);
   else ['aliascall_lang','aliascall_language','ac_lang','lang'].forEach((k) => { try { localStorage.setItem(k, next); } catch (e) {} });
@@ -1115,7 +1115,7 @@ document.getElementById('langToggleBtn').addEventListener('click', () => {
   location.reload();
 });
 
-// ⚠ 서버(aliascall-hotline-message)가 개설자 닉네임을 '개설자'로 고정 저장함.
+// ⚠ 서버(aliascall_hotline_message)가 개설자 닉네임을 '개설자'로 고정 저장함.
 //   DB에 들어간 값이라 바꾸면 과거 메시지와 섞이므로, 화면에 보여줄 때만 번역함.
 //   통화 기록과 같은 원칙(저장은 한국어, 표시만 번역).
 function displayNickname(nick){
@@ -1185,7 +1185,7 @@ async function init(){
   if (session) accessToken = session.access_token;
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-messages`, {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall_hotline_messages`, {
       method: 'POST', headers: authHeaders(),
       body: JSON.stringify({ hotlineId: directHotlineId || undefined, inviteToken: inviteToken || undefined, memberAnonId: hotlineAnonId }),
     });
@@ -1254,7 +1254,7 @@ async function init(){
 }
 
 // 2026-08-21 신설: "열쇠 직접 입력" 화면의 입장 버튼 — URL에 열쇠를 붙인 뒤 처음부터 다시 시도함
-document.getElementById('manualKeySubmitBtn').addEventListener('click', () => {
+on('manualKeySubmitBtn', 'click', () => {
   const val = document.getElementById('manualKeyInput').value.trim().replace(/^#?k=/, '');
   if (!val) { alert(T('alertKeyRequired')); return; }
   window.location.hash = 'k=' + val;
@@ -1610,7 +1610,7 @@ function openZoomableLightbox(url){
   document.getElementById('lightbox').classList.add('show');
   aliascallShowZoomableImage(document.getElementById('lightboxContent'), url);
 }
-document.getElementById('lightboxClose').addEventListener('click', () => {
+on('lightboxClose', 'click', () => {
   document.getElementById('lightbox').classList.remove('show');
   document.getElementById('lightboxContent').innerHTML = '';
 });
@@ -1650,7 +1650,7 @@ async function sendChatMessage(){
   try {
     // 2026-08-21 신설: 암호화 상품이면 서버로 보내기 전에 브라우저에서 먼저 암호화함
     const payloadText = roomIsSecure ? await e2eeEncryptText(roomKey, text) : text;
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall_hotline_message`, {
       method: 'POST', headers: authHeaders(),
       body: JSON.stringify({ hotlineId, text: payloadText, replyToMessageId, timerSeconds: timerSecondsToSend, memberAnonId: accessToken ? undefined : hotlineAnonId }),
     });
@@ -1665,7 +1665,7 @@ async function sendChatMessage(){
     alert(T('alertSendFail'));
   }
 }
-document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+on('chatSendBtn', 'click', sendChatMessage);
 
 // =====================================================
 // 2026-08-22 신설 (1단계): 답장 / 수정·삭제 / 즐겨찾기 / 나만의 메모함 / 목표(D-DAY) / 음성입력
@@ -1688,7 +1688,7 @@ function cancelReply(){
   replyingToMessageInfo = null;
   document.getElementById('replyBar').style.display = 'none';
 }
-document.getElementById('replyBarCancel').addEventListener('click', () => { cancelReply(); cancelEdit(); });
+on('replyBarCancel', 'click', () => { cancelReply(); cancelEdit(); });
 
 // ── 수정 ──
 async function startEdit(messageId){
@@ -1794,13 +1794,13 @@ function closeActionSheet(){
   document.getElementById('actionSheetOverlay').classList.remove('show');
   currentActionMessageId = null;
 }
-document.getElementById('actionSheetClose').addEventListener('click', closeActionSheet);
-document.getElementById('actionSheetOverlay').addEventListener('click', (e) => { if (e.target.id === 'actionSheetOverlay') closeActionSheet(); });
-document.getElementById('actionReply').addEventListener('click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) startReply(id); });
-document.getElementById('actionFavorite').addEventListener('click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) toggleFavorite(id); });
-document.getElementById('actionKeep').addEventListener('click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) saveMessageToKeep(id); });
-document.getElementById('actionEdit').addEventListener('click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) startEdit(id); });
-document.getElementById('actionDelete').addEventListener('click', async () => {
+on('actionSheetClose', 'click', closeActionSheet);
+on('actionSheetOverlay', 'click', (e) => { if (e.target.id === 'actionSheetOverlay') closeActionSheet(); });
+on('actionReply', 'click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) startReply(id); });
+on('actionFavorite', 'click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) toggleFavorite(id); });
+on('actionKeep', 'click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) saveMessageToKeep(id); });
+on('actionEdit', 'click', () => { const id = currentActionMessageId; closeActionSheet(); if (id) startEdit(id); });
+on('actionDelete', 'click', async () => {
   const id = currentActionMessageId; closeActionSheet();
   if (!id) return;
   if (!confirm(T('confirmDeleteMsg'))) return;
@@ -1816,12 +1816,12 @@ document.getElementById('actionDelete').addEventListener('click', async () => {
 });
 
 // ── 더보기 메뉴 ──
-document.getElementById('moreMenuBtn').addEventListener('click', () => document.getElementById('moreMenuOverlay').classList.add('show'));
-document.getElementById('moreMenuCloseBtn').addEventListener('click', () => document.getElementById('moreMenuOverlay').classList.remove('show'));
-document.getElementById('moreMenuOverlay').addEventListener('click', (e) => { if (e.target.id === 'moreMenuOverlay') document.getElementById('moreMenuOverlay').classList.remove('show'); });
+on('moreMenuBtn', 'click', () => document.getElementById('moreMenuOverlay').classList.add('show'));
+on('moreMenuCloseBtn', 'click', () => document.getElementById('moreMenuOverlay').classList.remove('show'));
+on('moreMenuOverlay', 'click', (e) => { if (e.target.id === 'moreMenuOverlay') document.getElementById('moreMenuOverlay').classList.remove('show'); });
 
 // ── 즐겨찾기 패널 ──
-document.getElementById('openFavoritesBtn').addEventListener('click', () => {
+on('openFavoritesBtn', 'click', () => {
   document.getElementById('moreMenuOverlay').classList.remove('show');
   renderFavoritesPanel();
   document.getElementById('favoritesPanelOverlay').classList.add('show');
@@ -1838,7 +1838,7 @@ function renderFavoritesPanel(){
 }
 
 // ── 내 메모함 패널 ──
-document.getElementById('openKeepBtn').addEventListener('click', async () => {
+on('openKeepBtn', 'click', async () => {
   document.getElementById('moreMenuOverlay').classList.remove('show');
   await loadKeepNotes();
   document.getElementById('keepPanelOverlay').classList.add('show');
@@ -1873,7 +1873,7 @@ async function loadKeepNotes(){
     });
   } catch (e) { console.error('[hotline-room] 메모함 조회 실패', e); list.innerHTML = '<div class="panel-empty">' + T('panelLoadFail') + '</div>'; }
 }
-document.getElementById('keepFreeNoteSaveBtn').addEventListener('click', async () => {
+on('keepFreeNoteSaveBtn', 'click', async () => {
   const input = document.getElementById('keepFreeNoteInput');
   const text = input.value.trim();
   if (!text) return;
@@ -1910,7 +1910,7 @@ function renderGoalsStrip(){
     return `<div class="goal-chip"><span class="goal-days">${label}</span><span>${g.title}</span><button class="goal-del" data-goal-id="${g.id}">✕</button></div>`;
   }).join('');
   strip.innerHTML = chips + '<button type="button" class="goal-add-chip" id="goalAddChip">' + T('goalAddChip') + '</button>';
-  document.getElementById('goalAddChip').addEventListener('click', openGoalModal);
+  on('goalAddChip', 'click', openGoalModal);
   strip.querySelectorAll('.goal-del').forEach((btn) => {
     btn.addEventListener('click', async () => {
       if (!confirm(T('confirmDeleteGoal'))) return;
@@ -1933,7 +1933,7 @@ function openGoalModal(){
   document.getElementById('goalModeHint').textContent = T('goalHintCountdown'); // 2026-08-23 신설: 모달 새로 열 때 힌트도 초기화
   document.getElementById('goalModalOverlay').classList.add('show');
 }
-document.getElementById('goalCancelBtn').addEventListener('click', () => document.getElementById('goalModalOverlay').classList.remove('show'));
+on('goalCancelBtn', 'click', () => document.getElementById('goalModalOverlay').classList.remove('show'));
 document.querySelectorAll('.goal-mode-tab').forEach((tab) => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.goal-mode-tab').forEach((t) => t.classList.remove('active'));
@@ -1944,7 +1944,7 @@ document.querySelectorAll('.goal-mode-tab').forEach((tab) => {
       : T('goalHintCountup');
   });
 });
-document.getElementById('goalSaveBtn').addEventListener('click', async () => {
+on('goalSaveBtn', 'click', async () => {
   const title = document.getElementById('goalTitleInput').value.trim();
   const targetDate = document.getElementById('goalDateInput').value;
   const mode = document.querySelector('.goal-mode-tab.active').dataset.mode;
@@ -1995,7 +1995,7 @@ document.getElementById('goalSaveBtn').addEventListener('click', async () => {
 // ── 입력 중 표시 ──
 let lastTypingSentAt = 0;
 let typingIndicatorTimeout = null;
-document.getElementById('chatInput').addEventListener('input', () => {
+on('chatInput', 'input', () => {
   if (!chatChannel) return;
   const now = Date.now();
   if (now - lastTypingSentAt < 2000) return; // 2초에 한 번만 신호 보냄(스팸 방지)
@@ -2124,14 +2124,14 @@ function dismissDailyQuestion(){
   localStorage.setItem('aliascall_dq_dismissed_' + hotlineId + '_' + dateKey, '1');
   document.getElementById('dailyQuestionCard').style.display = 'none';
 }
-document.getElementById('dqDismissBtn').addEventListener('click', dismissDailyQuestion);
-document.getElementById('dqSendBtn').addEventListener('click', () => {
+on('dqDismissBtn', 'click', dismissDailyQuestion);
+on('dqSendBtn', 'click', () => {
   document.getElementById('chatInput').value = document.getElementById('dailyQuestionText').textContent;
   dismissDailyQuestion();
   document.getElementById('chatInput').focus();
 });
 
-document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+on('chatInput', 'keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
 // =====================================================
 // 2026-08-22 신설 (3단계): 대화 검색 / 링크 미리보기
@@ -2140,7 +2140,7 @@ document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.
 // ── 대화 검색 ──
 let searchMatches = [];
 let searchCurrentIndex = -1;
-document.getElementById('openSearchBtn').addEventListener('click', () => {
+on('openSearchBtn', 'click', () => {
   document.getElementById('moreMenuOverlay').classList.remove('show');
   document.getElementById('searchBar').style.display = 'flex';
   document.getElementById('searchInput').focus();
@@ -2150,13 +2150,13 @@ function closeSearch(){
   document.getElementById('searchInput').value = '';
   clearSearchHighlights();
 }
-document.getElementById('searchCloseBtn').addEventListener('click', closeSearch);
+on('searchCloseBtn', 'click', closeSearch);
 function clearSearchHighlights(){
   document.querySelectorAll('.chat-bubble.search-match, .chat-bubble.search-current').forEach((el) => el.classList.remove('search-match', 'search-current'));
   searchMatches = []; searchCurrentIndex = -1;
   document.getElementById('searchCount').textContent = '';
 }
-document.getElementById('searchInput').addEventListener('input', () => {
+on('searchInput', 'input', () => {
   const query = document.getElementById('searchInput').value.trim().toLowerCase();
   clearSearchHighlights();
   if (!query) return;
@@ -2173,12 +2173,12 @@ function focusSearchMatch(){
   if (el) { el.classList.add('search-current'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
   document.getElementById('searchCount').textContent = searchMatches.length > 0 ? (searchCurrentIndex + 1) + '/' + searchMatches.length : T('searchZero');
 }
-document.getElementById('searchNextBtn').addEventListener('click', () => {
+on('searchNextBtn', 'click', () => {
   if (searchMatches.length === 0) return;
   searchCurrentIndex = (searchCurrentIndex + 1) % searchMatches.length;
   focusSearchMatch();
 });
-document.getElementById('searchPrevBtn').addEventListener('click', () => {
+on('searchPrevBtn', 'click', () => {
   if (searchMatches.length === 0) return;
   searchCurrentIndex = (searchCurrentIndex - 1 + searchMatches.length) % searchMatches.length;
   focusSearchMatch();
@@ -2223,12 +2223,12 @@ async function attachLinkPreview(bubbleEl, text){
 
 // ── 타이머 메시지 ──
 let selectedTimerSeconds = 0;
-document.getElementById('timerBtn').addEventListener('click', () => {
+on('timerBtn', 'click', () => {
   closePlusMenu();
   document.querySelectorAll('.timer-option').forEach((btn) => btn.classList.toggle('active', Number(btn.dataset.seconds) === selectedTimerSeconds));
   document.getElementById('timerModalOverlay').classList.add('show');
 });
-document.getElementById('timerModalCloseBtn').addEventListener('click', () => document.getElementById('timerModalOverlay').classList.remove('show'));
+on('timerModalCloseBtn', 'click', () => document.getElementById('timerModalOverlay').classList.remove('show'));
 document.querySelectorAll('.timer-option').forEach((btn) => {
   btn.addEventListener('click', () => {
     selectedTimerSeconds = Number(btn.dataset.seconds);
@@ -2285,19 +2285,19 @@ async function startVoiceRecording(){
     alert(T('alertMicPerm'));
   }
 }
-document.getElementById('voiceMsgBtn').addEventListener('click', () => { closePlusMenu(); startVoiceRecording(); });
-document.getElementById('voiceRecordStopBtn').addEventListener('click', () => {
+on('voiceMsgBtn', 'click', () => { closePlusMenu(); startVoiceRecording(); });
+on('voiceRecordStopBtn', 'click', () => {
   if (voiceMediaRecorder && voiceMediaRecorder.state === 'recording') voiceMediaRecorder.stop();
   clearInterval(voiceRecordingTimerInterval);
 });
-document.getElementById('voiceRecordCancelBtn').addEventListener('click', () => {
+on('voiceRecordCancelBtn', 'click', () => {
   if (voiceMediaRecorder && voiceMediaRecorder.state === 'recording') voiceMediaRecorder.stop();
   clearInterval(voiceRecordingTimerInterval);
   document.getElementById('voiceRecordOverlay').classList.remove('show');
   voiceRecordedBlob = null;
 });
-document.getElementById('voiceRecordRetakeBtn').addEventListener('click', () => { startVoiceRecording(); });
-document.getElementById('voiceRecordSendBtn').addEventListener('click', async () => {
+on('voiceRecordRetakeBtn', 'click', () => { startVoiceRecording(); });
+on('voiceRecordSendBtn', 'click', async () => {
   document.getElementById('voiceRecordOverlay').classList.remove('show');
   if (!voiceRecordedBlob) return;
   const file = new File([voiceRecordedBlob], 'voice_' + Date.now() + '.webm', { type: 'audio/webm' });
@@ -2307,21 +2307,21 @@ document.getElementById('voiceRecordSendBtn').addEventListener('click', async ()
 
 
 // 2026-08-23 신설: "+" 팝업 — 파일첨부/사진촬영/타이머/음성메시지를 여기 모아둠(입력창이 안 붐비게)
-document.getElementById('plusMenuBtn').addEventListener('click', () => document.getElementById('plusMenuOverlay').classList.add('show'));
-document.getElementById('plusMenuOverlay').addEventListener('click', (e) => { if (e.target.id === 'plusMenuOverlay') document.getElementById('plusMenuOverlay').classList.remove('show'); });
+on('plusMenuBtn', 'click', () => document.getElementById('plusMenuOverlay').classList.add('show'));
+on('plusMenuOverlay', 'click', (e) => { if (e.target.id === 'plusMenuOverlay') document.getElementById('plusMenuOverlay').classList.remove('show'); });
 function closePlusMenu(){ document.getElementById('plusMenuOverlay').classList.remove('show'); }
 
 // 2026-08-23 신설: 사용법 안내 패널
-document.getElementById('guideMenuBtn').addEventListener('click', () => {
+on('guideMenuBtn', 'click', () => {
   closePlusMenu();
   document.getElementById('guidePanelOverlay').classList.add('show');
 });
 
-document.getElementById('attachBtn').addEventListener('click', () => { closePlusMenu(); document.getElementById('fileInput').click(); });
+on('attachBtn', 'click', () => { closePlusMenu(); document.getElementById('fileInput').click(); });
 // 2026-08-22 수정: 노트북 웹캠에서도 실제로 카메라가 열리도록, 브라우저 내장 카메라 촬영
 // 모듈(aliascall_camera_capture.js)을 씀 — <input capture>는 데스크톱에서 대부분 무시되고
 // 파일탐색기가 뜨는 문제가 있었음
-document.getElementById('cameraBtn').addEventListener('click', () => {
+on('cameraBtn', 'click', () => {
   closePlusMenu();
   aliascallOpenCameraCapture((file) => uploadAndSendFile(file));
 });
@@ -2337,10 +2337,10 @@ renderAliascallEmojiPanel(emojiPanel, (char) => {
   input.focus();
   input.setSelectionRange(newPos, newPos);
 });
-document.getElementById('emojiBtn').addEventListener('click', () => {
+on('emojiBtn', 'click', () => {
   emojiPanel.classList.toggle('show');
 });
-document.getElementById('navUpload').addEventListener('click', () => document.getElementById('fileInput').click());
+on('navUpload', 'click', () => document.getElementById('fileInput').click());
 
 // =====================================================
 // 2026-08-22 신설: "같이 듣기" — 유튜브 링크 또는 직접 올린 음원 파일로 재생/일시정지/
@@ -2450,9 +2450,9 @@ async function sendMusicSync(action, extra){
   } catch (e) { console.error('[hotline-room] 음악 동기화 실패', e); }
 }
 
-document.getElementById('navMusic').addEventListener('click', () => { showState('stateMusic'); updateNavActive('navMusic'); });
+on('navMusic', 'click', () => { showState('stateMusic'); updateNavActive('navMusic'); });
 
-document.getElementById('musicLoadBtn').addEventListener('click', async () => {
+on('musicLoadBtn', 'click', async () => {
   const url = document.getElementById('musicUrlInput').value.trim();
   const videoId = extractYoutubeId(url);
   if (!videoId) { alert(T('alertBadYoutube')); return; }
@@ -2461,8 +2461,8 @@ document.getElementById('musicLoadBtn').addEventListener('click', async () => {
 });
 
 // 2026-08-22 신설: 음원 파일 직접 올려서 같이 듣기
-document.getElementById('musicFileBtn').addEventListener('click', () => document.getElementById('musicFileInput').click());
-document.getElementById('musicFileInput').addEventListener('change', async (e) => {
+on('musicFileBtn', 'click', () => document.getElementById('musicFileInput').click());
+on('musicFileInput', 'change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
@@ -2500,20 +2500,20 @@ document.getElementById('musicFileInput').addEventListener('change', async (e) =
   }
 });
 
-document.getElementById('musicChangeBtn').addEventListener('click', async () => {
+on('musicChangeBtn', 'click', async () => {
   await sendMusicSync('stop', {});
   document.getElementById('musicPlayerWrap').style.display = 'none';
   document.getElementById('musicEmptyState').style.display = 'block';
 });
 
-document.getElementById('musicPlayPauseBtn').addEventListener('click', async () => {
+on('musicPlayPauseBtn', 'click', async () => {
   const pos = musicGetCurrentTime();
   await sendMusicSync(isMusicPlaying ? 'pause' : 'play', { positionSeconds: pos });
 });
 
-document.getElementById('musicSeekBar').addEventListener('mousedown', () => { musicSeekBarDragging = true; });
-document.getElementById('musicSeekBar').addEventListener('touchstart', () => { musicSeekBarDragging = true; });
-document.getElementById('musicSeekBar').addEventListener('change', async () => {
+on('musicSeekBar', 'mousedown', () => { musicSeekBarDragging = true; });
+on('musicSeekBar', 'touchstart', () => { musicSeekBarDragging = true; });
+on('musicSeekBar', 'change', async () => {
   musicSeekBarDragging = false;
   const duration = musicGetDuration() || 100;
   const pos = (document.getElementById('musicSeekBar').value / 100) * duration;
@@ -2530,7 +2530,7 @@ setInterval(() => {
   } catch (e) {}
 }, 1000);
 
-document.getElementById('fileInput').addEventListener('change', async (e) => {
+on('fileInput', 'change', async (e) => {
   const files = Array.from(e.target.files || []);
   e.target.value = '';
   if (files.length === 0) return;
@@ -2578,7 +2578,7 @@ async function uploadAndSendFile(file){
     // 파일명도 암호화 상품이면 같이 암호화(문서 목록에 원래 파일명이 그대로 노출되지 않게)
     const fileNamePayload = roomIsSecure ? await e2eeEncryptText(roomKey, file.name) : file.name;
 
-    const msgRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
+    const msgRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall_hotline_message`, {
       method: 'POST', headers: authHeaders(),
       body: JSON.stringify({ hotlineId, fileUrl: uploadData.url, fileType, fileName: fileNamePayload, fileSizeBytes: uploadData.fileSizeBytes, originalMimeType: file.type, memberAnonId: accessToken ? undefined : hotlineAnonId }),
     });
@@ -2598,13 +2598,13 @@ function updateNavActive(id){
   document.querySelectorAll('.bottom-nav-btn').forEach((b) => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-document.getElementById('navChat').addEventListener('click', () => {
+on('navChat', 'click', () => {
   if (activeCall) endCall();
   showState('stateChat'); updateNavActive('navChat');
   markAsRead(); // 2026-08-22 신설
 });
-document.getElementById('navVoice').addEventListener('click', () => { showState('stateCall'); updateNavActive('navVoice'); startCall('voice'); });
-document.getElementById('navVideo').addEventListener('click', () => { showState('stateCall'); updateNavActive('navVideo'); startCall('video'); });
+on('navVoice', 'click', () => { showState('stateCall'); updateNavActive('navVoice'); startCall('voice'); });
+on('navVideo', 'click', () => { showState('stateCall'); updateNavActive('navVideo'); startCall('video'); });
 
 let activeCall = null;
 let localStream = null;
@@ -2658,7 +2658,7 @@ async function startCall(mode){
       }
     });
 
-  fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
+  fetch(`${SUPABASE_URL}/functions/v1/aliascall_hotline_message`, {
     method: 'POST', headers: authHeaders(),
     body: JSON.stringify({ hotlineId, callLog: (myNickname) + '님이 ' + (mode === 'video' ? '영상' : '음성') + '통화를 시작했어요', memberAnonId: accessToken ? undefined : hotlineAnonId }),
   }).catch(() => {});
@@ -2806,16 +2806,16 @@ async function endCall(){
   document.getElementById('tilesGrid').innerHTML = '';
   activeCall = null;
 
-  fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-message`, {
+  fetch(`${SUPABASE_URL}/functions/v1/aliascall_hotline_message`, {
     method: 'POST', headers: authHeaders(),
     body: JSON.stringify({ hotlineId, callLog: (myNickname) + '님이 ' + (mode === 'video' ? '영상' : '음성') + '통화를 종료했어요', memberAnonId: accessToken ? undefined : hotlineAnonId }),
   }).catch(() => {});
 }
-document.getElementById('hangupBtn').addEventListener('click', async () => {
+on('hangupBtn', 'click', async () => {
   await endCall();
   showState('stateChat'); updateNavActive('navChat');
 });
-document.getElementById('muteBtn').addEventListener('click', () => {
+on('muteBtn', 'click', () => {
   if (!localStream) return;
   isMuted = !isMuted;
   localStream.getAudioTracks().forEach((t) => (t.enabled = !isMuted));
@@ -2825,7 +2825,7 @@ document.getElementById('muteBtn').addEventListener('click', () => {
 });
 
 // 2026-08-24 신설: 신고 — 더보기(⋯) 메뉴에서 열림
-document.getElementById('openReportBtn').addEventListener('click', () => {
+on('openReportBtn', 'click', () => {
   document.getElementById('moreMenuOverlay').classList.remove('show');
   if (!hotlineId) { alert(T('alertTryLater')); return; }
   aliascallOpenReport({ context: 'hotline', targetId: hotlineId });
@@ -2946,7 +2946,7 @@ function renderBoard(){
   document.getElementById('boardToggle').textContent = open ? T('bdLess') : T('bdMore');
 }
 
-document.getElementById('boardHead').addEventListener('click', () => {
+on('boardHead', 'click', () => {
   const body = document.getElementById('boardBody');
   const open = body.classList.toggle('show');
   document.getElementById('boardToggle').textContent = open ? T('bdLess') : T('bdMore');
@@ -3027,8 +3027,31 @@ async function loadRoomConfig(){
   }
 }
 
+
+// =====================================================================
+// ⚠ 2026-08-26 수정: 요소가 아직 없을 때 안전하게 이벤트를 붙이는 도우미
+//
+//   자리비움·안내판·내보내기 패널의 마크업이 이 <script>보다 아래에 있습니다.
+//   그래서 document.getElementById('awToggleBtn').addEventListener(...) 처럼
+//   바로 부르면 null에 걸려 스크립트 전체가 그 자리에서 멈춥니다.
+//   (실제로 대화방이 "불러오지 못했어요"로 뜨던 원인이었습니다)
+//
+//   on()은 요소가 없으면 DOM이 다 그려진 뒤에 다시 시도합니다.
+// =====================================================================
+function on(id, event, handler){
+  const bind = () => {
+    const el = document.getElementById(id);
+    if (el) { el.addEventListener(event, handler); return true; }
+    return false;
+  };
+  if (bind()) return;
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!bind()) console.warn('[on] 요소를 찾지 못함:', id);
+  });
+}
+
 // ── 자리비움 켜기/끄기 ──
-document.getElementById('awToggleBtn').addEventListener('click', async () => {
+on('awToggleBtn', 'click', async () => {
   const status = document.getElementById('awStatus');
   const next = (awayStatus === 'busy') ? 'available' : 'busy';
   if (next === 'busy' && !awayMessage) {
@@ -3048,7 +3071,7 @@ document.getElementById('awToggleBtn').addEventListener('click', async () => {
   setTimeout(() => { status.textContent = ''; }, 1500);
 });
 
-document.getElementById('awAddBtn').addEventListener('click', async () => {
+on('awAddBtn', 'click', async () => {
   const label = document.getElementById('awNewLabel').value.trim();
   const msg = document.getElementById('awNewMsg').value.trim();
   if (!label || !msg) { alert(T('awNeedBoth')); return; }
@@ -3062,13 +3085,13 @@ document.getElementById('awAddBtn').addEventListener('click', async () => {
   renderAwayPanel();
 });
 
-document.getElementById('openAwayBtn').addEventListener('click', () => {
+on('openAwayBtn', 'click', () => {
   document.getElementById('moreMenu').classList.remove('show');
   renderAwayPanel();
   document.getElementById('awPanel').classList.add('show');
 });
-document.getElementById('awCloseBtn').addEventListener('click', () => document.getElementById('awPanel').classList.remove('show'));
-document.getElementById('awPanel').addEventListener('click', (e) => {
+on('awCloseBtn', 'click', () => document.getElementById('awPanel').classList.remove('show'));
+on('awPanel', 'click', (e) => {
   if (e.target === document.getElementById('awPanel')) document.getElementById('awPanel').classList.remove('show');
 });
 
@@ -3111,15 +3134,15 @@ function renderBoardEditor(){
   });
 }
 
-document.getElementById('bdPickImageBtn').addEventListener('click', () => document.getElementById('bdImageInput').click());
-document.getElementById('bdImageInput').addEventListener('change', (e) => {
+on('bdPickImageBtn', 'click', () => document.getElementById('bdImageInput').click());
+on('bdImageInput', 'change', (e) => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
   bdPendingImage = f;
   document.getElementById('bdPickImageBtn').textContent = '✓ ' + (f.name.length > 12 ? f.name.slice(0, 12) + '…' : f.name);
 });
 
-document.getElementById('bdAddItemBtn').addEventListener('click', async () => {
+on('bdAddItemBtn', 'click', async () => {
   const name = document.getElementById('bdNewName').value.trim();
   if (!name) { alert(T('bdNeedName')); return; }
   const status = document.getElementById('bdStatus');
@@ -3157,7 +3180,7 @@ document.getElementById('bdAddItemBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('bdSaveBtn').addEventListener('click', async () => {
+on('bdSaveBtn', 'click', async () => {
   const status = document.getElementById('bdStatus');
   const payload = {
     hotline_id: hotlineId,
@@ -3174,13 +3197,13 @@ document.getElementById('bdSaveBtn').addEventListener('click', async () => {
   setTimeout(() => { status.textContent = ''; }, 1500);
 });
 
-document.getElementById('openBoardBtn').addEventListener('click', () => {
+on('openBoardBtn', 'click', () => {
   document.getElementById('moreMenu').classList.remove('show');
   renderBoardEditor();
   document.getElementById('bdPanel').classList.add('show');
 });
-document.getElementById('bdCloseBtn').addEventListener('click', () => document.getElementById('bdPanel').classList.remove('show'));
-document.getElementById('bdPanel').addEventListener('click', (e) => {
+on('bdCloseBtn', 'click', () => document.getElementById('bdPanel').classList.remove('show'));
+on('bdPanel', 'click', (e) => {
   if (e.target === document.getElementById('bdPanel')) document.getElementById('bdPanel').classList.remove('show');
 });
 
@@ -3250,7 +3273,7 @@ async function exFetchFiltered(){
   const toTs = toVal ? new Date(toVal + 'T23:59:59.999').getTime() : Infinity;
   if (fromTs > toTs) { alert(T('exAlertNoRange')); return null; }
 
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-messages`, {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall_hotline_messages`, {
     method: 'POST', headers: authHeaders(),
     body: JSON.stringify({ hotlineId, memberAnonId: hotlineAnonId }),
   });
@@ -3405,13 +3428,13 @@ async function exBuildDocument(msgs, attachments){
 
 let exLastAttachments = [];
 
-document.getElementById('openExportBtn').addEventListener('click', openExportPanel);
-document.getElementById('exCloseBtn').addEventListener('click', () => document.getElementById('exPanel').classList.remove('show'));
-document.getElementById('exPanel').addEventListener('click', (e) => {
+on('openExportBtn', 'click', openExportPanel);
+on('exCloseBtn', 'click', () => document.getElementById('exPanel').classList.remove('show'));
+on('exPanel', 'click', (e) => {
   if (e.target === document.getElementById('exPanel')) document.getElementById('exPanel').classList.remove('show');
 });
 
-document.getElementById('exRunBtn').addEventListener('click', async () => {
+on('exRunBtn', 'click', async () => {
   const status = document.getElementById('exStatus');
   status.textContent = T('exPreparing');
   try {
@@ -3431,7 +3454,7 @@ document.getElementById('exRunBtn').addEventListener('click', async () => {
 });
 
 // 동영상·음성·문서를 하나씩 복호화해서 내려받음
-document.getElementById('exFilesBtn').addEventListener('click', async () => {
+on('exFilesBtn', 'click', async () => {
   const status = document.getElementById('exStatus');
   status.textContent = T('exPreparing');
   try {
