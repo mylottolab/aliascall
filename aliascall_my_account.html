@@ -342,6 +342,13 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .mline-btns a.sub{ background:var(--teal-tint); color:var(--teal-deep); }
 .mline-empty{ background:var(--teal-tint); border-radius:12px; padding:16px; text-align:center; font-size:12.5px; color:var(--ink-soft); line-height:1.7; }
 .mline-empty a{ display:inline-block; margin-top:8px; color:var(--teal-deep); font-weight:700; text-decoration:underline; }
+
+/* 2026-08-28 신설: 회선 연장 */
+.mline-warn{ font-size:11.5px; color:var(--danger); font-weight:600; margin-top:12px; line-height:1.6; }
+.mline-renew-t{ font-size:12.5px; font-weight:700; margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
+.mline-renew-d{ font-size:11px; color:var(--ink-soft); line-height:1.6; margin:4px 0 9px; }
+.mline-renew-row{ display:flex; gap:7px; flex-wrap:wrap; }
+.mline-renew-btn{ flex:1; min-width:64px; padding:9px 4px; border-radius:9px; background:var(--teal-deep); color:#fff; font-size:12px; font-weight:700; text-align:center; text-decoration:none; }
 </style>
 </head>
 <body>
@@ -460,19 +467,19 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
       <button id="logoutBtn" class="logout-btn" data-i18n="logoutBtn">로그아웃</button>
     </div>
 
+    <!-- ⚠ 2026-08-28: 포인트는 Emergency Call에서만 쓰입니다.
+         그래서 이 카드가 Emergency 구역 안에 있어야 맞습니다. -->
+    <div class="svc-head emg" data-i18n="svcEmergency">📍 Alias The Emergency Call 이용현황</div>
+
     <div class="card">
       <div class="info-row"><span class="label" data-i18n="nicknameLabel">닉네임</span><span class="value" id="nicknameVal">-</span></div>
       <div class="info-row"><span class="label" data-i18n="pointsLabel">보유 포인트</span><span class="value" id="pointsVal">-</span></div>
       <div class="info-row"><span class="label" data-i18n="joinedLabel">가입일</span><span class="value" id="joinedVal">-</span></div>
     </div>
 
-    <!-- ⚠ 2026-08-28: 두 서비스를 한 페이지에서 보므로 구역을 나눕니다.
-         "내 계정"은 둘 다에 해당하므로 맨 위에 그대로 둡니다. -->
-    <div class="svc-head emg" data-i18n="svcEmergency">📍 Alias Emergency Call 이용현황</div>
-
     <div class="card sub-card">
       <div class="sub-top">
-        <span class="sub-title" data-i18n="subscriptionTitle">수신서비스 구독</span>
+        <span class="sub-title" data-i18n="subscriptionTitle">Emergency Call 서비스 구독</span>
         <span class="reg-status" id="subStatusBadge">-</span>
       </div>
       <div class="reg-meta" id="subStatusMeta" style="margin-bottom:12px;"></div>
@@ -728,17 +735,20 @@ const I18N = {
     alertWithdrawError: '탈퇴 처리 중 오류가 발생했어요: ',
     deleteConfirmMismatch: '"{word}"를 정확히 입력해주세요.',
     loginNeeded: '로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.',
-    svcEmergency: '📍 Alias Emergency Call 이용현황',
+    svcEmergency: '📍 Alias The Emergency Call 이용현황',
     svcMessenger: '💬 Alias The Next-Gen Messenger 이용현황',
     lineNone: '이용 중인 보안회선이 없습니다.',
     lineGoBuy: '회선 둘러보기 ›',
     lineActive: '활성', lineExpires: '만료',
     lineManage: '방 관리', lineDigest: '📖 대화 모아보기',
     lineNoTalk: '아직 대화가 없습니다',
+    lineRenewTitle: '회선 연장',
+    lineRenewDesc: '만료되면 방이 잠기고 새 대화를 시작할 수 없습니다. 미리 연장해두세요.',
+    lineExpireSoon: '⏰ 만료가 한 달도 남지 않았습니다. 지금 연장해두세요.',
     pageTitle: '내 계정', nicknameLabel: '닉네임', pointsLabel: '보유 포인트', joinedLabel: '가입일',
     logoutBtn: '로그아웃', logoutConfirm: '로그아웃 하시겠어요?',
     myRegistrationsTitle: '내 등록물',
-    subscriptionTitle: '수신서비스 구독',
+    subscriptionTitle: 'Emergency Call 서비스 구독',
     subscriptionSub: '등록물 개수와 무관하게, 이 구독 하나로 전체 등록물의 연결이 유지됩니다. (아동·치매어르신·장애우·반려동물은 구독 여부와 무관하게 항상 연결됩니다)',
     editBtn: '수정', deleteBtn: '삭제',
     withdrawTitle: '회원 탈퇴', withdrawDesc: '탈퇴하시면 계정과 함께 회원님이 등록하신 모든 QR 태그·정보가 삭제되며, 되돌릴 수 없습니다. 보유 포인트도 함께 소멸됩니다.',
@@ -859,17 +869,20 @@ const I18N = {
     alertWithdrawError: 'Something went wrong while deleting your account: ',
     deleteConfirmMismatch: 'Please type "{word}" exactly.',
     loginNeeded: 'Please log in. Log in with your nickname + password on the registration screen first.',
-    svcEmergency: '📍 Alias Emergency Call — your usage',
+    svcEmergency: '📍 Alias The Emergency Call — your usage',
     svcMessenger: '💬 Alias The Next-Gen Messenger — your usage',
     lineNone: 'No secure lines in use.',
     lineGoBuy: 'Browse plans ›',
     lineActive: 'Active', lineExpires: 'Expires',
     lineManage: 'Manage rooms', lineDigest: '📖 Conversation digest',
     lineNoTalk: 'No conversation yet',
+    lineRenewTitle: 'Extend this line',
+    lineRenewDesc: 'When it expires the rooms lock and you cannot start new conversations. Extend it in advance.',
+    lineExpireSoon: '⏰ Less than a month left. Extend it now.',
     pageTitle: 'My Account', nicknameLabel: 'Nickname', pointsLabel: 'Points balance', joinedLabel: 'Joined',
     logoutBtn: 'Log out', logoutConfirm: 'Are you sure you want to log out?',
     myRegistrationsTitle: 'My Registrations',
-    subscriptionTitle: 'Receiving Service Subscription',
+    subscriptionTitle: 'Emergency Call service subscription',
     subscriptionSub: 'This one subscription keeps every registration connected, no matter how many you have. (Child · dementia/elderly · disability · pet registrations always stay connected regardless of subscription status)',
     editBtn: 'Edit', deleteBtn: 'Delete',
     withdrawTitle: 'Delete Account', withdrawDesc: 'Deleting your account removes all your QR tags and data — this cannot be undone. Your points balance will also be lost.',
@@ -1235,7 +1248,7 @@ async function renderMyLinesOnMyPage(session){
     cards.push({
       isSub: true, id: sub.id,
       name: sub.display_name || sub.business_name || nameOf(sub.tier),
-      plan: nameOf(sub.tier), expiresAt: sub.expires_at,
+      plan: nameOf(sub.tier), tier: sub.tier, expiresAt: sub.expires_at,
       active: sub.active_rooms || 0, limit: (sub.max_rooms || 0) + (sub.extra_rooms || 0),
       recentId: recent ? recent.id : null,
       recentLabel: recent ? (recent.client_label || recent.title || '') : '',
@@ -1246,7 +1259,7 @@ async function renderMyLinesOnMyPage(session){
     cards.push({
       isSub: false, id: r.id,
       name: r.title || r.client_label || nameOf(r.tier),
-      plan: nameOf(r.tier), expiresAt: r.expires_at,
+      plan: nameOf(r.tier), tier: r.tier, expiresAt: r.expires_at,
       recentId: r.id, recentLabel: '', lastAt: r.last_activity_at,
     });
   });
@@ -1310,6 +1323,44 @@ async function renderMyLinesOnMyPage(session){
       btns.style.gridTemplateColumns = '1fr';
     }
     el.appendChild(btns);
+
+    // ── 연장 ──
+    // ⚠ 만료일은 회선마다 다르므로, 연장 단추도 카드 안에 둡니다.
+    //   Emergency Call은 계정에 구독이 하나뿐이라 바깥에 한 벌만 있으면 됐지만,
+    //   회선은 여러 개일 수 있어 "어느 것을 연장하는지"가 분명해야 합니다.
+    const daysLeft = Math.ceil((new Date(c.expiresAt) - Date.now()) / 86400000);
+    if (daysLeft <= 30) {
+      const warn = document.createElement('div');
+      warn.className = 'mline-warn';
+      warn.textContent = t.lineExpireSoon;
+      el.appendChild(warn);
+    }
+
+    const rt = document.createElement('div');
+    rt.className = 'mline-renew-t';
+    rt.textContent = t.lineRenewTitle;
+    el.appendChild(rt);
+
+    const rd = document.createElement('div');
+    rd.className = 'mline-renew-d';
+    rd.textContent = t.lineRenewDesc;
+    el.appendChild(rd);
+
+    // ⚠ 전문관리용은 1/6/12개월, 기존 8종은 3/6/12/24개월입니다.
+    //   상품마다 파는 기간이 달라 그대로 맞춥니다.
+    const months = /^pro_/.test(c.tier || '') ? [1, 6, 12] : [3, 6, 12, 24];
+    const rr = document.createElement('div');
+    rr.className = 'mline-renew-row';
+    months.forEach((m) => {
+      const a = document.createElement('a');
+      a.className = 'mline-renew-btn';
+      a.href = 'aliascall_hotline_purchase.html?tier=' + encodeURIComponent(c.tier)
+             + '&months=' + m;
+      a.textContent = (currentLang === 'en') ? (m + 'mo') : (m + '개월');
+      rr.appendChild(a);
+    });
+    el.appendChild(rr);
+
     box.appendChild(el);
   });
 }
