@@ -126,11 +126,11 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 }
 
 .login-status{ text-align:center; padding:6px 24px 0; font-size:11.5px; color:rgba(255,255,255,.55); }
-/* ⚠ 2026-08-27: 로그아웃/계정만들기 링크가 흐려서 잘 안 보였습니다.
-   주변 안내문(11.5px, 반투명)보다 확실히 도드라지게 합니다. */
-.login-status a{
-  color:#FFFFFF; text-decoration:underline;
-  font-size:13px; font-weight:700;
+.login-status a{ color:var(--coral); text-decoration:underline; }
+/* ⚠ 2026-08-27: 링크 안에서 "로그인"/"로그아웃" 낱말만 도드라지게 합니다.
+   나머지 문구는 주황색 그대로 두어, 눌러야 할 핵심 단어에만 눈이 가게 합니다. */
+.login-status a em{
+  font-style:normal; color:#FFFFFF; font-weight:700; font-size:13.5px;
 }
 
 /* ── 수신대기 안내 배너 (2026-08-17 신규, 2026-08-20 (3차): "부재중 메시지" 배지는
@@ -1135,8 +1135,8 @@ const I18N = {
     footerNote1: 'Aliascall은 실제 번호를 노출하지 않는 안전한 연결 서비스입니다.',
     footerNote2: '실시간 위치추적 기능은 없습니다.',
     loginPrompt: '아직 로그인하지 않으셨어요 — ',
-    loginPromptLink: '계정을 만들어 로그인하면 편리합니다',
-    loggedInSuffix: '님 로그인됨', logoutLink: '로그아웃', logoutConfirm: '로그아웃 하시겠어요?',
+    loginPromptLink: '계정을 만들어 <em>로그인</em>하면 편리합니다',
+    loggedInSuffix: '님 로그인됨', logoutLink: '<em>로그아웃</em>', logoutConfirm: '로그아웃 하시겠어요?',
     missedBadgeText: '부재중 메시지',
     soundUnlockText: '🔔 알림음을 받으려면 탭 한 번만 해주세요', soundUnlockBtn: '알림음 켜기',
     listenReminderText: '💡 연결 요청을 놓치지 않으려면 <a href="aliascall_incoming_calls.html">수신 대기 화면</a>을 자주 확인해주세요. 이 화면(홈)을 열어두셔도 연결 요청이 오면 바로 알림이 뜹니다.',
@@ -1222,8 +1222,8 @@ const I18N = {
     footerNote1: 'Aliascall is a safe connection service that never exposes real phone numbers.',
     footerNote2: 'There is no real-time location tracking.',
     loginPrompt: "You're not logged in yet — ",
-    loginPromptLink: 'Create an account and sign in — it makes things easier',
-    loggedInSuffix: ' is logged in', logoutLink: 'Log out', logoutConfirm: 'Are you sure you want to log out?',
+    loginPromptLink: 'Create an account and <em>sign in</em> — it makes things easier',
+    loggedInSuffix: ' is logged in', logoutLink: '<em>Log out</em>', logoutConfirm: 'Are you sure you want to log out?',
     missedBadgeText: 'Missed messages',
     soundUnlockText: '🔔 Tap once to enable notification sounds', soundUnlockBtn: 'Enable sound',
     listenReminderText: '💡 To avoid missing a connection request, check the <a href="aliascall_incoming_calls.html">Incoming Calls screen</a> often. Keeping this home screen open also works — a popup will appear here the moment a request comes in.',
