@@ -190,7 +190,7 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
     </div>
 
     <!-- 2026-08-26 신설(v51): 전문관리용 — 구독 1건 = 방 여러 개 -->
-    <div class="pro-row-label">
+    <div class="pro-row-label" id="proRowLabel">
       <b data-i18n="proRowLabel">프로 비즈니스 · 전문관리용</b>
       <span data-i18n="proRowDesc">의뢰인·환자·단골을 한 계정으로 관리합니다. 구독 하나로 방을 여러 개 만들 수 있어요.</span>
     </div>
@@ -608,6 +608,8 @@ async function init(){
     document.getElementById('guestNotice').style.display = 'block';
   }
 
+  applyCategoryFilter(); // 2026-08-27: 들어온 갈래에 맞는 상품만
+
   const { data: plans, error } = await sb.from('hotline_pricing_plans').select('*');
   if (error || !plans) { document.getElementById('durationGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--danger); font-size:12.5px;">' + T('planLoadFail') + '</div>'; return; }
   allPlans = plans;
@@ -645,6 +647,26 @@ const urlGuide = urlParams.get('guide') === '1';
 // 로그인하고 돌아오셨을 때 고르셨던 기간까지 되살립니다.
 const urlMonths = urlParams.get('months');
 let monthsRestored = false;
+
+// ⚠ 2026-08-27 신설: 홈에서 네 갈래로 나눠놨는데 여기서 11개가 다 보이면
+//   "메인메뉴가 산만하다"는 지적이 그대로 되돌아옵니다.
+//   들어온 갈래에 맞는 상품만 보여줍니다.
+//     cat=love / work  →  기존 8종만
+//     cat=pro  / ad    →  전문관리용 3종만
+//   ⚠ cat이 없으면(직접 주소를 친 경우 등) 전부 보여줍니다.
+function applyCategoryFilter(){
+  if (!urlCat) return;
+  // ⚠ 로그인하고 돌아오실 때 ?tier= 도 함께 옵니다.
+  //   cat과 tier가 어긋나면(예: cat=love 인데 tier=pro_starter) 고른 상품이
+  //   숨겨진 줄에 있게 되어 요금표가 안 뜹니다. tier를 먼저 존중합니다.
+  const tierIsPro = (typeof isProTier === 'function') && isProTier(selectedTier);
+  const isPro = urlTier ? tierIsPro : (urlCat === 'pro' || urlCat === 'ad');
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
+  show('tierTabs', !isPro);
+  show('tierTabsSecure', !isPro);
+  show('proRowLabel', isPro);
+  show('tierTabsPro', isPro);
+}
 
 // 2026-08-27(v61): 이 결제가 어느 용도인지.
 //  ⚠ "우리끼리 회선"과 "일상 업무용 회선"은 같은 8종(tier)을 씁니다.
