@@ -30,8 +30,12 @@ main{ max-width:640px; margin:0 auto; padding:28px 20px 70px; }
 .page-title{ font-size:26px; margin-bottom:6px; }
 .page-desc{ font-size:13.5px; color:var(--ink-soft); margin-bottom:24px; line-height:1.6; }
 
-.toc{ display:flex; gap:8px; overflow-x:auto; margin-bottom:30px; padding-bottom:4px; }
-.toc a{ flex:0 0 auto; text-decoration:none; padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-size:12.5px; font-weight:600; white-space:nowrap; }
+/* ⚠ 2026-08-27: 원래는 가로 스크롤(overflow-x:auto)이었습니다.
+   PC는 스크롤바가 보이지만, 모바일은 배경색과 비슷한 데다 금방 사라져서
+   "③ 다음에 ④가 잘려 있는" 상태로만 보입니다. 뒤에 5개가 더 있는 줄 모릅니다.
+   목차는 전체를 한눈에 보는 게 목적이므로, 줄바꿈해서 다 보여줍니다. */
+.toc{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:30px; }
+.toc a{ flex:0 0 auto; text-decoration:none; padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-size:12.5px; font-weight:600; }
 .toc a:hover{ border-color:var(--brass); color:#8a6416; }
 
 section{ margin-bottom:38px; scroll-margin-top:90px; }
