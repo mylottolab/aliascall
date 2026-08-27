@@ -250,6 +250,19 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 .alerts-strip .t{ flex:1; font-size:12.5px; font-weight:700; }
 
 /* 내 회선 */
+
+/* 2026-08-27 신설: 내 구독 관리 */
+.subcard{ background:#fff; color:var(--ink); border-radius:14px; padding:14px; margin-bottom:9px; }
+.subcard-h{ display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+.subcard-h .nm{ font-size:14px; font-weight:700; flex:1; font-family:'Space Grotesk',sans-serif; }
+.subcard-h .badge{ font-size:10.5px; font-weight:700; background:var(--teal-tint); color:var(--teal-deep); border-radius:20px; padding:3px 9px; white-space:nowrap; }
+.subcard-h .badge.warn{ background:#FDF0D5; color:#8A6A1F; }
+.subcard-h .badge.danger{ background:#FCE9E6; color:var(--danger); }
+.subcard-meta{ font-size:11px; color:var(--ink-soft); line-height:1.6; margin-bottom:11px; }
+.subcard-btns{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.subcard-btns a{ padding:10px 6px; border-radius:10px; font-size:12px; font-weight:700; text-align:center; text-decoration:none; }
+.subcard-btns a.main{ background:var(--teal-deep); color:#fff; }
+.subcard-btns a.sub{ background:var(--teal-tint); color:var(--teal-deep); }
 .mine-head{ display:flex; align-items:center; margin:12px 2px 8px; }
 .mine-head .t{ font-size:12px; font-weight:700; color:#9BE0D8; flex:1; }
 .mine-head a{ font-size:10.5px; color:#9FBDB9; text-decoration:none; }
@@ -405,6 +418,11 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <span class="t" data-i18n="myLines">내 회선</span>
   </div>
   <div id="myLinesFull" style="margin-bottom:18px;"></div>
+
+  <!-- ⚠ 2026-08-27 신설: 구독을 결제하고 나면 방을 만들러 갈 곳이 필요합니다.
+       예전에는 주소를 직접 쳐야만 관리 화면에 들어갈 수 있었습니다.
+       구독이 있을 때만 보입니다. -->
+  <div id="mySubsBox" style="margin-bottom:18px;"></div>
 
   <!-- 상품 네 갈래 -->
   <div class="prod">
@@ -911,7 +929,7 @@ function showView(name, fromHistory){
       else history.pushState({ view: name }, '', '#' + name);
     } catch (e) {}
   }
-  if (name === 'msg') renderMyLines('myLinesFull');
+  if (name === 'msg') { renderMyLines('myLinesFull'); renderMySubs(); }
 }
 
 window.addEventListener('popstate', (e) => {
@@ -947,6 +965,94 @@ function relDay(iso){
   if (d < 30) return (LANG === 'en') ? (d + ' days ago') : (d + '일 전');
   const m = Math.floor(d / 30);
   return (LANG === 'en') ? (m + ' months ago') : (m + '개월 전');
+}
+
+
+// =====================================================================
+// 2026-08-27 신설: 내 구독 관리
+//
+// ⚠ 구독을 결제하고 나면 방을 만들러 갈 곳이 필요합니다.
+//   예전에는 주소를 직접 쳐야만 관리 화면에 들어갈 수 있었습니다.
+//   변호사가 프로 비즈니스를 사고 나서 "의뢰인 방을 어디서 만들지?" 하게 됩니다.
+//
+// ⚠ 구독이 없으면 아무것도 그리지 않습니다(상품 카드만 보입니다).
+// =====================================================================
+const PRO_TIER_NAME = {
+  ko: { pro_starter:'프로 스타터', pro_business:'프로 비즈니스', pro_enterprise:'프로 엔터프라이즈' },
+  en: { pro_starter:'Pro Starter', pro_business:'Pro Business', pro_enterprise:'Pro Enterprise' },
+};
+
+async function renderMySubs(){
+  const box = document.getElementById('mySubsBox');
+  if (!box) return;
+  box.innerHTML = '';
+  if (!cachedSession) return;   // 로그인 안 하셨으면 표시하지 않습니다
+
+  let subs = [];
+  try {
+    const { data, error } = await sb.rpc('my_subscriptions_summary');
+    if (error) throw error;
+    subs = data || [];
+  } catch (e) {
+    console.warn('[my-subs] 불러오기 실패', e);
+    return;
+  }
+  if (subs.length === 0) return;
+
+  const t = T();
+  const head = document.createElement('div');
+  head.className = 'mine-head';
+  const ht = document.createElement('span');
+  ht.className = 't';
+  ht.textContent = t.mySubs;
+  head.appendChild(ht);
+  box.appendChild(head);
+
+  const locale = (currentLang === 'en') ? 'en-US' : 'ko-KR';
+  subs.forEach((sub) => {
+    const limit = (sub.max_rooms || 0) + (sub.extra_rooms || 0);
+    const active = sub.active_rooms || 0;
+    const expired = new Date(sub.expires_at) < new Date() || sub.status !== 'active';
+    const ratio = limit > 0 ? Math.round(active / limit * 100) : 0;
+
+    const card = document.createElement('div');
+    card.className = 'subcard';
+
+    const h = document.createElement('div');
+    h.className = 'subcard-h';
+    const nm = document.createElement('span');
+    nm.className = 'nm';
+    nm.textContent = sub.display_name || sub.business_name
+                   || (PRO_TIER_NAME[currentLang] || PRO_TIER_NAME.ko)[sub.tier] || sub.tier;
+    const badge = document.createElement('span');
+    // ⚠ 한도가 가까워지면 눈에 띄게 합니다. 다 차면 방을 못 만듭니다.
+    badge.className = 'badge' + (expired ? ' danger' : ratio >= 100 ? ' danger' : ratio >= 80 ? ' warn' : '');
+    badge.textContent = expired ? t.subExpired : (t.subActive + ' ' + active + '/' + limit);
+    h.appendChild(nm); h.appendChild(badge);
+    card.appendChild(h);
+
+    const meta = document.createElement('div');
+    meta.className = 'subcard-meta';
+    meta.textContent = t.subExpires + ' ' + new Date(sub.expires_at).toLocaleDateString(locale)
+                     + ' · ' + sub.usage_cap_gb + 'GB';
+    card.appendChild(meta);
+
+    const btns = document.createElement('div');
+    btns.className = 'subcard-btns';
+    const a1 = document.createElement('a');
+    a1.className = 'main';
+    a1.href = 'aliascall_hotline_manage.html';
+    a1.textContent = expired ? t.subRenew : t.subManage;
+    if (expired) a1.href = 'aliascall_hotline_purchase.html?tier=' + encodeURIComponent(sub.tier);
+    const a2 = document.createElement('a');
+    a2.className = 'sub';
+    a2.href = 'aliascall_hotline_digest.html?sub=' + encodeURIComponent(sub.id);
+    a2.textContent = t.subDigest;
+    btns.appendChild(a1); btns.appendChild(a2);
+    card.appendChild(btns);
+
+    box.appendChild(card);
+  });
 }
 
 function renderMyLines(containerId, limit){
@@ -1069,6 +1175,13 @@ const I18N = {
     msgSub: '번호 없이, 우리끼리만 아는 회선을 엽니다. 저희 서버도 못 보는 잠금까지.',
     msgPt1: '연인 · 가족', msgPt2: '업무 · 비서', msgPt3: '고객 관리',
     alertsStrip: '확인해야 할 알림이 있습니다',
+    mySubs: '📁 내 구독 관리',
+    subManage: '방 관리',
+    subDigest: '📖 대화 모아보기',
+    subExpires: '만료',
+    subActive: '활성',
+    subExpired: '만료됨',
+    subRenew: '연장하기',
     myLines: '내 회선',
     myLinesAll: '전체 보기 ›',
     myLinesEmpty: '아직 이용 중인 회선이 없습니다.<br>상품을 고르시면 바로 시작하실 수 있어요.',
@@ -1156,6 +1269,13 @@ const I18N = {
     msgSub: 'Open a line only you and your people know — no phone numbers. Lockable so even we cannot read it.',
     msgPt1: 'Partner · family', msgPt2: 'Work · assistant', msgPt3: 'Client care',
     alertsStrip: 'You have alerts to check',
+    mySubs: '📁 My subscriptions',
+    subManage: 'Manage rooms',
+    subDigest: '📖 Conversation digest',
+    subExpires: 'Expires',
+    subActive: 'Active',
+    subExpired: 'Expired',
+    subRenew: 'Renew',
     myLines: 'My lines',
     myLinesAll: 'See all ›',
     myLinesEmpty: 'No lines yet.<br>Pick a plan to get started.',
@@ -1348,6 +1468,7 @@ function renderLoginStatus(){
     initIncomingWatcher(session.user.id);
   }
   renderNotifySettings(sb, 'notifySettingsContainer'); // 2026-08-19 (2차): 통합 알림설정 렌더링
+  renderMySubs(); // 2026-08-27: 로그인 확인 후 구독 카드
   applyLang(currentLang);
 })();
 </script>
