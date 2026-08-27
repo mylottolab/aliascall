@@ -1190,6 +1190,35 @@ function authHeaders(){
   return h;
 }
 
+
+// =====================================================================
+// 2026-08-27 신설: 내 회선 기록
+//
+// ⚠ 지금까지 참가자는 방으로 돌아갈 길이 없었습니다.
+//   개설자는 관리 화면에서 [열기]를 누르면 되지만,
+//   참가자는 초대링크를 다시 찾아야 했습니다. 탭을 닫으면 끝이었습니다.
+//   ("메신저를 쓰려면 찾아 삼만리를 해야 한다"는 지적)
+//
+//   그래서 방에 들어올 때마다 이 브라우저에 남겨둡니다.
+//   홈의 "내 회선"이 이 기록을 읽어 보여줍니다.
+//
+// ⚠ 서버에 저장하지 않습니다. 참가자는 계정이 없고,
+//   "어느 방에 들어갔는지"는 서버가 모르는 편이 안전합니다.
+// =====================================================================
+const MY_LINES_KEY = 'aliascall_my_lines';
+
+function recordMyLine(info){
+  try {
+    const raw = localStorage.getItem(MY_LINES_KEY);
+    let list = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(list)) list = [];
+    list = list.filter((x) => x && x.hotlineId !== info.hotlineId);
+    list.unshift(info);
+    // ⚠ 무한정 쌓이지 않게 최근 30개만 둡니다.
+    localStorage.setItem(MY_LINES_KEY, JSON.stringify(list.slice(0, 30)));
+  } catch (e) { console.warn('[my-lines] 기록 실패', e); }
+}
+
 async function init(){
   const params = new URLSearchParams(window.location.search);
   const inviteToken = params.get('t');
@@ -1259,6 +1288,18 @@ async function init(){
     initDailyQuestion();
 
     for (const m of (data.messages || [])) { renderedMsgIds.add(m.id); await appendChatMessage(m); }
+    // 2026-08-27: 이 브라우저에 "내 회선"으로 남겨둠 (다음에 홈에서 바로 들어올 수 있게)
+    recordMyLine({
+      hotlineId: hotlineId,
+      title: data.title || '',
+      tier: data.tier || '',
+      isOwner: !!data.isOwner,
+      // ⚠ 참가자는 초대 토큰이 있어야 다시 들어올 수 있습니다.
+      //   개설자는 ?hotline= 으로 들어가므로 토큰이 필요 없습니다.
+      token: (new URLSearchParams(window.location.search)).get('t') || '',
+      lastVisitedAt: new Date().toISOString(),
+    });
+
     showState('stateChat');
     subscribeChat();
     markAsRead(); // 2026-08-22 신설: 방에 들어온 시점 = 여기까지 다 읽은 것으로 처리
