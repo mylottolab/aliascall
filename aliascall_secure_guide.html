@@ -42,6 +42,10 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
 .sec-num{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--brass); color:#fff; font-size:12.5px; font-weight:700; font-family:'Space Grotesk',sans-serif; margin-right:8px; }
 .sec-title{ font-size:19px; display:flex; align-items:center; margin-bottom:14px; }
 
+/* ⚠ 2026-08-27 신설: 섹션 안의 작은 제목.
+   highlight-box(어두운 배경)에 흰 카드를 넣으면 흰 글씨가 안 보여서,
+   제목만 따로 두고 카드는 밖으로 뺐습니다. */
+.sec-sub{ font-size:14px; font-weight:700; color:var(--ink); margin:20px 0 10px; }
 .step-list{ display:flex; flex-direction:column; gap:10px; }
 .step-item{ display:flex; gap:12px; background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px 16px; }
 .step-item .n{ flex:0 0 auto; font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--brass); font-size:13px; }
@@ -144,13 +148,11 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
       <div class="category-card"><div class="h" data-i18n-html="s019">👥 이코노미 (4인)</div><div class="d" data-i18n-html="s020">최대 4명이 함께 쓰는 가벼운 모임용입니다.</div></div>
       <div class="category-card"><div class="h" data-i18n-html="s021">✨ 프리미엄 (4인)</div><div class="d" data-i18n-html="s022">이코노미와 인원은 같지만 고화질 영상통화가 가능합니다.</div></div>
     </div>
-    <div class="highlight-box">
-      <div class="tag" data-i18n-html="y06">세 가지만 정하면 8종 중 하나가 정해집니다</div>
-      <div class="step-list">
-        <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="y07"><b>몇 명이 쓰나요?</b>둘이서(2인) 또는 여럿이서(최대 4인)</span></div>
-        <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="y08"><b>상대를 바꿀 일이 있나요?</b>고정이면 저렴하고, 교체형은 상대를 내보내고 새로 초대할 수 있습니다. <b>이전 대화는 새 상대에게 보이지 않습니다.</b></span></div>
-        <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="y09"><b>암호화가 필요한가요?</b>Secure는 열쇠가 초대링크에만 있어 저희조차 내용을 볼 수 없습니다.</span></div>
-      </div>
+    <div class="sec-sub" data-i18n-html="y06">세 가지만 정하면 8종 중 하나가 정해집니다</div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="y07"><b>몇 명이 쓰나요?</b>둘이서(2인) 또는 여럿이서(최대 4인)</span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="y08"><b>상대를 바꿀 일이 있나요?</b>고정이면 저렴하고, 교체형은 상대를 내보내고 새로 초대할 수 있습니다. <b>이전 대화는 새 상대에게 보이지 않습니다.</b></span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="y09"><b>암호화가 필요한가요?</b>Secure는 열쇠가 초대링크에만 있어 저희조차 내용을 볼 수 없습니다.</span></div>
     </div>
 
     <div class="tip-callout" data-i18n-html="s023"><b>Secure 버전이 궁금하다면?</b> 위 4종 모두 "🔒 Secure" 버전이 따로 있습니다 — 인원·기능은 동일하고, 문자·사진·음성 등 모든 내용을 저희(Aliascall)조차 볼 수 없게 암호화됩니다. 자세한 가격은 <a href="aliascall_hotline_guide.html" style="color:var(--brass); font-weight:700;">상품 안내 페이지</a>에서 확인하실 수 있어요.</div>
