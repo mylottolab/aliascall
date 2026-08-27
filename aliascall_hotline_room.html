@@ -1178,6 +1178,15 @@ let renderedMsgIds = new Set();
 //   ⚠ let은 끌어올려지지 않으므로, 값을 넣는 init()보다 반드시 위에 있어야 합니다.
 const PRO_TIERS = ['pro_starter', 'pro_business', 'pro_enterprise'];
 let roomIsPro = false;
+
+// ⚠ 2026-08-27(v61): "우리끼리"와 "일상 업무용"은 같은 8종(tier)을 씁니다.
+//   tier만으로는 구분이 안 되어 서버가 내려주는 purpose를 씁니다.
+//     personal — 연인·가족·친구      (D+day·오늘의 질문 있음)
+//     work     — 임원·비서·프로젝트   (없음)
+//     pro      — 고객 관리           (없음)
+let roomPurpose = 'personal';
+// 연인용 기능을 보여줄지. personal일 때만 켭니다.
+function showCoupleFeatures(){ return roomPurpose === 'personal'; }
 let chatChannel = null;
 
 function showState(name){
@@ -1240,6 +1249,7 @@ async function init(){
     mySenderAnonId = data.mySenderAnonId;
     roomIsSecure = isSecureTier(data.tier);
     roomIsPro = PRO_TIERS.includes(data.tier); // 2026-08-27
+    roomPurpose = data.purpose || (roomIsPro ? 'pro' : 'personal'); // 2026-08-27(v61)
     (data.members || []).forEach((m) => { memberNicknames[m.member_anon_id] = m.nickname; });
     myNickname = memberNicknames[mySenderAnonId] || T('meNickname');
 
@@ -1973,8 +1983,8 @@ document.querySelectorAll('.panel-overlay').forEach((overlay) => {
 // ── 목표(D-DAY) ──
 let currentGoals = [];
 function renderGoalsStrip(){
-  // 2026-08-27: 전문관리용에서는 목표(D+day)를 쓰지 않음
-  if (roomIsPro) {
+  // 2026-08-27(v61): 업무용·전문관리용에서는 목표(D+day)를 쓰지 않음
+  if (!showCoupleFeatures()) {
     const strip = document.getElementById('goalsStrip');
     if (strip) strip.style.display = 'none';
     return;
@@ -2223,7 +2233,7 @@ function getTodayQuestion(){
   return list[dayIndex % list.length];
 }
 function initDailyQuestion(){
-  if (roomIsPro) return; // 2026-08-27: 전문관리용에서는 오늘의 질문을 띄우지 않음
+  if (!showCoupleFeatures()) return; // 2026-08-27(v61): 업무용·전문관리용에서는 띄우지 않음
   const dateKey = new Date().toISOString().slice(0, 10);
   const dismissKey = 'aliascall_dq_dismissed_' + hotlineId + '_' + dateKey;
   if (localStorage.getItem(dismissKey)) return;

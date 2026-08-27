@@ -98,9 +98,11 @@ function _hlLoadIniPaySdk(){
 }
 
 // ── 핫라인 이니시스 결제 시작 ──
-// opts: { tier, durationMonths, buyername, buyertel, buyeremail }
+// opts: { tier, durationMonths, buyername, buyertel, buyeremail, purpose }
+// ⚠ 2026-08-27(v61): purpose는 "우리끼리(personal)"인지 "업무용(work)"인지입니다.
+//   같은 8종(tier)을 두 갈래로 파는데, 결제 후 방에서 둘을 구분하려면 필요합니다.
 async function startHotlineInicisPayment(sb, opts){
-  const { tier, durationMonths, buyername, buyertel, buyeremail } = opts;
+  const { tier, durationMonths, buyername, buyertel, buyeremail, purpose } = opts;
   const token = await _hlGetAuthToken(sb);
   if (!token) { alert(_acPayT('loginRequired')); return; }
 
@@ -109,7 +111,7 @@ async function startHotlineInicisPayment(sb, opts){
     const res = await fetch(`${HOTLINE_PAYMENTS_FN_BASE}/aliascall-hotline-inicis-prepare`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-      body: JSON.stringify({ tier, durationMonths, buyername, buyertel, buyeremail }),
+      body: JSON.stringify({ tier, durationMonths, buyername, buyertel, buyeremail, purpose }),
     });
     data = await res.json();
     if (!res.ok) { alert(_acPayErr(data.error, 'prepareFail')); return; }
@@ -150,7 +152,7 @@ async function startHotlineInicisPayment(sb, opts){
 }
 
 // ── 핫라인 PayPal 버튼 렌더링 ──
-// containerId: 버튼을 그릴 <div id="..."> / opts: { tier, durationMonths }
+// containerId: 버튼을 그릴 <div id="..."> / opts: { tier, durationMonths, purpose }
 // onSuccess(data): 결제 성공 후 호출할 콜백 (data.hotlineId, data.inviteToken 포함)
 async function renderHotlinePayPalButtons(sb, containerId, opts, onSuccess){
   const el = document.getElementById(containerId);

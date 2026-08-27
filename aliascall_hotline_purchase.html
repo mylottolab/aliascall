@@ -614,6 +614,15 @@ const urlTier = urlParams.get('tier');
 const urlCat = urlParams.get('cat');
 const urlGuide = urlParams.get('guide') === '1';
 
+// 2026-08-27(v61): 이 결제가 어느 용도인지.
+//  ⚠ "우리끼리 회선"과 "일상 업무용 회선"은 같은 8종(tier)을 씁니다.
+//    결제 후 방에서 둘을 구분하려면 이 값이 함께 저장되어야 합니다.
+//    전문관리용은 tier 자체가 달라 'pro'로 고정됩니다.
+function roomPurpose(){
+  if (typeof isProTier === 'function' && isProTier(selectedTier)) return 'pro';
+  return (urlCat === 'work') ? 'work' : 'personal';
+}
+
 if (urlTier && document.querySelector(`.tier-tab[data-tier="${urlTier}"]`)) {
   selectedTier = urlTier;
   document.querySelector(`.tier-tab[data-tier="${urlTier}"]`).classList.add('active');
