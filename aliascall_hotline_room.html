@@ -656,6 +656,9 @@ const I18N = {
     menuReport: '🚩 신고하기',
     menuExport: '🖨️ 대화 내보내기',
     menuAway: '🟡 자리비움 설정',
+    awMyStatus: '내 상태',
+    awDescMember: '자리를 비운 동안, 상대가 메시지를 보내면 아래 문구가 한 번 자동으로 나갑니다.',
+    awHintMember: '예: 수업 중이야 · 운전 중 · 자는 중',
     menuBoard: '📋 안내판 편집',
     awTitle: '🟡 자리비움 설정',
     awDesc: '자리를 비운 동안, 상대가 메시지를 보내면 아래 문구가 한 번 자동으로 나갑니다.',
@@ -875,6 +878,9 @@ const I18N = {
     menuReport: '🚩 Report',
     menuExport: '🖨️ Export conversation',
     menuAway: '🟡 Away settings',
+    awMyStatus: 'My status',
+    awDescMember: 'While you are away, this message is sent once automatically when the other person writes to you.',
+    awHintMember: 'e.g. In class · Driving · Sleeping',
     menuBoard: '📋 Edit info board',
     awTitle: '🟡 Away settings',
     awDesc: 'While you are away, the message below is sent once automatically when someone writes to you.',
@@ -2944,8 +2950,12 @@ let bdPendingImage = null;   // 항목에 붙일 사진 (업로드 전)
 // ── 개설자 여부에 따라 ⋯ 메뉴 항목을 보이거나 숨김 ──
 function applyOwnerMenus(){
   const d = isRoomOwner ? 'block' : 'none';
-  document.getElementById('openAwayBtn').style.display = d;
-  document.getElementById('openBoardBtn').style.display = d;
+  // ⚠ 2026-08-27(v60): 자리비움은 참가자도 씁니다.
+  //   연인·가족 사이에서는 양쪽 다 상태를 알려야 의미가 있습니다("수업 중이야" / "나도 운전 중").
+  //   다만 전문관리용은 제외합니다 — 상담받으러 온 의뢰인이 자리비움을 알릴 이유가 없습니다.
+  const awayVisible = isRoomOwner || !roomIsPro;
+  document.getElementById('openAwayBtn').style.display = awayVisible ? 'block' : 'none';
+  document.getElementById('openBoardBtn').style.display = d;  // 안내판은 개설자만
 }
 
 // ─────────────────────────────────────────────
@@ -3035,6 +3045,11 @@ function renderAwayBadge(){
 }
 
 function renderAwayPanel(){
+  // 2026-08-27(v60): 참가자에게는 "내 상태"로 보이는 게 자연스럽습니다.
+  const awDescEl = document.querySelector('#awPanel .cfg-desc');
+  if (awDescEl) awDescEl.textContent = isRoomOwner ? T('awDesc') : T('awDescMember');
+  const awNewMsgEl = document.getElementById('awNewMsg');
+  if (awNewMsgEl && !isRoomOwner) awNewMsgEl.placeholder = T('awHintMember');
   document.getElementById('awNowLabel').textContent =
     (awayStatus === 'busy') ? T('awBusy') : T('awAvailable');
   document.getElementById('awToggleBtn').textContent =
@@ -3063,7 +3078,16 @@ function renderAwayPanel(){
     del.textContent = T('awDelete');
     del.addEventListener('click', async (e) => {
       e.stopPropagation();
-      await sb.from('hotline_away_presets').delete().eq('id', p.id);
+      if (isRoomOwner) {
+        await sb.from('hotline_away_presets').delete().eq('id', p.id);
+      } else {
+        try {
+          await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-member-away`, {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ hotlineId, memberAnonId: hotlineAnonId, action: 'delPreset', presetId: p.id }),
+          });
+        } catch (e) { console.error('[member-away] 문구 삭제 실패', e); }
+      }
       awayPresets = awayPresets.filter((x) => x.id !== p.id);
       renderAwayPanel();
     });
@@ -3084,6 +3108,22 @@ async function loadRoomConfig(){
       sb.from('hotline_board_items').select('*').eq('hotline_id', hotlineId).order('sort_order'),
     ]);
     awayPresets = presetsRes.data || [];
+
+    // ⚠ 2026-08-27(v60): 참가자는 비로그인이라 RLS로 못 읽습니다. 서버를 거칩니다.
+    if (!isRoomOwner && !roomIsPro) {
+      try {
+        const r = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-member-away`, {
+          method: 'POST', headers: authHeaders(),
+          body: JSON.stringify({ hotlineId, memberAnonId: hotlineAnonId, action: 'get' }),
+        });
+        const d = await r.json();
+        if (r.ok && d.ok) {
+          awayStatus = d.status || 'available';
+          awayMessage = d.message || '';
+          awayPresets = d.presets || [];
+        }
+      } catch (e) { console.warn('[member-away] 불러오기 실패', e); }
+    }
     boardData = board || null;
     boardItems = items || [];
     renderBoard();
@@ -3123,13 +3163,28 @@ on('awToggleBtn', 'click', async () => {
     // 문구를 안 고른 채 켜면 기본 문구를 씀
     awayMessage = awayPresets.length ? awayPresets[0].message : T('awBusy');
   }
-  const { error } = await sb.from('hotlines')
-    .update({ away_status: next, away_message: next === 'busy' ? awayMessage : null })
-    .eq('id', hotlineId);
-  if (error) { console.error('[away] 저장 실패', error); alert(T('alertTryLater')); return; }
+  // ⚠ 2026-08-27(v60): 개설자는 hotlines에, 참가자는 hotline_members에 저장됩니다.
+  //   저장 위치가 달라 경로를 나눕니다.
+  if (isRoomOwner) {
+    const { error } = await sb.from('hotlines')
+      .update({ away_status: next, away_message: next === 'busy' ? awayMessage : null })
+      .eq('id', hotlineId);
+    if (error) { console.error('[away] 저장 실패', error); alert(T('alertTryLater')); return; }
+  } else {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-member-away`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ hotlineId, memberAnonId: hotlineAnonId, action: 'set',
+                               status: next, message: awayMessage }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) { alert(d.error || T('alertTryLater')); return; }
+    } catch (e) { console.error('[member-away] 저장 실패', e); alert(T('alertTryLater')); return; }
+  }
   awayStatus = next;
   // 상태를 바꾸면 "이미 자동응답을 받은 사람" 기록을 지워, 다음에 다시 한 번 나가게 함
-  try { await sb.from('hotline_away_sent').delete().eq('hotline_id', hotlineId); } catch (e) {}
+  // 참가자 쪽은 서버가 알아서 정리합니다(위 Edge Function 안에서).
+  if (isRoomOwner) { try { await sb.from('hotline_away_sent').delete().eq('hotline_id', hotlineId); } catch (e) {} }
   renderAwayPanel();
   renderAwayBadge();
   status.textContent = T('awSaved');
@@ -3140,11 +3195,23 @@ on('awAddBtn', 'click', async () => {
   const label = document.getElementById('awNewLabel').value.trim();
   const msg = document.getElementById('awNewMsg').value.trim();
   if (!label || !msg) { alert(T('awNeedBoth')); return; }
-  const { data, error } = await sb.from('hotline_away_presets')
-    .insert({ hotline_id: hotlineId, label, message: msg, sort_order: awayPresets.length })
-    .select().single();
-  if (error) { console.error('[away] 문구 추가 실패', error); alert(T('alertTryLater')); return; }
-  awayPresets.push(data);
+  if (isRoomOwner) {
+    const { data, error } = await sb.from('hotline_away_presets')
+      .insert({ hotline_id: hotlineId, label, message: msg, sort_order: awayPresets.length })
+      .select().single();
+    if (error) { console.error('[away] 문구 추가 실패', error); alert(T('alertTryLater')); return; }
+    awayPresets.push(data);
+  } else {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-member-away`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ hotlineId, memberAnonId: hotlineAnonId, action: 'addPreset', label, message: msg }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) { alert(d.error || T('alertTryLater')); return; }
+      awayPresets.push(d.preset);
+    } catch (e) { console.error('[member-away] 문구 추가 실패', e); alert(T('alertTryLater')); return; }
+  }
   document.getElementById('awNewLabel').value = '';
   document.getElementById('awNewMsg').value = '';
   renderAwayPanel();
