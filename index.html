@@ -39,7 +39,9 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 }
 
 .hero{ padding:16px 24px 4px; text-align:center; position:relative; min-height:46px; }
-.hero-brand{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; color:#fff; padding:6px 0 8px; }
+/* ⚠ 2026-08-28: 로고가 버튼이 되었습니다. 생김새는 그대로 두되 누를 수 있게 합니다. */
+.hero-brand{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; color:#fff; padding:6px 0 8px;
+             background:none; border:none; cursor:pointer; display:block; margin:0 auto; }
 .hero-brand em{ font-style:normal; color:var(--coral); }
 .lang-toggle{ position:absolute; top:16px; right:16px; display:flex; gap:4px; background:rgba(255,255,255,.1); border-radius:20px; padding:3px; }
 .lang-toggle button{ border:none; background:none; color:rgba(255,255,255,.6); font-size:11px; font-weight:700; padding:5px 10px; border-radius:16px; cursor:pointer; }
@@ -214,6 +216,15 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
      연결요청 배너·푸시·실시간 수신이 이 파일에 들어 있어,
      페이지를 나누면 그 화면에 있는 동안 연결 요청을 못 받습니다.
    ═══════════════════════════════════════════════════ */
+
+/* 2026-08-28 신설: My Page 단추 (언어 토글 바로 밑) */
+.mypage-btn{
+  position:absolute; right:16px; top:44px;
+  background:rgba(255,255,255,.14); color:#fff;
+  border-radius:20px; padding:5px 13px;
+  font-size:11.5px; font-weight:700; text-decoration:none;
+  border:1px solid rgba(255,255,255,.2);
+}
 .hero-tagline{ font-size:12px; color:#9FBDB9; margin-top:7px; text-align:center; line-height:1.6; }
 .view{ display:none; }
 .view.show{ display:block; }
@@ -250,6 +261,18 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 .alerts-strip .t{ flex:1; font-size:12.5px; font-weight:700; }
 
 /* 내 회선 */
+
+
+/* 2026-08-28 신설: 내 회선 = 회선망 카드 */
+.linecard{ display:block; background:#fff; color:var(--ink); border-radius:13px; padding:13px 14px; margin-bottom:8px; text-decoration:none; }
+.lc-h{ display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.lc-n{ flex:1; font-size:14px; font-weight:700; font-family:'Space Grotesk',sans-serif; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lc-b{ font-size:10px; font-weight:700; background:var(--teal-tint); color:var(--teal-deep); border-radius:20px; padding:3px 8px; white-space:nowrap; }
+.lc-b.warn{ background:#FDF0D5; color:#8A6A1F; }
+.lc-b.danger{ background:#FCE9E6; color:var(--danger); }
+.lc-m{ display:block; font-size:11px; color:var(--ink-soft); margin-bottom:6px; }
+.lc-last{ display:block; font-size:12px; color:var(--teal-deep); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lc-last.none{ color:var(--ink-soft); font-weight:400; }
 
 /* 2026-08-27 신설: 내 구독 관리 */
 .subcard{ background:#fff; color:var(--ink); border-radius:14px; padding:14px; margin-bottom:9px; }
@@ -303,7 +326,12 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <button data-lang="ko" class="active">KR</button>
     <button data-lang="en">EN</button>
   </div>
-  <div class="hero-brand">Alias<em>call</em></div>
+  <!-- ⚠ 2026-08-28 신설: 통합 마이페이지.
+       Emergency와 Messenger 이용현황을 한 곳에서 봅니다. -->
+  <a class="mypage-btn" href="aliascall_my_account.html" data-i18n="myPage">My Page</a>
+  <!-- ⚠ 2026-08-28: 로고를 누르면 첫 화면으로 돌아갑니다.
+       모바일에서 작은 "‹ 홈"을 누르기 어렵다는 지적을 반영했습니다. -->
+  <button type="button" class="hero-brand" id="brandHome" data-i18n-aria="backHomeAria" aria-label="첫 화면으로">Alias<em>call</em></button>
   <!-- 2026-08-27 신설: 브랜드 밑 한 줄 설명 -->
   <div class="hero-tagline" data-i18n="heroTagline">양방향 모두 번호 노출 없는 안전한 통신</div>
 </div>
@@ -361,10 +389,6 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 
 <!-- ═══ Emergency 화면 ═══ -->
 <div class="view" id="viewEmg">
-  <div class="view-back">
-    <button type="button" onclick="showView('home')" data-i18n="backHome">‹ 홈</button>
-    <span class="vt" data-i18n="emgTitle">Alias The Emergency Call</span>
-  </div>
 
 <div class="section-header emergency">
   <div class="section-header-title">🚨 Alias Emergency Call</div>
@@ -409,9 +433,11 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 
 <!-- ═══ Messenger 화면 ═══ -->
 <div class="view" id="viewMsg">
-  <div class="view-back">
-    <button type="button" onclick="showView('home')" data-i18n="backHome">‹ 홈</button>
-    <span class="vt" data-i18n="msgTitle">Alias The Next-Gen Messenger</span>
+
+  <!-- ⚠ 2026-08-28 신설: Emergency 쪽에는 제목이 있는데 여기엔 없었습니다. -->
+  <div class="section-header secure">
+    <div class="section-header-title">💬 Alias Secure Call</div>
+    <div class="section-header-sub" data-i18n="secMsgSub">번호 없이, 우리끼리만 아는 회선</div>
   </div>
 
   <div class="mine-head">
@@ -936,6 +962,9 @@ window.addEventListener('popstate', (e) => {
   showView((e.state && e.state.view) || 'home', true);
 });
 
+// ⚠ 2026-08-28: 로고를 누르면 첫 화면으로. "‹ 홈"을 없앤 자리를 대신합니다.
+document.getElementById('brandHome').addEventListener('click', () => showView('home'));
+
 // =====================================================================
 // 2026-08-27 신설: 내 회선
 //
@@ -1055,51 +1084,156 @@ async function renderMySubs(){
   });
 }
 
-function renderMyLines(containerId, limit){
+// =====================================================================
+// 2026-08-28: 내 회선 = 내가 산 회선망
+//
+//   카톡 아이콘을 누르듯, 회선을 누르면 바로 최근 대화방이 열립니다.
+//   거기서 뒤로 가면 방을 고르는 관리 화면으로 갑니다.
+//
+//   ⚠ 처음에는 "방 하나하나"를 나열했는데, 그러면 방이 50개일 때
+//     홈이 방 목록이 되어버리고 아래 "내 구독 관리"와도 겹칩니다.
+//     회선은 망이지 대화가 아닙니다.
+//
+//   ⚠ 기존 8종도 같은 방식입니다. 구독이 아니라 방 하나짜리지만,
+//     사용자에게는 똑같이 "내가 산 회선"입니다.
+// =====================================================================
+let myLinesCache = null;
+
+async function collectMyLines(){
+  if (!cachedSession) return [];
+  const out = [];
+
+  try {
+    // ① 전문관리용 구독
+    let subs = [];
+    try {
+      const { data } = await sb.rpc('my_subscriptions_summary');
+      subs = data || [];
+    } catch (e) { /* 구독이 없어도 아래 8종은 보여줍니다 */ }
+
+    const { data: rooms } = await sb.from('hotlines')
+      .select('id, client_label, title, tier, subscription_id, last_activity_at, archived_at, expires_at, status, invite_token')
+      .eq('owner_user_id', cachedSession.user.id)
+      .order('last_activity_at', { ascending: false })
+      .limit(200);
+    const alive = (rooms || []).filter((r) =>
+      !r.archived_at && r.status === 'active' && new Date(r.expires_at) > new Date());
+
+    const tierName = (t) => (PRO_TIER_NAME[currentLang] || PRO_TIER_NAME.ko)[t] || t;
+
+    subs.forEach((sub) => {
+      const mine = alive.filter((r) => r.subscription_id === sub.id);
+      // 가장 최근에 대화가 오간 방
+      const recent = mine[0] || null;
+      out.push({
+        kind: 'sub',
+        id: sub.id,
+        name: sub.display_name || sub.business_name || tierName(sub.tier),
+        planName: tierName(sub.tier),
+        expiresAt: sub.expires_at,
+        active: sub.active_rooms || 0,
+        limit: (sub.max_rooms || 0) + (sub.extra_rooms || 0),
+        recentRoomId: recent ? recent.id : null,
+        recentLabel: recent ? (recent.client_label || recent.title || '') : '',
+        lastAt: recent ? recent.last_activity_at : null,
+      });
+    });
+
+    // ② 기존 8종 — 구독에 속하지 않은 방
+    alive.filter((r) => !r.subscription_id).forEach((r) => {
+      out.push({
+        kind: 'solo',
+        id: r.id,
+        name: r.title || r.client_label || (LEGACY_TIER_NAME[currentLang] || LEGACY_TIER_NAME.ko)[r.tier] || r.tier,
+        planName: (LEGACY_TIER_NAME[currentLang] || LEGACY_TIER_NAME.ko)[r.tier] || r.tier,
+        expiresAt: r.expires_at,
+        recentRoomId: r.id,
+        recentLabel: '',
+        lastAt: r.last_activity_at,
+      });
+    });
+  } catch (e) {
+    console.warn('[my-lines] 불러오기 실패', e);
+  }
+
+  out.sort((a, b) => new Date(b.lastAt || 0) - new Date(a.lastAt || 0));
+  return out;
+}
+
+const LEGACY_TIER_NAME = {
+  ko: {
+    hotline_1to1:'핫라인', hotline_everybody:'에브리바디', economy_4:'이코노미', premium_4:'프리미엄',
+    hotline_1to1_secure:'핫라인 Secure', hotline_everybody_secure:'에브리바디 Secure',
+    economy_4_secure:'이코노미 Secure', premium_4_secure:'프리미엄 Secure',
+  },
+  en: {
+    hotline_1to1:'Hotline', hotline_everybody:'Everybody', economy_4:'Economy', premium_4:'Premium',
+    hotline_1to1_secure:'Hotline Secure', hotline_everybody_secure:'Everybody Secure',
+    economy_4_secure:'Economy Secure', premium_4_secure:'Premium Secure',
+  },
+};
+
+async function renderMyLines(containerId, limit){
   const box = document.getElementById(containerId);
   if (!box) return;
-  const list = loadMyLines();
+  const t = T();
+
+  if (!myLinesCache) myLinesCache = await collectMyLines();
+  const list = myLinesCache;
+
   box.innerHTML = '';
   if (list.length === 0) {
     const e = document.createElement('div');
     e.className = 'mine-empty';
-    e.innerHTML = T().myLinesEmpty;
+    e.innerHTML = t.myLinesEmpty;
     box.appendChild(e);
     return;
   }
+
+  const locale = (currentLang === 'en') ? 'en-US' : 'ko-KR';
   const shown = limit ? list.slice(0, limit) : list;
   shown.forEach((it) => {
-    const a = document.createElement('a');
-    a.className = 'line-item';
-    // ⚠ 개설자는 ?hotline= 으로, 참가자는 ?t=(초대토큰) 으로 들어갑니다.
-    //   주소를 잘못 만들면 "불러오지 못했어요"가 뜹니다.
-    a.href = it.isOwner
-      ? ('aliascall_hotline_room.html?hotline=' + encodeURIComponent(it.hotlineId))
-      : ('aliascall_hotline_room.html?t=' + encodeURIComponent(it.token || ''));
+    const card = document.createElement('a');
+    card.className = 'linecard';
+    // ⚠ 누르면 바로 최근 대화방으로. 뒤로 가면 방 목록(관리 화면)으로 갑니다.
+    //   최근 방이 없으면(방을 아직 안 만드셨으면) 관리 화면으로 보냅니다.
+    card.href = it.recentRoomId
+      ? ('aliascall_hotline_room.html?hotline=' + encodeURIComponent(it.recentRoomId) + '&from=lines')
+      : 'aliascall_hotline_manage.html';
 
-    const dot = document.createElement('span');
-    // 최근 3일 안에 들어간 방만 불을 켭니다(오래된 것과 눈으로 구분되게).
-    const fresh = it.lastVisitedAt && (Date.now() - new Date(it.lastVisitedAt).getTime()) < 3 * 86400000;
-    dot.className = 'dot' + (fresh ? '' : ' off');
-    a.appendChild(dot);
+    const h = document.createElement('span');
+    h.className = 'lc-h';
+    const nm = document.createElement('span');
+    nm.className = 'lc-n';
+    nm.textContent = it.name;
+    h.appendChild(nm);
+    if (it.kind === 'sub') {
+      const b = document.createElement('span');
+      const ratio = it.limit > 0 ? Math.round(it.active / it.limit * 100) : 0;
+      b.className = 'lc-b' + (ratio >= 100 ? ' danger' : ratio >= 80 ? ' warn' : '');
+      b.textContent = t.subActive + ' ' + it.active + '/' + it.limit;
+      h.appendChild(b);
+    }
+    card.appendChild(h);
 
-    const info = document.createElement('span');
-    info.className = 'li-info';
-    const n = document.createElement('span');
-    n.className = 'li-n';
-    n.textContent = it.title || '—';
-    const sub = document.createElement('span');
-    sub.className = 'li-s';
-    sub.textContent = relDay(it.lastVisitedAt);
-    info.appendChild(n); info.appendChild(sub);
-    a.appendChild(info);
+    const meta = document.createElement('span');
+    meta.className = 'lc-m';
+    meta.textContent = it.planName + ' · ' + t.subExpires + ' '
+                     + new Date(it.expiresAt).toLocaleDateString(locale);
+    card.appendChild(meta);
 
-    const role = document.createElement('span');
-    role.className = 'role ' + (it.isOwner ? 'own' : 'mem');
-    role.textContent = it.isOwner ? T().roleOwner : T().roleMember;
-    a.appendChild(role);
+    // 가장 최근 톡
+    const last = document.createElement('span');
+    last.className = 'lc-last';
+    if (it.lastAt) {
+      last.textContent = '💬 ' + (it.recentLabel ? (it.recentLabel + ' · ') : '') + relDay(it.lastAt);
+    } else {
+      last.textContent = t.lineNoTalk;
+      last.classList.add('none');
+    }
+    card.appendChild(last);
 
-    box.appendChild(a);
+    box.appendChild(card);
   });
 }
 
@@ -1175,6 +1309,7 @@ const I18N = {
     msgSub: '번호 없이, 우리끼리만 아는 회선을 엽니다. 저희 서버도 못 보는 잠금까지.',
     msgPt1: '연인 · 가족', msgPt2: '업무 · 비서', msgPt3: '고객 관리',
     alertsStrip: '확인해야 할 알림이 있습니다',
+    lineNoTalk: '아직 대화가 없습니다',
     mySubs: '📁 내 구독 관리',
     subManage: '방 관리',
     subDigest: '📖 대화 모아보기',
@@ -1186,6 +1321,9 @@ const I18N = {
     myLinesAll: '전체 보기 ›',
     myLinesEmpty: '아직 이용 중인 회선이 없습니다.<br>상품을 고르시면 바로 시작하실 수 있어요.',
     roleOwner: '개설자', roleMember: '참여 중',
+    backHomeAria: '첫 화면으로',
+    secMsgSub: '번호 없이, 우리끼리만 아는 회선',
+    myPage: 'My Page',
     backHome: '‹ 홈',
     relToday: '오늘', relYesterday: '어제',
     pLove: '우리끼리 회선', pLoveSub: '정말 친한 연인 · 친구 · 가족만 남 모르게 쓰는 보안회선',
@@ -1269,6 +1407,7 @@ const I18N = {
     msgSub: 'Open a line only you and your people know — no phone numbers. Lockable so even we cannot read it.',
     msgPt1: 'Partner · family', msgPt2: 'Work · assistant', msgPt3: 'Client care',
     alertsStrip: 'You have alerts to check',
+    lineNoTalk: 'No conversation yet',
     mySubs: '📁 My subscriptions',
     subManage: 'Manage rooms',
     subDigest: '📖 Conversation digest',
@@ -1280,6 +1419,9 @@ const I18N = {
     myLinesAll: 'See all ›',
     myLinesEmpty: 'No lines yet.<br>Pick a plan to get started.',
     roleOwner: 'Host', roleMember: 'Joined',
+    backHomeAria: 'Back to start',
+    secMsgSub: 'A line only you and your people know — no phone numbers',
+    myPage: 'My Page',
     backHome: '‹ Home',
     relToday: 'today', relYesterday: 'yesterday',
     pLove: 'Our own line', pLoveSub: 'A private line only your closest people know',
@@ -1469,6 +1611,10 @@ function renderLoginStatus(){
   }
   renderNotifySettings(sb, 'notifySettingsContainer'); // 2026-08-19 (2차): 통합 알림설정 렌더링
   renderMySubs(); // 2026-08-27: 로그인 확인 후 구독 카드
+  // ⚠ 로그인 확인 전에는 서버 방을 못 읽습니다. 확인이 끝나면 다시 그립니다.
+  myLinesCache = null;
+  renderMyLines('myLinesHome', 3);
+  renderMyLines('myLinesFull');
   applyLang(currentLang);
 })();
 </script>

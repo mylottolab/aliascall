@@ -316,6 +316,32 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
   font-size:11.5px; color:var(--ink-soft); text-align:center;
   margin-top:7px; line-height:1.6;
 }
+
+/* 2026-08-28 신설: 통합 마이페이지 구역 제목 */
+.svc-head{
+  font-size:14px; font-weight:700; margin:26px 0 12px;
+  padding-left:11px; border-left:5px solid var(--line);
+  font-family:'Space Grotesk',sans-serif;
+}
+.svc-head.emg{ border-left-color:var(--coral); color:#B4552E; }
+.svc-head.msg{ border-left-color:var(--teal); color:var(--teal-deep); }
+
+/* 보안회선 카드 */
+.mline{ background:var(--card); border:1.5px solid var(--line); border-radius:13px; padding:14px; margin-bottom:9px; }
+.mline-h{ display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.mline-n{ flex:1; font-size:14px; font-weight:700; }
+.mline-b{ font-size:10px; font-weight:700; background:var(--teal-tint); color:var(--teal-deep); border-radius:20px; padding:3px 8px; white-space:nowrap; }
+.mline-b.warn{ background:#FDF0D5; color:#8A6A1F; }
+.mline-b.danger{ background:#FCE9E6; color:var(--danger); }
+.mline-m{ font-size:11px; color:var(--ink-soft); margin-bottom:5px; }
+.mline-last{ font-size:12px; color:var(--teal-deep); margin-bottom:11px; }
+.mline-last.none{ color:var(--ink-soft); }
+.mline-btns{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.mline-btns a{ padding:10px 6px; border-radius:10px; font-size:12px; font-weight:700; text-align:center; text-decoration:none; }
+.mline-btns a.main{ background:var(--teal-deep); color:#fff; }
+.mline-btns a.sub{ background:var(--teal-tint); color:var(--teal-deep); }
+.mline-empty{ background:var(--teal-tint); border-radius:12px; padding:16px; text-align:center; font-size:12.5px; color:var(--ink-soft); line-height:1.7; }
+.mline-empty a{ display:inline-block; margin-top:8px; color:var(--teal-deep); font-weight:700; text-decoration:underline; }
 </style>
 </head>
 <body>
@@ -440,6 +466,10 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
       <div class="info-row"><span class="label" data-i18n="joinedLabel">가입일</span><span class="value" id="joinedVal">-</span></div>
     </div>
 
+    <!-- ⚠ 2026-08-28: 두 서비스를 한 페이지에서 보므로 구역을 나눕니다.
+         "내 계정"은 둘 다에 해당하므로 맨 위에 그대로 둡니다. -->
+    <div class="svc-head emg" data-i18n="svcEmergency">📍 Alias Emergency Call 이용현황</div>
+
     <div class="card sub-card">
       <div class="sub-top">
         <span class="sub-title" data-i18n="subscriptionTitle">수신서비스 구독</span>
@@ -457,6 +487,10 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
     <div class="section-title" data-i18n="myRegistrationsTitle">내 등록물</div>
     <div id="myRegistrations"></div>
+
+    <!-- ⚠ 2026-08-28 신설: Messenger(보안회선) 이용현황 -->
+    <div class="svc-head msg" data-i18n="svcMessenger">💬 Alias The Next-Gen Messenger 이용현황</div>
+    <div id="myLinesBox"></div>
 
     <div class="danger-card">
       <h2 data-i18n="withdrawTitle">회원 탈퇴</h2>
@@ -694,6 +728,13 @@ const I18N = {
     alertWithdrawError: '탈퇴 처리 중 오류가 발생했어요: ',
     deleteConfirmMismatch: '"{word}"를 정확히 입력해주세요.',
     loginNeeded: '로그인이 필요합니다. 등록화면에서 닉네임+비밀번호로 먼저 로그인해주세요.',
+    svcEmergency: '📍 Alias Emergency Call 이용현황',
+    svcMessenger: '💬 Alias The Next-Gen Messenger 이용현황',
+    lineNone: '이용 중인 보안회선이 없습니다.',
+    lineGoBuy: '회선 둘러보기 ›',
+    lineActive: '활성', lineExpires: '만료',
+    lineManage: '방 관리', lineDigest: '📖 대화 모아보기',
+    lineNoTalk: '아직 대화가 없습니다',
     pageTitle: '내 계정', nicknameLabel: '닉네임', pointsLabel: '보유 포인트', joinedLabel: '가입일',
     logoutBtn: '로그아웃', logoutConfirm: '로그아웃 하시겠어요?',
     myRegistrationsTitle: '내 등록물',
@@ -818,6 +859,13 @@ const I18N = {
     alertWithdrawError: 'Something went wrong while deleting your account: ',
     deleteConfirmMismatch: 'Please type "{word}" exactly.',
     loginNeeded: 'Please log in. Log in with your nickname + password on the registration screen first.',
+    svcEmergency: '📍 Alias Emergency Call — your usage',
+    svcMessenger: '💬 Alias The Next-Gen Messenger — your usage',
+    lineNone: 'No secure lines in use.',
+    lineGoBuy: 'Browse plans ›',
+    lineActive: 'Active', lineExpires: 'Expires',
+    lineManage: 'Manage rooms', lineDigest: '📖 Conversation digest',
+    lineNoTalk: 'No conversation yet',
     pageTitle: 'My Account', nicknameLabel: 'Nickname', pointsLabel: 'Points balance', joinedLabel: 'Joined',
     logoutBtn: 'Log out', logoutConfirm: 'Are you sure you want to log out?',
     myRegistrationsTitle: 'My Registrations',
@@ -1133,7 +1181,141 @@ function hideAllGates(){
   document.getElementById('accountContent').style.display = 'none';
 }
 
+
+// =====================================================================
+// 2026-08-28 신설: 통합 마이페이지 — 보안회선(Messenger) 이용현황
+//
+//   ⚠ 예전에는 Emergency Call 내용만 있었습니다.
+//     회선을 사고 나서 "내가 뭘 쓰고 있지?"를 한 곳에서 볼 데가 없었습니다.
+//
+//   ⚠ 홈의 "내 회선"과 같은 규칙입니다.
+//     구독 1개 = 카드 1개. 방을 하나하나 늘어놓지 않습니다.
+// =====================================================================
+const MYPAGE_TIER_NAME = {
+  ko: {
+    pro_starter:'프로 스타터', pro_business:'프로 비즈니스', pro_enterprise:'프로 엔터프라이즈',
+    hotline_1to1:'핫라인', hotline_everybody:'에브리바디', economy_4:'이코노미', premium_4:'프리미엄',
+    hotline_1to1_secure:'핫라인 Secure', hotline_everybody_secure:'에브리바디 Secure',
+    economy_4_secure:'이코노미 Secure', premium_4_secure:'프리미엄 Secure',
+  },
+  en: {
+    pro_starter:'Pro Starter', pro_business:'Pro Business', pro_enterprise:'Pro Enterprise',
+    hotline_1to1:'Hotline', hotline_everybody:'Everybody', economy_4:'Economy', premium_4:'Premium',
+    hotline_1to1_secure:'Hotline Secure', hotline_everybody_secure:'Everybody Secure',
+    economy_4_secure:'Economy Secure', premium_4_secure:'Premium Secure',
+  },
+};
+
+async function renderMyLinesOnMyPage(session){
+  const box = document.getElementById('myLinesBox');
+  if (!box || !session) return;
+  const t = I18N[currentLang];
+  const locale = (currentLang === 'en') ? 'en-US' : 'ko-KR';
+  const nameOf = (tier) => (MYPAGE_TIER_NAME[currentLang] || MYPAGE_TIER_NAME.ko)[tier] || tier;
+
+  let subs = [], rooms = [];
+  try {
+    const r1 = await sb.rpc('my_subscriptions_summary');
+    subs = r1.data || [];
+  } catch (e) { /* 구독이 없어도 아래 8종은 보여줍니다 */ }
+  try {
+    const r2 = await sb.from('hotlines')
+      .select('id, client_label, title, tier, subscription_id, last_activity_at, archived_at, expires_at, status')
+      .eq('owner_user_id', session.user.id)
+      .order('last_activity_at', { ascending: false })
+      .limit(200);
+    rooms = (r2.data || []).filter((r) =>
+      !r.archived_at && r.status === 'active' && new Date(r.expires_at) > new Date());
+  } catch (e) { console.warn('[mypage] 회선 조회 실패', e); }
+
+  const cards = [];
+  subs.forEach((sub) => {
+    const mine = rooms.filter((r) => r.subscription_id === sub.id);
+    const recent = mine[0] || null;
+    cards.push({
+      isSub: true, id: sub.id,
+      name: sub.display_name || sub.business_name || nameOf(sub.tier),
+      plan: nameOf(sub.tier), expiresAt: sub.expires_at,
+      active: sub.active_rooms || 0, limit: (sub.max_rooms || 0) + (sub.extra_rooms || 0),
+      recentId: recent ? recent.id : null,
+      recentLabel: recent ? (recent.client_label || recent.title || '') : '',
+      lastAt: recent ? recent.last_activity_at : null,
+    });
+  });
+  rooms.filter((r) => !r.subscription_id).forEach((r) => {
+    cards.push({
+      isSub: false, id: r.id,
+      name: r.title || r.client_label || nameOf(r.tier),
+      plan: nameOf(r.tier), expiresAt: r.expires_at,
+      recentId: r.id, recentLabel: '', lastAt: r.last_activity_at,
+    });
+  });
+  cards.sort((a, b) => new Date(b.lastAt || 0) - new Date(a.lastAt || 0));
+
+  box.innerHTML = '';
+  if (cards.length === 0) {
+    box.innerHTML = '<div class="mline-empty">' + t.lineNone +
+      '<br><a href="index.html#msg">' + t.lineGoBuy + '</a></div>';
+    return;
+  }
+
+  cards.forEach((c) => {
+    const el = document.createElement('div');
+    el.className = 'mline';
+
+    const h = document.createElement('div');
+    h.className = 'mline-h';
+    const nm = document.createElement('span');
+    nm.className = 'mline-n';
+    nm.textContent = c.name;
+    h.appendChild(nm);
+    if (c.isSub) {
+      const b = document.createElement('span');
+      const ratio = c.limit > 0 ? Math.round(c.active / c.limit * 100) : 0;
+      b.className = 'mline-b' + (ratio >= 100 ? ' danger' : ratio >= 80 ? ' warn' : '');
+      b.textContent = t.lineActive + ' ' + c.active + '/' + c.limit;
+      h.appendChild(b);
+    }
+    el.appendChild(h);
+
+    const m = document.createElement('div');
+    m.className = 'mline-m';
+    m.textContent = c.plan + ' · ' + t.lineExpires + ' ' + new Date(c.expiresAt).toLocaleDateString(locale);
+    el.appendChild(m);
+
+    const last = document.createElement('div');
+    last.className = 'mline-last' + (c.lastAt ? '' : ' none');
+    last.textContent = c.lastAt
+      ? ('💬 ' + (c.recentLabel ? c.recentLabel + ' · ' : '') + new Date(c.lastAt).toLocaleDateString(locale))
+      : t.lineNoTalk;
+    el.appendChild(last);
+
+    const btns = document.createElement('div');
+    btns.className = 'mline-btns';
+    const a1 = document.createElement('a');
+    a1.className = 'main';
+    // ⚠ 홈의 "내 회선"과 같은 규칙: 누르면 최근 대화방, 뒤로 가면 방 목록.
+    a1.href = c.recentId
+      ? ('aliascall_hotline_room.html?hotline=' + encodeURIComponent(c.recentId) + '&from=lines')
+      : 'aliascall_hotline_manage.html';
+    a1.textContent = t.lineManage;
+    btns.appendChild(a1);
+    if (c.isSub) {
+      const a2 = document.createElement('a');
+      a2.className = 'sub';
+      a2.href = 'aliascall_hotline_digest.html?sub=' + encodeURIComponent(c.id);
+      a2.textContent = t.lineDigest;
+      btns.appendChild(a2);
+    } else {
+      btns.style.gridTemplateColumns = '1fr';
+    }
+    el.appendChild(btns);
+    box.appendChild(el);
+  });
+}
+
 async function showMyPage(session){
+  renderMyLinesOnMyPage(session); // 2026-08-28: 보안회선 이용현황
   hideAllGates();
   document.getElementById('accountContent').style.display = 'block';
 
