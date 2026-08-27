@@ -263,6 +263,21 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 /* 내 회선 */
 
 
+
+/* 2026-08-28 신설: 순환 배너 */
+.banner-box{ margin:18px 0 6px; }
+.banner-head{ display:flex; align-items:center; margin:0 2px 9px; }
+.banner-head .bh-t{ flex:1; font-size:12px; font-weight:700; color:#E8A98A; }
+.banner-head a{ font-size:10.5px; color:#9FBDB9; text-decoration:none; }
+/* ⚠ 좌우로 밀어 보는 띠입니다. 모바일에서 스크롤바가 안 보이므로
+   마지막 칸을 살짝 걸치게 두어 "더 있다"는 것을 눈으로 알립니다. */
+.banner-strip{ display:flex; gap:9px; overflow-x:auto; padding-bottom:4px; scroll-snap-type:x mandatory; }
+.banner-strip::-webkit-scrollbar{ height:4px; }
+.banner-strip::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.25); border-radius:4px; }
+.bn{ flex:0 0 auto; width:150px; background:#fff; color:var(--ink); border-radius:12px; padding:12px; text-decoration:none; scroll-snap-align:start; }
+.bn-c{ font-size:9.5px; font-weight:700; background:var(--coral-tint); color:#B4552E; border-radius:20px; padding:2px 8px; display:inline-block; }
+.bn-n{ font-size:13px; font-weight:700; margin-top:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bn-r{ font-size:10.5px; color:var(--ink-soft); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 /* 2026-08-28 신설: 내 회선 = 회선망 카드 */
 .linecard{ display:block; background:#fff; color:var(--ink); border-radius:13px; padding:13px 14px; margin-bottom:8px; text-decoration:none; }
 .lc-h{ display:flex; align-items:center; gap:8px; margin-bottom:4px; }
@@ -384,6 +399,19 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
       <a href="#" onclick="showView('msg'); return false;" data-i18n="myLinesAll">전체 보기 ›</a>
     </div>
     <div id="myLinesHome"></div>
+  </div>
+
+  <!-- ⚠ 2026-08-28 신설: 순환 배너.
+       따로 파는 광고가 아니라 "광고형 프로 비즈니스"에 포함된 혜택입니다.
+       별도로 팔면 상품이 둘이 되고, 돈 낸 사람보다 배너가 더 잘 보이는
+       모순이 생깁니다.
+       ⚠ 등록 업체가 없으면 아예 나타나지 않습니다. -->
+  <div class="banner-box" id="bannerBox" style="display:none;">
+    <div class="banner-head">
+      <span class="bh-t" data-i18n="bannerTitle">📣 이런 곳도 있어요</span>
+      <a href="aliascall_directory.html" data-i18n="bannerAll">전체 보기 ›</a>
+    </div>
+    <div class="banner-strip" id="bannerStrip"></div>
   </div>
 </div>
 
@@ -1011,6 +1039,57 @@ const PRO_TIER_NAME = {
   en: { pro_starter:'Pro Starter', pro_business:'Pro Business', pro_enterprise:'Pro Enterprise' },
 };
 
+
+// =====================================================================
+// 2026-08-28 신설: 순환 배너
+//
+// ⚠ 따로 파는 광고 자리가 아닙니다.
+//   "광고형 프로 비즈니스"에 포함된 혜택입니다.
+//   별도로 팔면 상품이 둘이 되고, 돈 낸 사람보다 배너가 더 잘 보이는
+//   모순이 생깁니다.
+//
+// ⚠ 순서는 서버가 매번 섞습니다(order by random()).
+//   고정 순서면 먼저 가입한 곳이 늘 위에 와서 불공평합니다.
+//
+// ⚠ 등록 업체가 없으면 아예 나타나지 않습니다. 빈 띠는 안 보이는 게 낫습니다.
+// =====================================================================
+async function renderBanner(){
+  const box = document.getElementById('bannerBox');
+  const strip = document.getElementById('bannerStrip');
+  if (!box || !strip) return;
+
+  let rows = [];
+  try {
+    const { data, error } = await sb.rpc('list_banner_businesses', { p_limit: 8 });
+    if (error) throw error;
+    rows = data || [];
+  } catch (e) {
+    console.warn('[banner] 불러오기 실패', e);
+    return;   // 조용히 넘어갑니다. 배너가 없다고 홈이 망가지면 안 됩니다.
+  }
+  if (rows.length === 0) return;
+
+  strip.innerHTML = '';
+  rows.forEach((r) => {
+    const a = document.createElement('a');
+    a.className = 'bn';
+    // ⚠ 상호가 한글이라 반드시 부호화합니다.
+    a.href = 'aliascall_business.html?b=' + encodeURIComponent(r.slug || '');
+    const c = document.createElement('span');
+    c.className = 'bn-c'; c.textContent = r.category_label || '';
+    const n = document.createElement('div');
+    n.className = 'bn-n'; n.textContent = r.business_name || '';
+    a.appendChild(c); a.appendChild(n);
+    if (r.region) {
+      const rg = document.createElement('div');
+      rg.className = 'bn-r'; rg.textContent = '📍 ' + r.region;
+      a.appendChild(rg);
+    }
+    strip.appendChild(a);
+  });
+  box.style.display = 'block';
+}
+
 async function renderMySubs(){
   const box = document.getElementById('mySubsBox');
   if (!box) return;
@@ -1310,6 +1389,8 @@ const I18N = {
     msgPt1: '연인 · 가족', msgPt2: '업무 · 비서', msgPt3: '고객 관리',
     alertsStrip: '확인해야 할 알림이 있습니다',
     lineNoTalk: '아직 대화가 없습니다',
+    bannerTitle: '📣 이런 곳도 있어요',
+    bannerAll: '전체 보기 ›',
     mySubs: '📁 내 구독 관리',
     subManage: '방 관리',
     subDigest: '📖 대화 모아보기',
@@ -1409,6 +1490,8 @@ const I18N = {
     msgPt1: 'Partner · family', msgPt2: 'Work · assistant', msgPt3: 'Client care',
     alertsStrip: 'You have alerts to check',
     lineNoTalk: 'No conversation yet',
+    bannerTitle: '📣 Places you can reach',
+    bannerAll: 'See all ›',
     mySubs: '📁 My subscriptions',
     subManage: 'Manage rooms',
     subDigest: '📖 Conversation digest',
@@ -1600,6 +1683,7 @@ function renderLoginStatus(){
   const start = (h === 'emg' || h === 'msg') ? h : 'home';
   showView(start, true);
   renderMyLines('myLinesHome', 3);  // 홈에는 최근 3개만
+  renderBanner();                    // 2026-08-28: 순환 배너
 })();
 
 (async function checkLogin(){
