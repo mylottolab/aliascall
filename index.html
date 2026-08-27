@@ -202,6 +202,77 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 /* 2026-08-23 신설: 통신판매업자 기본 표시사항 */
 .biz-info{ margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,.1); font-size:10px; color:rgba(255,255,255,.35); line-height:1.8; }
 .biz-info a{ color:rgba(255,255,255,.45); text-decoration:underline; }
+
+/* ═══════════════════════════════════════════════════
+   2026-08-27 신설: 홈을 세 화면으로 나눔
+   ⚠ 별도 페이지가 아니라 한 파일 안에서 전환합니다.
+     연결요청 배너·푸시·실시간 수신이 이 파일에 들어 있어,
+     페이지를 나누면 그 화면에 있는 동안 연결 요청을 못 받습니다.
+   ═══════════════════════════════════════════════════ */
+.view{ display:none; }
+.view.show{ display:block; }
+
+/* 뒤로가기 줄 */
+.view-back{ display:flex; align-items:center; gap:8px; padding:4px 2px 12px; }
+.view-back button{ background:none; border:none; color:#9FBDB9; font-size:13px; cursor:pointer; font-family:inherit; padding:6px 2px; }
+.view-back .vt{ font-size:14px; font-weight:700; font-family:'Space Grotesk',sans-serif; }
+
+/* 카테고리 상자 — 두 서비스를 눈으로 확실히 가름 */
+.cat{ border-radius:20px; padding:14px; margin-bottom:16px; border:2px solid transparent; }
+.cat.emg{ background:rgba(232,115,74,.10); border-color:rgba(232,115,74,.45); }
+.cat.msg{ background:rgba(72,178,170,.20); border-color:rgba(96,204,196,.75); }
+.cat-label{ display:flex; align-items:center; gap:7px; padding:2px 4px 11px; font-size:11.5px; font-weight:700; letter-spacing:.03em; }
+.cat.emg .cat-label{ color:#F0A98A; }
+.cat.msg .cat-label{ color:#9BE0D8; }
+.cat-label .bar{ flex:1; height:1px; }
+.cat.emg .cat-label .bar{ background:rgba(232,115,74,.35); }
+.cat.msg .cat-label .bar{ background:rgba(155,224,216,.4); }
+
+.entry{ background:#fff; color:var(--ink); border-radius:16px; padding:18px; text-decoration:none; display:block; position:relative; cursor:pointer; width:100%; text-align:left; border:none; font-family:inherit; }
+.entry .arrow{ position:absolute; right:16px; top:18px; font-size:17px; color:var(--teal); }
+.entry .e-ico{ font-size:26px; }
+.entry h2{ font-size:19px; margin:6px 0 0; font-family:'Space Grotesk',sans-serif; }
+.entry .e-sub{ font-size:12.5px; color:var(--ink-soft); line-height:1.65; margin-top:6px; }
+.entry .pts{ margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; }
+.entry .pt{ font-size:10.5px; background:var(--teal-tint); color:var(--teal-deep); border-radius:20px; padding:4px 10px; }
+.cat.emg .entry .pt{ background:var(--coral-tint); color:#B4552E; }
+
+/* 알림 띠 */
+.alerts-strip{ display:none; align-items:center; gap:10px; background:var(--coral); border-radius:12px; padding:12px 14px; margin-top:10px; text-decoration:none; color:#fff; }
+.alerts-strip.show{ display:flex; }
+.alerts-strip .n{ background:#fff; color:var(--coral); font-size:12px; font-weight:700; border-radius:20px; padding:2px 9px; }
+.alerts-strip .t{ flex:1; font-size:12.5px; font-weight:700; }
+
+/* 내 회선 */
+.mine-head{ display:flex; align-items:center; margin:12px 2px 8px; }
+.mine-head .t{ font-size:12px; font-weight:700; color:#9BE0D8; flex:1; }
+.mine-head a{ font-size:10.5px; color:#9FBDB9; text-decoration:none; }
+.line-item{ display:flex; align-items:center; gap:10px; background:#fff; color:var(--ink); border-radius:11px; padding:11px 12px; margin-bottom:7px; text-decoration:none; }
+.line-item .dot{ width:8px; height:8px; border-radius:50%; background:var(--found,#2E7D4F); flex-shrink:0; }
+.line-item .dot.off{ background:var(--line); }
+.line-item .li-info{ flex:1; min-width:0; }
+.line-item .li-n{ font-size:13px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.line-item .li-s{ font-size:10.5px; color:var(--ink-soft); margin-top:2px; }
+.line-item .role{ font-size:9.5px; border-radius:20px; padding:3px 8px; flex-shrink:0; }
+.role.own{ background:var(--teal-tint); color:var(--teal-deep); }
+.role.mem{ background:#F3F0E4; color:#8A6A1F; }
+.mine-empty{ background:rgba(0,0,0,.18); border-radius:11px; padding:14px; font-size:11.5px; color:#9FBDB9; line-height:1.7; text-align:center; }
+
+/* Messenger 안의 상품 카드 4개 */
+.prod{ background:#fff; color:var(--ink); border-radius:16px; padding:16px; margin-bottom:11px; }
+.prod .p-ico{ font-size:20px; }
+.prod .p-t{ font-size:15.5px; font-weight:700; margin-top:5px; font-family:'Space Grotesk',sans-serif; }
+.prod .p-t small{ display:block; font-size:11.5px; font-weight:400; color:var(--ink-soft); margin-top:3px; line-height:1.5; }
+.prod .p-d{ font-size:11.5px; color:var(--ink-soft); line-height:1.65; margin-top:7px; }
+.prod .p-who{ font-size:10.5px; color:var(--teal); margin-top:7px; }
+.prod .p-p{ font-size:12.5px; font-weight:700; color:var(--teal-deep); margin-top:9px; }
+.prod .p-btns{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.prod .p-btns a{ padding:11px 6px; border-radius:10px; font-size:12px; font-weight:700; text-align:center; text-decoration:none; }
+.p-wiz{ background:var(--teal-deep); color:#fff; }
+.p-all{ background:var(--teal-tint); color:var(--teal-deep); }
+.prod.biz{ border-left:5px solid var(--brass); }
+.prod.ad{ border-left:5px solid var(--coral); }
+
 </style>
 </head>
 <body>
@@ -217,6 +288,59 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 </div>
 
 <!-- 2026-08-21 신설: 전체 화면 3구역 구분 헤더 (기존 서비스 / 핫라인 신규 / 연락상황) -->
+
+<!-- ═══ 2026-08-27 신설: 홈 화면 (두 갈래) ═══ -->
+<div class="view show" id="viewHome">
+  <div class="cat emg">
+    <div class="cat-label"><span data-i18n="catEmg">📍 안심 비상연락</span><span class="bar"></span></div>
+    <button type="button" class="entry" onclick="showView('emg')">
+      <span class="arrow">›</span>
+      <div class="e-ico">🎈</div>
+      <h2 data-i18n="emgTitle">Emergency Call</h2>
+      <div class="e-sub" data-i18n="emgSub">잃어버린 물건, 반려동물, 비상 상황. 번호를 노출하지 않고 연락받습니다.</div>
+      <div class="pts">
+        <span class="pt" data-i18n="emgPt1">등록물 QR</span>
+        <span class="pt" data-i18n="emgPt2">찾습니다 게시판</span>
+        <span class="pt" data-i18n="emgPt3">수신 대기</span>
+      </div>
+    </button>
+    <!-- ⚠ 확인할 알림이 있을 때만 뜹니다(JS가 켭니다). 급한 것을 첫 화면에서 놓치지 않게. -->
+    <a class="alerts-strip" id="alertsStrip" href="#" onclick="showView('emg'); return false;">
+      <span class="n" id="alertsCount">0</span>
+      <span class="t" data-i18n="alertsStrip">확인해야 할 알림이 있습니다</span>
+      <span>›</span>
+    </a>
+  </div>
+
+  <div class="cat msg">
+    <div class="cat-label"><span data-i18n="catMsg">🔒 안심 보안회선</span><span class="bar"></span></div>
+    <button type="button" class="entry" onclick="showView('msg')">
+      <span class="arrow">›</span>
+      <div class="e-ico">💬</div>
+      <h2 data-i18n="msgTitle">Messenger</h2>
+      <div class="e-sub" data-i18n="msgSub">번호 없이, 우리끼리만 아는 회선을 엽니다. 저희 서버도 못 보는 잠금까지.</div>
+      <div class="pts">
+        <span class="pt" data-i18n="msgPt1">연인 · 가족</span>
+        <span class="pt" data-i18n="msgPt2">업무 · 비서</span>
+        <span class="pt" data-i18n="msgPt3">고객 관리</span>
+      </div>
+    </button>
+
+    <div class="mine-head">
+      <span class="t" data-i18n="myLines">내 회선</span>
+      <a href="#" onclick="showView('msg'); return false;" data-i18n="myLinesAll">전체 보기 ›</a>
+    </div>
+    <div id="myLinesHome"></div>
+  </div>
+</div>
+
+<!-- ═══ Emergency 화면 ═══ -->
+<div class="view" id="viewEmg">
+  <div class="view-back">
+    <button type="button" onclick="showView('home')" data-i18n="backHome">‹ 홈</button>
+    <span class="vt" data-i18n="emgTitle">Emergency Call</span>
+  </div>
+
 <div class="section-header emergency">
   <div class="section-header-title">🚨 Alias Emergency Call</div>
   <div class="section-header-sub" data-i18n="secEmergencySub">양방향 모두 번호노출 없는 비상연락 안심수단</div>
@@ -256,6 +380,74 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   </a>
 </div>
 
+</div><!-- /viewEmg -->
+
+<!-- ═══ Messenger 화면 ═══ -->
+<div class="view" id="viewMsg">
+  <div class="view-back">
+    <button type="button" onclick="showView('home')" data-i18n="backHome">‹ 홈</button>
+    <span class="vt" data-i18n="msgTitle">Messenger</span>
+  </div>
+
+  <div class="mine-head">
+    <span class="t" data-i18n="myLines">내 회선</span>
+  </div>
+  <div id="myLinesFull" style="margin-bottom:18px;"></div>
+
+  <!-- 상품 네 갈래 -->
+  <div class="prod">
+    <div class="p-ico">💚</div>
+    <div class="p-t"><span data-i18n="pLove">우리끼리 회선</span><small data-i18n="pLoveSub">정말 친한 연인 · 친구 · 가족만 남 모르게 쓰는 보안회선</small></div>
+    <div class="p-d" data-i18n="pLoveDesc">누구나 아는 메신저 말고, 둘 또는 몇 명만 아는 회선을 엽니다.</div>
+    <div class="p-who" data-i18n="pLoveWho">연인 · 가족 · 친구 · 소모임</div>
+    <div class="p-p" data-i18n="priceFrom1">3개월 3,900원부터</div>
+    <div class="p-btns">
+      <a class="p-wiz" href="aliascall_hotline_purchase.html?cat=love&amp;guide=1" data-i18n="btnWizard">내게 맞는 상품은?</a>
+      <a class="p-all" href="aliascall_hotline_purchase.html?cat=love" data-i18n="btnAll">관련 전체 상품보기</a>
+    </div>
+  </div>
+
+  <div class="prod">
+    <div class="p-ico">🗂️</div>
+    <div class="p-t"><span data-i18n="pWork">일상 업무용 회선</span><small data-i18n="pWorkSub">보안 유지 · 비서 업무 · 그 밖의 업무 수행</small></div>
+    <div class="p-d" data-i18n="pWorkDesc">강화된 보안부터 최강 보안(E2EE)까지. 기존 통신망의 제약에서 벗어난 효율적인 업무망입니다.</div>
+    <div class="p-who" data-i18n="pWorkWho">임원 · 중역 · 간부 · 비서 · 중요업무 종사자 · 사생활 보호를 원하는 분</div>
+    <div class="p-p" data-i18n="priceFrom1">3개월 3,900원부터</div>
+    <div class="p-btns">
+      <a class="p-wiz" href="aliascall_hotline_purchase.html?cat=work&amp;guide=1" data-i18n="btnWizard">내게 맞는 상품은?</a>
+      <a class="p-all" href="aliascall_hotline_purchase.html?cat=work" data-i18n="btnAll">관련 전체 상품보기</a>
+    </div>
+  </div>
+
+  <div class="prod biz">
+    <div class="p-ico">💼</div>
+    <div class="p-t"><span data-i18n="pPro">프로 비즈니스</span><small data-i18n="pProSub">고객 · 의뢰인 · 환자를 한 계정으로 관리</small></div>
+    <div class="p-d" data-i18n="pProDesc">고객마다 방을 따로 열어, 번호를 주고받지 않고 계속 이어갑니다.</div>
+    <div class="p-who" data-i18n="pProWho">변호사 · 세무사 · 회계사 · 병원 · 상점 · 식당 · 부동산 등</div>
+    <div class="p-p" data-i18n="priceFrom2">월 9,900원부터</div>
+    <div class="p-btns">
+      <a class="p-wiz" href="aliascall_hotline_purchase.html?cat=pro&amp;guide=1" data-i18n="btnWizard">내게 맞는 상품은?</a>
+      <a class="p-all" href="aliascall_hotline_purchase.html?cat=pro" data-i18n="btnAll">관련 전체 상품보기</a>
+    </div>
+  </div>
+
+  <div class="prod ad">
+    <div class="p-ico">📣</div>
+    <div class="p-t"><span data-i18n="pAd">광고형 프로 비즈니스</span><small data-i18n="pAdSub">상호를 공개 목록에 올려 새 고객을 받습니다</small></div>
+    <div class="p-d" data-i18n="pAdDesc">위 프로 비즈니스에 공개 목록 게재를 더한 상품입니다.</div>
+    <div class="p-who" data-i18n="pAdWho">신규 고객이 필요한 전문가 · 상점 등</div>
+    <div class="p-p" data-i18n="priceFrom3">월 9,900원 + 게재료 5,500원부터</div>
+    <div class="p-btns">
+      <a class="p-wiz" href="aliascall_hotline_purchase.html?cat=ad&amp;guide=1" data-i18n="btnWizard">내게 맞는 상품은?</a>
+      <a class="p-all" href="aliascall_hotline_purchase.html?cat=ad" data-i18n="btnAll">관련 전체 상품보기</a>
+    </div>
+  </div>
+</div><!-- /viewMsg -->
+
+<!-- ⚠ 기존 8개 상품 카드는 Messenger 화면의 네 갈래로 대체되었습니다.
+     아래 블록은 화면에 보이지 않게 두되, 지우지는 않았습니다.
+     (링크 주소나 문구를 나중에 참고할 수 있어서) -->
+<div style="display:none;">
 <!-- 2026-08-21 신설: "핫라인"(2부) 소개 — 전화교환대 콘셉트, 상품별 콜사인으로 구분 -->
 <div class="section-header secure">
   <div class="section-header-title">🔒 Alias Secure Call</div>
@@ -341,6 +533,10 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   </div>
 </div>
 
+</div><!-- /옛 상품카드 숨김 -->
+
+<!-- ⚠ 연락 상황·알림 설정·소통함은 Emergency에 속합니다. 그 화면 안으로 넣습니다. -->
+<div class="view" id="viewEmg2">
 <!-- 2026-08-21 신설: 세 번째 구역 헤더 -->
 <div class="section-header status">
   <div class="section-header-title" data-i18n="secStatusTitle">📋 연락 상황 및 설정</div>
@@ -363,6 +559,8 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   </div>
   <div id="caseInboxList"></div>
 </div>
+
+</div><!-- /viewEmg2 -->
 
 <footer>
   <a href="aliascall_guide.html" data-i18n="guideEmergency">ℹ️ 안심비상연락 사용설명서</a><br>
@@ -583,8 +781,14 @@ async function loadCaseInbox(){
 
     if (!data.cases || data.cases.length === 0) {
       listEl.innerHTML = '<div class="case-inbox-empty">' + (showingClosedCases ? T().caseEmptyClosed : T().caseEmptyOpen) + '</div>';
+      updateAlertsStrip(0); // 2026-08-27
       return;
     }
+
+    // 2026-08-27: 진행 중인 소통 건수를 홈 첫 화면의 알림 띠에 반영합니다.
+    //  ⚠ 홈이 두 갈래로 나뉘면서 소통함이 한 단계 안쪽으로 들어갔습니다.
+    //    급한 것을 놓치지 않도록 첫 화면에서 건수만 보여줍니다.
+    if (!showingClosedCases) updateAlertsStrip(data.cases.length);
 
     const alertTitleHtml = !showingClosedCases ? '<div class="case-inbox-alert-title">' + T().caseAlertTitle + '</div>' : '';
     const isFirstLoad = Object.keys(caseInboxSnapshot).length === 0; // 2026-08-21: 첫 로딩 때는 전부 반짝이면 안 되니 구분
@@ -634,6 +838,132 @@ document.getElementById('toggleClosedCasesBtn').addEventListener('click', () => 
   document.getElementById('caseInboxTitle').textContent = showingClosedCases ? T().caseInboxClosed : T().caseInboxOpen;
   loadCaseInbox();
 });
+
+
+// =====================================================================
+// 2026-08-27 신설: 홈 화면 전환 (홈 / Emergency / Messenger)
+//
+// ⚠ 별도 페이지가 아니라 한 파일 안에서 보이는 것만 바꿉니다.
+//   이 파일에 연결요청 배너·푸시·실시간 수신이 들어 있어서,
+//   페이지를 나누면 그 화면에 있는 동안 연결 요청을 못 받습니다.
+//   비상연락 서비스에서 그건 치명적입니다.
+// =====================================================================
+function showView(name, fromHistory){
+  const map = {
+    home: ['viewHome'],
+    emg:  ['viewEmg', 'viewEmg2'],   // Emergency는 두 덩어리(아이콘/설정)로 나뉘어 있음
+    msg:  ['viewMsg'],
+  };
+  Object.keys(map).forEach((k) => {
+    map[k].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('show', k === name);
+    });
+  });
+  window.scrollTo(0, 0);
+
+  // 뒤로가기로 홈에 돌아올 수 있게 (안드로이드 뒤로가기 버튼 포함)
+  if (!fromHistory) {
+    try {
+      if (name === 'home') history.pushState({ view: 'home' }, '', location.pathname);
+      else history.pushState({ view: name }, '', '#' + name);
+    } catch (e) {}
+  }
+  if (name === 'msg') renderMyLines('myLinesFull');
+}
+
+window.addEventListener('popstate', (e) => {
+  showView((e.state && e.state.view) || 'home', true);
+});
+
+// =====================================================================
+// 2026-08-27 신설: 내 회선
+//
+// ⚠ 지금까지 참가자는 방으로 돌아갈 길이 없었습니다.
+//   개설자는 관리 화면에서 [열기]를 누르면 되지만,
+//   참가자는 초대링크를 다시 찾아야 했습니다. 탭을 닫으면 끝이었습니다.
+//   대화방이 들어갈 때마다 이 브라우저에 남겨두고, 여기서 읽어 보여줍니다.
+//
+// ⚠ 서버에 저장하지 않습니다. 참가자는 계정이 없고,
+//   "어느 방에 들어갔는지"는 서버가 모르는 편이 안전합니다.
+// =====================================================================
+const MY_LINES_KEY = 'aliascall_my_lines';
+
+function loadMyLines(){
+  try {
+    const raw = localStorage.getItem(MY_LINES_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch (e) { return []; }
+}
+
+function relDay(iso){
+  if (!iso) return '';
+  const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (d <= 0) return T('relToday');
+  if (d === 1) return T('relYesterday');
+  if (d < 30) return (LANG === 'en') ? (d + ' days ago') : (d + '일 전');
+  const m = Math.floor(d / 30);
+  return (LANG === 'en') ? (m + ' months ago') : (m + '개월 전');
+}
+
+function renderMyLines(containerId, limit){
+  const box = document.getElementById(containerId);
+  if (!box) return;
+  const list = loadMyLines();
+  box.innerHTML = '';
+  if (list.length === 0) {
+    const e = document.createElement('div');
+    e.className = 'mine-empty';
+    e.innerHTML = T('myLinesEmpty');
+    box.appendChild(e);
+    return;
+  }
+  const shown = limit ? list.slice(0, limit) : list;
+  shown.forEach((it) => {
+    const a = document.createElement('a');
+    a.className = 'line-item';
+    // ⚠ 개설자는 ?hotline= 으로, 참가자는 ?t=(초대토큰) 으로 들어갑니다.
+    //   주소를 잘못 만들면 "불러오지 못했어요"가 뜹니다.
+    a.href = it.isOwner
+      ? ('aliascall_hotline_room.html?hotline=' + encodeURIComponent(it.hotlineId))
+      : ('aliascall_hotline_room.html?t=' + encodeURIComponent(it.token || ''));
+
+    const dot = document.createElement('span');
+    // 최근 3일 안에 들어간 방만 불을 켭니다(오래된 것과 눈으로 구분되게).
+    const fresh = it.lastVisitedAt && (Date.now() - new Date(it.lastVisitedAt).getTime()) < 3 * 86400000;
+    dot.className = 'dot' + (fresh ? '' : ' off');
+    a.appendChild(dot);
+
+    const info = document.createElement('span');
+    info.className = 'li-info';
+    const n = document.createElement('span');
+    n.className = 'li-n';
+    n.textContent = it.title || '—';
+    const sub = document.createElement('span');
+    sub.className = 'li-s';
+    sub.textContent = relDay(it.lastVisitedAt);
+    info.appendChild(n); info.appendChild(sub);
+    a.appendChild(info);
+
+    const role = document.createElement('span');
+    role.className = 'role ' + (it.isOwner ? 'own' : 'mem');
+    role.textContent = it.isOwner ? T('roleOwner') : T('roleMember');
+    a.appendChild(role);
+
+    box.appendChild(a);
+  });
+}
+
+// 확인할 알림이 있으면 첫 화면 맨 위에 띄웁니다.
+function updateAlertsStrip(count){
+  const strip = document.getElementById('alertsStrip');
+  if (!strip) return;
+  const n = Number(count) || 0;
+  strip.classList.toggle('show', n > 0);
+  const el = document.getElementById('alertsCount');
+  if (el) el.textContent = String(n);
+}
 
 async function initIncomingWatcher(userId){
   const { data: regs } = await sb.from('registrations').select('id').eq('user_id', userId);
@@ -686,6 +1016,36 @@ async function initIncomingWatcher(userId){
 // ── 언어 전환 (KR/EN) — data-i18n 속성이 붙은 요소의 텍스트를 그대로 교체 ──
 const I18N = {
   ko: {
+    catEmg: '📍 안심 비상연락',
+    catMsg: '🔒 안심 보안회선',
+    emgTitle: 'Emergency Call',
+    emgSub: '잃어버린 물건, 반려동물, 비상 상황. 번호를 노출하지 않고 연락받습니다.',
+    emgPt1: '등록물 QR', emgPt2: '찾습니다 게시판', emgPt3: '수신 대기',
+    msgTitle: 'Messenger',
+    msgSub: '번호 없이, 우리끼리만 아는 회선을 엽니다. 저희 서버도 못 보는 잠금까지.',
+    msgPt1: '연인 · 가족', msgPt2: '업무 · 비서', msgPt3: '고객 관리',
+    alertsStrip: '확인해야 할 알림이 있습니다',
+    myLines: '내 회선',
+    myLinesAll: '전체 보기 ›',
+    myLinesEmpty: '아직 이용 중인 회선이 없습니다.<br>위에서 상품을 고르시면 바로 시작하실 수 있어요.',
+    roleOwner: '개설자', roleMember: '참여 중',
+    backHome: '‹ 홈',
+    relToday: '오늘', relYesterday: '어제',
+    pLove: '우리끼리 회선', pLoveSub: '정말 친한 연인 · 친구 · 가족만 남 모르게 쓰는 보안회선',
+    pLoveDesc: '누구나 아는 메신저 말고, 둘 또는 몇 명만 아는 회선을 엽니다.',
+    pLoveWho: '연인 · 가족 · 친구 · 소모임',
+    pWork: '일상 업무용 회선', pWorkSub: '보안 유지 · 비서 업무 · 그 밖의 업무 수행',
+    pWorkDesc: '강화된 보안부터 최강 보안(E2EE)까지. 기존 통신망의 제약에서 벗어난 효율적인 업무망입니다.',
+    pWorkWho: '임원 · 중역 · 간부 · 비서 · 중요업무 종사자 · 사생활 보호를 원하는 분',
+    pPro: '프로 비즈니스', pProSub: '고객 · 의뢰인 · 환자를 한 계정으로 관리',
+    pProDesc: '고객마다 방을 따로 열어, 번호를 주고받지 않고 계속 이어갑니다.',
+    pProWho: '변호사 · 세무사 · 회계사 · 병원 · 상점 · 식당 · 부동산 등',
+    pAd: '광고형 프로 비즈니스', pAdSub: '상호를 공개 목록에 올려 새 고객을 받습니다',
+    pAdDesc: '위 프로 비즈니스에 공개 목록 게재를 더한 상품입니다.',
+    pAdWho: '신규 고객이 필요한 전문가 · 상점 등',
+    priceFrom1: '3개월 3,900원부터', priceFrom2: '월 9,900원부터',
+    priceFrom3: '월 9,900원 + 게재료 5,500원부터',
+    btnWizard: '내게 맞는 상품은?', btnAll: '관련 전체 상품보기',
     secEmergencySub: '양방향 모두 번호노출 없는 비상연락 안심수단',
     secSecureSub: '통신보안을 강화한 남다른 우리들만의 핫 라인',
     secStatusTitle: '📋 연락 상황 및 설정',
@@ -741,6 +1101,36 @@ const I18N = {
     unmuteBtn: '🔊 소리가 안 들리면 여기를 탭하세요',
   },
   en: {
+    catEmg: '📍 Emergency contact',
+    catMsg: '🔒 Secure lines',
+    emgTitle: 'Emergency Call',
+    emgSub: 'Lost items, pets, emergencies. Get contacted without revealing your number.',
+    emgPt1: 'Item QR', emgPt2: 'Lost & found board', emgPt3: 'Standby',
+    msgTitle: 'Messenger',
+    msgSub: 'Open a line only you and your people know — no phone numbers. Lockable so even we cannot read it.',
+    msgPt1: 'Partner · family', msgPt2: 'Work · assistant', msgPt3: 'Client care',
+    alertsStrip: 'You have alerts to check',
+    myLines: 'My lines',
+    myLinesAll: 'See all ›',
+    myLinesEmpty: 'No lines yet.<br>Pick a plan above to get started.',
+    roleOwner: 'Host', roleMember: 'Joined',
+    backHome: '‹ Home',
+    relToday: 'today', relYesterday: 'yesterday',
+    pLove: 'Our own line', pLoveSub: 'A private line only your closest people know',
+    pLoveDesc: 'Not the messenger everyone uses — a line only two or a few of you know.',
+    pLoveWho: 'Partner · family · friends · small groups',
+    pWork: 'Everyday work line', pWorkSub: 'Confidentiality · assistant work · other duties',
+    pWorkDesc: 'From hardened security to the strongest (E2EE). A work line free of the usual network limits.',
+    pWorkWho: 'Executives · directors · managers · assistants · anyone who needs privacy',
+    pPro: 'Pro Business', pProSub: 'Manage clients, patients and customers from one account',
+    pProDesc: 'Open a separate room for each client and keep it going — no numbers exchanged.',
+    pProWho: 'Lawyers · tax accountants · clinics · shops · restaurants · agencies',
+    pAd: 'Pro Business with listing', pAdSub: 'List your business publicly and receive new customers',
+    pAdDesc: 'Pro Business plus a public directory listing.',
+    pAdWho: 'Professionals and shops seeking new customers',
+    priceFrom1: 'From 3,900 KRW / 3 months', priceFrom2: 'From 9,900 KRW / month',
+    priceFrom3: 'From 9,900 + 5,500 KRW / month',
+    btnWizard: 'Which plan fits me?', btnAll: 'See all plans',
     secEmergencySub: 'Emergency contact that keeps both sides\u2019 numbers private',
     secSecureSub: 'A private hotline of our own, with stronger communication security',
     secStatusTitle: '📋 Activity & Settings',
@@ -888,6 +1278,16 @@ function renderLoginStatus(){
     el.innerHTML = t.loginPrompt + '<a href="aliascall_registration_mockup.html">' + t.loginPromptLink + '</a>';
   }
 }
+
+// 2026-08-27: 홈 화면 초기 표시
+//  ⚠ 주소에 #emg / #msg 가 붙어 있으면 그 화면부터 엽니다.
+//    (다른 화면에서 돌아올 때 홈으로 튕기지 않게)
+(function initHomeView(){
+  const h = (location.hash || '').replace('#', '');
+  const start = (h === 'emg' || h === 'msg') ? h : 'home';
+  showView(start, true);
+  renderMyLines('myLinesHome', 3);  // 홈에는 최근 3개만
+})();
 
 (async function checkLogin(){
   const { data: { session } } = await sb.auth.getSession();
