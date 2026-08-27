@@ -1220,6 +1220,26 @@ document.getElementById('toggleClosedCasesBtn').addEventListener('click', () => 
   loadCaseInbox();
 });
 
+// ⚠ 2026-08-27 신설: 구매 화면에서 "로그인하고 결제하기"로 오셨을 때,
+//   로그인이 끝나면 고르셨던 상품 화면으로 돌려보냅니다.
+//   예전에는 로그인 후 처음부터 다시 골라야 했습니다.
+//   ⚠ 아무 주소로나 보내면 안 되므로, 우리 페이지(.html)인지 확인합니다.
+function nextAfterLogin(){
+  let next = new URLSearchParams(window.location.search).get('next');
+  if (!next) { try { next = sessionStorage.getItem('aliascall_after_login'); } catch (e) {} }
+  if (!next) return null;
+  if (/^https?:|^\/\//i.test(next)) return null;       // 바깥 주소로는 안 보냄
+  if (!/^aliascall_[A-Za-z0-9_]+\.html/.test(next)) return null;
+  return next;
+}
+function goNextIfAny(){
+  const next = nextAfterLogin();
+  if (!next) return false;
+  try { sessionStorage.removeItem('aliascall_after_login'); } catch (e) {}
+  window.location.href = next;
+  return true;
+}
+
 (async function init(){
   const { data: { session } } = await sb.auth.getSession();
   if (!session) {
@@ -1227,6 +1247,9 @@ document.getElementById('toggleClosedCasesBtn').addEventListener('click', () => 
     document.getElementById('loginGate').style.display = 'block';
     return;
   }
+
+  // 이미 로그인된 채로 오셨으면 곧장 원래 보시던 곳으로 돌려보냅니다.
+  if (goNextIfAny()) return;
 
   // 이미 로그인된 상태로 이 화면에 들어온 경우 -> 구독 여부만 보고 바로 분기
   const { data: profile } = await sb.from('profiles').select('subscription_expires_at').eq('id', session.user.id).maybeSingle();
@@ -1291,6 +1314,11 @@ document.getElementById('loginSubmitBtn').addEventListener('click', async () => 
       document.getElementById('newSubscriberGate').style.display = 'block';
       updateNewSubPrice();
     } else {
+      // ⚠ 2026-08-27: 구매 화면에서 오셨으면 고르셨던 상품으로 곧장 돌려보냅니다.
+      //   등록물 구독 안내(newSubscriberGate)는 회선 구매와 무관해서,
+      //   여기서 보여드리면 "내가 뭘 사려던 거였지?" 하게 됩니다.
+      if (goNextIfAny()) return;
+
       const { data: profile } = await sb.from('profiles').select('subscription_expires_at').eq('id', session.user.id).maybeSingle();
       if (!profile?.subscription_expires_at) {
         hideAllGates();
