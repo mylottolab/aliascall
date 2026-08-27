@@ -1130,7 +1130,7 @@ const I18N = {
     footerNote1: 'Aliascall은 실제 번호를 노출하지 않는 안전한 연결 서비스입니다.',
     footerNote2: '실시간 위치추적 기능은 없습니다.',
     loginPrompt: '아직 로그인하지 않으셨어요 — ',
-    loginPromptLink: '등록하며 계정 만들기',
+    loginPromptLink: '계정을 만들면 편리합니다',
     loggedInSuffix: '님 로그인됨', logoutLink: '로그아웃', logoutConfirm: '로그아웃 하시겠어요?',
     missedBadgeText: '부재중 메시지',
     soundUnlockText: '🔔 알림음을 받으려면 탭 한 번만 해주세요', soundUnlockBtn: '알림음 켜기',
@@ -1217,7 +1217,7 @@ const I18N = {
     footerNote1: 'Aliascall is a safe connection service that never exposes real phone numbers.',
     footerNote2: 'There is no real-time location tracking.',
     loginPrompt: "You're not logged in yet — ",
-    loginPromptLink: 'create an account by registering',
+    loginPromptLink: 'Creating an account makes things easier',
     loggedInSuffix: ' is logged in', logoutLink: 'Log out', logoutConfirm: 'Are you sure you want to log out?',
     missedBadgeText: 'Missed messages',
     soundUnlockText: '🔔 Tap once to enable notification sounds', soundUnlockBtn: 'Enable sound',
@@ -1316,7 +1316,10 @@ function renderLoginStatus(){
       });
     }
   } else {
-    el.innerHTML = t.loginPrompt + '<a href="aliascall_registration_mockup.html">' + t.loginPromptLink + '</a>';
+    // ⚠ 2026-08-27: 처음 온 분에게 "차량·사물을 등록하세요"는 너무 앞서갑니다.
+    //   무슨 서비스인지도 모르는 상태에서 등록부터 하라고 할 수는 없습니다.
+    //   닉네임과 비밀번호만으로 계정을 만들 수 있는 화면으로 보냅니다.
+    el.innerHTML = t.loginPrompt + '<a href="aliascall_my_account.html">' + t.loginPromptLink + '</a>';
   }
 }
 
