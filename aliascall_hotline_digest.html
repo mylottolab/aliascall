@@ -123,8 +123,10 @@ h1{ font-size:20px; margin-bottom:5px; }
 </div>
 
 <script>
-const SUPABASE_URL = 'https://qmwaraittiurkynszjts.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0MzY2MDIsImV4cCI6MjA2OTAxMjYwMn0.gVgTZDVIiHNONYbAKPGyfNRDrXfhTIKgWTb4hOAsD5A';
+// ⚠ 2026-08-28: 다른 화면과 똑같은 값이어야 합니다.
+//   처음에 옛 열쇠를 적어 넣어 모든 요청이 401(인증 안 됨)로 튕겼습니다.
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const I18N = {
@@ -333,12 +335,33 @@ function renderBody(){
   });
 }
 
+
+// ⚠ 2026-08-28 신설: 로그인 정보가 복원될 때까지 기다립니다.
+//   Supabase는 페이지가 열린 직후 저장소에서 세션을 되살리는 데 잠깐 걸립니다.
+//   그 전에 물어보면 비어 보이고, 서버 호출이 401로 실패합니다.
+async function waitForSession(maxMs = 3000){
+  const started = Date.now();
+  while (Date.now() - started < maxMs) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) return session;
+    await new Promise((r) => setTimeout(r, 120));
+  }
+  // 끝까지 없으면 정말 로그인하지 않으신 것입니다.
+  const { data: { session } } = await sb.auth.getSession();
+  return session || null;
+}
+
 // ── 시작 ──
 (async function init(){
   applyI18n();
   setQuick(30);   // 기본은 최근 1개월
 
-  const { data: { session } } = await sb.auth.getSession();
+  // ⚠ 2026-08-28: 페이지가 열린 직후에는 저장된 로그인 정보가 아직 복원되지
+  //   않았을 수 있습니다. 그 상태로 물어보면 세션이 비어 보이고,
+  //   그대로 서버를 부르면 401(인증 안 됨)로 튕깁니다.
+  //   ("전문관리용 구독이 없습니다"로 잘못 보이던 원인입니다)
+  //   복원될 때까지 잠깐 기다립니다.
+  const session = await waitForSession();
   if (!session) {
     document.getElementById('body').innerHTML = '<div class="state">' + T('loginNeeded') + '</div>';
     document.getElementById('sideList').innerHTML = '';
