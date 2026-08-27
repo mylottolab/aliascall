@@ -166,6 +166,7 @@ const I18N = {
     displayNamePlaceholder: '예: 김변호사',
     displayNameSave: '저장',
     displayNameSaved: '저장했어요.',
+    digestBtn: '📖 대화 모아보기',
     newRoomBtn: '+ 새 방 만들기',
     newRoomLabel: '의뢰인 이름 (선택)',
     newRoomPlaceholder: '예: 김철수 의뢰인',
@@ -223,6 +224,7 @@ const I18N = {
     displayNamePlaceholder: 'e.g. Attorney Kim',
     displayNameSave: 'Save',
     displayNameSaved: 'Saved.',
+    digestBtn: '📖 Conversation digest',
     newRoomBtn: '+ New room',
     newRoomLabel: 'Client name (optional)',
     newRoomPlaceholder: 'e.g. Kim Chulsoo',
@@ -480,6 +482,17 @@ function renderSubCard(sub){
   newBtn.textContent = T('newRoomBtn');
   newBtn.disabled = expired || active >= limit;
   tools.appendChild(newBtn);
+
+  // ⚠ 2026-08-27 신설: 방을 하나씩 열지 않고 기간별로 모아 보는 화면.
+  //   의뢰인이 37명, 환자가 120명이면 일일이 열어보는 건 불가능합니다.
+  const digestBtn = document.createElement('button');
+  digestBtn.type = 'button';
+  digestBtn.className = 'ghost';
+  digestBtn.textContent = T('digestBtn');
+  digestBtn.addEventListener('click', () => {
+    window.location.href = 'aliascall_hotline_digest.html?sub=' + encodeURIComponent(sub.id);
+  });
+  tools.appendChild(digestBtn);
 
   if (expired) {
     const renew = document.createElement('button');

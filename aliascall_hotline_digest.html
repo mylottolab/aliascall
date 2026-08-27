@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="docTitle">Aliascall — 대화 모아보기</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; word-break:keep-all; }
+h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
+
+.topbar{ background:#fff; border-bottom:1px solid var(--line); padding:12px 16px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:20; }
+.topbar a.back{ text-decoration:none; color:var(--ink-soft); font-size:18px; }
+.topbar .logo{ font-size:15px; font-weight:700; font-family:'Space Grotesk',sans-serif; }
+.topbar .logo em{ font-style:normal; color:var(--coral); }
+.topbar .spacer{ flex:1; }
+.lang{ border:1.5px solid var(--line); background:#fff; border-radius:20px; padding:5px 12px; font-size:11.5px; cursor:pointer; font-family:inherit; }
+
+.wrap{ max-width:1100px; margin:0 auto; padding:18px 16px 50px; }
+h1{ font-size:20px; margin-bottom:5px; }
+.desc{ font-size:12px; color:var(--ink-soft); line-height:1.7; margin-bottom:16px; }
+
+/* 기간 고르기 */
+.range{ background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:14px; margin-bottom:16px; }
+.range-quick{ display:flex; gap:7px; flex-wrap:wrap; margin-bottom:11px; }
+.range-quick button{ border:1.5px solid var(--line); background:#fff; border-radius:20px; padding:7px 13px; font-size:12px; cursor:pointer; font-family:inherit; color:var(--ink); }
+.range-quick button.on{ border-color:var(--teal-deep); background:var(--teal-tint); color:var(--teal-deep); font-weight:700; }
+.range-dates{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.range-dates input{ border:1.5px solid var(--line); border-radius:9px; padding:9px 11px; font-size:13px; font-family:inherit; }
+.range-dates span{ font-size:12px; color:var(--ink-soft); }
+.range-dates button{ border:none; background:var(--teal-deep); color:#fff; border-radius:9px; padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+.range-dates button:disabled{ opacity:.45; cursor:default; }
+
+/* 본문 2단 */
+.cols{ display:grid; grid-template-columns:230px 1fr; gap:14px; align-items:start; }
+@media (max-width:760px){ .cols{ grid-template-columns:1fr; } }
+
+.side{ background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:12px; position:sticky; top:70px; max-height:calc(100vh - 90px); overflow-y:auto; }
+.side input.find{ width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:9px; padding:8px 10px; font-size:12.5px; font-family:inherit; margin-bottom:9px; }
+.side-item{ display:flex; align-items:center; gap:8px; padding:9px 8px; border-radius:9px; cursor:pointer; }
+.side-item:hover{ background:var(--teal-tint); }
+.side-item.on{ background:var(--teal-tint); }
+.side-item .nm{ flex:1; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.side-item .ct{ font-size:10.5px; font-weight:700; background:var(--teal); color:#fff; border-radius:20px; padding:2px 7px; }
+.side-item .ct.zero{ background:var(--line); color:var(--ink-soft); }
+.side-empty{ font-size:11.5px; color:var(--ink-soft); text-align:center; padding:14px 4px; line-height:1.7; }
+
+.main{ background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:16px; min-height:300px; }
+.room-head{ display:flex; align-items:baseline; gap:9px; margin:20px 0 10px; padding-bottom:7px; border-bottom:2px solid var(--teal-tint); }
+.room-head:first-child{ margin-top:0; }
+.room-head .nm{ font-size:15px; font-weight:700; font-family:'Space Grotesk',sans-serif; }
+.room-head .ct{ font-size:11px; color:var(--ink-soft); }
+.line{ display:flex; gap:10px; padding:5px 0; font-size:13px; line-height:1.65; }
+.line .t{ flex:0 0 92px; font-size:11px; color:var(--ink-soft); padding-top:2px; }
+.line .w{ flex:0 0 78px; font-size:11.5px; font-weight:700; }
+.line .w.me{ color:var(--teal-deep); }
+.line .c{ flex:1; min-width:0; word-break:break-word; }
+.line .c.attach{ color:var(--ink-soft); font-style:italic; }
+.line .c.sys{ color:var(--ink-soft); font-size:11.5px; }
+
+.state{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:30px 10px; line-height:1.8; }
+.tools{ display:flex; gap:8px; justify-content:flex-end; margin-bottom:12px; }
+.tools button{ border:1.5px solid var(--line); background:#fff; border-radius:9px; padding:8px 13px; font-size:12px; cursor:pointer; font-family:inherit; color:var(--ink); }
+
+@media print{
+  .topbar, .range, .side, .tools, .lang { display:none !important; }
+  .cols{ grid-template-columns:1fr; }
+  .main{ border:none; padding:0; }
+  body{ background:#fff; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" href="aliascall_hotline_manage.html">←</a>
+  <span class="logo">Alias<em>call</em></span>
+  <span class="spacer"></span>
+  <button class="lang" id="langBtn">EN</button>
+</div>
+
+<div class="wrap">
+  <h1 data-i18n="pageTitle">📖 대화 모아보기</h1>
+  <div class="desc" data-i18n="pageDesc">방을 하나씩 열지 않고, 정하신 기간에 오간 대화를 한 화면에서 보실 수 있습니다.</div>
+
+  <!-- 기간 -->
+  <div class="range">
+    <div class="range-quick" id="quickBtns">
+      <button type="button" data-days="0" data-i18n="qToday">오늘</button>
+      <button type="button" data-days="7" data-i18n="q7">최근 7일</button>
+      <button type="button" data-days="30" class="on" data-i18n="q30">최근 1개월</button>
+      <button type="button" data-days="90" data-i18n="q90">최근 3개월</button>
+      <button type="button" data-days="-1" data-i18n="qAll">전체</button>
+    </div>
+    <div class="range-dates">
+      <input type="date" id="fromDate" autocomplete="off">
+      <span>~</span>
+      <input type="date" id="toDate" autocomplete="off">
+      <button type="button" id="loadBtn" data-i18n="btnLoad">불러오기</button>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="side">
+      <input type="text" class="find" id="findInput" data-i18n-placeholder="findPh" placeholder="이름으로 찾기…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <div id="sideList"><div class="side-empty" data-i18n="loading">불러오는 중…</div></div>
+    </div>
+
+    <div class="main">
+      <div class="tools">
+        <button type="button" id="printBtn" data-i18n="btnPrint">🖨️ 인쇄 · PDF</button>
+      </div>
+      <div id="body"><div class="state" data-i18n="loading">불러오는 중…</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://qmwaraittiurkynszjts.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0MzY2MDIsImV4cCI6MjA2OTAxMjYwMn0.gVgTZDVIiHNONYbAKPGyfNRDrXfhTIKgWTb4hOAsD5A';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const I18N = {
+  ko: {
+    docTitle: 'Aliascall — 대화 모아보기',
+    pageTitle: '📖 대화 모아보기',
+    pageDesc: '방을 하나씩 열지 않고, 정하신 기간에 오간 대화를 한 화면에서 보실 수 있습니다.',
+    qToday: '오늘', q7: '최근 7일', q30: '최근 1개월', q90: '최근 3개월', qAll: '전체',
+    btnLoad: '불러오기', btnPrint: '🖨️ 인쇄 · PDF',
+    findPh: '이름으로 찾기…',
+    loading: '불러오는 중…',
+    loginNeeded: '로그인이 필요합니다.',
+    noSub: '전문관리용 구독이 없습니다.',
+    noRooms: '아직 만든 방이 없습니다.',
+    noMsg: '이 기간에 오간 대화가 없습니다.<br>위에서 기간을 넓혀보세요.',
+    noMatch: '찾는 이름이 없습니다.',
+    unnamed: '(이름 없음)',
+    owner: '나',
+    loadFail: '불러오지 못했습니다.',
+    tooMany: '⚠ 대화가 많아 일부만 보여드립니다. 기간을 좁히시면 전부 보실 수 있습니다.',
+    msgUnit: '건',
+    badRange: '시작일이 종료일보다 뒤입니다.',
+  },
+  en: {
+    docTitle: 'Aliascall — Conversation digest',
+    pageTitle: '📖 Conversation digest',
+    pageDesc: 'See every conversation from the period you choose on one screen, without opening each room.',
+    qToday: 'Today', q7: 'Last 7 days', q30: 'Last month', q90: 'Last 3 months', qAll: 'All',
+    btnLoad: 'Load', btnPrint: '🖨️ Print · PDF',
+    findPh: 'Search by name…',
+    loading: 'Loading…',
+    loginNeeded: 'Please sign in.',
+    noSub: 'No Pro Business subscription found.',
+    noRooms: 'No rooms yet.',
+    noMsg: 'No messages in this period.<br>Try widening the range above.',
+    noMatch: 'No matching name.',
+    unnamed: '(No name)',
+    owner: 'Me',
+    loadFail: "Couldn't load.",
+    tooMany: '⚠ There are many messages, so only part is shown. Narrow the range to see them all.',
+    msgUnit: '',
+    badRange: 'The start date is after the end date.',
+  },
+};
+let LANG = (localStorage.getItem('aliascall_lang') === 'en') ? 'en' : 'ko';
+function T(k){ return (I18N[LANG] || I18N.ko)[k]; }
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = T(el.dataset.i18nPlaceholder); });
+  document.title = T('docTitle');
+  document.getElementById('langBtn').textContent = (LANG === 'ko') ? 'EN' : '한국어';
+}
+
+let subscriptionId = null;
+let summary = [];      // 방별 요약
+let rows = [];         // 대화 줄
+let focusRoom = null;  // 왼쪽에서 고른 방
+const MAX_ROWS = 2000;
+
+function ymd(d){ return d.toISOString().slice(0, 10); }
+
+// ⚠ 날짜 입력은 그 지역 자정 기준입니다.
+//   toDate는 "그 날까지 포함"이어야 하므로 하루를 더해 미만으로 비교합니다.
+function rangeFromInputs(){
+  const f = document.getElementById('fromDate').value;
+  const t = document.getElementById('toDate').value;
+  if (!f || !t) return null;
+  const from = new Date(f + 'T00:00:00');
+  const to = new Date(t + 'T00:00:00');
+  to.setDate(to.getDate() + 1);
+  if (from >= to) return null;
+  return { from, to };
+}
+
+function setQuick(days){
+  const to = new Date();
+  const from = new Date();
+  if (days < 0) from.setFullYear(from.getFullYear() - 20); // 전체
+  else from.setDate(from.getDate() - days);
+  document.getElementById('fromDate').value = ymd(from);
+  document.getElementById('toDate').value = ymd(to);
+}
+
+function relTime(iso){
+  if (!iso) return '';
+  const d = new Date(iso);
+  const mm = String(d.getMonth() + 1), dd = String(d.getDate());
+  const hh = String(d.getHours()).padStart(2, '0'), mi = String(d.getMinutes()).padStart(2, '0');
+  return mm + '/' + dd + ' ' + hh + ':' + mi;
+}
+
+async function loadDigest(){
+  const r = rangeFromInputs();
+  const body = document.getElementById('body');
+  const side = document.getElementById('sideList');
+  if (!r) { body.innerHTML = '<div class="state">' + T('badRange') + '</div>'; return; }
+
+  body.innerHTML = '<div class="state">' + T('loading') + '</div>';
+  side.innerHTML = '<div class="side-empty">' + T('loading') + '</div>';
+
+  try {
+    // ⚠ 요약을 먼저 받아 왼쪽 목록을 그립니다.
+    //   방이 120개일 때 대화를 다 받아 화면에서 세면 느립니다.
+    const [sumRes, rowRes] = await Promise.all([
+      sb.rpc('pro_conversation_summary', {
+        p_subscription_id: subscriptionId, p_from: r.from.toISOString(), p_to: r.to.toISOString(),
+      }),
+      sb.rpc('pro_conversation_digest', {
+        p_subscription_id: subscriptionId, p_from: r.from.toISOString(), p_to: r.to.toISOString(), p_limit: MAX_ROWS,
+      }),
+    ]);
+    if (sumRes.error) throw sumRes.error;
+    if (rowRes.error) throw rowRes.error;
+    summary = sumRes.data || [];
+    rows = rowRes.data || [];
+    focusRoom = null;
+    renderSide();
+    renderBody();
+  } catch (e) {
+    console.error('[digest] 불러오기 실패', e);
+    body.innerHTML = '<div class="state">' + T('loadFail') + '</div>';
+    side.innerHTML = '';
+  }
+}
+
+function renderSide(){
+  const side = document.getElementById('sideList');
+  const kw = document.getElementById('findInput').value.trim().toLowerCase();
+  side.innerHTML = '';
+
+  const list = summary.filter((x) => !kw || String(x.client_label || '').toLowerCase().includes(kw));
+  if (list.length === 0) {
+    side.innerHTML = '<div class="side-empty">' + (summary.length === 0 ? T('noRooms') : T('noMatch')) + '</div>';
+    return;
+  }
+  list.forEach((x) => {
+    const d = document.createElement('div');
+    d.className = 'side-item' + (focusRoom === x.hotline_id ? ' on' : '');
+    const nm = document.createElement('span');
+    nm.className = 'nm';
+    nm.textContent = x.client_label || T('unnamed');
+    const ct = document.createElement('span');
+    ct.className = 'ct' + (x.msg_count ? '' : ' zero');
+    ct.textContent = x.msg_count + T('msgUnit');
+    d.appendChild(nm); d.appendChild(ct);
+    d.addEventListener('click', () => {
+      // 같은 방을 다시 누르면 전체 보기로 돌아옵니다.
+      focusRoom = (focusRoom === x.hotline_id) ? null : x.hotline_id;
+      renderSide(); renderBody();
+    });
+    side.appendChild(d);
+  });
+}
+
+function renderBody(){
+  const body = document.getElementById('body');
+  body.innerHTML = '';
+
+  const use = focusRoom ? rows.filter((m) => m.hotline_id === focusRoom) : rows;
+  if (use.length === 0) {
+    body.innerHTML = '<div class="state">' + T('noMsg') + '</div>';
+    return;
+  }
+
+  if (rows.length >= MAX_ROWS) {
+    const w = document.createElement('div');
+    w.className = 'state';
+    w.style.padding = '10px';
+    w.style.color = 'var(--danger)';
+    w.textContent = T('tooMany');
+    body.appendChild(w);
+  }
+
+  // 방이 바뀔 때마다 머리글을 넣습니다.
+  let lastRoom = null;
+  use.forEach((m) => {
+    if (m.hotline_id !== lastRoom) {
+      lastRoom = m.hotline_id;
+      const s = summary.find((x) => x.hotline_id === m.hotline_id);
+      const h = document.createElement('div');
+      h.className = 'room-head';
+      const nm = document.createElement('span');
+      nm.className = 'nm';
+      nm.textContent = m.client_label || T('unnamed');
+      const ct = document.createElement('span');
+      ct.className = 'ct';
+      ct.textContent = (s ? s.msg_count : '') + T('msgUnit');
+      h.appendChild(nm); h.appendChild(ct);
+      body.appendChild(h);
+    }
+
+    const row = document.createElement('div');
+    row.className = 'line';
+    const t = document.createElement('span');
+    t.className = 't'; t.textContent = relTime(m.created_at);
+    const w = document.createElement('span');
+    w.className = 'w' + (m.is_owner ? ' me' : '');
+    w.textContent = m.is_owner ? T('owner') : (m.sender_nickname || '');
+    const c = document.createElement('span');
+    const sys = (m.message_type === 'call_log' || m.message_type === 'partner_joined' || m.message_type === 'partner_left');
+    const att = (m.message_type === 'photo' || m.message_type === 'video' || m.message_type === 'document' || m.message_type === 'voice');
+    c.className = 'c' + (sys ? ' sys' : att ? ' attach' : '');
+    c.textContent = m.content || '';
+    row.appendChild(t); row.appendChild(w); row.appendChild(c);
+    body.appendChild(row);
+  });
+}
+
+// ── 시작 ──
+(async function init(){
+  applyI18n();
+  setQuick(30);   // 기본은 최근 1개월
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    document.getElementById('body').innerHTML = '<div class="state">' + T('loginNeeded') + '</div>';
+    document.getElementById('sideList').innerHTML = '';
+    return;
+  }
+
+  // ⚠ 주소로 구독을 지정할 수 있게 합니다(구독이 여러 개일 수 있음).
+  const urlSub = new URLSearchParams(window.location.search).get('sub');
+  const { data: subs } = await sb.rpc('my_subscriptions_summary');
+  if (!subs || subs.length === 0) {
+    document.getElementById('body').innerHTML = '<div class="state">' + T('noSub') + '</div>';
+    document.getElementById('sideList').innerHTML = '';
+    return;
+  }
+  subscriptionId = (urlSub && subs.some((x) => x.id === urlSub)) ? urlSub : subs[0].id;
+
+  loadDigest();
+})();
+
+document.querySelectorAll('#quickBtns button').forEach((b) => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#quickBtns button').forEach((x) => x.classList.remove('on'));
+    b.classList.add('on');
+    setQuick(Number(b.dataset.days));
+    if (subscriptionId) loadDigest();
+  });
+});
+document.getElementById('loadBtn').addEventListener('click', () => {
+  // 날짜를 직접 고치셨으면 빠른 선택 표시를 지웁니다.
+  document.querySelectorAll('#quickBtns button').forEach((x) => x.classList.remove('on'));
+  if (subscriptionId) loadDigest();
+});
+document.getElementById('findInput').addEventListener('input', renderSide);
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+document.getElementById('langBtn').addEventListener('click', () => {
+  LANG = (LANG === 'ko') ? 'en' : 'ko';
+  try { localStorage.setItem('aliascall_lang', LANG); } catch (e) {}
+  applyI18n(); renderSide(); renderBody();
+});
+</script>
+</body>
+</html>
