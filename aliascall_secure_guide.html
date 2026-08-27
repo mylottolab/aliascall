@@ -45,6 +45,35 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
 /* ⚠ 2026-08-27 신설: 섹션 안의 작은 제목.
    highlight-box(어두운 배경)에 흰 카드를 넣으면 흰 글씨가 안 보여서,
    제목만 따로 두고 카드는 밖으로 뺐습니다. */
+
+/* ═══ 2026-08-27 신설: 안내서 안에서 상품 찾기 ═══
+   ⚠ 가격은 여기 적지 않습니다. 구매 화면과 두 곳에서 관리하면
+     언젠가 서로 다른 값을 보여주게 됩니다. 답만 알려주고 결제는 넘깁니다. */
+
+/* 2026-08-27 신설: 회선 세 갈래 */
+.cat3{ display:flex; flex-direction:column; gap:9px; margin:14px 0 20px; }
+.cat3-item{ border-radius:12px; padding:13px 15px; border-left:5px solid var(--line); background:var(--card); border-top:1.5px solid var(--line); border-right:1.5px solid var(--line); border-bottom:1.5px solid var(--line); }
+.cat3-item.love{ border-left-color:#4CAF7D; }
+.cat3-item.work{ border-left-color:#5B8DEF; }
+.cat3-item.pro{ border-left-color:var(--brass); }
+.cat3-h{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; margin-bottom:4px; }
+.cat3-cnt{ font-size:10.5px; font-weight:700; background:var(--line); color:var(--ink-soft); border-radius:20px; padding:2px 9px; }
+.cat3-d{ font-size:12px; color:var(--ink-soft); line-height:1.6; }
+.gw-hint{ font-size:12px; color:var(--ink-soft); margin-bottom:12px; }
+.gw-step{ margin-bottom:14px; }
+.gw-q{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; margin-bottom:8px; }
+.gw-n{ flex:0 0 auto; width:22px; height:22px; border-radius:50%; background:var(--brass); color:#fff; font-size:12px; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; }
+.gw-opts{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.gw-opt{ border:2px solid var(--line); background:var(--card); border-radius:12px; padding:12px 13px; text-align:left; cursor:pointer; font-family:inherit; color:var(--ink); }
+.gw-opt.on{ border-color:var(--brass); background:#FCF7EC; }
+.gw-opt b{ display:block; font-size:13.5px; margin-bottom:3px; }
+.gw-opt span{ display:block; font-size:11.5px; color:var(--ink-soft); line-height:1.55; }
+.gw-result{ margin-top:16px; border:2px solid var(--brass); border-radius:14px; padding:16px; background:#FCF7EC; }
+.gw-rl{ font-size:11px; font-weight:700; color:#8a6416; letter-spacing:.04em; }
+.gw-rn{ font-size:20px; font-weight:700; margin:5px 0 3px; font-family:'Space Grotesk',sans-serif; color:var(--ink); }
+.gw-rw{ font-size:12px; color:var(--ink-soft); line-height:1.7; }
+.gw-go{ display:inline-block; margin-top:11px; padding:11px 18px; border-radius:10px; background:var(--brass); color:#fff; font-size:13px; font-weight:700; text-decoration:none; }
+@media (max-width:520px){ .gw-opts{ grid-template-columns:1fr; } }
 .sec-sub{ font-size:14px; font-weight:700; color:var(--ink); margin:20px 0 10px; }
 .step-list{ display:flex; flex-direction:column; gap:10px; }
 .step-item{ display:flex; gap:12px; background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px 16px; }
@@ -129,18 +158,25 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
   <section id="sec-products">
     <div class="sec-title"><span class="sec-num">2</span><span data-i18n-html="s014">상품 고르기</span></div>
 
-    <p data-i18n-html="y01">상품은 크게 <b>두 갈래</b>입니다. 먼저 어느 쪽인지 고르시면 훨씬 쉽습니다.</p>
+    <p data-i18n-html="y01">회선은 <b>세 갈래</b>입니다. 먼저 어느 쪽인지 정하시면 훨씬 쉽습니다.</p>
 
-    <div class="dodont">
-      <div class="dodont-col do">
-        <div class="head" data-i18n-html="y02">💚 나와 가까운 사람들과</div>
-        <div class="dodont-item"><span class="icon">👥</span><span><span data-i18n-html="y03">연인 · 가족 · 친구, 또는 비서 · 담당자와 쓰는 회선입니다. 아래 8종이 여기 속합니다.</span></span></div>
+    <div class="cat3">
+      <div class="cat3-item love">
+        <div class="cat3-h"><span data-i18n-html="y02">💚 우리끼리 회선</span><span class="cat3-cnt" data-i18n-html="y70">8종</span></div>
+        <div class="cat3-d" data-i18n-html="y03">연인 · 가족 · 친구 · 친지 · 동창 사이에 쓰는 회선입니다.</div>
       </div>
-      <div class="dodont-col dont">
-        <div class="head" data-i18n-html="y04">💼 고객 · 의뢰인 · 환자를 관리하려면</div>
-        <div class="dodont-item"><span class="icon">💼</span><span><span data-i18n-html="y05">한 계정으로 <b>방을 여러 개</b> 만들어 고객마다 따로 씁니다. 아래 ⑥번에서 자세히 다룹니다.</span></span></div>
+      <div class="cat3-item work">
+        <div class="cat3-h"><span data-i18n-html="y04">🗂️ 일상 업무용 회선</span><span class="cat3-cnt" data-i18n-html="y70">8종</span></div>
+        <div class="cat3-d" data-i18n-html="y05">임원 · 중역 · 간부 · 비서 · 프로젝트 구성원 · 회사 업무 등에 쓰는 회선입니다.</div>
+      </div>
+      <div class="cat3-item pro">
+        <div class="cat3-h"><span data-i18n-html="y71">💼 프로 비즈니스 회선</span><span class="cat3-cnt" data-i18n-html="y72">각 3종</span></div>
+        <div class="cat3-d" data-i18n-html="y73">고객마다 방을 따로 열어 관리합니다. 광고형은 상호를 공개 목록에 올립니다. 아래 ⑥번에서 자세히 다룹니다.</div>
       </div>
     </div>
+
+    <div class="sec-sub" data-i18n-html="y74">① 우리끼리 회선 · ② 일상 업무용 회선 — 8종</div>
+    <p class="gw-hint" data-i18n-html="y75">두 갈래는 <b>같은 8종</b>을 씁니다. 쓰는 분과 쓰임새가 다를 뿐, 고르는 방법은 똑같습니다.</p>
 
     <div class="category-grid">
       <div class="category-card"><div class="h" data-i18n-html="s015">📌 핫라인 (2인)</div><div class="d" data-i18n-html="s016">단둘이, 정해진 상대와 고정으로 씁니다.</div></div>
@@ -149,10 +185,37 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
       <div class="category-card"><div class="h" data-i18n-html="s021">✨ 프리미엄 (4인)</div><div class="d" data-i18n-html="s022">이코노미와 인원은 같지만 고화질 영상통화가 가능합니다.</div></div>
     </div>
     <div class="sec-sub" data-i18n-html="y06">세 가지만 정하면 8종 중 하나가 정해집니다</div>
-    <div class="step-list">
-      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="y07"><b>몇 명이 쓰나요?</b>둘이서(2인) 또는 여럿이서(최대 4인)</span></div>
-      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="y08"><b>상대를 바꿀 일이 있나요?</b>고정이면 저렴하고, 교체형은 상대를 내보내고 새로 초대할 수 있습니다. <b>이전 대화는 새 상대에게 보이지 않습니다.</b></span></div>
-      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="y09"><b>암호화가 필요한가요?</b>Secure는 열쇠가 초대링크에만 있어 저희조차 내용을 볼 수 없습니다.</span></div>
+    <div class="gw-hint" data-i18n-html="y50">아래에서 눌러보세요. 맨 아래 답이 바로 바뀝니다.</div>
+
+    <div class="gw-step">
+      <div class="gw-q"><span class="gw-n">1</span><span data-i18n-html="y51">몇 명이 쓰시나요?</span></div>
+      <div class="gw-opts">
+        <button type="button" class="gw-opt on" data-k="ppl" data-v="2"><b data-i18n-html="y52">둘이서</b><span data-i18n-html="y53">나와 상대 한 사람</span></button>
+        <button type="button" class="gw-opt" data-k="ppl" data-v="4"><b data-i18n-html="y54">여럿이서</b><span data-i18n-html="y55">최대 4명까지</span></button>
+      </div>
+    </div>
+
+    <div class="gw-step">
+      <div class="gw-q"><span class="gw-n">2</span><span data-i18n-html="y56">상대를 바꿀 일이 있나요?</span></div>
+      <div class="gw-opts">
+        <button type="button" class="gw-opt on" data-k="swap" data-v="fixed"><b data-i18n-html="y57">한 사람과 계속</b><span data-i18n-html="y58">처음 들어온 분과 쭉 씁니다. 더 저렴합니다.</span></button>
+        <button type="button" class="gw-opt" data-k="swap" data-v="swap"><b data-i18n-html="y59">바꿔가며</b><span data-i18n-html="y60">상대를 내보내고 다시 초대할 수 있습니다. 이전 대화는 새 상대에게 안 보입니다.</span></button>
+      </div>
+    </div>
+
+    <div class="gw-step">
+      <div class="gw-q"><span class="gw-n">3</span><span data-i18n-html="y61">암호화가 필요한가요?</span></div>
+      <div class="gw-opts">
+        <button type="button" class="gw-opt on" data-k="sec" data-v="normal"><b data-i18n-html="y62">일반</b><span data-i18n-html="y63">서버에 안전하게 보관되며, 기기를 바꿔도 대화가 이어집니다.</span></button>
+        <button type="button" class="gw-opt" data-k="sec" data-v="secure"><b data-i18n-html="y64">Secure 🔒</b><span data-i18n-html="y65">열쇠가 초대링크에만 있어 저희조차 내용을 볼 수 없습니다. ⚠ 링크를 잃으면 복구가 안 됩니다.</span></button>
+      </div>
+    </div>
+
+    <div class="gw-result">
+      <div class="gw-rl" data-i18n-html="y66">이 상품이 맞습니다</div>
+      <div class="gw-rn" id="gwName">핫라인</div>
+      <div class="gw-rw" id="gwWhy"></div>
+      <a class="gw-go" id="gwGo" href="aliascall_hotline_purchase.html" data-i18n-html="y67">이 상품 보러 가기 ▷</a>
     </div>
 
     <div class="tip-callout" data-i18n-html="s023"><b>Secure 버전이 궁금하다면?</b> 위 4종 모두 "🔒 Secure" 버전이 따로 있습니다 — 인원·기능은 동일하고, 문자·사진·음성 등 모든 내용을 저희(Aliascall)조차 볼 수 없게 암호화됩니다. 자세한 가격은 <a href="aliascall_hotline_guide.html" style="color:var(--brass); font-weight:700;">상품 안내 페이지</a>에서 확인하실 수 있어요.</div>
@@ -325,15 +388,36 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
 // =====================================================================
 const I18N = {
  "ko": {
-  "y01": "상품은 크게 <b>두 갈래</b>입니다. 먼저 어느 쪽인지 고르시면 훨씬 쉽습니다.",
-  "y02": "💚 나와 가까운 사람들과",
-  "y03": "연인 · 가족 · 친구, 또는 비서 · 담당자와 쓰는 회선입니다. 아래 8종이 여기 속합니다.",
-  "y04": "💼 고객 · 의뢰인 · 환자를 관리하려면",
-  "y05": "한 계정으로 <b>방을 여러 개</b> 만들어 고객마다 따로 씁니다. 아래 ⑥번에서 자세히 다룹니다.",
+  "y70": "8종",
+  "y71": "💼 프로 비즈니스 회선",
+  "y72": "각 3종",
+  "y73": "고객마다 방을 따로 열어 관리합니다. 광고형은 상호를 공개 목록에 올립니다. 아래 ⑥번에서 자세히 다룹니다.",
+  "y74": "① 우리끼리 회선 · ② 일상 업무용 회선 — 8종",
+  "y75": "두 갈래는 <b>같은 8종</b>을 씁니다. 쓰는 분과 쓰임새가 다를 뿐, 고르는 방법은 똑같습니다.",
+  "y50": "아래에서 눌러보세요. 맨 아래 답이 바로 바뀝니다.",
+  "y51": "몇 명이 쓰시나요?",
+  "y52": "둘이서",
+  "y53": "나와 상대 한 사람",
+  "y54": "여럿이서",
+  "y55": "최대 4명까지",
+  "y56": "상대를 바꿀 일이 있나요?",
+  "y57": "한 사람과 계속",
+  "y58": "처음 들어온 분과 쭉 씁니다. 더 저렴합니다.",
+  "y59": "바꿔가며",
+  "y60": "상대를 내보내고 다시 초대할 수 있습니다. 이전 대화는 새 상대에게 안 보입니다.",
+  "y61": "암호화가 필요한가요?",
+  "y62": "일반",
+  "y63": "서버에 안전하게 보관되며, 기기를 바꿔도 대화가 이어집니다.",
+  "y64": "Secure 🔒",
+  "y65": "열쇠가 초대링크에만 있어 저희조차 내용을 볼 수 없습니다. ⚠ 링크를 잃으면 복구가 안 됩니다.",
+  "y66": "이 상품이 맞습니다",
+  "y67": "이 상품 보러 가기 ▷",
+  "y01": "회선은 <b>세 갈래</b>입니다. 먼저 어느 쪽인지 정하시면 훨씬 쉽습니다.",
+  "y02": "💚 우리끼리 회선",
+  "y03": "연인 · 가족 · 친구 · 친지 · 동창 사이에 쓰는 회선입니다.",
+  "y04": "🗂️ 일상 업무용 회선",
+  "y05": "임원 · 중역 · 간부 · 비서 · 프로젝트 구성원 · 회사 업무 등에 쓰는 회선입니다.",
   "y06": "세 가지만 정하면 8종 중 하나가 정해집니다",
-  "y07": "<b>몇 명이 쓰나요?</b>둘이서(2인) 또는 여럿이서(최대 4인)",
-  "y08": "<b>상대를 바꿀 일이 있나요?</b>고정이면 저렴하고, 교체형은 상대를 내보내고 새로 초대할 수 있습니다. <b>이전 대화는 새 상대에게 보이지 않습니다.</b>",
-  "y09": "<b>암호화가 필요한가요?</b>Secure는 열쇠가 초대링크에만 있어 저희조차 내용을 볼 수 없습니다.",
   "y10": "⑥ 프로 비즈니스 ⭐",
   "y11": "프로 비즈니스 (고객 관리용)",
   "y12": "구독 하나로 방을 여러 개",
@@ -455,15 +539,36 @@ const I18N = {
   "langAria": "언어 바꾸기"
  },
  "en": {
-  "y01": "There are <b>two families</b> of plans. Deciding which one you need first makes everything simpler.",
-  "y02": "💚 For the people close to you",
-  "y03": "A line for a partner, family, friends — or an assistant or counterpart at work. The eight plans below belong here.",
-  "y04": "💼 To manage clients, patients or customers",
-  "y05": "One account lets you open <b>many rooms</b>, one per customer. Section ⑥ covers this in detail.",
+  "y70": "8 plans",
+  "y71": "💼 Pro Business line",
+  "y72": "3 tiers each",
+  "y73": "Open a separate room for each customer. The listing version also publishes your business in the public directory. Section ⑥ covers this in detail.",
+  "y74": "① Our own line · ② Everyday work line — 8 plans",
+  "y75": "Both families use the <b>same eight plans</b>. Only the people and the purpose differ — the way you choose is identical.",
+  "y50": "Tap the options below — the answer at the bottom updates instantly.",
+  "y51": "How many people will use it?",
+  "y52": "Just two",
+  "y53": "You and one other person",
+  "y54": "A few of us",
+  "y55": "Up to four people",
+  "y56": "Might the other person change?",
+  "y57": "Always the same person",
+  "y58": "You keep using it with whoever joins first. This is the cheaper option.",
+  "y59": "Swap as needed",
+  "y60": "You can remove someone and invite another. The earlier conversation stays hidden from the new person.",
+  "y61": "Do you need encryption?",
+  "y62": "Standard",
+  "y63": "Stored safely on our servers, and your conversation follows you to a new device.",
+  "y64": "Secure 🔒",
+  "y65": "The key lives only in the invite link, so not even we can read it. ⚠ Lose the link and nothing can be recovered.",
+  "y66": "This is the plan for you",
+  "y67": "See this plan ▷",
+  "y01": "There are <b>three families</b> of lines. Deciding which one you need first makes everything simpler.",
+  "y02": "💚 Our own line",
+  "y03": "For a partner, family, friends, relatives or old classmates.",
+  "y04": "🗂️ Everyday work line",
+  "y05": "For executives, directors, managers, assistants, project members and general company work.",
   "y06": "Three choices decide which of the eight you need",
-  "y07": "<b>How many people?</b>Just two, or up to four",
-  "y08": "<b>Will the other person change?</b>Fixed is cheaper. Swappable lets you remove someone and invite another — <b>and the earlier conversation stays hidden from the new person.</b>",
-  "y09": "<b>Do you need encryption?</b>On Secure plans the key lives only in the invite link, so not even we can read the contents.",
   "y10": "⑥ Pro Business ⭐",
   "y11": "Pro Business (for managing customers)",
   "y12": "One subscription, many rooms",
@@ -613,6 +718,89 @@ document.getElementById('langToggleBtn').addEventListener('click', () => {
   applyI18n();
   // 목차 암커로 이동한 상태에서 바꿔도 위치가 유지되도록 새로고침은 하지 않음
 });
+
+// =====================================================================
+// 2026-08-27 신설: 안내서 안에서 상품 찾기
+//
+// 8개 상품의 차이는 인원수 · 상대 교체 · 암호화 세 가지뿐입니다(2×2×2).
+// 세 가지를 고르면 답이 하나로 정해집니다.
+//
+// ⚠ 가격은 여기 적지 않습니다.
+//   구매 화면에도 같은 질문형이 있는데, 가격을 두 곳에서 관리하면
+//   언젠가 서로 다른 값을 보여주게 됩니다.
+//   안내서는 "어느 상품인지"까지만 알려주고 결제는 구매 화면으로 넘깁니다.
+// =====================================================================
+(function initGuideFinder(){
+  const pick = { ppl:'2', swap:'fixed', sec:'normal' };
+
+  const NAMES = {
+    ko: {
+      hotline_1to1:'핫라인', hotline_everybody:'에브리바디',
+      economy_4:'이코노미', premium_4:'프리미엄',
+      hotline_1to1_secure:'핫라인 Secure', hotline_everybody_secure:'에브리바디 Secure',
+      economy_4_secure:'이코노미 Secure', premium_4_secure:'프리미엄 Secure',
+    },
+    en: {
+      hotline_1to1:'Hotline', hotline_everybody:'Everybody',
+      economy_4:'Economy', premium_4:'Premium',
+      hotline_1to1_secure:'Hotline Secure', hotline_everybody_secure:'Everybody Secure',
+      economy_4_secure:'Economy Secure', premium_4_secure:'Premium Secure',
+    },
+  };
+
+  function tierOf(){
+    const base = (pick.ppl === '2')
+      ? (pick.swap === 'fixed' ? 'hotline_1to1' : 'hotline_everybody')
+      : (pick.swap === 'fixed' ? 'economy_4' : 'premium_4');
+    return base + (pick.sec === 'secure' ? '_secure' : '');
+  }
+
+  function render(){
+    const lang = (typeof LANG !== 'undefined' && LANG === 'en') ? 'en' : 'ko';
+    const tier = tierOf();
+    const nameEl = document.getElementById('gwName');
+    const whyEl = document.getElementById('gwWhy');
+    const goEl = document.getElementById('gwGo');
+    if (!nameEl) return;
+
+    nameEl.textContent = (NAMES[lang] || NAMES.ko)[tier] || tier;
+
+    // ⚠ 고른 답을 되돌려 말해줍니다.
+    //   결과만 툭 나오면 맞게 고른 건지 여전히 알 수 없습니다.
+    const a = [];
+    if (lang === 'en') {
+      a.push(pick.ppl === '2' ? 'Two of you' : 'Up to four of you');
+      a.push(pick.swap === 'fixed' ? 'the same person throughout' : 'with the option to swap');
+      a.push(pick.sec === 'secure' ? 'and the contents locked so even we cannot read them' : 'and conversations kept safely on our servers');
+      whyEl.textContent = a.join(', ') + '.';
+    } else {
+      a.push(pick.ppl === '2' ? '둘이서 쓰시고' : '최대 4명이 쓰시고');
+      a.push(pick.swap === 'fixed' ? '상대는 바꾸지 않으며' : '상대를 바꿔가며 쓰시고');
+      a.push(pick.sec === 'secure' ? '대화는 저희조차 볼 수 없게 잠급니다' : '대화는 서버에 안전하게 보관됩니다');
+      whyEl.textContent = a.join(', ') + '.';
+    }
+
+    // 구매 화면으로 넘길 때 고른 상품이 처음부터 선택되게 합니다.
+    if (goEl) goEl.href = 'aliascall_hotline_purchase.html?tier=' + tier;
+  }
+
+  document.querySelectorAll('.gw-opt').forEach((b) => {
+    b.addEventListener('click', () => {
+      const k = b.dataset.k;
+      document.querySelectorAll('.gw-opt[data-k="' + k + '"]').forEach((x) => x.classList.remove('on'));
+      b.classList.add('on');
+      pick[k] = b.dataset.v;
+      render();
+    });
+  });
+
+  render();
+  // 언어를 바꾸면 답도 다시 그립니다.
+  document.addEventListener('aliascall-lang-changed', render);
+  const langBtn = document.getElementById('langToggleBtn');
+  if (langBtn) langBtn.addEventListener('click', () => setTimeout(render, 50));
+})();
+
 </script>
 
 </body>
