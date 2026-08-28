@@ -397,6 +397,18 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 <div class="state show" id="stateLoading"><div class="loading-state" data-i18n="loading">불러오는 중…</div></div>
 <div class="state" id="stateError"><div class="loading-state" id="errorMsg" data-i18n="errorDefault">접근할 수 없습니다.</div></div>
 
+<!-- 2026-08-28 신설(v68): 승인 대기 화면
+     ⚠ 예전에는 이 경우도 stateError로 보내 "이 핫라인의 참가자가 아닙니다"가 떴습니다.
+       기다리면 되는 사람에게 거절당한 것처럼 보이는 안내였습니다. -->
+<div class="state" id="stateWaiting">
+  <div class="loading-state" style="text-align:center; color:#333;">
+    <div style="font-size:32px; margin-bottom:10px;">⏳</div>
+    <p style="font-weight:700; margin:0 0 6px;" data-i18n="waitTitle">개설자의 승인을 기다리는 중입니다.</p>
+    <p style="font-size:12.5px; color:#666; margin:0 0 16px;" data-i18n="waitSub">승인되면 바로 대화를 시작할 수 있어요. 이 화면을 닫으셔도 괜찮습니다.</p>
+    <button id="waitingRetryBtn" style="background:var(--teal); color:#fff; border:none; border-radius:10px; padding:11px 20px; font-weight:700; cursor:pointer;" data-i18n="waitRetry">새로고침</button>
+  </div>
+</div>
+
 <!-- 2026-08-21 신설: 암호화 상품인데 열쇠(키)가 없을 때 — 직접 입력할 수 있게 함 -->
 <div class="state" id="stateKeyNeeded">
   <div class="loading-state" style="text-align:left;">
@@ -408,6 +420,9 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 </div>
 
 <div class="state" id="stateChat">
+  <!-- 2026-08-28 신설(v68): 승인 대기자 — 개설자에게만 보입니다.
+       ⚠ 참가자 목록은 approved만 내려오므로 여기가 유일한 승인 창구입니다. -->
+  <div id="approveCard" style="display:none;"></div>
   <!-- 2026-08-25 신설: 방 상단 고정 안내판 (메뉴판 · 진료안내 등)
        ⚠ 이것은 "게시"이지 "전송"이 아님 — 손님이 방을 열었을 때 거기 있는 것이라
          정보통신망법 제50조의 광고성 정보 "전송"에 해당하지 않음.
@@ -733,6 +748,20 @@ const I18N = {
     errInvalidAccess: '올바르지 않은 접근입니다.',
     errCannotEnter: '입장할 수 없습니다.',
     errLoadFail: '불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+    // 2026-08-28 신설(v68): 승인 대기 · 승인 처리
+    waitTitle: '개설자의 승인을 기다리는 중입니다.',
+    waitSub: '승인되면 바로 대화를 시작할 수 있어요. 이 화면을 닫으셔도 괜찮습니다.',
+    waitRetry: '새로고침',
+    waitRejected: '이 대화방에 참가할 수 없습니다.',
+    apTitle: '승인을 기다리는 문의',
+    apPublic: '공개 목록에서 들어온 문의입니다.',
+    apApprove: '승인',
+    apReject: '거절',
+    apRejectConfirm: '거절하시겠어요? 이 분은 대화방에 들어올 수 없습니다.',
+    apFull: '정원이 가득 찼습니다.',
+    apFail: '처리하지 못했어요. 잠시 후 다시 시도해주세요.',
+    apSoundOn: '알림음 켜짐 — 눌러서 끄기',
+    apSoundOff: '알림음 꺼짐 — 눌러서 켜기',
 
     keyNeededMsg: '이 대화방은 암호화되어 있어요.<br>초대링크에 포함된 열쇠가 필요합니다.',
     keyPlaceholder: '열쇠(#k= 뒷부분)를 붙여넣으세요',
@@ -954,6 +983,20 @@ const I18N = {
     errorDefault: 'You cannot access this room.',
     errInvalidAccess: 'Invalid access.',
     errCannotEnter: 'Unable to join this room.',
+    // 2026-08-28 (v68)
+    waitTitle: 'Waiting for the owner to approve.',
+    waitSub: 'You can start chatting as soon as you are approved. It is fine to close this page.',
+    waitRetry: 'Refresh',
+    waitRejected: 'You cannot join this room.',
+    apTitle: 'Requests waiting for approval',
+    apPublic: 'This inquiry came from the public directory.',
+    apApprove: 'Approve',
+    apReject: 'Decline',
+    apRejectConfirm: 'Decline this request? They will not be able to join.',
+    apFull: 'The room is full.',
+    apFail: 'Could not process. Please try again shortly.',
+    apSoundOn: 'Sound on — tap to mute',
+    apSoundOff: 'Sound off — tap to unmute',
     errLoadFail: "Couldn't load. Please try again in a moment.",
 
     keyNeededMsg: 'This room is encrypted.<br>You need the key included in the invite link.',
@@ -1243,7 +1286,12 @@ async function init(){
       body: JSON.stringify({ hotlineId: directHotlineId || undefined, inviteToken: inviteToken || undefined, memberAnonId: hotlineAnonId }),
     });
     const data = await res.json();
-    if (!res.ok) { document.getElementById('errorMsg').textContent = data.error || T('errCannotEnter'); showState('stateError'); return; }
+    if (!res.ok) {
+      // 2026-08-28(v68): 승인 대기는 오류가 아닙니다. 기다리면 되는 상태입니다.
+      if (data.pendingApproval) { showState('stateWaiting'); return; }
+      if (data.rejected) { document.getElementById('errorMsg').textContent = T('waitRejected'); showState('stateError'); return; }
+      document.getElementById('errorMsg').textContent = data.error || T('errCannotEnter'); showState('stateError'); return;
+    }
 
     hotlineId = data.hotlineId;
     mySenderAnonId = data.mySenderAnonId;
@@ -1276,6 +1324,8 @@ async function init(){
 
     // 2026-08-25 신설(v50): 개설자 여부와 자리비움 상태는 서버가 내려줌
     isRoomOwner = !!data.isOwner;
+    roomOrigin = data.origin || 'direct';                 // 2026-08-28(v68)
+    renderPendingRequests(data.pendingRequests);          // 2026-08-28(v68)
     if (data.away) {
       awayStatus = data.away.status || 'available';
       awayMessage = data.away.message || '';   // 참가자에겐 안 내려옴(빈 값)
@@ -1320,6 +1370,9 @@ async function init(){
     showState('stateError');
   }
 }
+
+// 2026-08-28 신설(v68): 승인 대기 화면의 새로고침
+on('waitingRetryBtn', 'click', () => { showState('stateLoading'); init(); });
 
 // 2026-08-21 신설: "열쇠 직접 입력" 화면의 입장 버튼 — URL에 열쇠를 붙인 뒤 처음부터 다시 시도함
 on('manualKeySubmitBtn', 'click', () => {
@@ -2147,6 +2200,8 @@ async function syncReadState(){
     const data = await res.json();
     (data.members || []).forEach((m) => { memberLastReadAt[m.member_anon_id] = m.last_read_at; });
     refreshReadTags();
+    // 2026-08-28(v68): 새 문의가 들어오면 20초 안에 승인 카드가 뜹니다.
+    if (isRoomOwner) renderPendingRequests(data.pendingRequests);
   } catch (e) { /* 보정 실패는 조용히 넘어감 */ }
 }
 function startReadSync(){
@@ -3007,6 +3062,171 @@ function applyOwnerMenus(){
   const awayVisible = isRoomOwner || !roomIsPro;
   document.getElementById('openAwayBtn').style.display = awayVisible ? 'block' : 'none';
   document.getElementById('openBoardBtn').style.display = d;  // 안내판은 개설자만
+}
+
+// ─────────────────────────────────────────────
+// 2026-08-28 신설(v68): 승인 대기자 — 개설자만
+//
+// ⚠ 승인 대기는 hotline_members가 아니라 hotline_join_requests에 있습니다.
+//   그래서 참가자 목록(approved만)에는 나타나지 않습니다.
+//   서버가 pendingRequests로 따로 내려줍니다(개설자에게만).
+// ─────────────────────────────────────────────
+let roomOrigin = 'direct';
+let pendingRequests = [];
+
+// ── 새 문의 알림음 (딩동) ──
+// ⚠ 한 번만 울립니다. 계속 울리는 벨이 아닙니다.
+//   인수인계서 ③번(벨이 끌 때까지 무한히 울림)을 되풀이하지 않기 위함입니다.
+// ⚠ 20초 보정은 document.hidden이면 건너뜁니다.
+//   따라서 다른 탭을 보고 있을 때는 울리지 않습니다.
+let apSoundOn = (localStorage.getItem('aliascall_ap_sound') !== 'off');
+let apAudioCtx = null;
+// null = 아직 첫 목록을 못 받은 상태. 방에 들어오자마자 울리는 것을 막습니다.
+let apSeenRequestIds = null;
+
+function apDetectNew(list){
+  const ids = new Set((list || []).map((r) => r.id));
+  let hasNew = false;
+  if (apSeenRequestIds !== null) {
+    ids.forEach((id) => { if (!apSeenRequestIds.has(id)) hasNew = true; });
+  }
+  apSeenRequestIds = ids;
+  return hasNew;
+}
+
+// 음원 파일 없이 두 음(딩–동)을 만들어 씁니다. 내려받을 것이 없습니다.
+function playDingDong(){
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!apAudioCtx) apAudioCtx = new AC();
+    // ⚠ 브라우저는 사용자가 한 번도 누르지 않은 화면에서 소리를 막습니다.
+    //   막히면 조용히 넘어갑니다. 승인 흐름 자체는 영향받지 않습니다.
+    if (apAudioCtx.state === 'suspended') apAudioCtx.resume();
+    const t0 = apAudioCtx.currentTime;
+    [[987.77, 0], [783.99, 0.18]].forEach((pair) => {
+      const freq = pair[0], at = pair[1];
+      const osc = apAudioCtx.createOscillator();
+      const gain = apAudioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, t0 + at);
+      gain.gain.exponentialRampToValueAtTime(0.22, t0 + at + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + at + 0.42);
+      osc.connect(gain); gain.connect(apAudioCtx.destination);
+      osc.start(t0 + at); osc.stop(t0 + at + 0.45);
+    });
+  } catch (e) { /* 소리가 안 나도 승인은 그대로 됩니다 */ }
+}
+
+// ⚠ 승인 함수는 JWT ON입니다. 개설자 토큰과 apikey가 함께 필요합니다.
+function ownerHeaders(){
+  const h = { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY };
+  if (accessToken) h['Authorization'] = 'Bearer ' + accessToken;
+  return h;
+}
+
+function renderPendingRequests(list){
+  const hasNew = apDetectNew(list);
+  pendingRequests = list || [];
+  const box = document.getElementById('approveCard');
+  if (!box) return;
+  box.textContent = '';
+  if (!isRoomOwner || pendingRequests.length === 0) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  box.style.cssText = 'display:block; background:#fff; border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; margin:10px 12px 0;';
+
+  const head = document.createElement('div');
+  head.style.cssText = 'display:flex; align-items:center; gap:8px; margin-bottom:2px;';
+
+  const headText = document.createElement('div');
+  headText.style.cssText = 'flex:1; min-width:0; font-weight:700; font-size:13px; color:#333;';
+  headText.textContent = '⏳ ' + T('apTitle') + ' (' + pendingRequests.length + ')';
+  head.appendChild(headText);
+
+  // 알림음 켜기/끄기 — 이 브라우저에만 저장됩니다(방문자와 무관).
+  const bell = document.createElement('button');
+  bell.type = 'button';
+  bell.style.cssText = 'background:none; border:none; font-size:16px; line-height:1; padding:2px 4px; cursor:pointer;';
+  const paintBell = () => {
+    bell.textContent = apSoundOn ? '🔔' : '🔕';
+    bell.title = T(apSoundOn ? 'apSoundOn' : 'apSoundOff');
+    bell.setAttribute('aria-label', bell.title);
+  };
+  paintBell();
+  bell.addEventListener('click', () => {
+    apSoundOn = !apSoundOn;
+    localStorage.setItem('aliascall_ap_sound', apSoundOn ? 'on' : 'off');
+    paintBell();
+    // 켤 때 한 번 들려줍니다. 소리가 막혀 있으면 이때 풀립니다(사용자가 누른 직후라).
+    if (apSoundOn) playDingDong();
+  });
+  head.appendChild(bell);
+
+  box.appendChild(head);
+
+  if (roomOrigin === 'public_inquiry') {
+    const sub = document.createElement('div');
+    sub.style.cssText = 'font-size:11.5px; color:#777; margin-bottom:8px;';
+    sub.textContent = '📣 ' + T('apPublic');
+    box.appendChild(sub);
+  }
+
+  pendingRequests.forEach((r) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:8px; padding:8px 0; border-top:1px solid var(--line);';
+
+    const name = document.createElement('div');
+    name.style.cssText = 'flex:1; min-width:0; font-size:13px; color:#333; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+    // ⚠ 별명은 방문자가 직접 적은 값입니다. textContent로만 넣습니다.
+    name.textContent = r.nickname || '방문자';
+    row.appendChild(name);
+
+    const okBtn = document.createElement('button');
+    okBtn.type = 'button';
+    okBtn.style.cssText = 'background:var(--teal); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:12.5px; font-weight:700; cursor:pointer;';
+    okBtn.textContent = T('apApprove');
+    okBtn.addEventListener('click', () => decideJoinRequest(r.id, 'approve', row));
+    row.appendChild(okBtn);
+
+    const noBtn = document.createElement('button');
+    noBtn.type = 'button';
+    noBtn.style.cssText = 'background:#fff; color:#888; border:1.5px solid var(--line); border-radius:8px; padding:7px 12px; font-size:12.5px; cursor:pointer;';
+    noBtn.textContent = T('apReject');
+    noBtn.addEventListener('click', () => {
+      if (!confirm(T('apRejectConfirm'))) return;
+      decideJoinRequest(r.id, 'reject', row);
+    });
+    row.appendChild(noBtn);
+
+    box.appendChild(row);
+  });
+
+  // ⚠ 그리기가 끝난 뒤에 울립니다. 소리부터 나고 화면이 비어 있으면 이상합니다.
+  if (hasNew && apSoundOn) playDingDong();
+}
+
+async function decideJoinRequest(requestId, decision, rowEl){
+  // 두 번 눌리는 것을 막습니다.
+  if (rowEl) rowEl.querySelectorAll('button').forEach((b) => { b.disabled = true; b.style.opacity = '0.5'; });
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-approve-join`, {
+      method: 'POST', headers: ownerHeaders(),
+      body: JSON.stringify({ hotlineId, requestId, decision }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.reason === 'room_full' ? T('apFull') : (data.error || T('apFail')));
+      if (rowEl) rowEl.querySelectorAll('button').forEach((b) => { b.disabled = false; b.style.opacity = '1'; });
+      return;
+    }
+    // 목록에서 빼고 다시 그립니다. 승인된 사람은 곧 참가자 목록에 나타납니다.
+    renderPendingRequests(pendingRequests.filter((r) => r.id !== requestId));
+  } catch (e) {
+    console.error('[hotline-room] 승인 처리 실패', e);
+    alert(T('apFail'));
+    if (rowEl) rowEl.querySelectorAll('button').forEach((b) => { b.disabled = false; b.style.opacity = '1'; });
+  }
 }
 
 // ─────────────────────────────────────────────
