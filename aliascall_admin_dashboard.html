@@ -127,6 +127,7 @@ tr:hover td{ background:rgba(31,111,107,.03); }
   <div class="nav-tab" data-tab="products">상품 관리</div>
   <div class="nav-tab" data-tab="hotlinePricing">핫라인 요금정책</div>
   <div class="nav-tab" data-tab="grants">🎁 수동 부여</div>
+  <div class="nav-tab" data-tab="verify">🔎 업체 심사</div>
   <div class="nav-tab" data-tab="settings">⚙️ 환경설정</div>
 </div>
 
@@ -374,6 +375,18 @@ tr:hover td{ background:rgba(31,111,107,.03); }
   </div>
 
   <!-- 2026-08-26 신설(v52): 환경설정 — 코드에 박혀 있던 값들을 여기서 바꿈 -->
+
+  <div class="tab-panel" data-panel="verify">
+    <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.8; margin-bottom:14px;">
+      공개 목록에 올리려는 업체가 낸 서류를 확인합니다.
+      <b>사업자등록증</b>은 모두, 법률·세무·회계·의료·약국·동물병원·부동산은 <b>해당 자격증까지</b> 봅니다.<br>
+      ⚠ 무자격자가 "○○변호사사무실"로 게재되면 <b>게재한 저희에게 책임</b>이 옵니다.
+      상호·대표자명·업종이 서류와 맞는지 반드시 대조하세요.<br>
+      ⚠ 서류 파일은 비공개 보관함에 있습니다. 열람 링크는 <b>10분 뒤 만료</b>됩니다.
+    </p>
+    <div id="verifyList"><div class="empty-row">불러오는 중…</div></div>
+  </div>
+
   <div class="tab-panel" data-panel="settings">
     <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">
       아래 값들은 <b>바꾸는 즉시 반영</b>됩니다. 함수를 다시 배포할 필요가 없습니다.<br>
@@ -762,6 +775,135 @@ let hlPlansCache = {}; // key: tier|duration -> { price_krw, usage_cap_gb }
 //   app_settings가 아니라 public_listing_prices 표를 직접 다룹니다.
 //   구조는 위 "핫라인 요금정책"과 같습니다.
 // =====================================================================
+
+
+// =====================================================================
+// 2026-08-28 신설: 업체 심사
+//
+// ⚠ 무자격자가 "○○변호사사무실"로 게재되면 변호사법 위반이고,
+//   게재한 저희에게 책임이 옵니다. 그래서 상호·업종이 서류와 맞는지
+//   사람이 직접 대조해야 합니다.
+//
+// ⚠ 서류는 비공개 보관함에 있습니다.
+//   공개 주소를 만들면 면허번호·주민등록번호가 그대로 노출됩니다.
+//   반드시 시간이 지나면 만료되는 임시 링크로만 엽니다.
+// =====================================================================
+const VERIFY_BUCKET = 'aliascall-verify';
+const VERIFY_LINK_SECONDS = 600;   // 10분
+
+async function loadVerifications(){
+  const box = document.getElementById('verifyList');
+  if (!box) return;
+  box.innerHTML = '<div class="empty-row">불러오는 중…</div>';
+
+  let rows = [];
+  try {
+    const { data, error } = await sb.rpc('admin_pending_verifications');
+    if (error) throw error;
+    rows = data || [];
+  } catch (e) {
+    console.error('[verify] 조회 실패', e);
+    box.innerHTML = '<div class="empty-row">불러오지 못했습니다.</div>';
+    return;
+  }
+
+  if (rows.length === 0) {
+    box.innerHTML = '<div class="empty-row">확인을 기다리는 서류가 없습니다.</div>';
+    return;
+  }
+
+  box.innerHTML = '';
+  rows.forEach((r) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.cssText = 'background:#fff; border:1.5px solid var(--line); border-radius:12px; padding:16px; margin-bottom:12px;';
+
+    const docLabel = (r.doc_type === 'business_license') ? '사업자등록증' : '자격증';
+    const head = document.createElement('div');
+    head.style.cssText = 'display:flex; align-items:center; gap:9px; margin-bottom:8px;';
+    head.innerHTML =
+      '<span style="flex:1; font-size:15px; font-weight:700;"></span>' +
+      '<span style="font-size:10.5px; font-weight:700; background:var(--teal-tint); color:var(--teal-deep); border-radius:20px; padding:3px 9px;">' + docLabel + '</span>';
+    head.querySelector('span').textContent = r.business_name || '(상호 없음)';
+    card.appendChild(head);
+
+    const meta = document.createElement('div');
+    meta.style.cssText = 'font-size:11.5px; color:var(--ink-soft); line-height:1.7; margin-bottom:12px;';
+    meta.textContent = (r.category_label || '업종 미지정')
+      + (r.requires_license ? ' · 자격증 필요' : ' · 사업자등록증만')
+      + ' · ' + new Date(r.created_at).toLocaleString('ko-KR')
+      + (r.original_name ? (' · ' + r.original_name) : '');
+    card.appendChild(meta);
+
+    const btns = document.createElement('div');
+    btns.style.cssText = 'display:flex; gap:8px; flex-wrap:wrap;';
+
+    const view = document.createElement('button');
+    view.type = 'button';
+    view.style.cssText = 'border:1.5px solid var(--line); background:#fff; border-radius:9px; padding:9px 14px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;';
+    view.textContent = '📄 서류 보기';
+    view.addEventListener('click', () => openDoc(r.file_path, view));
+    btns.appendChild(view);
+
+    const ok = document.createElement('button');
+    ok.type = 'button';
+    ok.style.cssText = 'border:none; background:var(--teal-deep); color:#fff; border-radius:9px; padding:9px 16px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;';
+    ok.textContent = '✓ 승인';
+    ok.addEventListener('click', () => reviewDoc(r.verification_id, true, null, card));
+    btns.appendChild(ok);
+
+    const no = document.createElement('button');
+    no.type = 'button';
+    no.style.cssText = 'border:none; background:var(--danger); color:#fff; border-radius:9px; padding:9px 16px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;';
+    no.textContent = '✕ 반려';
+    no.addEventListener('click', () => {
+      // ⚠ 반려 사유는 반드시 적습니다. 업체가 무엇을 고쳐야 할지 알아야 합니다.
+      const why = prompt('반려 사유를 적어주세요.\n(업체 화면에 그대로 보입니다)');
+      if (why === null) return;
+      if (!why.trim()) { alert('사유를 적어주세요.'); return; }
+      reviewDoc(r.verification_id, false, why.trim(), card);
+    });
+    btns.appendChild(no);
+
+    card.appendChild(btns);
+    box.appendChild(card);
+  });
+}
+
+async function openDoc(path, btn){
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = '여는 중…';
+  try {
+    // ⚠ 공개 주소를 만들면 안 됩니다. 시간이 지나면 막히는 임시 링크만 씁니다.
+    const { data, error } = await sb.storage.from(VERIFY_BUCKET)
+      .createSignedUrl(path, VERIFY_LINK_SECONDS);
+    if (error) throw error;
+    window.open(data.signedUrl, '_blank', 'noopener');
+  } catch (e) {
+    console.error('[verify] 서류 열기 실패', e);
+    alert('서류를 열지 못했습니다. 보관함(aliascall-verify)이 만들어져 있는지 확인해주세요.');
+  }
+  btn.disabled = false; btn.textContent = old;
+}
+
+async function reviewDoc(id, approve, reason, card){
+  try {
+    const { data, error } = await sb.rpc('admin_review_verification', {
+      p_verification_id: id, p_approve: approve, p_reason: reason,
+    });
+    if (error) throw error;
+    if (!data.ok) { alert(data.error || '처리하지 못했습니다.'); return; }
+    card.remove();
+    // 남은 것이 없으면 안내를 다시 그립니다.
+    const box = document.getElementById('verifyList');
+    if (box && box.children.length === 0) {
+      box.innerHTML = '<div class="empty-row">확인을 기다리는 서류가 없습니다.</div>';
+    }
+  } catch (e) {
+    console.error('[verify] 심사 실패', e);
+    alert('처리하지 못했습니다.');
+  }
+}
 
 let plPrices = [];
 
@@ -1301,6 +1443,7 @@ function loadAllTabs(){
   updateGrantForm();     // 2026-08-26 신설(v53)
   loadGrantHistory();
   loadPublicListingPrices();  // 2026-08-26 신설(v54)
+  loadVerifications();        // 2026-08-28 신설: 업체 심사
 }
 
 (async () => {

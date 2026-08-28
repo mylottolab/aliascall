@@ -167,6 +167,7 @@ const I18N = {
     displayNameSave: '저장',
     displayNameSaved: '저장했어요.',
     digestBtn: '📖 대화 모아보기',
+    bizBtn: '📣 업체 공개 등록',
     newRoomBtn: '+ 새 방 만들기',
     newRoomLabel: '의뢰인 이름 (선택)',
     newRoomPlaceholder: '예: 김철수 의뢰인',
@@ -225,6 +226,7 @@ const I18N = {
     displayNameSave: 'Save',
     displayNameSaved: 'Saved.',
     digestBtn: '📖 Conversation digest',
+    bizBtn: '📣 List my business',
     newRoomBtn: '+ New room',
     newRoomLabel: 'Client name (optional)',
     newRoomPlaceholder: 'e.g. Kim Chulsoo',
@@ -493,6 +495,17 @@ function renderSubCard(sub){
     window.location.href = 'aliascall_hotline_digest.html?sub=' + encodeURIComponent(sub.id);
   });
   tools.appendChild(digestBtn);
+
+  // ⚠ 2026-08-28 신설: 공개 목록에 올리는 입구.
+  //   여기가 없으면 상품을 사고도 어디서 등록하는지 알 수 없습니다.
+  const bizBtn = document.createElement('button');
+  bizBtn.type = 'button';
+  bizBtn.className = 'ghost';
+  bizBtn.textContent = T('bizBtn');
+  bizBtn.addEventListener('click', () => {
+    window.location.href = 'aliascall_business_register.html?sub=' + encodeURIComponent(sub.id);
+  });
+  tools.appendChild(bizBtn);
 
   if (expired) {
     const renew = document.createElement('button');
