@@ -103,6 +103,18 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 .room-dot.on{ background:var(--found,#2E7D4F); }
 .room-dot.off{ background:var(--line); }
 .room-acts{ display:flex; gap:5px; flex-shrink:0; }
+/* 2026-08-28(v68): 좁은 화면에서 단추 4개가 이름 칸을 다 먹어
+   방 이름이 "📣 …"로 잘려 어느 방인지 구분되지 않던 문제.
+   단추를 아랫줄로 내려 이름에 한 줄을 통째로 줍니다. */
+@media (max-width: 560px){
+  .room-row{ flex-wrap:wrap; }
+  .room-info{ flex:1 1 auto; }
+  .room-acts{ width:100%; justify-content:flex-end; margin-top:6px; }
+}
+/* 공개 목록에서 들어온 방 표시 — 이름 칸 밖으로 뺍니다 */
+.room-tag{ display:inline-block; flex-shrink:0; font-size:10px; font-weight:700;
+  background:var(--coral-tint, #FDEAE1); color:var(--coral, #E8734A);
+  border-radius:6px; padding:2px 6px; margin-right:5px; vertical-align:1px; }
 .room-acts button{ border:1.5px solid var(--line); background:#fff; border-radius:8px; padding:6px 9px; font-size:11px; cursor:pointer; font-family:inherit; color:var(--ink); white-space:nowrap; }
 .rooms-more{ text-align:center; font-size:12px; color:var(--teal); background:none; border:none; cursor:pointer; padding:10px; width:100%; font-family:inherit; }
 .sub-status{ font-size:11.5px; color:var(--ink-soft); min-height:15px; margin-top:6px; }
@@ -175,6 +187,7 @@ const I18N = {
     capSaved: '저장했어요.',
     capCleared: '기본값을 따릅니다.',
     capClamped: '요금제 상한까지만 적용됐어요.',
+    roomTagPublic: '공개',
     capMax: '최대',
     capUnit: '건',
     digestBtn: '📖 대화 모아보기',
@@ -245,6 +258,7 @@ const I18N = {
     capSaved: 'Saved.',
     capCleared: 'Using the default.',
     capClamped: 'Capped at your plan limit.',
+    roomTagPublic: 'Public',
     capMax: 'max',
     capUnit: '',
     digestBtn: '📖 Conversation digest',
@@ -766,7 +780,17 @@ function renderRoomRow(sub, r){
   info.className = 'room-info';
   const nm = document.createElement('div');
   nm.className = 'room-name';
-  nm.textContent = r.client_label || r.title || T('roomUnnamed');
+  // 2026-08-28(v68): '📣 채무과다' → [공개] 채무과다
+  // ⚠ 이모지가 좁은 이름 칸에서 두 칸을 먹어 별명이 통째로 잘렸습니다.
+  const rawLabel = r.client_label || r.title || T('roomUnnamed');
+  const isPub = /^📣\s*/.test(rawLabel);
+  if (isPub) {
+    const tag = document.createElement('span');
+    tag.className = 'room-tag';
+    tag.textContent = T('roomTagPublic');
+    nm.appendChild(tag);
+  }
+  nm.appendChild(document.createTextNode(rawLabel.replace(/^📣\s*/, '')));
   const sb2 = document.createElement('div');
   sb2.className = 'room-sub';
   sb2.textContent = `${T('roomLastTalk')} ${relTime(r.last_activity_at)}`
@@ -799,11 +823,16 @@ function renderRoomRow(sub, r){
   const renameBtn = document.createElement('button');
   renameBtn.type = 'button'; renameBtn.textContent = T('roomRename');
   renameBtn.addEventListener('click', async () => {
-    const v = prompt(T('renamePrompt'), r.client_label || '');
+    // 2026-08-28(v68): 📣는 표시용이라 물어볼 때 빼고, 저장할 때 되붙입니다.
+    //   안 그러면 사장님이 이름을 고칠 때마다 📣가 사라져
+    //   공개 문의로 온 방인지 알 수 없게 됩니다.
+    const hadTag = /^📣\s*/.test(r.client_label || '');
+    const v = prompt(T('renamePrompt'), (r.client_label || '').replace(/^📣\s*/, ''));
     if (v === null) return;
-    const { data, error } = await sb.rpc('set_room_label', { p_hotline_id: r.id, p_label: v });
+    const newLabel = v.trim() ? ((hadTag ? '📣 ' : '') + v.trim()) : '';
+    const { data, error } = await sb.rpc('set_room_label', { p_hotline_id: r.id, p_label: newLabel });
     if (error || !data?.ok) { alert(data?.error || T('archiveFail')); return; }
-    r.client_label = v.trim() || null;
+    r.client_label = newLabel || null;
     nm.textContent = r.client_label || T('roomUnnamed');
   });
   acts.appendChild(renameBtn);
