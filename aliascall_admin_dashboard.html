@@ -460,6 +460,13 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
     document.querySelector('.tab-panel[data-panel="' + tab.dataset.tab + '"]').classList.add('active');
+
+    // ⚠ 2026-08-28: 탭을 열 때마다 다시 읽습니다.
+    //   예전에는 페이지가 열릴 때 한 번만 읽었습니다. 그런데 그 시점에는
+    //   아직 로그인 확인이 끝나지 않아 관리자로 인정되지 않고,
+    //   빈 목록을 받은 채로 그대로 남아 있었습니다.
+    //   ("서류를 올렸는데 심사 목록이 비어 있다"의 원인)
+    if (tab.dataset.tab === 'verify') loadVerifications();
   });
 });
 
@@ -1443,6 +1450,7 @@ function loadAllTabs(){
   updateGrantForm();     // 2026-08-26 신설(v53)
   loadGrantHistory();
   loadPublicListingPrices();  // 2026-08-26 신설(v54)
+  // ⚠ 로그인 확인이 끝난 뒤에 읽습니다. 그 전에 부르면 관리자로 인정되지 않습니다.
   loadVerifications();        // 2026-08-28 신설: 업체 심사
 }
 
