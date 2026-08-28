@@ -1288,7 +1288,7 @@ async function init(){
     const data = await res.json();
     if (!res.ok) {
       // 2026-08-28(v68): 승인 대기는 오류가 아닙니다. 기다리면 되는 상태입니다.
-      if (data.pendingApproval) { showState('stateWaiting'); return; }
+      if (data.pendingApproval) { showState('stateWaiting'); listenForDecision(inviteToken); return; }
       if (data.rejected) { document.getElementById('errorMsg').textContent = T('waitRejected'); showState('stateError'); return; }
       document.getElementById('errorMsg').textContent = data.error || T('errCannotEnter'); showState('stateError'); return;
     }
@@ -1369,6 +1369,22 @@ async function init(){
     document.getElementById('errorMsg').textContent = T('errLoadFail');
     showState('stateError');
   }
+}
+
+// 2026-08-28 신설(v68): 승인/거절을 실시간으로 받습니다.
+// ⚠ decide-join이 승인 직후 이 채널로 방송합니다(2026-08-21부터 있던 구조).
+//   기다리는 분이 새로고침을 눌러야만 들어갈 수 있으면 답답합니다.
+let joinDecisionChannel = null;
+function listenForDecision(inviteToken){
+  if (!inviteToken || joinDecisionChannel) return;   // 개설자 링크(?hotline=)에는 토큰이 없습니다
+  try {
+    joinDecisionChannel = sb.channel('hotline-join-' + inviteToken + '-' + hotlineAnonId);
+    joinDecisionChannel.on('broadcast', { event: 'decision' }, (msg) => {
+      if (msg?.payload?.decision === 'approve') { showState('stateLoading'); init(); }
+      else { document.getElementById('errorMsg').textContent = T('waitRejected'); showState('stateError'); }
+    });
+    joinDecisionChannel.subscribe();
+  } catch (e) { /* 실시간이 안 되면 새로고침 버튼으로 들어갑니다 */ }
 }
 
 // 2026-08-28 신설(v68): 승인 대기 화면의 새로고침
@@ -3210,12 +3226,17 @@ async function decideJoinRequest(requestId, decision, rowEl){
   // 두 번 눌리는 것을 막습니다.
   if (rowEl) rowEl.querySelectorAll('button').forEach((b) => { b.disabled = true; b.style.opacity = '0.5'; });
   try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-approve-join`, {
+    // ⚠ 2026-08-28(v68): 승인 창구는 이 함수 하나입니다.
+    //   핫라인 관리 화면(aliascall_hotline_manage.html)도 같은 함수를 부릅니다.
+    //   따로 만들면 어느 쪽이 진짜 승인인지 흐려집니다.
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-decide-join`, {
       method: 'POST', headers: ownerHeaders(),
-      body: JSON.stringify({ hotlineId, requestId, decision }),
+      body: JSON.stringify({ requestId, decision }),
     });
     const data = await res.json();
     if (!res.ok) {
+      // 다른 창에서 이미 처리했을 뿐이면 오류가 아닙니다. 목록에서만 빼줍니다.
+      if (data.already) { renderPendingRequests(pendingRequests.filter((r) => r.id !== requestId)); return; }
       alert(data.reason === 'room_full' ? T('apFull') : (data.error || T('apFail')));
       if (rowEl) rowEl.querySelectorAll('button').forEach((b) => { b.disabled = false; b.style.opacity = '1'; });
       return;
