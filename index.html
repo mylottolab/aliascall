@@ -259,6 +259,13 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 .alerts-strip.show{ display:flex; }
 .alerts-strip .n{ background:#fff; color:var(--coral); font-size:12px; font-weight:700; border-radius:20px; padding:2px 9px; }
 .alerts-strip .t{ flex:1; font-size:12.5px; font-weight:700; }
+/* 2026-08-29 신설(v69): 승인 대기 문의 — 보안회선 쪽.
+   ⚠ 위 alerts-strip은 안심콜(등록물) 알림이라 색과 이동 위치가 다릅니다. */
+.wait-strip{ display:none; align-items:center; gap:10px; background:var(--teal-deep, #123F3D);
+  border-radius:12px; padding:12px 14px; margin-top:10px; text-decoration:none; color:#fff; }
+.wait-strip.show{ display:flex; }
+.wait-strip .n{ background:#fff; color:var(--teal-deep, #123F3D); font-size:12px; font-weight:700; border-radius:20px; padding:2px 9px; }
+.wait-strip .t{ flex:1; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 /* 내 회선 */
 
@@ -393,6 +400,14 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
         <span class="pt" data-i18n="msgPt3">고객 관리</span>
       </div>
     </button>
+
+    <!-- ⚠ 2026-08-29 신설(v69): 승인을 기다리는 문의.
+         승인 카드는 그 방의 대화방을 열어야만 보입니다. -->
+    <a class="wait-strip" id="waitStrip" href="#">
+      <span class="n" id="waitCount">0</span>
+      <span class="t" id="waitText" data-i18n="waitStrip">승인을 기다리는 문의가 있습니다</span>
+      <span>›</span>
+    </a>
 
     <div class="mine-head">
       <span class="t" data-i18n="myLines">내 회선</span>
@@ -1316,6 +1331,79 @@ async function renderMyLines(containerId, limit){
   });
 }
 
+// ── 2026-08-29 신설(v69): 승인을 기다리는 문의 ──
+// ⚠ RLS가 "내 핫라인의 신청"만 내려줍니다(관리 화면과 같은 방식).
+let waitSoundReady = false;   // 화면을 처음 열 때는 울리지 않습니다
+let waitLastIds = null;
+let waitAudioCtx = null;
+
+// 음원 파일 없이 두 음(딩–동)을 만들어 씁니다. 한 번만 울립니다.
+function playWaitDing(){
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!waitAudioCtx) waitAudioCtx = new AC();
+    // ⚠ 브라우저는 한 번도 누르지 않은 화면에서 소리를 막습니다. 막히면 조용히 넘어갑니다.
+    if (waitAudioCtx.state === 'suspended') waitAudioCtx.resume();
+    const t0 = waitAudioCtx.currentTime;
+    [[987.77, 0], [783.99, 0.18]].forEach((pair) => {
+      const osc = waitAudioCtx.createOscillator();
+      const gain = waitAudioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.value = pair[0];
+      gain.gain.setValueAtTime(0.0001, t0 + pair[1]);
+      gain.gain.exponentialRampToValueAtTime(0.22, t0 + pair[1] + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + pair[1] + 0.42);
+      osc.connect(gain); gain.connect(waitAudioCtx.destination);
+      osc.start(t0 + pair[1]); osc.stop(t0 + pair[1] + 0.45);
+    });
+  } catch (e) { /* 소리가 안 나도 띠는 뜹니다 */ }
+}
+
+async function refreshWaitStrip(){
+  const strip = document.getElementById('waitStrip');
+  if (!strip || !cachedSession) return;
+
+  let rows = [];
+  try {
+    const { data, error } = await sb.from('hotline_join_requests')
+      .select('id, hotline_id, nickname, requested_at')
+      .eq('status', 'pending')
+      .order('requested_at', { ascending: false })
+      .limit(20);
+    if (error) return;
+    rows = data || [];
+  } catch (e) { return; }
+
+  strip.classList.toggle('show', rows.length > 0);
+  if (rows.length === 0) { waitLastIds = new Set(); return; }
+
+  const t = T();
+  document.getElementById('waitCount').textContent = String(rows.length);
+  document.getElementById('waitText').textContent = (rows.length === 1)
+    ? ((rows[0].nickname || '') + t.waitStripOne) : t.waitStrip;
+  // ⚠ 승인 단추는 그 방의 대화방에 있습니다.
+  strip.setAttribute('href', 'aliascall_hotline_room.html?hotline=' + rows[0].hotline_id);
+
+  const ids = new Set(rows.map((r) => r.id));
+  let hasNew = false;
+  if (waitLastIds !== null) ids.forEach((id) => { if (!waitLastIds.has(id)) hasNew = true; });
+  waitLastIds = ids;
+  if (hasNew && waitSoundReady && localStorage.getItem('aliascall_ap_sound') !== 'off') playWaitDing();
+  waitSoundReady = true;
+}
+
+function watchWaitStrip(){
+  try { refreshWaitStrip(); } catch (e) { console.warn('[home] 대기 문의 조회 실패', e); }
+  try {
+    sb.channel('home-join-requests')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'hotline_join_requests' },
+          () => refreshWaitStrip())
+      .subscribe();
+  } catch (e) { /* 실시간이 안 되면 아래 주기 조회로 갑니다 */ }
+  // ⚠ 실시간이 끊길 수 있어 1분마다 한 번 더 봅니다.
+  setInterval(() => { if (!document.hidden) refreshWaitStrip(); }, 60000);
+}
+
 // 확인할 알림이 있으면 첫 화면 맨 위에 띄웁니다.
 function updateAlertsStrip(count){
   const strip = document.getElementById('alertsStrip');
@@ -1388,6 +1476,8 @@ const I18N = {
     msgSub: '번호 없이, 우리끼리만 아는 회선을 엽니다. 저희 서버도 못 보는 잠금까지.',
     msgPt1: '연인 · 가족', msgPt2: '업무 · 비서', msgPt3: '고객 관리',
     alertsStrip: '확인해야 할 알림이 있습니다',
+    waitStrip: '승인을 기다리는 문의가 있습니다',
+    waitStripOne: '님의 문의가 승인을 기다립니다',
     lineNoTalk: '아직 대화가 없습니다',
     bannerTitle: '📣 이런 곳도 있어요',
     bannerAll: '전체 보기 ›',
@@ -1489,6 +1579,8 @@ const I18N = {
     msgSub: 'Open a line only you and your people know — no phone numbers. Lockable so even we cannot read it.',
     msgPt1: 'Partner · family', msgPt2: 'Work · assistant', msgPt3: 'Client care',
     alertsStrip: 'You have alerts to check',
+    waitStrip: 'Inquiries are waiting for your approval',
+    waitStripOne: ' is waiting for your approval',
     lineNoTalk: 'No conversation yet',
     bannerTitle: '📣 Places you can reach',
     bannerAll: 'See all ›',
@@ -1694,7 +1786,6 @@ function renderLoginStatus(){
     cachedNickname = profile?.nickname || '';
     document.getElementById('listenReminder').style.display = 'block';
     initIncomingWatcher(session.user.id);
-    watchWaitStrip(); // 2026-08-29(v69): 승인을 기다리는 문의
   }
   renderNotifySettings(sb, 'notifySettingsContainer'); // 2026-08-19 (2차): 통합 알림설정 렌더링
   renderMySubs(); // 2026-08-27: 로그인 확인 후 구독 카드
@@ -1703,6 +1794,10 @@ function renderLoginStatus(){
   renderMyLines('myLinesHome', 3);
   renderMyLines('myLinesFull');
   applyLang(currentLang);
+  // ⚠ 2026-08-29(v69): 반드시 맨 마지막에, try로 감쌉니다.
+  //   중간에 두었더니 여기서 오류가 났을 때 "내 회선"까지 통째로 안 그려졌습니다.
+  //   새로 붙이는 기능이 기존 화면을 죽이면 안 됩니다.
+  if (session) { try { watchWaitStrip(); } catch (e) { console.warn('[home] 대기 문의 띠 실패', e); } }
 })();
 </script>
 </body>
