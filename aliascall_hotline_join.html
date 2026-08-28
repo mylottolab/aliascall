@@ -238,6 +238,31 @@ async function init(){
     return;
   }
 
+  // 🔴 2026-08-29 신설(v69): 개설자가 자기 방 링크를 눌렀을 때
+  //   예전에는 개설자도 참가자로 등록돼 정원 한 자리를 차지했습니다.
+  //   전문관리용 방은 정원이 2명(개설자+의뢰인)이라, 변호사가 "내 방이
+  //   어떻게 보이나" 확인차 한 번 들어가 보면 그 뒤로 의뢰인이 들어오지 못하고
+  //   "정원이 가득 찼습니다"만 뜹니다. 이유를 알 방법도 없습니다.
+  //   (2026-08-26 홍길동 건이 사흘간 막혀 있던 실제 원인이었습니다)
+  //
+  //   ⚠ RLS와 owner_user_id를 함께 걸어 "내 방"일 때만 걸립니다.
+  //     남의 방 토큰으로는 아무것도 돌아오지 않습니다.
+  //   ⚠ ?hotline= 으로 보냅니다. 그래야 대화방이 개설자로 엽니다.
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      const { data: mine } = await sb.from('hotlines')
+        .select('id')
+        .eq('invite_token', inviteToken)
+        .eq('owner_user_id', session.user.id)
+        .maybeSingle();
+      if (mine) {
+        window.location.replace('aliascall_hotline_room.html?hotline=' + mine.id + window.location.hash);
+        return;
+      }
+    }
+  } catch (e) { console.warn('[hotline] 개설자 확인 실패(계속 진행)', e); }
+
   // 먼저 이미 신청/승인된 적 있는지 확인 (재방문 케이스)
   try {
     const statusRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-check-join-status`, {
