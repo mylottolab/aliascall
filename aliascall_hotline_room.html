@@ -1285,7 +1285,24 @@ async function init(){
   const directHotlineId = params.get('hotline');
   if (!inviteToken && !directHotlineId) { document.getElementById('errorMsg').textContent = T('errInvalidAccess'); showState('stateError'); return; }
 
-  const { data: { session } } = await sb.auth.getSession();
+  let { data: { session } } = await sb.auth.getSession();
+
+  // 🔴 2026-08-29(v69): 로그인 복원을 기다립니다.
+  //   ?hotline= 은 개설자만 쓰는 주소입니다(관리 화면·홈 알림 띠).
+  //   방문자는 언제나 ?t= 로 들어옵니다.
+  //   그런데 페이지가 막 열린 순간에는 저장된 로그인이 아직 안 살아나
+  //   getSession()이 비어서 돌아올 때가 있습니다. 그대로 진행하면
+  //   서버가 "로그인 안 한 방문자"로 보고 승인 대기 화면을 내보냅니다.
+  //   (홈 화면 띠를 처음 눌렀을 때 대기 화면이 뜨고, 다시 누르면 정상이던 이유)
+  if (!session && directHotlineId) {
+    session = await new Promise((resolve) => {
+      let done = false;
+      const finish = (v) => { if (done) return; done = true; try { sub?.data?.subscription?.unsubscribe(); } catch (_e) {} resolve(v); };
+      const sub = sb.auth.onAuthStateChange((_evt, s) => { if (s) finish(s); });
+      // 로그인이 정말 없을 수도 있습니다. 오래 붙잡아두지 않습니다.
+      setTimeout(() => finish(null), 2000);
+    });
+  }
   if (session) accessToken = session.access_token;
 
   try {
@@ -3245,16 +3262,19 @@ async function decideJoinRequest(requestId, decision, rowEl){
     if (!res.ok) {
       // 다른 창에서 이미 처리했을 뿐이면 오류가 아닙니다. 목록에서만 빼줍니다.
       if (data.already) { renderPendingRequests(pendingRequests.filter((r) => r.id !== requestId)); return; }
-      alert(data.reason === 'room_full' ? T('apFull') : (data.error || T('apFail')));
+      // ⚠ 2026-08-29(v69): 알림창을 띄우기 "전에" 단추를 되살립니다.
+      //   alert()는 화면을 멈춰 세우기 때문에, 뒤에 두면 확인을 누를 때까지
+      //   단추가 회색으로 잠긴 채 남아 "고장난 것"처럼 보입니다.
       if (rowEl) rowEl.querySelectorAll('button').forEach((b) => { b.disabled = false; b.style.opacity = '1'; });
+      alert(data.reason === 'room_full' ? T('apFull') : (data.error || T('apFail')));
       return;
     }
     // 목록에서 빼고 다시 그립니다. 승인된 사람은 곧 참가자 목록에 나타납니다.
     renderPendingRequests(pendingRequests.filter((r) => r.id !== requestId));
   } catch (e) {
     console.error('[hotline-room] 승인 처리 실패', e);
-    alert(T('apFail'));
     if (rowEl) rowEl.querySelectorAll('button').forEach((b) => { b.disabled = false; b.style.opacity = '1'; });
+    alert(T('apFail'));
   }
 }
 
