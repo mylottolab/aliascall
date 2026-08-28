@@ -1694,6 +1694,7 @@ function renderLoginStatus(){
     cachedNickname = profile?.nickname || '';
     document.getElementById('listenReminder').style.display = 'block';
     initIncomingWatcher(session.user.id);
+    watchWaitStrip(); // 2026-08-29(v69): 승인을 기다리는 문의
   }
   renderNotifySettings(sb, 'notifySettingsContainer'); // 2026-08-19 (2차): 통합 알림설정 렌더링
   renderMySubs(); // 2026-08-27: 로그인 확인 후 구독 카드

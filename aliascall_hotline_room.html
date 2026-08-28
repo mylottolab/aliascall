@@ -25,6 +25,14 @@
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{ height:100%; }
 body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; word-break:keep-all; display:flex; flex-direction:column; }
+/* 🔴 2026-08-29(v69): .app-shell에 760px 이상 규칙만 있어서
+   휴대폰에서는 내용 높이만큼만 잡혔습니다.
+   그래서 .state{flex:1}이 먹지 않아 대화 영역이 접히고
+   툴바(채팅·음성·화상·업로드·음악)가 화면 중간에 떴습니다.
+   PC는 멀쩡하고 폰에서만 그랬던 이유입니다. */
+.app-shell{ flex:1; min-height:0; width:100%; display:flex; flex-direction:column; }
+/* 주소창이 접혔다 펴지는 만큼 100vh가 어긋납니다. dvh를 쓰면 실제 보이는 높이를 따릅니다. */
+@supports (height:100dvh){ html,body{ height:100dvh; } }
 @media (min-width:760px){ body{ align-items:center; } .app-shell{ max-width:430px; width:100%; box-shadow:0 0 60px rgba(0,0,0,.15); height:100vh; background:var(--paper); display:flex; flex-direction:column; } }
 h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .mono{ font-family:'IBM Plex Mono',monospace; }

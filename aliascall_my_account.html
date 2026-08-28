@@ -325,6 +325,12 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 }
 .svc-head.emg{ border-left-color:var(--coral); color:#B4552E; }
 .svc-head.msg{ border-left-color:var(--teal); color:var(--teal-deep); }
+/* 2026-08-29 신설(v69): 승인을 기다리는 문의 */
+.wait-strip{ display:none; align-items:center; gap:10px; background:var(--teal-deep, #123F3D);
+  border-radius:12px; padding:12px 14px; margin-bottom:12px; text-decoration:none; color:#fff; }
+.wait-strip.show{ display:flex; }
+.wait-strip .n{ background:#fff; color:var(--teal-deep, #123F3D); font-size:12px; font-weight:700; border-radius:20px; padding:2px 9px; }
+.wait-strip .t{ flex:1; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 /* 보안회선 카드 */
 .mline{ background:var(--card); border:1.5px solid var(--line); border-radius:13px; padding:14px; margin-bottom:9px; }
@@ -497,6 +503,15 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
     <!-- ⚠ 2026-08-28 신설: Messenger(보안회선) 이용현황 -->
     <div class="svc-head msg" data-i18n="svcMessenger">💬 Alias The Next-Gen Messenger 이용현황</div>
+
+    <!-- ⚠ 2026-08-29 신설(v69): 승인 단추는 그 방의 대화방에만 있습니다.
+         방이 여럿이면 하나씩 열어보지 않는 한 새 문의가 온 줄 모릅니다. -->
+    <a class="wait-strip" id="waitStrip" href="#">
+      <span class="n" id="waitCount">0</span>
+      <span class="t" id="waitText" data-i18n="waitStrip">승인을 기다리는 문의가 있습니다</span>
+      <span>›</span>
+    </a>
+
     <div id="myLinesBox"></div>
 
     <div class="danger-card">
@@ -698,6 +713,8 @@ const I18N = {
     caseEmptyClosed: '지난 소통이 없어요.',
     caseEmptyOpen: '확인해야 할 알림이 없어요.',
     caseAlertTitle: '확인해야 할 알림입니다',
+    waitStrip: '승인을 기다리는 문의가 있습니다',
+    waitStripOne: '님의 문의가 승인을 기다립니다',
     caseLoadFail: '불러오지 못했어요.',
     caseMePrefix: '나: ',
     caseNoMessage: '(메시지 없음)',
@@ -832,6 +849,8 @@ const I18N = {
     caseEmptyClosed: 'No past conversations.',
     caseEmptyOpen: 'Nothing needs your attention.',
     caseAlertTitle: 'Needs your attention',
+    waitStrip: 'Inquiries are waiting for your approval',
+    waitStripOne: ' is waiting for your approval',
     caseLoadFail: 'Could not load.',
     caseMePrefix: 'Me: ',
     caseNoMessage: '(No messages)',
@@ -1219,6 +1238,76 @@ const MYPAGE_TIER_NAME = {
   },
 };
 
+// ── 2026-08-29 신설(v69): 승인을 기다리는 문의 ──
+// ⚠ RLS가 "내 핫라인의 신청"만 내려줍니다(관리 화면과 같은 방식).
+// ⚠ 이 파일의 T()는 인자를 받지 않습니다. T().키 로 써야 합니다.
+let waitSoundReady = false;
+let waitLastIds = null;
+let waitAudioCtx = null;
+
+function playWaitDing(){
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!waitAudioCtx) waitAudioCtx = new AC();
+    if (waitAudioCtx.state === 'suspended') waitAudioCtx.resume();
+    const t0 = waitAudioCtx.currentTime;
+    [[987.77, 0], [783.99, 0.18]].forEach((pair) => {
+      const osc = waitAudioCtx.createOscillator();
+      const gain = waitAudioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.value = pair[0];
+      gain.gain.setValueAtTime(0.0001, t0 + pair[1]);
+      gain.gain.exponentialRampToValueAtTime(0.22, t0 + pair[1] + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + pair[1] + 0.42);
+      osc.connect(gain); gain.connect(waitAudioCtx.destination);
+      osc.start(t0 + pair[1]); osc.stop(t0 + pair[1] + 0.45);
+    });
+  } catch (e) { /* 소리가 안 나도 띠는 뜹니다 */ }
+}
+
+async function refreshWaitStrip(){
+  const strip = document.getElementById('waitStrip');
+  if (!strip) return;
+
+  let rows = [];
+  try {
+    const { data, error } = await sb.from('hotline_join_requests')
+      .select('id, hotline_id, nickname, requested_at')
+      .eq('status', 'pending')
+      .order('requested_at', { ascending: false })
+      .limit(20);
+    if (error) return;
+    rows = data || [];
+  } catch (e) { return; }
+
+  strip.classList.toggle('show', rows.length > 0);
+  if (rows.length === 0) { waitLastIds = new Set(); return; }
+
+  document.getElementById('waitCount').textContent = String(rows.length);
+  document.getElementById('waitText').textContent = (rows.length === 1)
+    ? ((rows[0].nickname || '') + T().waitStripOne) : T().waitStrip;
+  // ⚠ 승인 단추는 그 방의 대화방에 있습니다.
+  strip.setAttribute('href', 'aliascall_hotline_room.html?hotline=' + rows[0].hotline_id);
+
+  const ids = new Set(rows.map((r) => r.id));
+  let hasNew = false;
+  if (waitLastIds !== null) ids.forEach((id) => { if (!waitLastIds.has(id)) hasNew = true; });
+  waitLastIds = ids;
+  if (hasNew && waitSoundReady && localStorage.getItem('aliascall_ap_sound') !== 'off') playWaitDing();
+  waitSoundReady = true;
+}
+
+function watchWaitStrip(){
+  refreshWaitStrip();
+  try {
+    sb.channel('mypage-join-requests')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'hotline_join_requests' },
+          () => refreshWaitStrip())
+      .subscribe();
+  } catch (e) { /* 실시간이 안 되면 아래 주기 조회로 갑니다 */ }
+  setInterval(() => { if (!document.hidden) refreshWaitStrip(); }, 60000);
+}
+
 async function renderMyLinesOnMyPage(session){
   const box = document.getElementById('myLinesBox');
   if (!box || !session) return;
@@ -1367,6 +1456,7 @@ async function renderMyLinesOnMyPage(session){
 
 async function showMyPage(session){
   renderMyLinesOnMyPage(session); // 2026-08-28: 보안회선 이용현황
+  watchWaitStrip();               // 2026-08-29(v69): 승인을 기다리는 문의
   hideAllGates();
   document.getElementById('accountContent').style.display = 'block';
 
