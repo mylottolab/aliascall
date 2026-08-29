@@ -1374,8 +1374,16 @@ async function refreshWaitStrip(){
     rows = data || [];
   } catch (e) { return; }
 
-  strip.classList.toggle('show', rows.length > 0);
-  if (rows.length === 0) { waitLastIds = new Set(); return; }
+  // ── 2026-08-29(v72): 대기 신청이 없으면 안 읽은 메시지를 봅니다 ──
+  // ⚠ 승인이 먼저입니다. 승인은 손이 가야 하는 일이고,
+  //   메시지는 읽으면 되는 일이라 급한 쪽을 위에 둡니다.
+  if (rows.length === 0) {
+    waitLastIds = new Set();
+    await refreshUnreadStrip(strip);
+    return;
+  }
+  strip.classList.remove('unread');
+  strip.classList.add('show');
 
   const t = T();
   document.getElementById('waitCount').textContent = String(rows.length);
@@ -1392,11 +1400,36 @@ async function refreshWaitStrip(){
   waitSoundReady = true;
 }
 
+// ── 2026-08-29 신설(v72): 안 읽은 메시지 ──
+// ⚠ 방마다 세면 방 개수만큼 서버를 부릅니다. 한 번에 세는 함수(v72)를 씁니다.
+async function refreshUnreadStrip(strip){
+  let info = null;
+  try {
+    const { data, error } = await sb.rpc('get_owner_unread_summary');
+    if (error || !data || !data.ok) { strip.classList.remove('show'); return; }
+    info = data;
+  } catch (e) { strip.classList.remove('show'); return; }
+
+  if (!info.rooms) { strip.classList.remove('show'); return; }
+
+  const t = T();
+  strip.classList.add('show');
+  document.getElementById('waitCount').textContent = String(info.messages);
+  // 한 방뿐이면 누구인지 바로 보여줍니다. 여럿이면 개수만.
+  document.getElementById('waitText').textContent = (info.rooms === 1 && info.latestLabel)
+    ? (String(info.latestLabel).replace(/^📣\s*/, '') + t.unreadStripOne)
+    : t.unreadStrip;
+  strip.setAttribute('href', 'aliascall_hotline_room.html?hotline=' + info.latestHotlineId);
+}
+
 function watchWaitStrip(){
   try { refreshWaitStrip(); } catch (e) { console.warn('[home] 대기 문의 조회 실패', e); }
   try {
     sb.channel('home-join-requests')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'hotline_join_requests' },
+          () => refreshWaitStrip())
+      // 2026-08-29(v72): 새 메시지도 같은 채널에서 받습니다.
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hotline_messages' },
           () => refreshWaitStrip())
       .subscribe();
   } catch (e) { /* 실시간이 안 되면 아래 주기 조회로 갑니다 */ }
@@ -1478,6 +1511,9 @@ const I18N = {
     alertsStrip: '확인해야 할 알림이 있습니다',
     waitStrip: '승인을 기다리는 문의가 있습니다',
     waitStripOne: '님의 문의가 승인을 기다립니다',
+    // 2026-08-29 신설(v72): 안 읽은 메시지
+    unreadStrip: '읽지 않은 메시지가 있습니다',
+    unreadStripOne: '님과의 대화에 새 메시지가 있습니다',
     lineNoTalk: '아직 대화가 없습니다',
     bannerTitle: '📣 이런 곳도 있어요',
     bannerAll: '전체 보기 ›',
@@ -1581,6 +1617,8 @@ const I18N = {
     alertsStrip: 'You have alerts to check',
     waitStrip: 'Inquiries are waiting for your approval',
     waitStripOne: ' is waiting for your approval',
+    unreadStrip: 'You have unread messages',
+    unreadStripOne: ' sent you a new message',
     lineNoTalk: 'No conversation yet',
     bannerTitle: '📣 Places you can reach',
     bannerAll: 'See all ›',
