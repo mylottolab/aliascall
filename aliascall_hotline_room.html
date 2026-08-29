@@ -414,6 +414,29 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
     <p style="font-weight:700; margin:0 0 6px;" data-i18n="waitTitle">개설자의 승인을 기다리는 중입니다.</p>
     <p style="font-size:12.5px; color:#666; margin:0 0 16px;" data-i18n="waitSub">승인되면 바로 대화를 시작할 수 있어요. 이 화면을 닫으셔도 괜찮습니다.</p>
     <button id="waitingRetryBtn" style="background:var(--teal); color:#fff; border:none; border-radius:10px; padding:11px 20px; font-weight:700; cursor:pointer;" data-i18n="waitRetry">새로고침</button>
+
+    <!-- 🔴 2026-08-29 신설(v71): 기다리는 동안 용건을 미리 적어두는 메모장.
+         승인되면 방문자가 보낸 첫 대화 메시지로 옮겨갑니다.
+         승인 전에는 개설자와 본인만 봅니다.
+
+         ⛔ 여기에 날짜·인원·메뉴·수량 같은 칸을 추가하면
+            예약 폼/주문서가 되어 통신판매중개에 해당합니다(1번 항목).
+            자유롭게 쓰는 메모 한 덩어리까지만 유지하세요. -->
+    <div id="memoBox" style="max-width:420px; margin:22px auto 0; text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:12px; padding:14px;">
+      <div style="font-weight:700; font-size:13px; color:#333; margin-bottom:3px;" data-i18n="memoTitle">📝 미리 남겨두기</div>
+      <div style="font-size:11.5px; color:#777; line-height:1.7; margin-bottom:9px;" data-i18n="memoHint">기다리시는 동안 용건을 적어두시면 개설자가 먼저 보고 판단할 수 있습니다. 승인되면 첫 메시지로 남습니다.</div>
+      <textarea id="memoInput" rows="5" maxlength="300"
+        style="width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:9px; padding:10px; font-size:13px; font-family:inherit; line-height:1.6; resize:none; color:#333; background:#fff;"
+        autocomplete="off" spellcheck="false"></textarea>
+      <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+        <span id="memoCount" style="flex:1; font-size:11px; color:#999;">0 / 300</span>
+        <button type="button" id="memoSaveBtn" style="background:var(--teal); color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:12.5px; font-weight:700; cursor:pointer;" data-i18n="memoSave">저장</button>
+      </div>
+      <div id="memoMsg" style="font-size:11.5px; color:var(--teal); margin-top:7px; min-height:15px;"></div>
+      <div style="border-top:1px solid var(--line); margin-top:10px; padding-top:9px;">
+        <button type="button" id="memoCancelBtn" style="background:none; border:none; padding:0; font-size:11.5px; color:#999; text-decoration:underline; cursor:pointer;" data-i18n="memoCancelReq">문의를 취소하겠습니다</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -767,6 +790,17 @@ const I18N = {
     rejSoon: '잠시',
     rejHours: '약 {n}시간',
     rejDays: '약 {n}일',
+    // 2026-08-29 신설(v71): 대기 중 메모
+    memoTitle: '📝 미리 남겨두기',
+    memoHint: '기다리시는 동안 용건을 적어두시면 개설자가 먼저 보고 판단할 수 있습니다. 승인되면 첫 메시지로 남습니다.',
+    memoSave: '저장',
+    memoSaved: '저장했습니다. 개설자가 볼 수 있습니다.',
+    memoCleared: '메모를 지웠습니다.',
+    memoFail: '저장하지 못했습니다. 잠시 후 다시 시도해주세요.',
+    memoCancelReq: '문의를 취소하겠습니다',
+    memoCancelConfirm: '문의를 취소하시겠어요? 적어두신 메모도 함께 사라집니다.',
+    memoCancelled: '문의를 취소했습니다. 언제든 다시 문의하실 수 있습니다.',
+    memoNoteLabel: '남겨둔 메모',
     apTitle: '승인을 기다리는 문의',
     apPublic: '공개 목록에서 들어온 문의입니다.',
     apApprove: '승인',
@@ -1006,6 +1040,17 @@ const I18N = {
     rejSoon: 'a little while',
     rejHours: 'about {n} hours',
     rejDays: 'about {n} days',
+    // 2026-08-29 (v71)
+    memoTitle: '📝 Leave a note',
+    memoHint: 'While you wait, note what you need. The owner can read it before approving, and it becomes your first message once approved.',
+    memoSave: 'Save',
+    memoSaved: 'Saved. The owner can see this.',
+    memoCleared: 'Note cleared.',
+    memoFail: 'Could not save. Please try again shortly.',
+    memoCancelReq: 'Cancel my inquiry',
+    memoCancelConfirm: 'Cancel this inquiry? Your note will be removed too.',
+    memoCancelled: 'Inquiry cancelled. You can send a new one anytime.',
+    memoNoteLabel: 'Note',
     apTitle: 'Requests waiting for approval',
     apPublic: 'This inquiry came from the public directory.',
     apApprove: 'Approve',
@@ -1323,7 +1368,14 @@ async function init(){
     const data = await res.json();
     if (!res.ok) {
       // 2026-08-28(v68): 승인 대기는 오류가 아닙니다. 기다리면 되는 상태입니다.
-      if (data.pendingApproval) { showState('stateWaiting'); listenForDecision(inviteToken); return; }
+      if (data.pendingApproval) {
+        showState('stateWaiting');
+        listenForDecision(inviteToken);
+        // ⚠ 이 경로에서는 아래 hotlineId 설정 줄까지 가지 못하므로 여기서 챙깁니다.
+        if (!hotlineId && data.hotlineId) hotlineId = data.hotlineId;
+        loadMemo();
+        return;
+      }
       if (data.rejected) {
         // 🔴 2026-08-29(v70): 언제 다시 문의할 수 있는지 함께 안내합니다.
         //   "참가할 수 없습니다"만 보면 영영 막힌 줄 알고 계속 두드리게 됩니다.
@@ -1333,8 +1385,11 @@ async function init(){
         const ms = data.retryAfterMs;
         if (ms && ms > 0) {
           const hours = Math.ceil(ms / 3600000);
+          // ⚠ 48시간 미만은 시간으로 보여줍니다.
+          //   23시간 남았는데 "약 1일 뒤"라고 하면 하루를 통째로 기다리라는
+          //   말처럼 들려 실제보다 막막합니다.
           const when = (hours < 1) ? T('rejSoon')
-                     : (hours < 24) ? T('rejHours').replace('{n}', String(hours))
+                     : (hours < 48) ? T('rejHours').replace('{n}', String(hours))
                      : T('rejDays').replace('{n}', String(Math.ceil(hours / 24)));
           msg += '\n' + T('rejWait').replace('{when}', when);
         }
@@ -1424,6 +1479,79 @@ async function init(){
   }
 }
 
+// ── 2026-08-29 신설(v71): 대기 중 메모 ──
+// ⚠ 방문자는 로그인이 없습니다. 브라우저 식별값으로 본인을 가리는
+//   security definer 함수(v71)를 씁니다. Edge Function을 새로 만들지 않았습니다.
+let memoLoadedFor = null;
+
+function memoPaintCount(){
+  const el = document.getElementById('memoInput');
+  const c = document.getElementById('memoCount');
+  if (el && c) c.textContent = (el.value || '').length + ' / 300';
+}
+
+async function loadMemo(){
+  const box = document.getElementById('memoBox');
+  if (!box || !hotlineId) return;
+  if (memoLoadedFor === hotlineId) return;   // 다시 그릴 때 사용자가 쓰던 내용을 덮지 않습니다
+  try {
+    const { data, error } = await sb.rpc('get_my_join_note', {
+      p_hotline_id: hotlineId, p_requester_anon_id: hotlineAnonId,
+    });
+    if (error || !data || !data.ok) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    const el = document.getElementById('memoInput');
+    if (el) el.value = data.note || '';
+    memoPaintCount();
+    memoLoadedFor = hotlineId;
+  } catch (e) { box.style.display = 'none'; }
+}
+
+async function saveMemo(){
+  const el = document.getElementById('memoInput');
+  const btn = document.getElementById('memoSaveBtn');
+  const msg = document.getElementById('memoMsg');
+  if (!el || !btn) return;
+  btn.disabled = true;
+  try {
+    const { data, error } = await sb.rpc('set_my_join_note', {
+      p_hotline_id: hotlineId, p_requester_anon_id: hotlineAnonId, p_note: el.value,
+    });
+    if (error || !data || !data.ok) {
+      msg.style.color = '#C1483A';
+      msg.textContent = T('memoFail');
+    } else {
+      msg.style.color = 'var(--teal)';
+      msg.textContent = data.note ? T('memoSaved') : T('memoCleared');
+      el.value = data.note || '';   // 서버가 300자로 자른 결과를 그대로 보여줍니다
+      memoPaintCount();
+      setTimeout(() => { msg.textContent = ''; }, 3000);
+    }
+  } catch (e) {
+    msg.style.color = '#C1483A';
+    msg.textContent = T('memoFail');
+  }
+  btn.disabled = false;
+}
+
+async function cancelMyRequest(){
+  if (!confirm(T('memoCancelConfirm'))) return;
+  const btn = document.getElementById('memoCancelBtn');
+  if (btn) btn.disabled = true;
+  try {
+    const { data, error } = await sb.rpc('cancel_my_join_request', {
+      p_hotline_id: hotlineId, p_requester_anon_id: hotlineAnonId,
+    });
+    if (error || !data || !data.ok) { alert(T('memoFail')); if (btn) btn.disabled = false; return; }
+    // ⚠ 철회는 거절과 다릅니다. 24시간 제한이 붙지 않습니다.
+    document.getElementById('errorMsg').textContent = T('memoCancelled');
+    showState('stateError');
+  } catch (e) {
+    alert(T('memoFail'));
+    if (btn) btn.disabled = false;
+  }
+}
+
 // 2026-08-28 신설(v68): 승인/거절을 실시간으로 받습니다.
 // ⚠ decide-join이 승인 직후 이 채널로 방송합니다(2026-08-21부터 있던 구조).
 //   기다리는 분이 새로고침을 눌러야만 들어갈 수 있으면 답답합니다.
@@ -1444,6 +1572,10 @@ function listenForDecision(inviteToken){
 
 // 2026-08-28 신설(v68): 승인 대기 화면의 새로고침
 on('waitingRetryBtn', 'click', () => { showState('stateLoading'); init(); });
+// 2026-08-29(v71): 대기 중 메모
+on('memoSaveBtn', 'click', saveMemo);
+on('memoCancelBtn', 'click', cancelMyRequest);
+on('memoInput', 'input', memoPaintCount);
 
 // 2026-08-21 신설: "열쇠 직접 입력" 화면의 입장 버튼 — URL에 열쇠를 붙인 뒤 처음부터 다시 시도함
 on('manualKeySubmitBtn', 'click', () => {
@@ -3252,6 +3384,17 @@ function renderPendingRequests(list){
     // ⚠ 별명은 방문자가 직접 적은 값입니다. textContent로만 넣습니다.
     name.textContent = r.nickname || '방문자';
     row.appendChild(name);
+
+    // 2026-08-29(v71): 대기 중에 적어둔 메모가 있으면 별명 아래에 함께 보입니다.
+    //   누구부터 받을지 정하는 근거가 됩니다.
+    if (r.note && String(r.note).trim()) {
+      row.style.flexWrap = 'wrap';
+      const note = document.createElement('div');
+      note.style.cssText = 'flex-basis:100%; order:3; margin-top:6px; font-size:12px; color:#666; line-height:1.6; background:#F7F9F8; border-radius:8px; padding:8px 10px; white-space:pre-wrap; word-break:break-word;';
+      // ⚠ 방문자가 직접 쓴 글입니다. textContent로만 넣습니다.
+      note.textContent = String(r.note).trim();
+      row.appendChild(note);
+    }
 
     const okBtn = document.createElement('button');
     okBtn.type = 'button';
