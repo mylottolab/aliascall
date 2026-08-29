@@ -104,7 +104,7 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
     <div class="hl-card">
       <div class="result-icon">✕</div>
       <h3 style="margin-bottom:6px; color:var(--danger);" data-i18n="rejectedTitle">참가가 거절됐어요</h3>
-      <p style="font-size:13px; color:var(--ink-soft);" data-i18n="rejectedDesc">개설자에게 직접 문의해주세요.</p>
+      <p style="font-size:13px; color:var(--ink-soft);" id="rejectedDesc" data-i18n="rejectedDesc">잠시 뒤에 다시 문의하실 수 있습니다.</p>
     </div>
   </div>
 </main>
@@ -140,8 +140,13 @@ const I18N = {
     approvedTitle: '참가가 승인됐어요',
     approvedDesc: '이제 대화에 참여할 수 있습니다.',
     enterRoomBtn: '대화방 입장하기',
-    rejectedTitle: '참가가 거절됐어요',
-    rejectedDesc: '개설자에게 직접 문의해주세요.',
+    rejectedTitle: '지금은 참가하실 수 없습니다',
+    rejectedDesc: '잠시 뒤에 다시 문의하실 수 있습니다.',
+    // 2026-08-29(v70) {when} 자리에 "약 20시간" 처럼 들어갑니다
+    rejectedWait: '지금으로부터 {when} 뒤에 다시 문의하실 수 있습니다.',
+    rejectedSoon: '잠시',
+    rejectedHours: '약 {n}시간',
+    rejectedDays: '약 {n}일',
     alertNeedNickname: '별명을 입력해주세요.',
     alertJoinFail: '신청에 실패했어요.',
     alertJoinFailRetry: '신청에 실패했어요. 잠시 후 다시 시도해주세요.',
@@ -166,8 +171,12 @@ const I18N = {
     approvedTitle: "You're approved",
     approvedDesc: 'You can now join the conversation.',
     enterRoomBtn: 'Enter the room',
-    rejectedTitle: 'Your request was declined',
-    rejectedDesc: 'Please contact the owner directly.',
+    rejectedTitle: 'You cannot join right now',
+    rejectedDesc: 'You can send a new inquiry shortly.',
+    rejectedWait: 'You can send a new inquiry in {when}.',
+    rejectedSoon: 'a little while',
+    rejectedHours: 'about {n} hours',
+    rejectedDays: 'about {n} days',
     alertNeedNickname: 'Please enter a nickname.',
     alertJoinFail: "Couldn't send your request.",
     alertJoinFailRetry: "Couldn't send your request. Please try again in a moment.",
@@ -273,7 +282,12 @@ async function init(){
     if (statusRes.ok) {
       if (statusData.status === 'approved') { showState('stateApproved'); return; }
       if (statusData.status === 'pending') { enterWaitingState(); return; }
-      if (statusData.status === 'rejected') { showState('stateRejected'); return; }
+      // 🔴 2026-08-29(v70): 거절이어도 여기서 막지 않습니다.
+      //   기간이 지났으면 다시 문의할 수 있어야 하는데,
+      //   check-join-status는 그 판단을 하지 않습니다(남은 시간도 모릅니다).
+      //   별명 입력 화면을 보여주고, 실제 판단은 request-join에 맡깁니다.
+      //   아직 기간이 남았다면 그때 남은 시간과 함께 안내됩니다.
+      if (statusData.status === 'rejected') { /* 아래로 계속 진행 */ }
     }
   } catch (e) { console.warn('[hotline] 상태 확인 실패(계속 진행)', e); }
 
@@ -332,7 +346,7 @@ document.getElementById('joinBtn').addEventListener('click', async () => {
     if (!res.ok) { alert(srvErr(data.error, 'alertJoinFail')); btn.disabled = false; return; }
 
     if (data.status === 'approved') { showState('stateApproved'); return; }
-    if (data.status === 'rejected') { showState('stateRejected'); return; }
+    if (data.status === 'rejected') { showRejected(data); return; }
     enterWaitingState();
   } catch (e) {
     console.error('[hotline] 신청 실패', e);
@@ -340,6 +354,32 @@ document.getElementById('joinBtn').addEventListener('click', async () => {
     btn.disabled = false;
   }
 });
+
+// ── 2026-08-29 신설(v70): 거절 화면 ──
+// ⚠ "24시간 뒤"로 고정하면 시간이 지날수록 틀린 안내가 됩니다.
+//   서버가 남은 시간(retryAfterMs)을 주면 그것으로 계산해서 보여줍니다.
+// ⚠ 거절당했다는 사실 자체는 말하지 않습니다. 정원이 차서 못 들어간 경우와
+//   굳이 구분할 필요가 없고, 개설자와 방문자 사이에 감정이 생길 이유를
+//   만들지 않습니다.
+function showRejected(data){
+  const el = document.getElementById('rejectedDesc');
+  const ms = data && data.retryAfterMs;
+  if (el) {
+    if (ms && ms > 0) {
+      const hours = Math.ceil(ms / 3600000);
+      let when;
+      if (hours < 1) when = T('rejectedSoon');
+      else if (hours < 24) when = T('rejectedHours').replace('{n}', String(hours));
+      else when = T('rejectedDays').replace('{n}', String(Math.ceil(hours / 24)));
+      el.textContent = T('rejectedWait').replace('{when}', when);
+      el.removeAttribute('data-i18n');   // 언어 전환이 덮어쓰지 않게
+    } else {
+      el.setAttribute('data-i18n', 'rejectedDesc');
+      el.textContent = T('rejectedDesc');
+    }
+  }
+  showState('stateRejected');
+}
 
 function enterWaitingState(){
   showState('stateWaiting');
@@ -349,7 +389,7 @@ function enterWaitingState(){
   decisionChannel
     .on('broadcast', { event: 'decision' }, ({ payload }) => {
       if (payload.decision === 'approve') showState('stateApproved');
-      else showState('stateRejected');
+      else showRejected(null);   // 방금 거절된 참이라 남은 시간은 화면을 다시 열 때 안내합니다
       cleanupWaiting();
     })
     .subscribe();
@@ -364,7 +404,7 @@ function enterWaitingState(){
       });
       const data = await res.json();
       if (res.ok && data.status === 'approved') { showState('stateApproved'); cleanupWaiting(); }
-      else if (res.ok && data.status === 'rejected') { showState('stateRejected'); cleanupWaiting(); }
+      else if (res.ok && data.status === 'rejected') { showRejected(data); cleanupWaiting(); }
     } catch (e) { /* 무시하고 다음 폴링에서 재시도 */ }
   }, 5000);
 }
