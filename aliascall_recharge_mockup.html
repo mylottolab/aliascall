@@ -151,6 +151,18 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
     <span class="value mono" id="payAmount">$1.00</span>
   </div>
 
+  <!-- 🔴 2026-08-29 신설: 취소·환불 규정 제5조·제7조 사전 안내
+       ⚠ 포인트는 기간 제한 없이 환급되고 위약금이 없습니다(회선 상품과 다릅니다). -->
+  <div style="background:#FBF1DE; border:1.5px solid #D9A441; border-radius:12px; padding:13px 15px; margin:14px 0;">
+    <div style="font-size:12px; font-weight:700; color:#8a6416; margin-bottom:6px;" data-i18n="rfTitle">💰 포인트 환급 안내</div>
+    <div style="font-size:11.5px; line-height:1.75; color:#3E5654;" data-i18n-html="rfBody">
+      사용하지 않은 포인트는 <b>기간 제한 없이 환급</b>받으실 수 있으며, <b>위약금이 없습니다.</b>
+      카드 수수료는 회사가 부담하고, 계좌 송금이 필요한 경우에만 <b>송금 실비</b>가 공제됩니다.
+      다만 <b>회원 탈퇴 시에는 소멸</b>되므로 탈퇴 전에 신청해주세요.
+      <a href="aliascall_refund.html" target="_blank" style="color:#123F3D; font-weight:700;">취소·환불 규정 전문 ›</a>
+    </div>
+  </div>
+
   <button class="pay-btn inicis" id="payBtn" style="display:none;">카드로 결제하기 (이니시스)</button>
   <div id="paypalButtonContainer" style="min-height:45px;"></div>
   <div class="note" id="payNote">외화 결제는 PayPal을 통해 안전하게 처리됩니다.</div>
@@ -183,6 +195,8 @@ const I18N = {
     krwSuffix: '원',
     payBtnPaypal: 'PayPal로 결제하기',
     payBtnInicis: '카드로 결제하기 (이니시스)',
+    rfTitle: '💰 포인트 환급 안내',
+    rfBody: '사용하지 않은 포인트는 <b>기간 제한 없이 환급</b>받으실 수 있으며, <b>위약금이 없습니다.</b> 카드 수수료는 회사가 부담하고, 계좌 송금이 필요한 경우에만 <b>송금 실비</b>가 공제됩니다. 다만 <b>회원 탈퇴 시에는 소멸</b>되므로 탈퇴 전에 신청해주세요. <a href="aliascall_refund.html" target="_blank" style="color:#123F3D; font-weight:700;">취소·환불 규정 전문 ›</a>',
     noteUSD: '외화 결제는 PayPal을 통해 안전하게 처리됩니다.',
     noteKRW: '국내 카드결제는 이니시스를 통해 안전하게 처리됩니다.',
     productsTitle: '유용한 관련상품',
@@ -205,6 +219,8 @@ const I18N = {
     krwSuffix: '',
     payBtnPaypal: 'Pay with PayPal',
     payBtnInicis: 'Pay by Card (Inicis)',
+    rfTitle: '💰 About point refunds',
+    rfBody: 'Unused points can be <b>refunded at any time with no deadline</b>, and <b>no cancellation fee applies.</b> Card processing fees are paid by us; only the actual <b>transfer cost</b> is deducted where a bank transfer is needed. Points are <b>forfeited if you delete your account</b>, so please request a refund first. <a href="aliascall_refund.html" target="_blank" style="color:#123F3D; font-weight:700;">Full refund policy ›</a>',
     noteUSD: 'Foreign currency payments are securely processed via PayPal.',
     noteKRW: 'Domestic card payments are securely processed via Inicis.',
     productsTitle: 'Useful Related Products',
