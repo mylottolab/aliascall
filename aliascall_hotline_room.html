@@ -758,7 +758,8 @@ const I18N = {
     errLoadFail: '불러오지 못했어요. 잠시 후 다시 시도해주세요.',
     // 2026-08-28 신설(v68): 승인 대기 · 승인 처리
     waitTitle: '개설자의 승인을 기다리는 중입니다.',
-    waitSub: '승인되면 바로 대화를 시작할 수 있어요. 이 화면을 닫으셔도 괜찮습니다.',
+    // 2026-08-29(v70): 중간 화면을 없애면서 "링크 저장" 안내를 여기로 옮겼습니다.
+    waitSub: '승인되면 바로 대화가 열립니다. 이 화면을 닫으셔도 괜찮습니다. 이 주소를 저장해두시면 언제든 다시 들어오실 수 있습니다.',
     waitRetry: '새로고침',
     waitRejected: '지금은 이 대화방에 참가하실 수 없습니다.',
     // 2026-08-29(v70) {when} 자리에 "약 20시간" 처럼 들어갑니다
@@ -998,7 +999,7 @@ const I18N = {
     errCannotEnter: 'Unable to join this room.',
     // 2026-08-28 (v68)
     waitTitle: 'Waiting for the owner to approve.',
-    waitSub: 'You can start chatting as soon as you are approved. It is fine to close this page.',
+    waitSub: 'The chat opens as soon as you are approved. You can close this page — save this address to come back anytime.',
     waitRetry: 'Refresh',
     waitRejected: 'You cannot join this room right now.',
     rejWait: 'You can send a new inquiry in {when}.',
@@ -1432,8 +1433,10 @@ function listenForDecision(inviteToken){
   try {
     joinDecisionChannel = sb.channel('hotline-join-' + inviteToken + '-' + hotlineAnonId);
     joinDecisionChannel.on('broadcast', { event: 'decision' }, (msg) => {
-      if (msg?.payload?.decision === 'approve') { showState('stateLoading'); init(); }
-      else { document.getElementById('errorMsg').textContent = T('waitRejected'); showState('stateError'); }
+      // ⚠ 2026-08-29(v70): 거절도 init()으로 다시 물어봅니다.
+      //   방송에는 "언제 다시 문의할 수 있는지"가 없습니다.
+      //   서버가 남은 시간을 계산해 주므로 그쪽 안내를 그대로 씁니다.
+      showState('stateLoading'); init();
     });
     joinDecisionChannel.subscribe();
   } catch (e) { /* 실시간이 안 되면 새로고침 버튼으로 들어갑니다 */ }

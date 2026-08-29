@@ -264,18 +264,20 @@ async function sendInquiry(biz){
       localStorage.setItem('aliascall_my_lines', JSON.stringify(list.slice(0, 30)));
     } catch (e) { /* 기록 실패해도 대화는 됩니다 */ }
 
-    const wrap = document.getElementById('wrap');
-    wrap.innerHTML = '';
-    const d = document.createElement('div');
-    d.className = 'card done';
-    d.innerHTML =
-      '<div class="ic">✅</div>' +
-      '<h2>' + (data.needsApproval ? '문의를 보냈습니다' : '대화가 열렸습니다') + '</h2>' +
-      '<p>' + (data.needsApproval
-        ? '업체가 확인하면 대화를 시작하실 수 있습니다.<br>아래 링크를 저장해두시면 언제든 다시 들어오실 수 있습니다.'
-        : '아래에서 바로 대화를 시작하세요.<br>이 링크를 저장해두시면 언제든 다시 들어오실 수 있습니다.') + '</p>' +
-      '<a class="go" href="' + roomUrl + '">대화방으로 이동 ›</a>';
-    wrap.appendChild(d);
+    // 🔴 2026-08-29(v70): 곧바로 대화방으로 보냅니다.
+    //   예전에는 여기서 "문의를 보냈습니다 + [대화방으로 이동]" 화면을 보여줬습니다.
+    //   그런데 승인·거절은 대화방에서만 실시간으로 받습니다.
+    //   그래서 방문자는 이 화면에서 아무 일도 없이 기다리다가,
+    //   할 수 없이 링크를 눌러 들어가서야 결과를 알게 됐습니다.
+    //   거절된 경우엔 "문의를 보냈습니다"와 "참가하실 수 없습니다"가
+    //   한 화면 건너 이어져 서로 반대말을 하는 꼴이었습니다.
+    //
+    //   ⚠ 중간 화면이 하던 일은 "링크를 저장해두세요" 안내뿐이었고,
+    //     그건 대기 화면에서도 할 수 있습니다.
+    //   ⚠ replace를 씁니다. 뒤로 가기로 이 화면에 돌아오면
+    //     같은 문의를 또 넣게 됩니다.
+    window.location.replace(roomUrl);
+    return;
   } catch (e) {
     console.error('[biz] 문의 실패', e);
     err.textContent = '연결에 실패했습니다. 잠시 후 다시 시도해주세요.';
