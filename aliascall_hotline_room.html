@@ -760,7 +760,12 @@ const I18N = {
     waitTitle: '개설자의 승인을 기다리는 중입니다.',
     waitSub: '승인되면 바로 대화를 시작할 수 있어요. 이 화면을 닫으셔도 괜찮습니다.',
     waitRetry: '새로고침',
-    waitRejected: '이 대화방에 참가할 수 없습니다.',
+    waitRejected: '지금은 이 대화방에 참가하실 수 없습니다.',
+    // 2026-08-29(v70) {when} 자리에 "약 20시간" 처럼 들어갑니다
+    rejWait: '지금으로부터 {when} 뒤에 다시 문의하실 수 있습니다.',
+    rejSoon: '잠시',
+    rejHours: '약 {n}시간',
+    rejDays: '약 {n}일',
     apTitle: '승인을 기다리는 문의',
     apPublic: '공개 목록에서 들어온 문의입니다.',
     apApprove: '승인',
@@ -995,7 +1000,11 @@ const I18N = {
     waitTitle: 'Waiting for the owner to approve.',
     waitSub: 'You can start chatting as soon as you are approved. It is fine to close this page.',
     waitRetry: 'Refresh',
-    waitRejected: 'You cannot join this room.',
+    waitRejected: 'You cannot join this room right now.',
+    rejWait: 'You can send a new inquiry in {when}.',
+    rejSoon: 'a little while',
+    rejHours: 'about {n} hours',
+    rejDays: 'about {n} days',
     apTitle: 'Requests waiting for approval',
     apPublic: 'This inquiry came from the public directory.',
     apApprove: 'Approve',
@@ -1314,7 +1323,25 @@ async function init(){
     if (!res.ok) {
       // 2026-08-28(v68): 승인 대기는 오류가 아닙니다. 기다리면 되는 상태입니다.
       if (data.pendingApproval) { showState('stateWaiting'); listenForDecision(inviteToken); return; }
-      if (data.rejected) { document.getElementById('errorMsg').textContent = T('waitRejected'); showState('stateError'); return; }
+      if (data.rejected) {
+        // 🔴 2026-08-29(v70): 언제 다시 문의할 수 있는지 함께 안내합니다.
+        //   "참가할 수 없습니다"만 보면 영영 막힌 줄 알고 계속 두드리게 됩니다.
+        //   "24시간 뒤"로 고정하면 시간이 지날수록 틀린 안내가 되므로
+        //   서버가 준 남은 시간으로 계산합니다.
+        let msg = T('waitRejected');
+        const ms = data.retryAfterMs;
+        if (ms && ms > 0) {
+          const hours = Math.ceil(ms / 3600000);
+          const when = (hours < 1) ? T('rejSoon')
+                     : (hours < 24) ? T('rejHours').replace('{n}', String(hours))
+                     : T('rejDays').replace('{n}', String(Math.ceil(hours / 24)));
+          msg += '\n' + T('rejWait').replace('{when}', when);
+        }
+        const el = document.getElementById('errorMsg');
+        el.style.whiteSpace = 'pre-line';   // 줄바꿈이 보이도록
+        el.textContent = msg;
+        showState('stateError'); return;
+      }
       document.getElementById('errorMsg').textContent = data.error || T('errCannotEnter'); showState('stateError'); return;
     }
 
