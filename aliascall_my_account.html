@@ -682,6 +682,20 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     <textarea id="deleteReason" data-i18n-placeholder="deleteReasonPlaceholder" placeholder="탈퇴 사유 (선택사항)"></textarea>
     <label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;" data-i18n="deleteConfirmLabel">계속하시려면 "탈퇴합니다"를 입력해주세요</label>
     <input type="text" id="deleteConfirmText" data-i18n-placeholder="deleteConfirmWord" placeholder="탈퇴합니다">
+
+    <!-- 🔴 2026-08-29 신설: 포인트 환급 안내 (취소·환불 규정 제5조 제4항)
+         ⚠ 미사용 포인트는 기간 제한 없이 환급받을 수 있지만, 탈퇴하면 소멸합니다.
+           안내 없이 소멸시키면 "몰랐다"는 다툼이 생깁니다. -->
+    <div style="background:#FDF6E3; border:1.5px solid var(--brass,#C9A24B); border-radius:10px; padding:12px; margin:4px 0 12px; text-align:left;">
+      <div style="font-size:12px; font-weight:700; color:#8a6416; margin-bottom:5px;" data-i18n="ptWarnTitle">💰 보유 포인트 안내</div>
+      <div id="ptWarnBalance" style="display:none; font-size:15px; font-weight:700; color:#8a6416; margin-bottom:7px;"></div>
+      <div style="font-size:11.5px; line-height:1.7; color:var(--ink-soft);" data-i18n-html="ptWarnBody">사용하지 않은 포인트는 기간 제한 없이 환급받으실 수 있습니다. 다만 <b>탈퇴하시면 함께 소멸</b>되며 이후에는 환급이 불가능합니다. 남은 포인트가 있으시면 탈퇴 전에 <b>weapps.kr@gmail.com</b>으로 환급을 신청해주세요.</div>
+      <label style="display:flex; align-items:flex-start; gap:7px; margin-top:10px; font-size:12px; font-weight:600; cursor:pointer;">
+        <input type="checkbox" id="ptWarnCheck" style="width:16px; height:16px; margin-top:1px; flex-shrink:0; accent-color:var(--brass,#C9A24B);">
+        <span data-i18n="ptWarnAgree">위 내용을 확인했으며, 포인트가 소멸되는 데 동의합니다</span>
+      </label>
+    </div>
+
     <div class="modal-btns">
       <button class="cancel-btn" id="cancelDeleteBtn" data-i18n="cancel">취소</button>
       <button class="confirm-btn" id="confirmDeleteBtn" data-i18n="confirmWithdraw">탈퇴 확정</button>
@@ -771,7 +785,7 @@ const I18N = {
     subscriptionTitle: 'Emergency Call 서비스 구독',
     subscriptionSub: '등록물 개수와 무관하게, 이 구독 하나로 전체 등록물의 연결이 유지됩니다. (아동·치매어르신·장애우·반려동물은 구독 여부와 무관하게 항상 연결됩니다)',
     editBtn: '수정', deleteBtn: '삭제',
-    withdrawTitle: '회원 탈퇴', withdrawDesc: '탈퇴하시면 계정과 함께 회원님이 등록하신 모든 QR 태그·정보가 삭제되며, 되돌릴 수 없습니다. 보유 포인트도 함께 소멸됩니다.',
+    withdrawTitle: '회원 탈퇴', withdrawDesc: '탈퇴하시면 계정과 함께 회원님이 등록하신 모든 QR 태그·정보가 삭제되며, 되돌릴 수 없습니다. 보유 포인트도 함께 소멸되므로, 남은 포인트가 있으시면 탈퇴 전에 환급을 신청해주세요.',
     withdrawBtn: '회원 탈퇴하기',
     renewTitle: '구독 갱신', renewDesc: '선택하신 기간만큼 수신서비스가 연장됩니다.',
     renewBtn1yr: '1년연장', renewBtn2yr: '2년연장', renewBtn3yr: '3년연장',
@@ -795,6 +809,12 @@ const I18N = {
     deleteConfirmTitle: '정말 탈퇴하시겠어요?', deleteConfirmDesc: '계정과 등록하신 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없어요.',
     deleteReasonPlaceholder: '탈퇴 사유 (선택사항)', deleteConfirmLabel: '계속하시려면 "탈퇴합니다"를 입력해주세요',
     deleteConfirmWord: '탈퇴합니다', confirmWithdraw: '탈퇴 확정',
+    // 2026-08-29 신설: 포인트 환급 안내
+    ptWarnTitle: '💰 보유 포인트 안내',
+    ptWarnBody: '사용하지 않은 포인트는 기간 제한 없이 환급받으실 수 있습니다. 다만 <b>탈퇴하시면 함께 소멸</b>되며 이후에는 환급이 불가능합니다. 남은 포인트가 있으시면 탈퇴 전에 <b>weapps.kr@gmail.com</b>으로 환급을 신청해주세요.',
+    ptWarnBalance: '현재 보유 포인트 {n}P',
+    ptWarnAgree: '위 내용을 확인했으며, 포인트가 소멸되는 데 동의합니다',
+    ptWarnNeed: '포인트 소멸 안내를 확인해주세요.',
     catVehicle: '차량', catLostItem: '분실·도난 우려 물품', catVulnerable: '아동·치매 어르신·장애우', catPet: '반려동물', catCallback: '부재중 연락', catMisc: '기타 물품·사건',
     statusForever: '♾️ 영구', statusForeverDesc: '안전 카테고리라 구독 만료와 무관하게 연결이 항상 유지됩니다.',
     statusNoSub: '❓ 구독정보 없음', statusNoSubDesc: '구독 정보를 확인할 수 없어요.',
@@ -933,6 +953,11 @@ const I18N = {
     deleteConfirmTitle: 'Are you sure you want to delete your account?', deleteConfirmDesc: 'All account and registration data will be permanently deleted. This cannot be undone.',
     deleteReasonPlaceholder: 'Reason for leaving (optional)', deleteConfirmLabel: 'Type "DELETE" to continue',
     deleteConfirmWord: 'DELETE', confirmWithdraw: 'Confirm deletion',
+    ptWarnTitle: '💰 About your points',
+    ptWarnBody: 'Unused points can be refunded at any time, with no deadline. However, <b>they are forfeited when you delete your account</b> and cannot be refunded afterwards. If you have points left, please request a refund at <b>weapps.kr@gmail.com</b> before deleting.',
+    ptWarnBalance: 'You currently hold {n}P',
+    ptWarnAgree: 'I understand and agree that my points will be forfeited',
+    ptWarnNeed: 'Please confirm the notice about your points.',
     catVehicle: 'Vehicle', catLostItem: 'Lost / at risk of theft', catVulnerable: 'Child · Dementia · Disability', catPet: 'Pet', catCallback: 'Callback contact', catMisc: 'Other item / incident',
     statusForever: '♾️ Permanent', statusForeverDesc: 'This is a safety category, so the connection stays active regardless of subscription status.',
     statusNoSub: '❓ No subscription info', statusNoSubDesc: 'Could not check subscription info.',
@@ -2466,7 +2491,27 @@ function onRenewPaymentSuccess(){
 
 document.getElementById('openDeleteModalBtn').addEventListener('click', () => {
   document.getElementById('deleteModal').classList.add('show');
+  loadPointsForDelete();   // 2026-08-29: 잔여 포인트 안내 (취소·환불 규정 제5조 제4항)
 });
+
+// 🔴 2026-08-29 신설: 탈퇴 전 잔여 포인트를 보여줍니다.
+// ⚠ 숫자를 못 읽어와도 탈퇴는 막지 않습니다. 안내 문구는 그대로 보입니다.
+//   (계정 삭제 경로를 막으면 구글 플레이 정책 위반입니다)
+async function loadPointsForDelete(){
+  const el = document.getElementById('ptWarnBalance');
+  if (!el) return;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data, error } = await sb.from('profiles')
+      .select('points_balance').eq('id', session.user.id).maybeSingle();
+    if (error || !data) return;
+    const n = Number(data.points_balance || 0);
+    if (n <= 0) return;                      // 0이면 굳이 보여주지 않습니다
+    el.style.display = 'block';
+    el.textContent = T().ptWarnBalance.replace('{n}', n.toLocaleString());
+  } catch (e) { /* 못 읽어와도 문구는 그대로 보입니다 */ }
+}
 document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
   document.getElementById('deleteModal').classList.remove('show');
 });
@@ -2481,6 +2526,9 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
     alert(T().deleteConfirmMismatch.replace('{word}', confirmWord));
     return;
   }
+  // 🔴 2026-08-29: 포인트 소멸 안내를 확인해야 진행합니다(취소·환불 규정 제5조 제4항).
+  const ptChk = document.getElementById('ptWarnCheck');
+  if (ptChk && !ptChk.checked) { alert(T().ptWarnNeed); return; }
   const btn = document.getElementById('confirmDeleteBtn');
   btn.disabled = true; btn.textContent = T().processing;
 

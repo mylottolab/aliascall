@@ -148,7 +148,7 @@ footer a{ color:var(--teal-deep); }
       차량이나 반려동물 인식표에 붙여둔 QR을 누군가 스캔해도 연결되지 않습니다.
       실물에 부착한 QR 스티커는 직접 제거해 주세요.
     </p>
-    <p data-i18n="noticeP2">보유하신 포인트는 함께 소멸되며 환불되지 않습니다.</p>
+    <p data-i18n-html="noticeP2">사용하지 않은 포인트는 <b>기간 제한 없이 환급</b>받으실 수 있습니다. 다만 <b>탈퇴하시면 함께 소멸</b>되므로, 남은 포인트가 있으시면 탈퇴 전에 <b>weapps.kr@gmail.com</b>으로 환급을 신청해주세요.</p>
   </div>
 
   <div class="card">
@@ -165,7 +165,7 @@ footer a{ color:var(--teal-deep); }
         <tr><td data-i18n="d4">반려동물 비문(코무늬) 사진</td><td data-i18n="d4a">즉시 삭제</td></tr>
         <tr><td data-i18n="d5">사건함 대화 기록 및 주고받은 사진</td><td data-i18n="d5a">즉시 삭제</td></tr>
         <tr><td data-i18n="d6">안심보안회선(핫라인) 대화 및 첨부 파일</td><td data-i18n="d6a">즉시 삭제</td></tr>
-        <tr><td data-i18n="d7">보유 포인트</td><td data-i18n="d7a">즉시 소멸</td></tr>
+        <tr><td data-i18n="d7">보유 포인트</td><td data-i18n="d7a">즉시 소멸 (탈퇴 전 환급 신청 가능)</td></tr>
         <tr><td data-i18n="d8">알림 수신 정보 (푸시 토큰)</td><td data-i18n="d8a">즉시 삭제</td></tr>
       </tbody>
     </table>
@@ -238,7 +238,7 @@ const I18N = {
 
     noticeTitle: '⚠️ 삭제 전 확인해 주세요',
     noticeP1: '탈퇴하시면 등록해두신 <b>QR 태그가 즉시 작동을 멈춥니다.</b>\n      차량이나 반려동물 인식표에 붙여둔 QR을 누군가 스캔해도 연결되지 않습니다.\n      실물에 부착한 QR 스티커는 직접 제거해 주세요.',
-    noticeP2: '보유하신 포인트는 함께 소멸되며 환불되지 않습니다.',
+    noticeP2: '사용하지 않은 포인트는 <b>기간 제한 없이 환급</b>받으실 수 있습니다. 다만 <b>탈퇴하시면 함께 소멸</b>되므로, 남은 포인트가 있으시면 탈퇴 전에 <b>weapps.kr@gmail.com</b>으로 환급을 신청해주세요.',
 
     delTitle: '📋 삭제되는 데이터',
     delIntro: '회원 탈퇴 시 아래 데이터가 삭제됩니다.',
@@ -249,7 +249,7 @@ const I18N = {
     d4: '반려동물 비문(코무늬) 사진', d4a: '즉시 삭제',
     d5: '사건함 대화 기록 및 주고받은 사진', d5a: '즉시 삭제',
     d6: '안심보안회선(핫라인) 대화 및 첨부 파일', d6a: '즉시 삭제',
-    d7: '보유 포인트', d7a: '즉시 소멸',
+    d7: '보유 포인트', d7a: '즉시 소멸 (탈퇴 전 환급 신청 가능)',
     d8: '알림 수신 정보 (푸시 토큰)', d8a: '즉시 삭제',
 
     keepTitle: '🗄️ 삭제 후에도 보관되는 데이터',
@@ -290,7 +290,7 @@ const I18N = {
 
     noticeTitle: '⚠️ Please check before deleting',
     noticeP1: 'Once you delete your account, <b>your QR tags stop working immediately.</b>\n      If someone scans a QR you attached to a vehicle or a pet tag, it will no longer connect.\n      Please remove any physical QR stickers yourself.',
-    noticeP2: 'Any points you hold are forfeited at the same time and are not refunded.',
+    noticeP2: 'Unused points can be refunded at any time, with no deadline. However, <b>they are forfeited when you delete your account</b>, so please request a refund at <b>weapps.kr@gmail.com</b> before deleting.',
 
     delTitle: '📋 Data that is deleted',
     delIntro: 'The following data is deleted when you close your account.',
