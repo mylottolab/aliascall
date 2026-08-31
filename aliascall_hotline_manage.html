@@ -103,6 +103,19 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 .room-dot.on{ background:var(--found,#2E7D4F); }
 .room-dot.off{ background:var(--line); }
 .room-acts{ display:flex; gap:5px; flex-shrink:0; }
+/* 2026-09-01 신설: 이름 바꾸기 — 손님에게 보이는 이름과 내 메모를 갈라 받습니다.
+   prompt() 한 칸으로는 둘을 구분해 물어볼 수 없었습니다. */
+.rename-box{ display:none; background:var(--teal-tint); border-radius:11px; padding:12px; margin:0 2px 10px; }
+.rename-box.show{ display:block; }
+.rename-box label{ font-size:11.5px; font-weight:700; color:var(--ink); display:block; margin-bottom:3px; }
+.rename-box .rn-hint{ font-size:10.5px; color:var(--ink-soft); margin-bottom:5px; line-height:1.45; }
+.rename-box input{ width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:9px; padding:9px 11px; font-size:13px; font-family:inherit; margin-bottom:12px; background:var(--card); }
+.rename-box .rn-btns{ display:flex; gap:6px; }
+.rename-box .rn-btns button{ border:none; border-radius:9px; padding:9px 14px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; background:var(--teal); color:#fff; }
+.rename-box .rn-btns button.ghost{ background:var(--card); color:var(--teal-deep); }
+.rename-box .rn-btns button:disabled{ opacity:.45; cursor:default; }
+/* 손님에게 보이는 이름이 아직 없는 방 — 목록에서 바로 눈에 띄게 */
+.room-warn{ font-size:10.5px; color:#8A6A1F; background:#FDF0D5; border-radius:7px; padding:1px 7px; display:inline-block; margin-top:3px; }
 /* 2026-08-28(v68): 좁은 화면에서 단추 4개가 이름 칸을 다 먹어
    방 이름이 "📣 …"로 잘려 어느 방인지 구분되지 않던 문제.
    단추를 아랫줄로 내려 이름에 한 줄을 통째로 줍니다. */
@@ -217,6 +230,17 @@ const I18N = {
     createFail: '방을 만들지 못했어요.',
     archiveFail: '처리하지 못했어요.',
     renamePrompt: '이 방의 이름을 입력하세요',
+    // 2026-09-01 신설: 이름이 두 개로 갈립니다
+    renameShownLabel: '손님에게 보이는 이름',
+    renameShownHint: '대화방 위쪽에 뜹니다. 손님도 봅니다.',
+    renameShownPh: '예: 강남점 상담실',
+    renameMemoLabel: '내 메모 (나만 봄)',
+    renameMemoHint: '이 목록에만 보입니다. 손님에게는 안 보입니다.',
+    renameMemoPh: '예: 김철수 의뢰인',
+    renameSave: '저장',
+    renameCancel: '취소',
+    renameSaved: '저장했어요',
+    noShownName: '손님에겐 “상담”으로 보임',
     stage1: '1차 안내', stage2: '2차 안내', stage3: '마지막 안내 ⚠️',
     renewBtn: '지금 연장하기',
     approve: '승인', reject: '거절',
@@ -288,6 +312,17 @@ const I18N = {
     createFail: "Couldn't create the room.",
     archiveFail: "Couldn't complete that.",
     renamePrompt: 'Enter a name for this room',
+    // 2026-09-01 신설
+    renameShownLabel: 'Name your guests see',
+    renameShownHint: 'Shown at the top of the room. Guests see this.',
+    renameShownPh: 'e.g. Gangnam consulting room',
+    renameMemoLabel: 'My note (private)',
+    renameMemoHint: 'Only shown in this list. Guests never see it.',
+    renameMemoPh: 'e.g. Client — J. Kim',
+    renameSave: 'Save',
+    renameCancel: 'Cancel',
+    renameSaved: 'Saved',
+    noShownName: 'Guests see “Consultation”',
     stage1: 'First notice', stage2: 'Second notice', stage3: 'Final notice ⚠️',
     renewBtn: 'Renew now',
     approve: 'Approve', reject: 'Decline',
@@ -769,6 +804,9 @@ function drawRooms(sub, box){
 }
 
 function renderRoomRow(sub, r){
+  // 2026-09-01: 행 아래로 이름 바꾸기 상자가 펼쳐지므로 감싸는 칸을 둡니다.
+  //   테두리(border-top)는 .room-row에 있어 겉모습은 그대로입니다.
+  const wrap = document.createElement('div');
   const row = document.createElement('div');
   row.className = 'room-row' + (r.archived_at ? ' dim' : '');
 
@@ -782,20 +820,34 @@ function renderRoomRow(sub, r){
   nm.className = 'room-name';
   // 2026-08-28(v68): '📣 채무과다' → [공개] 채무과다
   // ⚠ 이모지가 좁은 이름 칸에서 두 칸을 먹어 별명이 통째로 잘렸습니다.
-  const rawLabel = r.client_label || r.title || T('roomUnnamed');
-  const isPub = /^📣\s*/.test(rawLabel);
-  if (isPub) {
-    const tag = document.createElement('span');
-    tag.className = 'room-tag';
-    tag.textContent = T('roomTagPublic');
-    nm.appendChild(tag);
+  // 2026-09-01 신설: 손님에게 보이는 이름(title)이 비어 있는 방을 표시합니다.
+  // ⚠ title이 없으면 대화방 머리말은 tier 기본값으로 뜹니다 —
+  //   전문관리용 세 등급은 전부 "상담"이라 방이 50개면 손님이 구분하지 못합니다.
+  const warn = document.createElement('span');
+  warn.className = 'room-warn';
+  warn.textContent = T('noShownName');
+
+  // 저장 직후 다시 그려야 해서 함수로 뺐습니다.
+  function paintName(){
+    nm.innerHTML = '';
+    const rawLabel = r.client_label || r.title || T('roomUnnamed');
+    const isPub = /^📣\s*/.test(rawLabel);
+    if (isPub) {
+      const tag = document.createElement('span');
+      tag.className = 'room-tag';
+      tag.textContent = T('roomTagPublic');
+      nm.appendChild(tag);
+    }
+    nm.appendChild(document.createTextNode(rawLabel.replace(/^📣\s*/, '')));
+    warn.style.display = r.title ? 'none' : 'inline-block';
   }
-  nm.appendChild(document.createTextNode(rawLabel.replace(/^📣\s*/, '')));
+
   const sb2 = document.createElement('div');
   sb2.className = 'room-sub';
   sb2.textContent = `${T('roomLastTalk')} ${relTime(r.last_activity_at)}`
     + (r.archived_at ? ` · ${T('subArchived')}` : '');
-  info.appendChild(nm); info.appendChild(sb2);
+  info.appendChild(nm); info.appendChild(sb2); info.appendChild(warn);
+  paintName();
   row.appendChild(info);
 
   const acts = document.createElement('div');
@@ -820,20 +872,70 @@ function renderRoomRow(sub, r){
   });
   acts.appendChild(copyBtn);
 
+  // 🔴 2026-09-01: 이름 칸이 두 개로 갈렸습니다.
+  //   예전에는 prompt() 한 칸으로 받아 client_label에만 넣었는데,
+  //   대화방 머리말은 title을 읽어서 입력한 이름이 손님에게 가지 않았습니다.
+  //   ⚠ 둘을 하나로 합치면 안 됩니다. client_label은 "김철수 의뢰인" 같은
+  //     개설자 메모라, 그대로 대화방에 내보내면 손님이 자기 이름을 봅니다.
+  const box = document.createElement('div');
+  box.className = 'rename-box';
+
+  const tLab = document.createElement('label'); tLab.textContent = T('renameShownLabel');
+  const tHint = document.createElement('div'); tHint.className = 'rn-hint'; tHint.textContent = T('renameShownHint');
+  const tIn = document.createElement('input');
+  tIn.type = 'text'; tIn.placeholder = T('renameShownPh'); tIn.value = r.title || '';
+
+  const mLab = document.createElement('label'); mLab.textContent = T('renameMemoLabel');
+  const mHint = document.createElement('div'); mHint.className = 'rn-hint'; mHint.textContent = T('renameMemoHint');
+  const mIn = document.createElement('input');
+  mIn.type = 'text'; mIn.placeholder = T('renameMemoPh');
+  // 2026-08-28(v68): 📣는 표시용이라 물어볼 때 빼고, 저장할 때 되붙입니다.
+  mIn.value = (r.client_label || '').replace(/^📣\s*/, '');
+
+  const btns = document.createElement('div'); btns.className = 'rn-btns';
+  const saveBtn = document.createElement('button'); saveBtn.type = 'button'; saveBtn.textContent = T('renameSave');
+  const cancelBtn = document.createElement('button'); cancelBtn.type = 'button'; cancelBtn.className = 'ghost'; cancelBtn.textContent = T('renameCancel');
+  btns.appendChild(saveBtn); btns.appendChild(cancelBtn);
+
+  box.appendChild(tLab); box.appendChild(tHint); box.appendChild(tIn);
+  box.appendChild(mLab); box.appendChild(mHint); box.appendChild(mIn);
+  box.appendChild(btns);
+
+  cancelBtn.addEventListener('click', () => {
+    tIn.value = r.title || '';
+    mIn.value = (r.client_label || '').replace(/^📣\s*/, '');
+    box.classList.remove('show');
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const hadTag = /^📣\s*/.test(r.client_label || '');
+    const memo = mIn.value.trim();
+    const newLabel = memo ? ((hadTag ? '📣 ' : '') + memo) : '';
+    const newTitle = tIn.value.trim();
+    saveBtn.disabled = true;
+    try {
+      // ⚠ 두 칸을 한 번에 저장합니다. 나눠 부르면 한쪽만 들어간 채 실패할 수 있습니다.
+      const { data, error } = await sb.rpc('set_room_names', {
+        p_hotline_id: r.id, p_label: newLabel, p_title: newTitle,
+      });
+      if (error || !data || !data.ok) { alert((data && data.error) || T('archiveFail')); saveBtn.disabled = false; return; }
+      r.client_label = newLabel || null;
+      r.title = newTitle || null;
+      paintName();
+      box.classList.remove('show');
+    } catch (e) {
+      console.error('[rooms] 이름 저장 실패', e);
+      alert(T('archiveFail'));
+    }
+    saveBtn.disabled = false;
+  });
+
   const renameBtn = document.createElement('button');
   renameBtn.type = 'button'; renameBtn.textContent = T('roomRename');
-  renameBtn.addEventListener('click', async () => {
-    // 2026-08-28(v68): 📣는 표시용이라 물어볼 때 빼고, 저장할 때 되붙입니다.
-    //   안 그러면 사장님이 이름을 고칠 때마다 📣가 사라져
-    //   공개 문의로 온 방인지 알 수 없게 됩니다.
-    const hadTag = /^📣\s*/.test(r.client_label || '');
-    const v = prompt(T('renamePrompt'), (r.client_label || '').replace(/^📣\s*/, ''));
-    if (v === null) return;
-    const newLabel = v.trim() ? ((hadTag ? '📣 ' : '') + v.trim()) : '';
-    const { data, error } = await sb.rpc('set_room_label', { p_hotline_id: r.id, p_label: newLabel });
-    if (error || !data?.ok) { alert(data?.error || T('archiveFail')); return; }
-    r.client_label = newLabel || null;
-    nm.textContent = r.client_label || T('roomUnnamed');
+  renameBtn.addEventListener('click', () => {
+    const opening = !box.classList.contains('show');
+    box.classList.toggle('show');
+    if (opening) tIn.focus();
   });
   acts.appendChild(renameBtn);
 
@@ -849,7 +951,9 @@ function renderRoomRow(sub, r){
   acts.appendChild(arcBtn);
 
   row.appendChild(acts);
-  return row;
+  wrap.appendChild(row);
+  wrap.appendChild(box);   // 2026-09-01: 이름 바꾸기 상자는 행 바로 아래에 펼쳐집니다
+  return wrap;
 }
 
 async function loadHotlines(){
