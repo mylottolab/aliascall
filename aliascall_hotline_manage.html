@@ -92,8 +92,30 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 .sub-tools button.ghost{ background:var(--teal-tint); color:var(--teal-deep); }
 .new-room-box{ display:none; background:var(--teal-tint); border-radius:11px; padding:12px; margin-bottom:12px; }
 .new-room-box.show{ display:block; }
-.new-room-box label{ font-size:11.5px; color:var(--ink-soft); display:block; margin-bottom:5px; }
-.new-room-box input{ width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:9px; padding:9px 11px; font-size:13px; font-family:inherit; margin-bottom:8px; }
+.new-room-box label{ font-size:11.5px; font-weight:700; color:var(--ink); display:block; margin-bottom:3px; }
+.new-room-box .nb-hint{ font-size:10.5px; color:var(--ink-soft); margin-bottom:5px; line-height:1.45; }
+.new-room-box input{ width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:9px; padding:9px 11px; font-size:13px; font-family:inherit; margin-bottom:12px; background:var(--card); }
+.new-room-box .nb-btns{ display:flex; gap:6px; }
+.new-room-box .nb-btns button{ border:none; border-radius:9px; padding:9px 14px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; background:var(--teal); color:#fff; }
+.new-room-box .nb-btns button.ghost{ background:var(--card); color:var(--teal-deep); }
+.new-room-box .nb-btns button:disabled{ opacity:.45; cursor:default; }
+
+/* 2026-09-01 신설: 방 목록 머리줄 — 목록이 카드의 주인공이 되게 */
+.rooms-head{ display:flex; align-items:center; justify-content:space-between; gap:8px;
+  margin:16px 0 8px; padding-top:14px; border-top:1px solid var(--line); }
+.rooms-head-title{ font-size:13px; font-weight:700; color:var(--teal-deep); }
+.rooms-new-btn{ border:none; border-radius:9px; padding:8px 13px; font-size:12.5px; font-weight:700;
+  cursor:pointer; font-family:inherit; background:var(--teal); color:#fff; white-space:nowrap; flex-shrink:0; }
+.rooms-new-btn:disabled{ opacity:.4; cursor:default; }
+.rooms-search{ width:100%; box-sizing:border-box; border:1.5px solid var(--line); border-radius:9px;
+  padding:9px 11px; font-size:13px; font-family:inherit; margin-bottom:10px; }
+
+/* 목록 아래 도구줄·설정 — 매일 보는 자리를 비켜줍니다 */
+.card-sep{ margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
+.settings-toggle{ width:100%; background:none; border:none; cursor:pointer; font-family:inherit;
+  font-size:12px; font-weight:700; color:var(--ink-soft); padding:10px 0 2px; text-align:left; }
+.settings-box{ display:none; padding-top:8px; }
+.settings-box.show{ display:block; }
 .room-row{ display:flex; align-items:center; gap:9px; padding:10px 2px; border-top:1px solid var(--line); }
 .room-row.dim{ opacity:.55; }
 .room-info{ flex:1; min-width:0; }
@@ -218,6 +240,11 @@ const I18N = {
     newRoomCreate: '만들기',
     newRoomCancel: '취소',
     roomSearch: '이름으로 찾기…',
+    // 2026-09-01 신설
+    roomsHeading: '방',
+    settingsOpen: '⚙ 구독 설정 펼치기',
+    settingsClose: '⚙ 구독 설정 접기',
+    newRoomNameLater: '방은 만들어졌어요. 이름은 목록의 [이름 바꾸기]에서 넣어주세요.',
     roomsNone: '아직 만든 방이 없어요. "+ 새 방 만들기"를 눌러보세요.',
     roomsNoMatch: '찾는 방이 없어요.',
     roomLastTalk: '마지막 대화',
@@ -300,6 +327,11 @@ const I18N = {
     newRoomCreate: 'Create',
     newRoomCancel: 'Cancel',
     roomSearch: 'Search by name…',
+    // 2026-09-01 신설
+    roomsHeading: 'Rooms',
+    settingsOpen: '⚙ Show subscription settings',
+    settingsClose: '⚙ Hide subscription settings',
+    newRoomNameLater: 'Room created. Add its name with Rename in the list below.',
     roomsNone: 'No rooms yet. Tap "+ New room" to start.',
     roomsNoMatch: 'No matching rooms.',
     roomLastTalk: 'Last message',
@@ -502,8 +534,198 @@ function renderSubCard(sub){
   bar.innerHTML = `<i class="${level}" style="width:${ratio}%"></i>`;
   card.appendChild(bar);
 
+  // ─────────────────────────────────────────────────────────
+  // 🔴 2026-09-01 배치 정리
+  //   예전 순서: 내 이름 설정 → 공개 한도 → 도구줄(검색+단추 4개) → 방 목록
+  //   설정칸 둘이 카드 위쪽을 차지해서, 정작 매일 쓰는 방 목록이 맨 아래로
+  //   밀려 있었습니다. "의뢰인에게 보일 내 이름"이 카드 제목처럼 보여
+  //   방 이름으로 오해되기도 했습니다(Demo Room).
+  //   → 방 목록을 위로. 설정은 접어서 아래로. 검색은 방이 많을 때만.
+  // ─────────────────────────────────────────────────────────
+
+  const status = document.createElement('div');
+  status.className = 'sub-status';
+
+  // ── 방 목록 머리줄 ──
+  const roomsHead = document.createElement('div');
+  roomsHead.className = 'rooms-head';
+  const roomCount = (roomsBySub[sub.id] || []).filter((r) => !r.archived_at).length;
+  const roomsTitle = document.createElement('div');
+  roomsTitle.className = 'rooms-head-title';
+  roomsTitle.textContent = `${T('roomsHeading')} (${roomCount})`;
+  const newBtn = document.createElement('button');
+  newBtn.type = 'button';
+  newBtn.className = 'rooms-new-btn';
+  newBtn.textContent = T('newRoomBtn');
+  newBtn.disabled = expired || active >= limit;
+  roomsHead.appendChild(roomsTitle);
+  roomsHead.appendChild(newBtn);
+  card.appendChild(roomsHead);
+
+  // ── 검색 ──
+  // ⚠ 방이 몇 개 없을 때는 찾을 것이 없어 자리만 차지합니다.
+  if (roomCount >= 6) {
+    const search = document.createElement('input');
+    search.type = 'text';
+    search.className = 'rooms-search';
+    search.placeholder = T('roomSearch');
+    search.value = st.keyword;
+    search.addEventListener('input', () => {
+      st.keyword = search.value;
+      st.shown = ROOMS_PAGE;
+      redrawRooms(sub, card);
+    });
+    card.appendChild(search);
+  }
+
+  // ── 새 방 만들기 ──
+  // 🔴 2026-09-01: 이름을 두 칸으로 받습니다.
+  //   예전에는 clientLabel(내 메모) 하나만 받아서 새 방이 늘 title 없이 태어났고,
+  //   손님 화면에는 전부 "상담"으로 보였습니다. 만들 때 받는 것이 가장 확실합니다.
+  const nb = document.createElement('div');
+  nb.className = 'new-room-box';
+
+  const nbTLab = document.createElement('label'); nbTLab.textContent = T('renameShownLabel');
+  const nbTHint = document.createElement('div'); nbTHint.className = 'nb-hint'; nbTHint.textContent = T('renameShownHint');
+  const nbTitle = document.createElement('input');
+  nbTitle.type = 'text'; nbTitle.maxLength = 40; nbTitle.placeholder = T('renameShownPh');
+  nbTitle.autocomplete = 'off'; nbTitle.spellcheck = false;
+
+  const nbMLab = document.createElement('label'); nbMLab.textContent = T('renameMemoLabel');
+  const nbMHint = document.createElement('div'); nbMHint.className = 'nb-hint'; nbMHint.textContent = T('renameMemoHint');
+  const nbMemo = document.createElement('input');
+  nbMemo.type = 'text'; nbMemo.maxLength = 40; nbMemo.placeholder = T('renameMemoPh');
+  nbMemo.autocomplete = 'off'; nbMemo.spellcheck = false;
+
+  nb.appendChild(nbTLab); nb.appendChild(nbTHint); nb.appendChild(nbTitle);
+  nb.appendChild(nbMLab); nb.appendChild(nbMHint); nb.appendChild(nbMemo);
+
+  const nbActs = document.createElement('div');
+  nbActs.className = 'nb-btns';
+  const okBtn = document.createElement('button');
+  okBtn.type = 'button'; okBtn.textContent = T('newRoomCreate');
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button'; cancelBtn.className = 'ghost'; cancelBtn.textContent = T('newRoomCancel');
+  nbActs.appendChild(okBtn); nbActs.appendChild(cancelBtn);
+  nb.appendChild(nbActs);
+  card.appendChild(nb);
+
+  newBtn.addEventListener('click', () => {
+    nb.classList.add('show');
+    nbTitle.focus();
+  });
+  cancelBtn.addEventListener('click', () => {
+    nb.classList.remove('show');
+    nbTitle.value = ''; nbMemo.value = '';
+    status.textContent = '';
+  });
+
+  okBtn.addEventListener('click', async () => {
+    okBtn.disabled = true;
+    status.textContent = T('loading');
+    const titleVal = nbTitle.value.trim();
+    const memoVal = nbMemo.value.trim();
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-room-create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ subscriptionId: sub.id, clientLabel: memoVal }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        // ⚠ 서버가 reason을 함께 주므로 안내를 갈라서 보여줍니다.
+        status.textContent = (data.reason === 'room_limit') ? T('limitFull')
+                           : (data.reason === 'expired') ? T('subExpired')
+                           : (data.error || T('createFail'));
+        okBtn.disabled = false;
+        return;
+      }
+
+      // ⚠ 방 만들기 함수는 clientLabel만 받습니다(서버 파일을 아직 안 고쳤습니다).
+      //   그래서 만들어진 방 번호를 받아 title을 곧바로 한 번 더 저장합니다.
+      //   번호를 못 받으면 이름은 목록에서 [이름 바꾸기]로 넣으시면 됩니다.
+      const newId = data.hotlineId || data.id || (data.hotline && data.hotline.id);
+      let titleSaved = !titleVal;
+      if (titleVal && newId) {
+        try {
+          const { data: rn } = await sb.rpc('set_room_names', {
+            p_hotline_id: newId, p_label: memoVal, p_title: titleVal,
+          });
+          titleSaved = !!(rn && rn.ok);
+        } catch (e) { console.warn('[subs] 새 방 이름 저장 실패', e); }
+      }
+
+      nb.classList.remove('show');
+      nbTitle.value = ''; nbMemo.value = '';
+      status.textContent = titleSaved ? '' : T('newRoomNameLater');
+      await loadSubscriptions();
+    } catch (e) {
+      console.error('[subs] 방 생성 실패', e);
+      status.textContent = T('createFail');
+    }
+    okBtn.disabled = false;
+  });
+
+  // ── 방 목록 ──
+  const roomsBox = document.createElement('div');
+  roomsBox.className = 'rooms-box';
+  card.appendChild(roomsBox);
+  card.appendChild(status);
+
+  // ── 이 구독 전체에 쓰는 도구 ──
+  const tools = document.createElement('div');
+  tools.className = 'sub-tools card-sep';
+
+  // ⚠ 2026-08-27 신설: 방을 하나씩 열지 않고 기간별로 모아 보는 화면.
+  //   의뢰인이 37명, 환자가 120명이면 일일이 열어보는 건 불가능합니다.
+  const digestBtn = document.createElement('button');
+  digestBtn.type = 'button';
+  digestBtn.className = 'ghost';
+  digestBtn.textContent = T('digestBtn');
+  digestBtn.addEventListener('click', () => {
+    window.location.href = 'aliascall_hotline_digest.html?sub=' + encodeURIComponent(sub.id);
+  });
+  tools.appendChild(digestBtn);
+
+  // ⚠ 2026-08-28 신설: 공개 목록에 올리는 입구.
+  //   여기가 없으면 상품을 사고도 어디서 등록하는지 알 수 없습니다.
+  const bizBtn = document.createElement('button');
+  bizBtn.type = 'button';
+  bizBtn.className = 'ghost';
+  bizBtn.textContent = T('bizBtn');
+  bizBtn.addEventListener('click', () => {
+    window.location.href = 'aliascall_business_register.html?sub=' + encodeURIComponent(sub.id);
+  });
+  tools.appendChild(bizBtn);
+
+  if (expired) {
+    const renew = document.createElement('button');
+    renew.type = 'button'; renew.className = 'ghost';
+    renew.textContent = T('renewSub');
+    renew.addEventListener('click', () => { window.location.href = `aliascall_hotline_purchase.html?tier=${sub.tier}`; });
+    tools.appendChild(renew);
+  }
+  card.appendChild(tools);
+
+  // ── 설정 (접어둠) ──
+  // ⚠ 한 번 정하면 거의 안 바꾸는 것들입니다. 매일 보는 자리를 차지하지 않게 접습니다.
+  const setToggle = document.createElement('button');
+  setToggle.type = 'button';
+  setToggle.className = 'settings-toggle';
+  setToggle.textContent = T('settingsOpen');
+  const setBox = document.createElement('div');
+  setBox.className = 'settings-box';
+  setToggle.addEventListener('click', () => {
+    const open = setBox.classList.toggle('show');
+    setToggle.textContent = open ? T('settingsClose') : T('settingsOpen');
+  });
+  card.appendChild(setToggle);
+  card.appendChild(setBox);
+
   // ── 2026-08-27(v59): 의뢰인에게 보일 내 이름 ──
   // ⚠ 방마다 따로 받으면 30번 입력해야 하고 실수로 달라질 수 있어, 구독에 한 번만 등록합니다.
+  // ⚠ 이것은 "개설자 본인의 이름"입니다. 방 이름이 아닙니다.
   const nameBox = document.createElement('div');
   nameBox.className = 'sub-tools';
   nameBox.style.alignItems = 'flex-start';
@@ -540,7 +762,7 @@ function renderSubCard(sub){
     nameBtn.disabled = false;
   });
   nameBox.appendChild(nameBtn);
-  card.appendChild(nameBox);
+  setBox.appendChild(nameBox);
 
   // ── 2026-08-28 신설(v68): 공개 문의 하루 한도 ──
   // ⚠ 예전에는 30건이 코드에 박혀 있어 바꾸려면 배포가 필요했습니다.
@@ -551,120 +773,8 @@ function renderSubCard(sub){
   capBox.className = 'sub-tools';
   capBox.style.alignItems = 'flex-start';
   capBox.style.display = 'none';   // 값을 받아온 뒤에만 보입니다
-  card.appendChild(capBox);
+  setBox.appendChild(capBox);
   buildCapSetting(sub, capBox);
-
-  // ── 도구줄 ──
-  const tools = document.createElement('div');
-  tools.className = 'sub-tools';
-
-  const search = document.createElement('input');
-  search.type = 'text';
-  search.placeholder = T('roomSearch');
-  search.value = st.keyword;
-  search.addEventListener('input', () => {
-    st.keyword = search.value;
-    st.shown = ROOMS_PAGE;
-    redrawRooms(sub, card);
-  });
-  tools.appendChild(search);
-
-  const newBtn = document.createElement('button');
-  newBtn.type = 'button';
-  newBtn.textContent = T('newRoomBtn');
-  newBtn.disabled = expired || active >= limit;
-  tools.appendChild(newBtn);
-
-  // ⚠ 2026-08-27 신설: 방을 하나씩 열지 않고 기간별로 모아 보는 화면.
-  //   의뢰인이 37명, 환자가 120명이면 일일이 열어보는 건 불가능합니다.
-  const digestBtn = document.createElement('button');
-  digestBtn.type = 'button';
-  digestBtn.className = 'ghost';
-  digestBtn.textContent = T('digestBtn');
-  digestBtn.addEventListener('click', () => {
-    window.location.href = 'aliascall_hotline_digest.html?sub=' + encodeURIComponent(sub.id);
-  });
-  tools.appendChild(digestBtn);
-
-  // ⚠ 2026-08-28 신설: 공개 목록에 올리는 입구.
-  //   여기가 없으면 상품을 사고도 어디서 등록하는지 알 수 없습니다.
-  const bizBtn = document.createElement('button');
-  bizBtn.type = 'button';
-  bizBtn.className = 'ghost';
-  bizBtn.textContent = T('bizBtn');
-  bizBtn.addEventListener('click', () => {
-    window.location.href = 'aliascall_business_register.html?sub=' + encodeURIComponent(sub.id);
-  });
-  tools.appendChild(bizBtn);
-
-  if (expired) {
-    const renew = document.createElement('button');
-    renew.type = 'button'; renew.className = 'ghost';
-    renew.textContent = T('renewSub');
-    renew.addEventListener('click', () => { window.location.href = `aliascall_hotline_purchase.html?tier=${sub.tier}`; });
-    tools.appendChild(renew);
-  }
-  card.appendChild(tools);
-
-  // ── 새 방 만들기 ──
-  const nb = document.createElement('div');
-  nb.className = 'new-room-box';
-  nb.innerHTML =
-    `<label>${T('newRoomLabel')}</label>` +
-    `<input type="text" placeholder="${T('newRoomPlaceholder')}" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">`;
-  const nbActs = document.createElement('div');
-  nbActs.className = 'sub-tools';
-  const okBtn = document.createElement('button');
-  okBtn.type = 'button'; okBtn.textContent = T('newRoomCreate');
-  const cancelBtn = document.createElement('button');
-  cancelBtn.type = 'button'; cancelBtn.className = 'ghost'; cancelBtn.textContent = T('newRoomCancel');
-  nbActs.appendChild(okBtn); nbActs.appendChild(cancelBtn);
-  nb.appendChild(nbActs);
-  card.appendChild(nb);
-
-  newBtn.addEventListener('click', () => {
-    nb.classList.add('show');
-    nb.querySelector('input').focus();
-  });
-  cancelBtn.addEventListener('click', () => nb.classList.remove('show'));
-
-  const status = document.createElement('div');
-  status.className = 'sub-status';
-
-  okBtn.addEventListener('click', async () => {
-    okBtn.disabled = true;
-    status.textContent = T('loading');
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-hotline-room-create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-        body: JSON.stringify({ subscriptionId: sub.id, clientLabel: nb.querySelector('input').value.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        // ⚠ 서버가 reason을 함께 주므로 안내를 갈라서 보여줍니다.
-        status.textContent = (data.reason === 'room_limit') ? T('limitFull')
-                           : (data.reason === 'expired') ? T('subExpired')
-                           : (data.error || T('createFail'));
-        okBtn.disabled = false;
-        return;
-      }
-      nb.classList.remove('show');
-      nb.querySelector('input').value = '';
-      status.textContent = '';
-      await loadSubscriptions();
-    } catch (e) {
-      console.error('[subs] 방 생성 실패', e);
-      status.textContent = T('createFail');
-    }
-    okBtn.disabled = false;
-  });
-
-  const roomsBox = document.createElement('div');
-  roomsBox.className = 'rooms-box';
-  card.appendChild(roomsBox);
-  card.appendChild(status);
 
   drawRooms(sub, roomsBox);
   return card;
