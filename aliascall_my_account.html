@@ -312,6 +312,14 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
   background:var(--teal-tint); color:var(--teal-deep);
   font-size:14px; font-weight:700; font-family:inherit;
 }
+/* 🔴 2026-08-31: 가입 직후 결제 단추.
+   reg-renew-btn은 목록 안에서 작게 쓰이는 공용 단추라 그대로 두고,
+   이 자리에서만 아래 "다음에 결제하기"와 같은 크기가 되도록 덮어씁니다. */
+.sub-pay-main{
+  display:block; width:100%; box-sizing:border-box;
+  padding:13px; border-radius:11px;
+  font-size:14px; font-weight:700; font-family:inherit;
+}
 .later-pay-note{
   font-size:11.5px; color:var(--ink-soft); text-align:center;
   margin-top:7px; line-height:1.6;
@@ -398,7 +406,10 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
   <!-- 처음 가입하는 사람만 보는 구독안내 (기존 구독자는 마이페이지로 바로 감) -->
   <div id="newSubscriberGate" style="display:none;">
-    <div class="page-title" data-i18n="welcomeTitle">환영합니다!</div>
+    <!-- 🔴 2026-08-31: 닉네임을 넣어 부릅니다.
+         data-i18n을 쓰지 않는 이유 — 그 표시가 있으면 언어를 바꿀 때마다
+         사전값으로 덮어써서 닉네임이 사라집니다. applyWelcomeName()이 채웁니다. -->
+    <div class="page-title" id="welcomeTitleEl">환영합니다!</div>
 
     <!-- ⚠ 2026-08-27 신설: "이미 됐다"를 먼저 알려주는 게 맞는 순서입니다.
          계정은 이미 만들어졌는데 곧바로 결제 화면이 뜨면
@@ -430,7 +441,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     </div>
     <div class="sub-summary" data-i18n="subSummaryLabel">결제 금액</div>
     <div class="sub-summary-price" id="newSubPrice">1,200원</div>
-    <button class="reg-renew-btn" id="newSubPayBtn" style="width:100%;" data-i18n="subPayBtn">결제하고 계속하기</button>
+    <button class="reg-renew-btn sub-pay-main" id="newSubPayBtn" data-i18n="subPayBtn">결제하고 바로 사용하기</button>
     <div id="newSubPaypalContainer" style="min-height:45px; display:none;"></div>
 
     <!-- ⚠ 2026-08-27 신설: 돈 낼 준비가 안 된 분에게 나가는 길이 없으면 무례합니다.
@@ -753,8 +764,8 @@ const I18N = {
     bonus200: '+200P 보너스',
     bonus300: '+300P 보너스',
     subSummaryLabel: '결제 금액',
-    subPayBtn: '결제하고 계속하기',
-    welcomeDone: '✅ 계정이 만들어졌습니다. 지금 바로 쓰실 수 있어요.',
+    subPayBtn: '결제하고 바로 사용하기',
+    welcomeDone: '✅ 계정이 만들어졌습니다. 아래에서 골라 구독하시면 지금 바로 쓰실 수 있어요.',
     payLaterBtn: '다음에 결제하기',
     payLaterNote: '언제든 내 계정에서 구독하실 수 있습니다.',
     backBtn: '뒤로가기',
@@ -885,7 +896,7 @@ const I18N = {
     loginGateDesc: '이미 등록하신 적이 있으면 그 닉네임+비밀번호를 입력하세요. 처음이시면 같은 방식으로 새로 시작할 수 있습니다.',
     nicknamePlaceholder: '닉네임', passwordPlaceholder: '비밀번호 (6자 이상)',
     loginSubmitBtn: '로그인 · 시작하기',
-    welcomeTitle: '환영합니다!',
+    welcomeTitle: '환영합니다!', welcomeTitleNamed: '환영합니다. {name}님!',
     welcomeDesc: '등록물을 발견자와 연결하려면 구독이 필요해요. 아동·치매어르신·장애우·반려동물 등록은 구독기간이 끝나도 무료로 연결됩니다.',
     subDoneTitle: '구독 완료!', subDoneDesc: '이제 물건이나 사람·반려동물을 등록해보세요.',
     subPaymentDone: '결제가 완료됐어요! 구독이 시작됩니다.',
@@ -903,8 +914,8 @@ const I18N = {
     bonus200: '+200P bonus',
     bonus300: '+300P bonus',
     subSummaryLabel: 'Amount to pay',
-    subPayBtn: 'Pay and continue',
-    welcomeDone: '✅ Your account is ready. You can start using it right away.',
+    subPayBtn: 'Pay and start now',
+    welcomeDone: '✅ Your account is ready. Choose a plan below and you can start right away.',
     payLaterBtn: 'Pay later',
     payLaterNote: 'You can subscribe any time from My account.',
     backBtn: 'Back',
@@ -1033,7 +1044,7 @@ const I18N = {
     loginGateDesc: 'If you already registered, enter that nickname + password. First time? Use the same fields to get started.',
     nicknamePlaceholder: 'Nickname', passwordPlaceholder: 'Password (6+ characters)',
     loginSubmitBtn: 'Log in · Get started',
-    welcomeTitle: 'Welcome!',
+    welcomeTitle: 'Welcome!', welcomeTitleNamed: 'Welcome, {name}!',
     welcomeDesc: "A subscription is needed to connect a registered item with whoever finds it. Registrations for children, elderly people, people with disabilities, and pets stay connectable for free even after the subscription ends.",
     subDoneTitle: 'Subscribed!', subDoneDesc: 'Now go ahead and register an item, person, or pet.',
     subPaymentDone: 'Payment complete! Your subscription is now active.',
@@ -1046,6 +1057,21 @@ const I18N = {
 };
 // 2026-08-25 신설: 화면이 그려진 뒤 JS가 만들어내는 문자열용 언어 헬퍼
 function T(){ return I18N[currentLang] || I18N.ko; }
+
+// 🔴 2026-08-31: 환영 제목의 닉네임
+//   data-i18n을 쓰지 않는 이유 — 언어를 바꿀 때마다 사전값으로 덮어써서
+//   닉네임이 지워집니다. 그래서 따로 채웁니다.
+//   닉네임을 못 읽으면 이름 없는 문구로 둡니다("환영합니다. 님!"이 되면 안 됩니다).
+let welcomeName = null;
+
+function applyWelcomeName(){
+  const el = document.getElementById('welcomeTitleEl');
+  if (!el) return;
+  const t = T();
+  el.textContent = (welcomeName && t.welcomeTitleNamed)
+    ? t.welcomeTitleNamed.replace('{name}', welcomeName)
+    : t.welcomeTitle;
+}
 
 let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
 
@@ -1074,6 +1100,7 @@ function applyLang(lang){
     const key = el.dataset.i18nAria;
     if (I18N[lang][key] !== undefined) el.setAttribute('aria-label', I18N[lang][key]);
   });
+  applyWelcomeName();   // 사전값으로 덮이지 않도록 마지막에 다시 채웁니다
   document.querySelectorAll('.lang-toggle button').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.lang === lang);
   });
@@ -1574,6 +1601,8 @@ async function showMyPage(session){
 
   const { data: profile } = await sb.from('profiles').select('nickname, points_balance, created_at').eq('id', session.user.id).maybeSingle();
   document.getElementById('nicknameVal').textContent = profile?.nickname || '-';
+  welcomeName = profile?.nickname || null;
+  applyWelcomeName();
   document.getElementById('pointsVal').textContent = (profile?.points_balance ?? 0).toLocaleString() + 'P';
   // 2026-08-30: 충전 카드에도 같은 잔액을 보여줍니다.
   const tuEl = document.getElementById('topUpBalance');
