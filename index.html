@@ -309,6 +309,8 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 .subcard-btns a.main{ background:var(--teal-deep); color:#fff; }
 .subcard-btns a.sub{ background:var(--teal-tint); color:var(--teal-deep); }
 .mine-head{ display:flex; align-items:center; margin:12px 2px 8px; }
+/* 2026-09-01: 구독 카드와 상품 목록 사이를 벌려 두 덩어리로 보이게 합니다 */
+.prod-head{ margin-top:28px; }
 .mine-head .t{ font-size:12px; font-weight:700; color:#9BE0D8; flex:1; }
 .mine-head a{ font-size:10.5px; color:#9FBDB9; text-decoration:none; }
 .line-item{ display:flex; align-items:center; gap:10px; background:#fff; color:var(--ink); border-radius:11px; padding:11px 12px; margin-bottom:7px; text-decoration:none; }
@@ -492,6 +494,13 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
        예전에는 주소를 직접 쳐야만 관리 화면에 들어갈 수 있었습니다.
        구독이 있을 때만 보입니다. -->
   <div id="mySubsBox" style="margin-bottom:18px;"></div>
+
+  <!-- 🔴 2026-09-01 신설: "내 구독 관리" 카드 바로 아래로 상품 목록이
+       제목 없이 이어져 무엇을 보고 있는지 알기 어려웠습니다.
+       구독 유무와 상관없이 항상 보입니다. -->
+  <div class="mine-head prod-head" id="prodHead">
+    <span class="t" data-i18n="prodHeadTitle">사용하면 편리한 최신 메신저 상품소개</span>
+  </div>
 
   <!-- 상품 네 갈래 -->
   <div class="prod">
@@ -1518,6 +1527,8 @@ const I18N = {
     bannerTitle: '📣 이런 곳도 있어요',
     bannerAll: '전체 보기 ›',
     mySubs: '📁 내 구독 관리',
+    // 2026-09-01 신설: 구독이 있는 분의 화면에서 상품 목록 앞에 붙습니다
+    prodHeadTitle: '사용하면 편리한 최신 메신저 상품소개',
     subManage: '방 관리',
     subDigest: '📖 대화 모아보기',
     subExpires: '만료',
@@ -1623,6 +1634,8 @@ const I18N = {
     bannerTitle: '📣 Places you can reach',
     bannerAll: 'See all ›',
     mySubs: '📁 My subscriptions',
+    // 2026-09-01 신설
+    prodHeadTitle: 'Latest messenger plans worth a look',
     subManage: 'Manage rooms',
     subDigest: '📖 Conversation digest',
     subExpires: 'Expires',
