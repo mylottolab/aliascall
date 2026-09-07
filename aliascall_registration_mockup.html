@@ -1517,7 +1517,18 @@ btnNext.addEventListener('click', async () => {
     if (!ok) { renderStep(); return; }
   }
 
-  if (currentStep < panels.length - 1) { currentStep++; renderStep(); window.scrollTo(0,0); }
+  if (currentStep < panels.length - 1) {
+    currentStep++; renderStep(); window.scrollTo(0,0);
+    return;
+  }
+
+  // ⚠ 2026-09-07 신설: 마지막 단계(6/6)에서 이 버튼은 글자가 "완료"로 바뀝니다.
+  //   그런데 마지막 단계에서 할 일이 하나도 적혀 있지 않아서, 눌러도 오류 없이
+  //   아무 반응이 없었습니다. (구글플레이 2차 거절 사유 — "반응하지 않는 UI 요소")
+  //   이제 마이페이지의 "내 등록물"로 보내고, 방금 등록한 것을 표시해 줍니다.
+  location.href = createdRegistration
+    ? 'aliascall_my_account.html?highlight=' + encodeURIComponent(createdRegistration.id)
+    : 'aliascall_my_account.html';
 });
 btnBack.addEventListener('click', () => {
   if (currentStep > 0) { currentStep--; renderStep(); window.scrollTo(0,0); }
