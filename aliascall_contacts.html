@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Aliascall — 연락처</title>
+<meta name="theme-color" content="#123F3D">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  ═══════════════════════════════════════════════════════════════
+  2026-09-28 신설: 연락처 (33차 3-6, 만드는 순서 ②)
+
+  "소통함 · 관리 화면"은 만든 사람의 말입니다. 손님은 "연락처"를 찾습니다.
+  세 갈래로 나눠 보여줍니다.
+     회선  보안회선(메신저)으로 이어진 상대
+     긴급  QR · 찾습니다 게시판으로 연락 온 분 (소통함과 같은 내용)
+     임시  1회용 임시연락처 — 아직 없음(④단계에서 채움)
+
+  🔴 손님이 이름을 직접 붙입니다(부름의 peer_label).
+     계정이 있으면 서버 contact_labels 표에,
+     계정 없이 초대받은 참가자는 이 폰 안에만 남깁니다.
+     서버가 "누가 어느 방에 들어갔는지" 모르게 한 원칙을 지킵니다.
+
+  🔴 최근 대화 미리보기는 기본이 꺼짐입니다. 옆 사람이 읽습니다.
+
+  ⚠ 기존 서버 함수만 읽습니다. 새로 만든 표는 contact_labels 하나만 씁니다.
+  ═══════════════════════════════════════════════════════════════
+-->
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1; --brass:#C9A24B;
+  --line:#DCE3DE; --danger:#C1483A; --soft:#9FBDB9;
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ margin:0; }
+body{ background:var(--teal-deep); color:#fff; font-family:'Inter',system-ui,sans-serif; min-height:100vh; word-break:keep-all;
+      padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+.shell{ max-width:480px; margin:0 auto; padding:0 16px 40px; }
+
+/* 머리 */
+.top{ display:flex; align-items:center; gap:10px; padding:16px 0 8px; }
+.back{ background:none; border:none; color:#fff; font-size:22px; padding:6px 8px 6px 0; cursor:pointer; }
+.top h1{ flex:1; margin:0; font-family:'Space Grotesk','Inter',sans-serif; font-size:21px; font-weight:700; }
+.lang{ display:flex; gap:3px; background:rgba(255,255,255,.1); border-radius:20px; padding:3px; }
+.lang button{ border:none; background:none; color:rgba(255,255,255,.6); font-size:11px; font-weight:700; padding:5px 10px; border-radius:16px; cursor:pointer; }
+.lang button.on{ background:var(--coral); color:#fff; }
+
+/* 갈래 단추 — 셋이 한 줄. 누른 갈래만 흰 바탕 */
+.tabs{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; background:rgba(0,0,0,.2); border-radius:14px; padding:4px; margin:6px 0 12px; }
+.tabs button{ border:none; background:none; color:var(--soft); font-family:inherit; font-size:14px; font-weight:700; padding:10px 4px; border-radius:11px; cursor:pointer; }
+.tabs button.on{ background:#fff; color:var(--ink); }
+.tabs button .n{ font-weight:500; font-size:12px; opacity:.7; margin-left:3px; }
+
+/* 미리보기 켜기 줄 */
+.optrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px; color:var(--soft); margin:0 2px 10px; }
+.sw{ position:relative; width:42px; height:24px; border:none; border-radius:20px; background:rgba(255,255,255,.2); cursor:pointer; flex-shrink:0; }
+.sw::after{ content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .15s; }
+.sw.on{ background:var(--coral); }
+.sw.on::after{ left:21px; }
+
+/* 목록 */
+.list{ background:#fff; color:var(--ink); border-radius:16px; overflow:hidden; }
+.row{ display:flex; align-items:center; gap:12px; padding:12px 8px 12px 14px; border-bottom:1px solid var(--line); }
+.row:last-child{ border-bottom:none; }
+.av{ width:42px; height:42px; border-radius:50%; background:var(--teal-tint); display:flex; align-items:center; justify-content:center; font-size:21px; flex-shrink:0; cursor:pointer; }
+.row.emg .av{ background:var(--coral-tint); }
+.mid{ flex:1; min-width:0; cursor:pointer; }
+.nm{ font-weight:700; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sub{ font-size:12px; color:var(--ink-soft); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.prev{ font-size:12.5px; color:var(--ink); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.8; }
+.badge{ display:inline-block; font-size:10.5px; font-weight:700; border-radius:20px; padding:1px 7px; margin-left:5px; vertical-align:2px; background:#EEF1EF; color:var(--ink-soft); }
+.tm{ font-size:11px; color:var(--ink-soft); flex-shrink:0; text-align:right; }
+.dots{ background:none; border:none; font-size:20px; color:var(--ink-soft); padding:8px 8px; cursor:pointer; flex-shrink:0; border-radius:10px; }
+.dots:active{ background:var(--teal-tint); }
+.row.closed .nm, .row.closed .av{ opacity:.55; }
+
+.group-h{ font-size:12px; font-weight:700; color:var(--soft); margin:16px 4px 7px; }
+.group-h:first-child{ margin-top:0; }
+
+.empty{ background:rgba(0,0,0,.18); border-radius:14px; padding:22px 18px; font-size:13px; color:var(--soft); line-height:1.75; text-align:center; }
+.empty a{ color:#fff; font-weight:700; }
+.note{ font-size:11.5px; color:var(--soft); line-height:1.7; margin:12px 4px 0; }
+
+/* 아래에서 올라오는 창 (⋯ 메뉴 · 이름 붙이기) */
+.bg{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:50; }
+.sheet{ display:none; position:fixed; left:0; right:0; bottom:0; z-index:51; background:#fff; color:var(--ink);
+        border-radius:20px 20px 0 0; padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px)); max-width:480px; margin:0 auto; }
+.bg.show, .sheet.show{ display:block; }
+.sheet h3{ margin:0 0 4px; font-size:16px; }
+.sheet .hint{ font-size:12px; color:var(--ink-soft); margin-bottom:12px; line-height:1.6; }
+.sheet .item{ display:block; width:100%; text-align:left; background:none; border:none; font-family:inherit; font-size:15px; color:var(--ink); padding:13px 6px; border-bottom:1px solid var(--line); cursor:pointer; }
+.sheet .item:last-child{ border-bottom:none; }
+.sheet .item.danger{ color:var(--danger); }
+.sheet input{ width:100%; font-family:inherit; font-size:16px; padding:12px 14px; border:1.5px solid var(--line); border-radius:12px; outline:none; }
+.sheet input:focus{ border-color:var(--teal); }
+.sheet .btns{ display:flex; gap:8px; margin-top:12px; }
+.sheet .btns button{ flex:1; border:none; border-radius:12px; padding:13px; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+.sheet .btns .ok{ background:var(--teal); color:#fff; }
+.sheet .btns .no{ background:var(--teal-tint); color:var(--teal-deep); }
+
+.toast{ position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:#fff; color:var(--ink);
+        font-size:13px; font-weight:600; padding:10px 16px; border-radius:20px; box-shadow:0 6px 18px rgba(0,0,0,.3); display:none; z-index:60; }
+.toast.show{ display:block; }
+button:focus-visible, .mid:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="top">
+    <button type="button" class="back" id="backBtn" aria-label="뒤로">←</button>
+    <h1 data-i18n="title">연락처</h1>
+    <div class="lang"><button data-lang="ko">KR</button><button data-lang="en">EN</button></div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button type="button" data-tab="line"><span data-i18n="tabLine">회선</span><span class="n" id="nLine"></span></button>
+    <button type="button" data-tab="emergency"><span data-i18n="tabEmg">긴급</span><span class="n" id="nEmg"></span></button>
+    <button type="button" data-tab="temp"><span data-i18n="tabTemp">임시</span><span class="n" id="nTemp"></span></button>
+  </div>
+
+  <!-- 🔴 기본 꺼짐. 긴급 갈래에서만 보입니다. -->
+  <div class="optrow" id="prevRow" style="display:none;">
+    <span data-i18n="previewLabel">최근 대화 한 줄 보기</span>
+    <button type="button" class="sw" id="prevSw" aria-label="최근 대화 한 줄 보기"></button>
+  </div>
+
+  <div id="box"></div>
+  <div class="note" id="note"></div>
+</div>
+
+<div class="bg" id="bg"></div>
+<div class="sheet" id="menuSheet" role="dialog"></div>
+<div class="sheet" id="nameSheet" role="dialog">
+  <h3 data-i18n="nameTitle">이름 붙이기</h3>
+  <div class="hint" id="nameHint"></div>
+  <input type="text" id="nameInput" maxlength="40" autocomplete="off">
+  <div class="btns">
+    <button type="button" class="no" id="nameCancel" data-i18n="cancel">취소</button>
+    <button type="button" class="ok" id="nameSave" data-i18n="save">저장</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── 글씨 (KR/EN) ────────────────────────────────────────────
+const I18N = {
+  ko: {
+    title:'연락처', tabLine:'회선', tabEmg:'긴급', tabTemp:'임시', back:'뒤로',
+    previewLabel:'최근 대화 한 줄 보기',
+    nameTitle:'이름 붙이기', cancel:'취소', save:'저장',
+    finder:'발견자', item:'등록물', closed:'끝남', owner:'내가 연 회선', member:'초대받은 회선',
+    peerPrefix:'상대: ', originalPrefix:'원래 이름: ', me:'나: ', noMsg:'(메시지 없음)',
+    mOpen:'열기', mName:'이름 붙이기', mRename:'이름 바꾸기', mClear:'붙인 이름 지우기',
+    nameHintServer:'나만 보는 이름입니다. 상대에게는 보이지 않습니다.',
+    nameHintLocal:'이 폰에만 저장됩니다. 상대에게는 보이지 않습니다.',
+    saved:'저장했습니다', cleared:'붙인 이름을 지웠습니다', saveFail:'저장하지 못했습니다. 잠시 뒤 다시 해주세요.',
+    loadFail:'목록을 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 열어주세요.',
+    loading:'불러오는 중…',
+    loginNeed:'긴급 연락처는 로그인해야 보입니다.<br><a href="aliascall_my_account.html">로그인하러 가기</a>',
+    emptyEmg:'아직 연락 온 분이 없습니다.<br>등록물의 QR이나 찾습니다 게시판으로 연락이 오면 여기에 모입니다.',
+    emptyLine:'아직 이어진 회선이 없습니다.<br>보안통신 화면에서 회선을 열거나, 받은 초대 링크로 들어가시면 여기에 모입니다.',
+    emptyTemp:'1회용 임시연락처가 곧 열립니다.<br>그걸로 연락 온 분들이 여기에 모입니다.',
+    groupOpen:'진행 중', groupClosed:'끝난 연락',
+    groupOwner:'내가 연 회선', groupMember:'초대받은 회선',
+    noteEmg:'익명으로 연락 온 분일수록 이름을 붙여두세요. "강아지 찾아주신 분"처럼 붙여두면 나중에 알아보기 쉽습니다.',
+    noteLine:'초대받은 회선은 이 폰에만 기억됩니다. 다른 폰에서는 초대 링크로 다시 들어가셔야 합니다.',
+    today:'', yesterday:'어제',
+  },
+  en: {
+    title:'Contacts', tabLine:'Lines', tabEmg:'Emergency', tabTemp:'One-time', back:'Back',
+    previewLabel:'Show last message',
+    nameTitle:'Add a name', cancel:'Cancel', save:'Save',
+    finder:'Finder', item:'Item', closed:'Closed', owner:'Line I opened', member:'Line I joined',
+    peerPrefix:'With: ', originalPrefix:'Original: ', me:'Me: ', noMsg:'(no messages)',
+    mOpen:'Open', mName:'Add a name', mRename:'Rename', mClear:'Remove my name',
+    nameHintServer:'Only you see this name. The other person never does.',
+    nameHintLocal:'Saved on this phone only. The other person never sees it.',
+    saved:'Saved', cleared:'Name removed', saveFail:'Could not save. Please try again shortly.',
+    loadFail:'Could not load the list. Check your connection and open it again.',
+    loading:'Loading…',
+    loginNeed:'Sign in to see emergency contacts.<br><a href="aliascall_my_account.html">Go to sign in</a>',
+    emptyEmg:'No one has contacted you yet.<br>People who reach you through your item QR or the lost & found board will appear here.',
+    emptyLine:'No lines yet.<br>Open a line from Secure communication, or join one with an invite link, and it will appear here.',
+    emptyTemp:'One-time contact cards are coming soon.<br>People who reach you that way will appear here.',
+    groupOpen:'Active', groupClosed:'Closed',
+    groupOwner:'Lines I opened', groupMember:'Lines I joined',
+    noteEmg:'Give anonymous contacts a name you will recognize later, like "Found my dog".',
+    noteLine:'Lines you joined are remembered on this phone only. On another phone, use the invite link again.',
+    today:'', yesterday:'Yesterday',
+  },
+};
+let LANG = localStorage.getItem('aliascall_lang') === 'en' ? 'en' : 'ko';
+const T = () => I18N[LANG];
+
+const CAT_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
+const TIER_NAME = {
+  ko: { hotline_1to1:'핫라인', hotline_everybody:'에브리바디', economy_4:'이코노미', premium_4:'프리미엄',
+        hotline_1to1_secure:'핫라인 Secure', hotline_everybody_secure:'에브리바디 Secure',
+        economy_4_secure:'이코노미 Secure', premium_4_secure:'프리미엄 Secure',
+        pro_starter:'프로 스타터', pro_business:'프로 비즈니스', pro_enterprise:'프로 엔터프라이즈' },
+  en: { hotline_1to1:'Hotline', hotline_everybody:'Everybody', economy_4:'Economy', premium_4:'Premium',
+        hotline_1to1_secure:'Hotline Secure', hotline_everybody_secure:'Everybody Secure',
+        economy_4_secure:'Economy Secure', premium_4_secure:'Premium Secure',
+        pro_starter:'Pro Starter', pro_business:'Pro Business', pro_enterprise:'Pro Enterprise' },
+};
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function when(iso){
+  if (!iso) return '';
+  const d = new Date(iso), now = new Date();
+  const loc = LANG === 'en' ? 'en-US' : 'ko-KR';
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString(loc, { hour:'numeric', minute:'2-digit' });
+  const y = new Date(now); y.setDate(now.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return T().yesterday;
+  return d.toLocaleDateString(loc, { month:'numeric', day:'numeric' });
+}
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+// ── 상태 ────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+let tab = ['line','emergency','temp'].includes(params.get('tab')) ? params.get('tab') : 'emergency';
+let session = null;
+let emg = null;        // 긴급 연락처 (null = 아직 안 읽음)
+let lines = null;      // 회선 연락처
+let emgError = false, lineError = false;
+let serverLabels = {}; // 'kind|ref' → label
+// 🔴 미리보기 기본 꺼짐. 이 폰에만 기억합니다.
+let previewOn = localStorage.getItem('aliascall_contacts_preview') === 'on';
+
+// 🔴 계정 없는 참가자의 이름표 — 이 폰 안에만
+const LOCAL_LABELS_KEY = 'aliascall_contact_labels_local';
+function localLabels(){ try { return JSON.parse(localStorage.getItem(LOCAL_LABELS_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function setLocalLabel(key, label){
+  const m = localLabels();
+  if (label) m[key] = label; else delete m[key];
+  try { localStorage.setItem(LOCAL_LABELS_KEY, JSON.stringify(m)); } catch (e) {}
+}
+function labelOf(c){
+  const key = c.kind + '|' + c.ref;
+  return c.local ? (localLabels()[key] || '') : (serverLabels[key] || '');
+}
+
+// ── 읽어오기 ────────────────────────────────────────────────
+async function loadLabels(){
+  serverLabels = {};
+  if (!session) return;
+  try {
+    const { data, error } = await sb.from('contact_labels').select('kind, ref_id, label');
+    if (error) throw error;
+    (data || []).forEach((r) => { serverLabels[r.kind + '|' + r.ref_id] = r.label; });
+  } catch (e) { console.warn('[contacts] 이름표 읽기 실패', e); }
+}
+
+// 긴급 — 마이페이지 "소통함"과 같은 서버 함수를 씁니다. 진행 중 + 끝난 것 둘 다.
+async function loadEmergency(){
+  emg = []; emgError = false;
+  if (!session) return;
+  try {
+    const call = async (includeClosed) => {
+      const res = await fetch(SUPABASE_URL + '/functions/v1/aliascall-case-list', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + session.access_token },
+        body: JSON.stringify({ includeClosed }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'case-list');
+      return data.cases || [];
+    };
+    const [open, closed] = await Promise.all([call(false), call(true)]);
+    const seen = new Set();
+    [...open, ...closed].forEach((c) => {
+      if (!c || seen.has(c.caseId)) return;
+      seen.add(c.caseId);
+      emg.push({
+        kind:'emergency', ref:c.caseId, local:false,
+        emoji: CAT_EMOJI[c.category] || '❓',
+        base: (c.registrationTitle || T().item) + ' · ' + T().finder,
+        title: c.registrationTitle || T().item,
+        closed: c.status === 'closed',
+        lastAt: c.lastActivityAt,
+        last: c.lastMessage || null,
+        href: 'aliascall_incoming_calls.html?case=' + encodeURIComponent(c.caseId),
+      });
+    });
+    emg.sort((a, b) => new Date(b.lastAt || 0) - new Date(a.lastAt || 0));
+  } catch (e) {
+    console.warn('[contacts] 긴급 읽기 실패', e);
+    emgError = true;
+  }
+}
+
+// 회선 — 내가 연 방(서버) + 초대받아 들어간 방(이 폰의 기록)
+async function loadLines(){
+  lines = []; lineError = false;
+  const tn = (t) => (TIER_NAME[LANG] || TIER_NAME.ko)[t] || t || '';
+  const mine = new Set();
+
+  if (session) {
+    try {
+      const { data: rooms, error } = await sb.from('hotlines')
+        .select('id, client_label, title, tier, last_activity_at, archived_at, expires_at, status')
+        .eq('owner_user_id', session.user.id)
+        .order('last_activity_at', { ascending:false })
+        .limit(200);
+      if (error) throw error;
+      const alive = (rooms || []).filter((r) => !r.archived_at && r.status === 'active' && new Date(r.expires_at) > new Date());
+
+      // 상대 별명 — 읽을 수 없으면 조용히 넘어갑니다(방 이름으로 보여줍니다).
+      let peers = {};
+      if (alive.length) {
+        try {
+          const { data: mem } = await sb.from('hotline_members')
+            .select('hotline_id, nickname, role, status')
+            .in('hotline_id', alive.map((r) => r.id));
+          (mem || []).forEach((m) => {
+            if (m.role === 'owner' || (m.status && m.status !== 'active') || !m.nickname) return;
+            (peers[m.hotline_id] = peers[m.hotline_id] || []).push(m.nickname);
+          });
+        } catch (e) { peers = {}; }
+      }
+
+      alive.forEach((r) => {
+        mine.add(r.id);
+        const room = r.client_label || r.title || tn(r.tier);
+        const p = peers[r.id] || [];
+        lines.push({
+          kind:'line', ref:r.id, local:false, owner:true,
+          emoji: /_secure$/.test(r.tier || '') ? '🔒' : '💬',
+          base: room,
+          detail: p.length ? T().peerPrefix + p.join(', ') : tn(r.tier),
+          lastAt: r.last_activity_at,
+          href: 'aliascall_hotline_room.html?hotline=' + encodeURIComponent(r.id) + '&from=contacts',
+        });
+      });
+    } catch (e) {
+      console.warn('[contacts] 회선 읽기 실패', e);
+      lineError = true;
+    }
+  }
+
+  // 초대받아 들어간 방 — 대화방이 이 폰에 남겨둔 기록(aliascall_my_lines)
+  try {
+    const raw = JSON.parse(localStorage.getItem('aliascall_my_lines') || '[]');
+    (Array.isArray(raw) ? raw : []).forEach((x) => {
+      if (!x || !x.hotlineId || x.isOwner || mine.has(x.hotlineId) || !x.token) return;
+      lines.push({
+        kind:'line', ref:x.hotlineId, local:true, owner:false,
+        emoji: /_secure$/.test(x.tier || '') ? '🔒' : '💬',
+        base: x.title || tn(x.tier),
+        detail: tn(x.tier),
+        lastAt: x.lastVisitedAt,
+        href: 'aliascall_hotline_room.html?t=' + encodeURIComponent(x.token),
+      });
+    });
+  } catch (e) { /* 기록이 깨져 있으면 없는 것으로 봅니다 */ }
+
+  lines.sort((a, b) => new Date(b.lastAt || 0) - new Date(a.lastAt || 0));
+}
+
+// ── 그리기 ──────────────────────────────────────────────────
+function rowHtml(c, i){
+  const lb = labelOf(c);
+  // 긴급은 등록물 이름을 크게, "발견자"는 아래 줄에 둡니다(이름이 잘리지 않게).
+  const name = lb || (c.kind === 'emergency' ? c.title : c.base);
+  let sub = '';
+  if (c.kind === 'emergency') {
+    sub = lb ? c.base : T().finder;
+  } else {
+    sub = lb ? T().originalPrefix + c.base : (c.detail || '');
+  }
+  let prev = '';
+  if (previewOn && c.kind === 'emergency') {
+    const m = c.last;
+    const txt = !m ? T().noMsg
+      : (m.type === 'call_log' ? m.preview : ((m.sender === 'owner' ? T().me : '') + (m.preview || '')));
+    prev = '<div class="prev">' + esc(txt) + '</div>';
+  }
+  return '<div class="row' + (c.kind === 'emergency' ? ' emg' : '') + (c.closed ? ' closed' : '') + '">' +
+    '<div class="av" data-open="' + i + '" aria-hidden="true">' + esc(c.emoji) + '</div>' +
+    '<div class="mid" data-open="' + i + '" tabindex="0" role="button">' +
+      '<div class="nm">' + esc(name) + (c.closed ? '<span class="badge">' + esc(T().closed) + '</span>' : '') + '</div>' +
+      (sub ? '<div class="sub">' + esc(sub) + '</div>' : '') +
+      prev +
+    '</div>' +
+    '<div class="tm">' + esc(when(c.lastAt)) + '</div>' +
+    '<button type="button" class="dots" data-menu="' + i + '" aria-label="' + esc(T().mOpen) + '">⋯</button>' +
+  '</div>';
+}
+
+let shown = [];   // 지금 그려진 줄 (번호로 찾습니다)
+
+function groupHtml(title, items){
+  if (!items.length) return '';
+  const start = shown.length;
+  shown.push(...items);
+  return (title ? '<div class="group-h">' + esc(title) + '</div>' : '') +
+    '<div class="list">' + items.map((c, k) => rowHtml(c, start + k)).join('') + '</div>';
+}
+
+function paint(){
+  const t = T();
+  document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  document.getElementById('nLine').textContent = lines && lines.length ? lines.length : '';
+  document.getElementById('nEmg').textContent = emg && emg.length ? emg.length : '';
+  document.getElementById('prevRow').style.display = (tab === 'emergency' && session && emg && emg.length) ? 'flex' : 'none';
+  document.getElementById('prevSw').classList.toggle('on', previewOn);
+
+  const box = document.getElementById('box');
+  const note = document.getElementById('note');
+  shown = [];
+  note.textContent = '';
+
+  if (tab === 'temp') {
+    box.innerHTML = '<div class="empty">' + t.emptyTemp + '</div>';
+    return;
+  }
+  if (tab === 'emergency') {
+    if (!session) { box.innerHTML = '<div class="empty">' + t.loginNeed + '</div>'; return; }
+    if (emg === null) { box.innerHTML = '<div class="empty">' + esc(t.loading) + '</div>'; return; }
+    if (emgError) { box.innerHTML = '<div class="empty">' + esc(t.loadFail) + '</div>'; return; }
+    if (!emg.length) { box.innerHTML = '<div class="empty">' + t.emptyEmg + '</div>'; return; }
+    const open = emg.filter((c) => !c.closed), closed = emg.filter((c) => c.closed);
+    box.innerHTML = groupHtml(closed.length ? t.groupOpen : '', open) + groupHtml(t.groupClosed, closed);
+    note.textContent = t.noteEmg;
+    return;
+  }
+  // 회선
+  if (lines === null) { box.innerHTML = '<div class="empty">' + esc(t.loading) + '</div>'; return; }
+  if (!lines.length) { box.innerHTML = '<div class="empty">' + (lineError ? esc(t.loadFail) : t.emptyLine) + '</div>'; return; }
+  const own = lines.filter((c) => c.owner), joined = lines.filter((c) => !c.owner);
+  const both = own.length && joined.length;
+  box.innerHTML = groupHtml(both ? t.groupOwner : '', own) + groupHtml(both ? t.groupMember : '', joined);
+  if (joined.length) note.textContent = t.noteLine;
+}
+
+// ── 누르기 ──────────────────────────────────────────────────
+document.getElementById('box').addEventListener('click', (e) => {
+  const o = e.target.closest('[data-open]');
+  if (o) { const c = shown[+o.dataset.open]; if (c) location.href = c.href; return; }
+  const m = e.target.closest('[data-menu]');
+  if (m) openMenu(shown[+m.dataset.menu]);
+});
+document.getElementById('box').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const o = e.target.closest('[data-open]');
+  if (o) { const c = shown[+o.dataset.open]; if (c) location.href = c.href; }
+});
+
+const bg = document.getElementById('bg');
+const menuSheet = document.getElementById('menuSheet');
+const nameSheet = document.getElementById('nameSheet');
+function closeSheets(){ bg.classList.remove('show'); menuSheet.classList.remove('show'); nameSheet.classList.remove('show'); }
+bg.addEventListener('click', closeSheets);
+
+let target = null;
+function openMenu(c){
+  if (!c) return;
+  target = c;
+  const t = T(), has = !!labelOf(c);
+  menuSheet.innerHTML =
+    '<h3>' + esc(labelOf(c) || c.base) + '</h3>' +
+    '<button type="button" class="item" data-act="open">' + esc(t.mOpen) + '</button>' +
+    '<button type="button" class="item" data-act="name">' + esc(has ? t.mRename : t.mName) + '</button>' +
+    (has ? '<button type="button" class="item danger" data-act="clear">' + esc(t.mClear) + '</button>' : '');
+  bg.classList.add('show'); menuSheet.classList.add('show');
+}
+menuSheet.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-act]');
+  if (!b || !target) return;
+  if (b.dataset.act === 'open') { location.href = target.href; return; }
+  if (b.dataset.act === 'name') { menuSheet.classList.remove('show'); openName(target); return; }
+  if (b.dataset.act === 'clear') { closeSheets(); await saveLabel(target, ''); }
+});
+
+function openName(c){
+  document.getElementById('nameHint').textContent = c.local ? T().nameHintLocal : T().nameHintServer;
+  const inp = document.getElementById('nameInput');
+  inp.value = labelOf(c) || '';
+  inp.placeholder = c.base;
+  bg.classList.add('show'); nameSheet.classList.add('show');
+  setTimeout(() => inp.focus(), 50);
+}
+document.getElementById('nameCancel').addEventListener('click', closeSheets);
+document.getElementById('nameSave').addEventListener('click', async () => {
+  const v = document.getElementById('nameInput').value.trim().slice(0, 40);
+  closeSheets();
+  if (target) await saveLabel(target, v);
+});
+document.getElementById('nameInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('nameSave').click();
+});
+
+async function saveLabel(c, label){
+  const key = c.kind + '|' + c.ref;
+  if (c.local) {
+    setLocalLabel(key, label);
+    toast(label ? T().saved : T().cleared);
+    paint(); return;
+  }
+  try {
+    if (label) {
+      const { error } = await sb.from('contact_labels').upsert(
+        { user_id: session.user.id, kind: c.kind, ref_id: c.ref, label, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,kind,ref_id' });
+      if (error) throw error;
+      serverLabels[key] = label;
+    } else {
+      const { error } = await sb.from('contact_labels').delete().eq('kind', c.kind).eq('ref_id', c.ref);
+      if (error) throw error;
+      delete serverLabels[key];
+    }
+    toast(label ? T().saved : T().cleared);
+  } catch (e) {
+    console.warn('[contacts] 이름 저장 실패', e);
+    toast(T().saveFail);
+  }
+  paint();
+}
+
+// 갈래 · 미리보기 · 뒤로 · 언어
+document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => {
+  tab = b.dataset.tab;
+  try { history.replaceState(null, '', location.pathname + '?tab=' + tab + (params.get('from') ? '&from=' + encodeURIComponent(params.get('from')) : '')); } catch (e) {}
+  paint();
+}));
+document.getElementById('prevSw').addEventListener('click', () => {
+  previewOn = !previewOn;
+  try { localStorage.setItem('aliascall_contacts_preview', previewOn ? 'on' : 'off'); } catch (e) {}
+  paint();
+});
+document.getElementById('backBtn').addEventListener('click', () => {
+  const from = params.get('from');
+  location.href = (from === 'alert' || from === 'msg') ? ('index.html#' + from) : 'index.html';
+});
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach((el) => { const v = T()[el.dataset.i18n]; if (v !== undefined) el.textContent = v; });
+  document.querySelectorAll('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.lang === LANG));
+  document.getElementById('backBtn').setAttribute('aria-label', T().back);
+  document.title = 'Aliascall — ' + T().title;
+}
+document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('click', async () => {
+  LANG = b.dataset.lang;
+  try { localStorage.setItem('aliascall_lang', LANG); } catch (e) {}
+  applyLang();
+  // 기본 이름에 "발견자"·상품 이름이 들어가 있어 다시 읽습니다.
+  emg = null; lines = null; paint();
+  await Promise.all([loadEmergency(), loadLines()]);
+  paint();
+}));
+
+// ── 시작 ────────────────────────────────────────────────────
+(async function start(){
+  applyLang();
+  paint();
+  try { const r = await sb.auth.getSession(); session = r.data.session; } catch (e) { session = null; }
+  await loadLabels();
+  await Promise.all([loadEmergency(), loadLines()]);
+  paint();
+})();
+</script>
+</body>
+</html>
