@@ -229,6 +229,47 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 .view{ display:none; }
 .view.show{ display:block; }
 
+/* ═══ 2026-09-28 신설: 첫 화면 네 칸 (33차 3-4) ═══
+   ⚠ 여전히 한 파일 안에서 화면만 바꿉니다. 연결요청 수신이 이 파일에 있습니다. */
+#viewHome{ padding:10px 16px 0; max-width:420px; margin:0 auto; }
+.home-grid{ position:relative; display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin:8px 0 18px; }
+.tile{ background:#fff; color:var(--ink); border:none; border-radius:18px; aspect-ratio:1/1; min-height:160px;
+       padding:14px 6px; cursor:pointer; font-family:inherit; text-align:center;
+       display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+       border-top:6px solid var(--teal); box-shadow:0 6px 18px -8px rgba(0,0,0,.45); transition:transform .12s ease; }
+.tile:active{ transform:scale(.97); }
+.tile .t-name{ font-family:'Inter',sans-serif; font-size:19px; font-weight:800; line-height:1.35; letter-spacing:-.01em; }
+.tile .t-sub{ font-size:10.5px; letter-spacing:-.02em; color:var(--ink-soft); line-height:1.5; }
+.tile.t-reg, .tile.t-alert{ border-top-color:var(--coral); }
+.tile.t-temp{ border-top-color:var(--brass); }
+/* 윗줄 칸은 글씨를 조금 위로, 아랫줄 칸은 조금 아래로 — 가운데 띠에 가리지 않게 */
+.tile.t-reg, .tile.t-alert{ justify-content:center; padding-bottom:30px; }
+.tile.t-temp, .tile.t-msg{ padding-top:30px; }
+.no-num{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); pointer-events:none;
+         background:linear-gradient(180deg,#E36A5C,#B9342A); color:#fff; font-weight:800; font-size:14px;
+         padding:9px 18px; border-radius:10px; white-space:nowrap; border:2px solid #fff;
+         box-shadow:0 4px 12px rgba(0,0,0,.35); }
+/* 세부 화면 제목 */
+.sub-head{ max-width:360px; margin:10px auto 4px; padding:0 24px; text-align:center; }
+.sub-head .sh-t{ font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; color:#fff; }
+.sub-head .sh-s{ font-size:11.5px; color:rgba(255,255,255,.6); margin-top:4px; line-height:1.5; }
+.sub-home{ display:block; margin:0 auto; background:none; border:none; color:#9FBDB9; font-size:12.5px;
+           padding:10px 14px; cursor:pointer; font-family:inherit; }
+/* ② 수신 대기 큰 단추 */
+.big-link{ display:flex; align-items:center; gap:12px; max-width:312px; margin:16px auto 6px; background:#fff;
+           color:var(--ink); text-decoration:none; border-radius:16px; padding:14px 16px; }
+.big-link .bl-ico{ font-size:24px; }
+.big-link .bl-t{ flex:1; font-weight:700; font-size:14px; }
+.big-link .bl-t small{ display:block; font-weight:400; font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+.big-link .bl-a{ color:var(--coral); font-size:17px; }
+/* ③ 준비 중 안내 */
+.soon-card{ max-width:312px; margin:16px auto; background:rgba(255,255,255,.06); border:1px dashed rgba(201,162,75,.6);
+            border-radius:16px; padding:18px 16px; font-size:12.5px; line-height:1.75; color:rgba(255,255,255,.85); }
+.soon-card b{ color:#fff; }
+.soon-card .sc-tag{ display:inline-block; font-size:11px; font-weight:700; background:var(--brass); color:#2A2210;
+                    border-radius:20px; padding:3px 10px; margin-bottom:10px; }
+.soon-card ul{ margin:8px 0 0; padding-left:18px; }
+
 /* 뒤로가기 줄 */
 .view-back{ display:flex; align-items:center; gap:8px; padding:4px 2px 12px; }
 .view-back button{ background:none; border:none; color:#9FBDB9; font-size:13px; cursor:pointer; font-family:inherit; padding:6px 2px; }
@@ -368,55 +409,45 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 
 <!-- ═══ 2026-08-27 신설: 홈 화면 (두 갈래) ═══ -->
 <div class="view show" id="viewHome">
-  <div class="cat emg">
-    <div class="cat-label"><span data-i18n="catEmg">📍 안심 비상연락</span><span class="bar"></span></div>
-    <button type="button" class="entry" onclick="showView('emg')">
-      <span class="arrow">›</span>
-      <div class="e-ico">🎈</div>
-      <h2 data-i18n="emgTitle">Alias The Emergency Call</h2>
-      <div class="e-sub" data-i18n="emgSub">주차연락 · 분실 · 반려동물 실종 대비 · 부재중 연락 등 비상상황시 모두 다(등록자와 발견자 모두) 자신의 전화번호 노출 없이 서로 통화 가능합니다.</div>
-      <div class="pts">
-        <span class="pt" data-i18n="emgPt1">등록물 QR</span>
-        <span class="pt" data-i18n="emgPt2">찾습니다 게시판</span>
-        <span class="pt" data-i18n="emgPt3">수신 대기</span>
-      </div>
+  <!-- ═══ 2026-09-28 개편: 첫 화면 네 칸 (33차 3-4) ═══
+       ① 긴급등록 & 조회  ② 긴급연락 & 알림  ③ 1회용 임시연락처  ④ 보안통화 & 메신저 -->
+  <!-- 2026-09-28 (2차): 회사가 주신 메뉴판 문안대로. 가운데 "내 번호 노출 없음" 띠. -->
+  <div class="home-grid">
+    <button type="button" class="tile t-reg" onclick="showView('reg')">
+      <div class="t-name" data-i18n="tRegName">사건발생 긴급등록</div>
+      <div class="t-sub" data-i18n="tRegSub">-차량/분실/실종/도난/부재-</div>
     </button>
-    <!-- ⚠ 확인할 알림이 있을 때만 뜹니다(JS가 켭니다). 급한 것을 첫 화면에서 놓치지 않게. -->
-    <a class="alerts-strip" id="alertsStrip" href="#" onclick="showView('emg'); return false;">
-      <span class="n" id="alertsCount">0</span>
-      <span class="t" data-i18n="alertsStrip">확인해야 할 알림이 있습니다</span>
-      <span>›</span>
-    </a>
+    <button type="button" class="tile t-alert" onclick="showView('alert')">
+      <div class="t-name" data-i18n="tAlertName">사건발생 긴급연락</div>
+      <div class="t-sub" data-i18n="tAlertSub">-연락받기/연락하기/알림설정-</div>
+    </button>
+    <button type="button" class="tile t-temp" onclick="showView('temp')">
+      <div class="t-name" data-i18n="tTempName">1회용 임시연락처 발급</div>
+      <div class="t-sub" data-i18n="tTempSub">-신원미상 상대하는 현명한 선택-</div>
+    </button>
+    <button type="button" class="tile t-msg" onclick="showView('msg')">
+      <div class="t-name" data-i18n="tMsgName">사생활보호 안전한 보안통신</div>
+      <div class="t-sub" data-i18n="tMsgSub">-첨단메신저/음성/영상/파일전송-</div>
+    </button>
+    <div class="no-num" data-i18n="noNumber">내 번호 노출 없음</div>
   </div>
 
-  <div class="cat msg">
-    <div class="cat-label"><span data-i18n="catMsg">🔒 안심 보안회선</span><span class="bar"></span></div>
-    <button type="button" class="entry" onclick="showView('msg')">
-      <span class="arrow">›</span>
-      <div class="e-ico">💬</div>
-      <h2 data-i18n="msgTitle">Alias The Next-Gen Messenger</h2>
-      <div class="e-sub" data-i18n="msgSub">번호 없이, 우리끼리만 아는 회선을 엽니다. 저희 서버도 못 보는 잠금까지.</div>
-      <div class="pts">
-        <span class="pt" data-i18n="msgPt1">연인 · 가족</span>
-        <span class="pt" data-i18n="msgPt2">업무 · 비서</span>
-        <span class="pt" data-i18n="msgPt3">고객 관리</span>
-      </div>
-    </button>
+  <!-- ⚠ 확인할 알림이 있을 때만 뜹니다(JS가 켭니다). 급한 것을 첫 화면에서 놓치지 않게.
+       2026-09-28: 누르면 ② 긴급연락 & 알림으로 갑니다. -->
+  <a class="alerts-strip" id="alertsStrip" href="#" onclick="showView('alert'); return false;">
+    <span class="n" id="alertsCount">0</span>
+    <span class="t" data-i18n="alertsStrip">확인해야 할 알림이 있습니다</span>
+    <span>›</span>
+  </a>
 
-    <!-- ⚠ 2026-08-29 신설(v69): 승인을 기다리는 문의.
-         승인 카드는 그 방의 대화방을 열어야만 보입니다. -->
-    <a class="wait-strip" id="waitStrip" href="#">
-      <span class="n" id="waitCount">0</span>
-      <span class="t" id="waitText" data-i18n="waitStrip">승인을 기다리는 문의가 있습니다</span>
-      <span>›</span>
-    </a>
+  <!-- ⚠ 2026-08-29 신설(v69): 승인을 기다리는 문의 / 안 읽은 메시지. -->
+  <a class="wait-strip" id="waitStrip" href="#">
+    <span class="n" id="waitCount">0</span>
+    <span class="t" id="waitText" data-i18n="waitStrip">승인을 기다리는 문의가 있습니다</span>
+    <span>›</span>
+  </a>
 
-    <div class="mine-head">
-      <span class="t" data-i18n="myLines">내 회선</span>
-      <a href="#" onclick="showView('msg'); return false;" data-i18n="myLinesAll">전체 보기 ›</a>
-    </div>
-    <div id="myLinesHome"></div>
-  </div>
+  <!-- 2026-09-28 (2차): 첫 화면의 "내 회선"은 없앴습니다. ④ 안에 전체 목록이 그대로 있습니다. -->
 
   <!-- ⚠ 2026-08-28 신설: 순환 배너.
        따로 파는 광고가 아니라 "광고형 프로 비즈니스"에 포함된 혜택입니다.
@@ -435,9 +466,9 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 <!-- ═══ Emergency 화면 ═══ -->
 <div class="view" id="viewEmg">
 
-<div class="section-header emergency">
-  <div class="section-header-title">🚨 Alias Emergency Call</div>
-  <div class="section-header-sub" data-i18n="secEmergencySub">양방향 모두 번호노출 없는 비상연락 안심수단</div>
+<div class="sub-head">
+  <div class="sh-t" data-i18n="tRegName">긴급등록 &amp; 조회</div>
+  <div class="sh-s" data-i18n="secEmergencySub">양방향 모두 번호노출 없는 비상연락 안심수단</div>
 </div>
 
 <div class="quick-search">
@@ -447,34 +478,53 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   </div>
 </div>
 
+<!-- 2026-09-28: "수신 대기"는 ② 긴급연락 & 알림으로 옮겼습니다.
+     🔴 등록하기를 맨 앞에 둡니다. "비상시 결제 없이 바로 등록"이 그 안에 있습니다(33차 7절). -->
 <div class="grid">
-  <a class="icon-btn" href="aliascall_search_mockup.html">
-    <div class="icon-circle">🔍</div>
-    <div class="icon-label" data-i18n="search">찾기 · QR스캔</div>
-  </a>
   <a class="icon-btn secondary" href="aliascall_registration_mockup.html">
     <div class="icon-circle">🏷️</div>
     <div class="icon-label" data-i18n="register">등록하기</div>
   </a>
-  <a class="icon-btn secondary" href="aliascall_my_account.html">
-    <div class="icon-circle">👤</div>
-    <div class="icon-label" data-i18n="myAccount">내 계정</div>
-  </a>
-  <a class="icon-btn secondary" href="aliascall_incoming_calls.html">
-    <div class="icon-circle">🔔</div>
-    <div class="icon-label" data-i18n="incomingCalls">수신 대기</div>
-  </a>
-  <a class="icon-btn" href="aliascall_recharge_mockup.html">
-    <div class="icon-circle">🎁</div>
-    <div class="icon-label" data-i18n="charge">충전소</div>
+  <a class="icon-btn" href="aliascall_search_mockup.html">
+    <div class="icon-circle">🔍</div>
+    <div class="icon-label" data-i18n="search">찾기 · QR스캔</div>
   </a>
   <a class="icon-btn" href="aliascall_public_board_mockup.html">
     <div class="icon-circle">📋</div>
     <div class="icon-label" data-i18n="board">찾습니다 게시판</div>
   </a>
+  <a class="icon-btn secondary" href="aliascall_my_account.html">
+    <div class="icon-circle">👤</div>
+    <div class="icon-label" data-i18n="myAccount">내 계정</div>
+  </a>
+  <!-- ⚠ 충전소(포인트)는 개편 ⑤단계에서 없앱니다. 그때까지는 그대로 둡니다. -->
+  <a class="icon-btn" href="aliascall_recharge_mockup.html">
+    <div class="icon-circle">🎁</div>
+    <div class="icon-label" data-i18n="charge">충전소</div>
+  </a>
 </div>
 
+<button type="button" class="sub-home" onclick="showView('home')" data-i18n="backHome">‹ 첫 화면으로</button>
+
 </div><!-- /viewEmg -->
+
+<!-- ═══ 2026-09-28 신설: ③ 1회용 임시연락처 — 아직 준비 중 (33차 3-5, 만드는 순서 ④) ═══ -->
+<div class="view" id="viewTemp">
+  <div class="sub-head">
+    <div class="sh-t" data-i18n="tTempName">1회용 임시연락처</div>
+    <div class="sh-s" data-i18n="tTempHead">중고거래·일회성 만남에 번호 대신</div>
+  </div>
+  <div class="soon-card">
+    <span class="sc-tag" data-i18n="tSoon">곧 열립니다</span><br>
+    <span data-i18n-html="tTempBody">명함 크기 종이에 <b>QR과 코드</b>를 함께 담아 건네세요. 상대는 스캔하거나 코드를 입력해 연락합니다. 내 번호는 끝까지 드러나지 않습니다.</span>
+    <ul>
+      <li data-i18n="tTempL1">기한: 1 · 3 · 7 · 30일 중에서 고르기</li>
+      <li data-i18n="tTempL2">한 사람만 / 여러 사람 중에서 고르기</li>
+      <li data-i18n-html="tTempL3"><b>언제든 바로 끊기</b> — 기한 전이라도 성가시면 그 자리에서 끊습니다</li>
+    </ul>
+  </div>
+  <button type="button" class="sub-home" onclick="showView('home')" data-i18n="backHome">‹ 첫 화면으로</button>
+</div><!-- /viewTemp -->
 
 <!-- ═══ Messenger 화면 ═══ -->
 <div class="view" id="viewMsg">
@@ -646,6 +696,18 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 <!-- ⚠ 연락 상황·알림 설정·소통함은 Emergency에 속합니다. 그 화면 안으로 넣습니다. -->
 <div class="view" id="viewEmg2">
 <!-- 2026-08-21 신설: 세 번째 구역 헤더 -->
+<div class="sub-head">
+  <div class="sh-t" data-i18n="tAlertName">긴급연락 &amp; 알림</div>
+  <div class="sh-s" data-i18n="tAlertHead">등록물로 걸려온 연락을 받고, 알림을 켜두세요</div>
+</div>
+
+<!-- 2026-09-28: ①에 있던 "수신 대기"를 여기 맨 위로 옮겼습니다. -->
+<a class="big-link" href="aliascall_incoming_calls.html">
+  <span class="bl-ico">🔔</span>
+  <span class="bl-t"><span data-i18n="incomingCalls">수신 대기</span><small data-i18n="tIncomingSub">걸려오는 연결 요청을 기다리는 화면</small></span>
+  <span class="bl-a">›</span>
+</a>
+
 <div class="section-header status">
   <div class="section-header-title" data-i18n="secStatusTitle">📋 연락 상황 및 설정</div>
 </div>
@@ -667,6 +729,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   <div id="caseInboxList"></div>
 </div>
 
+<button type="button" class="sub-home" onclick="showView('home')" data-i18n="backHome">‹ 첫 화면으로</button>
 </div><!-- /viewEmg2 -->
 
 <footer>
@@ -988,15 +1051,26 @@ document.getElementById('toggleClosedCasesBtn').addEventListener('click', () => 
 // =====================================================================
 function showView(name, fromHistory){
   const map = {
-    home: ['viewHome'],
-    emg:  ['viewEmg', 'viewEmg2'],   // Emergency는 두 덩어리(아이콘/설정)로 나뉘어 있음
-    msg:  ['viewMsg'],
+    home:  ['viewHome'],
+    reg:   ['viewEmg'],              // ① 긴급등록 & 조회   (2026-09-28)
+    alert: ['viewEmg2'],             // ② 긴급연락 & 알림   (2026-09-28)
+    temp:  ['viewTemp'],             // ③ 1회용 임시연락처  (2026-09-28, 준비 중)
+    msg:   ['viewMsg'],              // ④ 보안통화 & 메신저
+    // ⚠ 옛 주소 #emg 로 돌아오는 화면이 있을 수 있어 남겨둡니다. ①②를 함께 보여줍니다.
+    emg:   ['viewEmg', 'viewEmg2'],
   };
+  // ⚠ 2026-09-28: 한 화면 조각이 두 갈래(예: reg 와 emg)에 들어 있어,
+  //   먼저 모두 끈 뒤 고른 갈래만 켭니다.
+  if (!map[name]) name = 'home';
   Object.keys(map).forEach((k) => {
     map[k].forEach((id) => {
       const el = document.getElementById(id);
-      if (el) el.classList.toggle('show', k === name);
+      if (el) el.classList.remove('show');
     });
+  });
+  map[name].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('show');
   });
   window.scrollTo(0, 0);
 
@@ -1540,6 +1614,19 @@ const I18N = {
     myLinesEmpty: '아직 이용 중인 회선이 없습니다.<br>상품을 고르시면 바로 시작하실 수 있어요.',
     roleOwner: '개설자', roleMember: '참여 중',
     backHomeAria: '첫 화면으로',
+    // 2026-09-28 신설: 첫 화면 네 칸
+    tRegName: '사건발생 긴급등록', tRegSub: '-차량/분실/실종/도난/부재-', noNumber: '내 번호 노출 없음',
+    tAlertName: '사건발생 긴급연락', tAlertSub: '-연락받기/연락하기/알림설정-',
+    tAlertHead: '등록물로 걸려온 연락을 받고, 알림을 켜두세요',
+    tIncomingSub: '걸려오는 연결 요청을 기다리는 화면',
+    tTempName: '1회용 임시연락처 발급', tTempSub: '-신원미상 상대하는 현명한 선택-',
+    tTempHead: '중고거래·일회성 만남에 번호 대신',
+    tTempBody: '명함 크기 종이에 <b>QR과 코드</b>를 함께 담아 건네세요. 상대는 스캔하거나 코드를 입력해 연락합니다. 내 번호는 끝까지 드러나지 않습니다.',
+    tTempL1: '기한: 1 · 3 · 7 · 30일 중에서 고르기',
+    tTempL2: '한 사람만 / 여러 사람 중에서 고르기',
+    tTempL3: '<b>언제든 바로 끊기</b> — 기한 전이라도 성가시면 그 자리에서 끊습니다',
+    tMsgName: '사생활보호 안전한 보안통신', tMsgSub: '-첨단메신저/음성/영상/파일전송-',
+    tSoon: '곧 열립니다', backHome: '‹ 첫 화면으로',
     secMsgTitle: '💬 Alias The Next-Gen Messenger',
     secMsgSub: '번호 없이, 우리끼리만 아는 회선',
     myPage: 'My Page',
@@ -1647,6 +1734,18 @@ const I18N = {
     myLinesEmpty: 'No lines yet.<br>Pick a plan to get started.',
     roleOwner: 'Host', roleMember: 'Joined',
     backHomeAria: 'Back to start',
+    tRegName: 'Register for emergencies', tRegSub: '-Car / Lost / Missing / Theft / Away-', noNumber: 'Your number stays hidden',
+    tAlertName: 'Emergency contact', tAlertSub: '-Receive / Call / Alert settings-',
+    tAlertHead: 'Answer contacts about your items and keep alerts on',
+    tIncomingSub: 'The screen that waits for incoming requests',
+    tTempName: 'Get a one-time contact card', tTempSub: '-The smart choice with strangers-',
+    tTempHead: 'For second-hand deals and one-off meetings',
+    tTempBody: 'Hand over a business-card-sized slip with a <b>QR and a code</b>. The other person scans it or types the code to reach you. Your number is never shown.',
+    tTempL1: 'Valid for 1, 3, 7 or 30 days',
+    tTempL2: 'One person only, or several people',
+    tTempL3: '<b>Cut it off anytime</b> — even before it expires',
+    tMsgName: 'Private, secure communication', tMsgSub: '-Messenger / Voice / Video / Files-',
+    tSoon: 'Coming soon', backHome: '‹ Back to start',
     secMsgTitle: '💬 Alias The Next-Gen Messenger',
     secMsgSub: 'A line only you and your people know — no phone numbers',
     myPage: 'My Page',
@@ -1823,7 +1922,7 @@ function renderLoginStatus(){
 //    (다른 화면에서 돌아올 때 홈으로 튕기지 않게)
 (function initHomeView(){
   const h = (location.hash || '').replace('#', '');
-  const start = (h === 'emg' || h === 'msg') ? h : 'home';
+  const start = ['emg', 'reg', 'alert', 'temp', 'msg'].includes(h) ? h : 'home';
   showView(start, true);
   renderMyLines('myLinesHome', 3);  // 홈에는 최근 3개만
   renderBanner();                    // 2026-08-28: 순환 배너
