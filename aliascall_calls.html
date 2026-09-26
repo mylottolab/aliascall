@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Aliascall — 통화기록</title>
+<meta name="theme-color" content="#123F3D">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  ═══════════════════════════════════════════════════════════════
+  2026-09-28 신설: 통화기록 (33차 3-6, 만드는 순서 ②-4단계)
+
+  언제 · 누구와 · 얼마나 · 걸었나 받았나 · 음성인가 영상인가.
+  갈래는 연락처와 같습니다(회선 · 긴급 · 임시).
+
+  긴급   서버 함수 my_emergency_calls — 내 등록물로 온 음성·영상만
+         (문자 연결은 연락처 쪽 대화로 갑니다)
+  회선   서버 함수 my_hotline_calls — 내가 연 회선의 통화
+         + 초대받은 회선은 이 폰의 기록(aliascall_my_calls_local)
+         ⚠ 회선 통화는 벨이 울리는 전화가 아닙니다. 통화 자리를 열고
+           아무도 안 들어오면 "아무도 안 받음"으로 적습니다.
+
+  ⚠ 연락처에서 붙인 이름(contact_labels)이 여기서도 그대로 보입니다.
+  ═══════════════════════════════════════════════════════════════
+-->
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1; --brass:#C9A24B;
+  --line:#DCE3DE; --danger:#C1483A; --soft:#9FBDB9;
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ margin:0; }
+body{ background:var(--teal-deep); color:#fff; font-family:'Inter',system-ui,sans-serif; min-height:100vh; word-break:keep-all;
+      padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+.shell{ max-width:480px; margin:0 auto; padding:0 16px 40px; }
+
+/* 머리 */
+.top{ display:flex; align-items:center; gap:10px; padding:16px 0 8px; }
+.back{ background:none; border:none; color:#fff; font-size:22px; padding:6px 8px 6px 0; cursor:pointer; }
+.top h1{ flex:1; margin:0; font-family:'Space Grotesk','Inter',sans-serif; font-size:21px; font-weight:700; }
+.lang{ display:flex; gap:3px; background:rgba(255,255,255,.1); border-radius:20px; padding:3px; }
+.lang button{ border:none; background:none; color:rgba(255,255,255,.6); font-size:11px; font-weight:700; padding:5px 10px; border-radius:16px; cursor:pointer; }
+.lang button.on{ background:var(--coral); color:#fff; }
+
+/* 갈래 단추 — 셋이 한 줄. 누른 갈래만 흰 바탕 */
+.tabs{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; background:rgba(0,0,0,.2); border-radius:14px; padding:4px; margin:6px 0 12px; }
+.tabs button{ border:none; background:none; color:var(--soft); font-family:inherit; font-size:14px; font-weight:700; padding:10px 4px; border-radius:11px; cursor:pointer; }
+.tabs button.on{ background:#fff; color:var(--ink); }
+.tabs button .n{ font-weight:500; font-size:12px; opacity:.7; margin-left:3px; }
+
+/* 미리보기 켜기 줄 */
+.optrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px; color:var(--soft); margin:0 2px 10px; }
+.sw{ position:relative; width:42px; height:24px; border:none; border-radius:20px; background:rgba(255,255,255,.2); cursor:pointer; flex-shrink:0; }
+.sw::after{ content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .15s; }
+.sw.on{ background:var(--coral); }
+.sw.on::after{ left:21px; }
+
+/* 목록 */
+.list{ background:#fff; color:var(--ink); border-radius:16px; overflow:hidden; }
+.row{ display:flex; align-items:center; gap:12px; padding:12px 8px 12px 14px; border-bottom:1px solid var(--line); }
+.row:last-child{ border-bottom:none; }
+.av{ width:42px; height:42px; border-radius:50%; background:var(--teal-tint); display:flex; align-items:center; justify-content:center; font-size:21px; flex-shrink:0; cursor:pointer; }
+.row.emg .av{ background:var(--coral-tint); }
+.mid{ flex:1; min-width:0; cursor:pointer; }
+.nm{ font-weight:700; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sub{ font-size:12px; color:var(--ink-soft); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.prev{ font-size:12.5px; color:var(--ink); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.8; }
+.badge{ display:inline-block; font-size:10.5px; font-weight:700; border-radius:20px; padding:1px 7px; margin-left:5px; vertical-align:2px; background:#EEF1EF; color:var(--ink-soft); }
+.tm{ font-size:11px; color:var(--ink-soft); flex-shrink:0; text-align:right; }
+.dots{ background:none; border:none; font-size:20px; color:var(--ink-soft); padding:8px 8px; cursor:pointer; flex-shrink:0; border-radius:10px; }
+.dots:active{ background:var(--teal-tint); }
+.row.closed .nm, .row.closed .av{ opacity:.55; }
+
+.group-h{ font-size:12px; font-weight:700; color:var(--soft); margin:16px 4px 7px; }
+.group-h:first-child{ margin-top:0; }
+
+.empty{ background:rgba(0,0,0,.18); border-radius:14px; padding:22px 18px; font-size:13px; color:var(--soft); line-height:1.75; text-align:center; }
+.empty a{ color:#fff; font-weight:700; }
+.note{ font-size:11.5px; color:var(--soft); line-height:1.7; margin:12px 4px 0; }
+
+/* 아래에서 올라오는 창 (⋯ 메뉴 · 이름 붙이기) */
+.bg{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:50; }
+.sheet{ display:none; position:fixed; left:0; right:0; bottom:0; z-index:51; background:#fff; color:var(--ink);
+        border-radius:20px 20px 0 0; padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px)); max-width:480px; margin:0 auto; }
+.bg.show, .sheet.show{ display:block; }
+.sheet h3{ margin:0 0 4px; font-size:16px; }
+.sheet .hint{ font-size:12px; color:var(--ink-soft); margin-bottom:12px; line-height:1.6; }
+.sheet .item{ display:block; width:100%; text-align:left; background:none; border:none; font-family:inherit; font-size:15px; color:var(--ink); padding:13px 6px; border-bottom:1px solid var(--line); cursor:pointer; }
+.sheet .item:last-child{ border-bottom:none; }
+.sheet .item.danger{ color:var(--danger); }
+.sheet input{ width:100%; font-family:inherit; font-size:16px; padding:12px 14px; border:1.5px solid var(--line); border-radius:12px; outline:none; }
+.sheet input:focus{ border-color:var(--teal); }
+.sheet .btns{ display:flex; gap:8px; margin-top:12px; }
+.sheet .btns button{ flex:1; border:none; border-radius:12px; padding:13px; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+.sheet .btns .ok{ background:var(--teal); color:#fff; }
+.sheet .btns .no{ background:var(--teal-tint); color:var(--teal-deep); }
+
+.toast{ position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:#fff; color:var(--ink);
+        font-size:13px; font-weight:600; padding:10px 16px; border-radius:20px; box-shadow:0 6px 18px rgba(0,0,0,.3); display:none; z-index:60; }
+.toast.show{ display:block; }
+button:focus-visible, .mid:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
+
+/* 통화기록 전용 */
+.day{ font-size:12px; font-weight:700; color:var(--soft); margin:16px 4px 7px; }
+.day:first-child{ margin-top:0; }
+.st{ font-size:12px; margin-top:2px; color:var(--ink-soft); }
+.st.miss{ color:var(--danger); font-weight:600; }
+.kind{ font-size:10.5px; font-weight:700; border-radius:20px; padding:1px 7px; margin-left:5px; vertical-align:2px; }
+.kind.emg{ background:var(--coral-tint); color:#B4552E; }
+.kind.line{ background:var(--teal-tint); color:var(--teal-deep); }
+.toplink{ color:#fff; text-decoration:none; font-size:12px; font-weight:700; background:rgba(255,255,255,.12); border-radius:20px; padding:6px 11px; white-space:nowrap; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="top">
+    <button type="button" class="back" id="backBtn" aria-label="뒤로">←</button>
+    <h1 data-i18n="title">통화기록</h1>
+    <a class="toplink" id="toContacts" href="aliascall_contacts.html" data-i18n="toContacts">📇 연락처</a>
+    <div class="lang"><button data-lang="ko">KR</button><button data-lang="en">EN</button></div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button type="button" data-tab="line"><span data-i18n="tabLine">회선</span></button>
+    <button type="button" data-tab="emergency"><span data-i18n="tabEmg">긴급</span></button>
+    <button type="button" data-tab="temp"><span data-i18n="tabTemp">임시</span></button>
+  </div>
+
+  <div id="box"></div>
+  <div class="note" id="note"></div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const I18N = {
+  ko: {
+    title:'통화기록', toContacts:'📇 연락처', tabLine:'회선', tabEmg:'긴급', tabTemp:'임시', back:'뒤로',
+    voice:'음성', video:'영상', finder:'발견자', item:'등록물',
+    inAnswered:'받음', outAnswered:'걸었음', missed:'부재중', declined:'거절함',
+    outNoAnswer:'상대가 안 받음', outDeclined:'상대가 거절함', ongoing:'연결 중',
+    lineNoOne:'아무도 안 받음', lineMine:'내가 시작', lineBy:'{n}님이 시작', people:'{n}명',
+    today:'오늘', yesterday:'어제',
+    loading:'불러오는 중…',
+    loadFail:'통화기록을 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 열어주세요.',
+    loginNeed:'긴급 통화기록은 로그인해야 보입니다.<br><a href="aliascall_my_account.html">로그인하러 가기</a>',
+    emptyEmg:'아직 긴급 통화가 없습니다.<br>등록물의 QR로 음성·영상 연결이 오면 여기에 남습니다.',
+    emptyLine:'아직 회선 통화가 없습니다.<br>회선 대화방에서 음성·영상 통화를 하면 여기에 남습니다.',
+    emptyTemp:'1회용 임시연락처가 곧 열립니다.<br>그걸로 한 통화가 여기에 남습니다.',
+    noteEmg:'문자로만 오간 연락은 연락처의 [긴급]에서 보실 수 있습니다.',
+    noteLine:'초대받은 회선의 통화는 이 폰에만 기록됩니다.',
+    sec:'초', min:'분', hr:'시간',
+  },
+  en: {
+    title:'Call history', toContacts:'📇 Contacts', tabLine:'Lines', tabEmg:'Emergency', tabTemp:'One-time', back:'Back',
+    voice:'Voice', video:'Video', finder:'Finder', item:'Item',
+    inAnswered:'Answered', outAnswered:'Outgoing', missed:'Missed', declined:'Declined',
+    outNoAnswer:'No answer', outDeclined:'They declined', ongoing:'Connecting',
+    lineNoOne:'No one joined', lineMine:'Started by me', lineBy:'Started by {n}', people:'{n} people',
+    today:'Today', yesterday:'Yesterday',
+    loading:'Loading…',
+    loadFail:'Could not load call history. Check your connection and open it again.',
+    loginNeed:'Sign in to see emergency calls.<br><a href="aliascall_my_account.html">Go to sign in</a>',
+    emptyEmg:'No emergency calls yet.<br>Voice or video calls through your item QR will appear here.',
+    emptyLine:'No line calls yet.<br>Voice or video calls in your line chats will appear here.',
+    emptyTemp:'One-time contact cards are coming soon.<br>Calls made that way will appear here.',
+    noteEmg:'Text-only contacts are under Contacts → Emergency.',
+    noteLine:'Calls in lines you joined are kept on this phone only.',
+    sec:'s', min:'m', hr:'h',
+  },
+};
+let LANG = localStorage.getItem('aliascall_lang') === 'en' ? 'en' : 'ko';
+const T = () => I18N[LANG];
+const CAT_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
+const TIER_NAME = {
+  ko: { hotline_1to1:'핫라인', hotline_everybody:'에브리바디', economy_4:'이코노미', premium_4:'프리미엄',
+        hotline_1to1_secure:'핫라인 Secure', hotline_everybody_secure:'에브리바디 Secure',
+        economy_4_secure:'이코노미 Secure', premium_4_secure:'프리미엄 Secure',
+        pro_starter:'프로 스타터', pro_business:'프로 비즈니스', pro_enterprise:'프로 엔터프라이즈' },
+  en: { hotline_1to1:'Hotline', hotline_everybody:'Everybody', economy_4:'Economy', premium_4:'Premium',
+        hotline_1to1_secure:'Hotline Secure', hotline_everybody_secure:'Everybody Secure',
+        economy_4_secure:'Economy Secure', premium_4_secure:'Premium Secure',
+        pro_starter:'Pro Starter', pro_business:'Pro Business', pro_enterprise:'Pro Enterprise' },
+};
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function tn(t){ return (TIER_NAME[LANG] || TIER_NAME.ko)[t] || t || ''; }
+function clock(iso){ return new Date(iso).toLocaleTimeString(LANG === 'en' ? 'en-US' : 'ko-KR', { hour:'numeric', minute:'2-digit' }); }
+function dayKey(iso){ return new Date(iso).toDateString(); }
+function dayLabel(iso){
+  const d = new Date(iso), now = new Date(), y = new Date(now); y.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return T().today;
+  if (d.toDateString() === y.toDateString()) return T().yesterday;
+  return d.toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR', { month:'long', day:'numeric', weekday:'short' });
+}
+function dur(a, b){
+  if (!a || !b) return '';
+  let s = Math.max(0, Math.round((new Date(b) - new Date(a)) / 1000));
+  const t = T();
+  if (s < 60) return s + t.sec;
+  const h = Math.floor(s / 3600); s -= h * 3600;
+  const m = Math.floor(s / 60); s -= m * 60;
+  return h ? (h + t.hr + ' ' + m + t.min) : (m + t.min + (s ? ' ' + s + t.sec : ''));
+}
+
+const params = new URLSearchParams(location.search);
+let tab = ['line','emergency','temp'].includes(params.get('tab')) ? params.get('tab') : 'emergency';
+let session = null, emg = null, lines = null, emgError = false, lineError = false;
+let serverLabels = {};
+function localLabels(){ try { return JSON.parse(localStorage.getItem('aliascall_contact_labels_local') || '{}') || {}; } catch (e) { return {}; } }
+
+async function loadLabels(){
+  serverLabels = {};
+  if (!session) return;
+  try {
+    const { data } = await sb.from('contact_labels').select('kind, ref_id, label');
+    (data || []).forEach((r) => { serverLabels[r.kind + '|' + r.ref_id] = r.label; });
+  } catch (e) {}
+}
+
+// 긴급 — 내 등록물로 온 음성·영상
+async function loadEmergency(){
+  emg = []; emgError = false;
+  if (!session) return;
+  try {
+    const { data, error } = await sb.rpc('my_emergency_calls', { p_limit: 200 });
+    if (error) throw error;
+    const t = T();
+    (data || []).forEach((r) => {
+      const out = r.direction === 'owner_to_finder';   // 내가 발견자에게 다시 건 통화
+      const answered = !!r.owner_joined_at || r.ended_reason === 'answered_and_ended';
+      let status, miss = false;
+      if (out) {
+        status = r.ended_reason === 'declined' ? t.outDeclined
+               : (r.ended_reason === 'timeout_no_answer' ? t.outNoAnswer : t.outAnswered);
+      } else if (answered) {
+        status = t.inAnswered;
+      } else if (r.ended_reason === 'declined') {
+        status = t.declined;
+      } else if (!r.ended_at && (Date.now() - new Date(r.created_at)) < 90000) {
+        status = t.ongoing;
+      } else {
+        status = t.missed; miss = true;   // 응답 없음 · 받기 전에 상대가 나감
+      }
+      const label = r.case_id ? serverLabels['emergency|' + r.case_id] : '';
+      emg.push({
+        at: r.created_at,
+        icon: (out ? '↗ ' : '↙ ') + (r.call_type === 'video' ? '🎥' : '📞'),
+        emoji: CAT_EMOJI[r.category] || '❓',
+        name: label || (r.registration_title || t.item),
+        who: label ? (r.registration_title || t.item) + ' · ' + t.finder : t.finder,
+        mode: r.call_type === 'video' ? t.video : t.voice,
+        status, miss,
+        length: (answered && r.ended_at) ? dur(r.owner_joined_at || r.created_at, r.ended_at) : '',
+        href: r.case_id ? 'aliascall_incoming_calls.html?case=' + encodeURIComponent(r.case_id) : '',
+        kind: 'emg',
+      });
+    });
+  } catch (e) { console.warn('[calls] 긴급 읽기 실패', e); emgError = true; }
+}
+
+// 회선 — 내가 연 회선(서버) + 초대받은 회선(이 폰)
+async function loadLines(){
+  lines = []; lineError = false;
+  const t = T();
+  const push = (x) => {
+    const label = x.local ? localLabels()['line|' + x.hotlineId] : serverLabels['line|' + x.hotlineId];
+    const noOne = (x.peak || 1) <= 1 && !!x.endedAt;
+    lines.push({
+      at: x.startedAt,
+      icon: (x.mine ? '↗ ' : '↙ ') + (x.mode === 'video' ? '🎥' : '📞'),
+      emoji: /_secure$/.test(x.tier || '') ? '🔒' : '💬',
+      name: label || x.room || tn(x.tier),
+      who: x.mine ? t.lineMine : t.lineBy.replace('{n}', x.by || '?'),
+      mode: x.mode === 'video' ? t.video : t.voice,
+      status: noOne ? t.lineNoOne : (x.endedAt ? t.people.replace('{n}', x.peak) : t.ongoing),
+      miss: noOne && !x.mine,
+      length: (!noOne && x.endedAt) ? dur(x.startedAt, x.endedAt) : '',
+      href: x.href, kind: 'line',
+    });
+  };
+  if (session) {
+    try {
+      const { data, error } = await sb.rpc('my_hotline_calls', { p_limit: 200 });
+      if (error) throw error;
+      (data || []).forEach((r) => push({
+        hotlineId: r.hotline_id, room: r.room_name === r.tier ? '' : r.room_name, tier: r.tier,
+        mode: r.mode, mine: !!r.started_by_me, by: r.started_by_nickname,
+        startedAt: r.started_at, endedAt: r.ended_at, peak: r.peak_participants,
+        href: 'aliascall_hotline_room.html?hotline=' + encodeURIComponent(r.hotline_id) + '&from=calls',
+      }));
+    } catch (e) { console.warn('[calls] 회선 읽기 실패', e); lineError = true; }
+  }
+  // 초대받은 회선 — 대화방이 이 폰에 남기는 기록(5단계에서 채웁니다)
+  try {
+    const raw = JSON.parse(localStorage.getItem('aliascall_my_calls_local') || '[]');
+    (Array.isArray(raw) ? raw : []).forEach((x) => {
+      if (!x || !x.hotlineId || !x.startedAt) return;
+      push({ ...x, local: true, href: x.token ? 'aliascall_hotline_room.html?t=' + encodeURIComponent(x.token) : '' });
+    });
+  } catch (e) {}
+  lines.sort((a, b) => new Date(b.at) - new Date(a.at));
+}
+
+function rowHtml(c){
+  const meta = [c.mode, c.status, c.length].filter(Boolean).join(' · ');
+  return '<div class="row' + (c.kind === 'emg' ? ' emg' : '') + '"' + (c.href ? ' data-href="' + esc(c.href) + '"' : '') + '>' +
+    '<div class="av" aria-hidden="true">' + esc(c.emoji) + '</div>' +
+    '<div class="mid"' + (c.href ? ' tabindex="0" role="button"' : '') + '>' +
+      '<div class="nm">' + esc(c.name) + '</div>' +
+      '<div class="sub">' + esc(c.who) + '</div>' +
+      '<div class="st' + (c.miss ? ' miss' : '') + '">' + esc(c.icon + ' ' + meta) + '</div>' +
+    '</div>' +
+    '<div class="tm">' + esc(clock(c.at)) + '</div>' +
+  '</div>';
+}
+function listHtml(items){
+  let html = '', cur = null, open = false;
+  items.forEach((c) => {
+    const k = dayKey(c.at);
+    if (k !== cur) {
+      if (open) html += '</div>';
+      html += '<div class="day">' + esc(dayLabel(c.at)) + '</div><div class="list">';
+      cur = k; open = true;
+    }
+    html += rowHtml(c);
+  });
+  return html + (open ? '</div>' : '');
+}
+
+function paint(){
+  const t = T();
+  document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  const box = document.getElementById('box'), note = document.getElementById('note');
+  note.textContent = '';
+  if (tab === 'temp') { box.innerHTML = '<div class="empty">' + t.emptyTemp + '</div>'; return; }
+  if (tab === 'emergency') {
+    if (!session) { box.innerHTML = '<div class="empty">' + t.loginNeed + '</div>'; return; }
+    if (emg === null) { box.innerHTML = '<div class="empty">' + esc(t.loading) + '</div>'; return; }
+    if (emgError) { box.innerHTML = '<div class="empty">' + esc(t.loadFail) + '</div>'; return; }
+    box.innerHTML = emg.length ? listHtml(emg) : '<div class="empty">' + t.emptyEmg + '</div>';
+    note.textContent = t.noteEmg;
+    return;
+  }
+  if (lines === null) { box.innerHTML = '<div class="empty">' + esc(t.loading) + '</div>'; return; }
+  if (!lines.length) { box.innerHTML = '<div class="empty">' + (lineError ? esc(t.loadFail) : t.emptyLine) + '</div>'; return; }
+  box.innerHTML = listHtml(lines);
+  note.textContent = t.noteLine;
+}
+
+document.getElementById('box').addEventListener('click', (e) => {
+  const r = e.target.closest('[data-href]');
+  if (r) location.href = r.dataset.href;
+});
+document.getElementById('box').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const r = e.target.closest('[data-href]');
+  if (r) location.href = r.dataset.href;
+});
+function fromQs(){ return params.get('from') ? '&from=' + encodeURIComponent(params.get('from')) : ''; }
+function syncLinks(){ document.getElementById('toContacts').href = 'aliascall_contacts.html?tab=' + tab + fromQs(); }
+document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => {
+  tab = b.dataset.tab;
+  try { history.replaceState(null, '', location.pathname + '?tab=' + tab + fromQs()); } catch (e) {}
+  syncLinks(); paint();
+}));
+document.getElementById('backBtn').addEventListener('click', () => {
+  const from = params.get('from');
+  location.href = (from === 'alert' || from === 'msg') ? ('index.html#' + from) : 'index.html';
+});
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach((el) => { const v = T()[el.dataset.i18n]; if (v !== undefined) el.textContent = v; });
+  document.querySelectorAll('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.lang === LANG));
+  document.getElementById('backBtn').setAttribute('aria-label', T().back);
+  document.title = 'Aliascall — ' + T().title;
+}
+document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('click', async () => {
+  LANG = b.dataset.lang;
+  try { localStorage.setItem('aliascall_lang', LANG); } catch (e) {}
+  applyLang(); emg = null; lines = null; paint();
+  await Promise.all([loadEmergency(), loadLines()]); paint();
+}));
+
+(async function start(){
+  applyLang(); syncLinks(); paint();
+  try { const r = await sb.auth.getSession(); session = r.data.session; } catch (e) { session = null; }
+  await loadLabels();
+  await Promise.all([loadEmergency(), loadLines()]);
+  paint();
+})();
+</script>
+</body>
+</html>

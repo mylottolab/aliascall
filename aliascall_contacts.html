@@ -105,6 +105,8 @@ body{ background:var(--teal-deep); color:#fff; font-family:'Inter',system-ui,san
 .toast{ position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:#fff; color:var(--ink);
         font-size:13px; font-weight:600; padding:10px 16px; border-radius:20px; box-shadow:0 6px 18px rgba(0,0,0,.3); display:none; z-index:60; }
 .toast.show{ display:block; }
+/* 2026-09-28: 통화기록으로 가는 단추 */
+.toplink{ color:#fff; text-decoration:none; font-size:12px; font-weight:700; background:rgba(255,255,255,.12); border-radius:20px; padding:6px 11px; white-space:nowrap; }
 button:focus-visible, .mid:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
 </style>
 </head>
@@ -114,6 +116,7 @@ button:focus-visible, .mid:focus-visible{ outline:2px solid var(--coral); outlin
   <div class="top">
     <button type="button" class="back" id="backBtn" aria-label="뒤로">←</button>
     <h1 data-i18n="title">연락처</h1>
+    <a class="toplink" id="toCalls" href="aliascall_calls.html" data-i18n="toCalls">📞 통화기록</a>
     <div class="lang"><button data-lang="ko">KR</button><button data-lang="en">EN</button></div>
   </div>
 
@@ -154,7 +157,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ── 글씨 (KR/EN) ────────────────────────────────────────────
 const I18N = {
   ko: {
-    title:'연락처', tabLine:'회선', tabEmg:'긴급', tabTemp:'임시', back:'뒤로',
+    title:'연락처', toCalls:'📞 통화기록', tabLine:'회선', tabEmg:'긴급', tabTemp:'임시', back:'뒤로',
     previewLabel:'최근 대화 한 줄 보기',
     nameTitle:'이름 붙이기', cancel:'취소', save:'저장',
     finder:'발견자', item:'등록물', closed:'끝남', owner:'내가 연 회선', member:'초대받은 회선',
@@ -176,7 +179,7 @@ const I18N = {
     today:'', yesterday:'어제',
   },
   en: {
-    title:'Contacts', tabLine:'Lines', tabEmg:'Emergency', tabTemp:'One-time', back:'Back',
+    title:'Contacts', toCalls:'📞 Calls', tabLine:'Lines', tabEmg:'Emergency', tabTemp:'One-time', back:'Back',
     previewLabel:'Show last message',
     nameTitle:'Add a name', cancel:'Cancel', save:'Save',
     finder:'Finder', item:'Item', closed:'Closed', owner:'Line I opened', member:'Line I joined',
@@ -534,8 +537,9 @@ async function saveLabel(c, label){
 document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => {
   tab = b.dataset.tab;
   try { history.replaceState(null, '', location.pathname + '?tab=' + tab + (params.get('from') ? '&from=' + encodeURIComponent(params.get('from')) : '')); } catch (e) {}
-  paint();
+  syncCallsLink(); paint();
 }));
+function syncCallsLink(){ const f = params.get('from'); document.getElementById('toCalls').href = 'aliascall_calls.html?tab=' + tab + (f ? '&from=' + encodeURIComponent(f) : ''); }
 document.getElementById('prevSw').addEventListener('click', () => {
   previewOn = !previewOn;
   try { localStorage.setItem('aliascall_contacts_preview', previewOn ? 'on' : 'off'); } catch (e) {}
@@ -564,7 +568,7 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
 
 // ── 시작 ────────────────────────────────────────────────────
 (async function start(){
-  applyLang();
+  applyLang(); syncCallsLink();
   paint();
   try { const r = await sb.auth.getSession(); session = r.data.session; } catch (e) { session = null; }
   await loadLabels();
