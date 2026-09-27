@@ -57,9 +57,11 @@
   S.buy = async function(sku, opts){
     opts = opts || {};
     if (!hasNative()) { done({ ok: false, error: 'no_native' }); return; }
-    var keep = { secure: !!opts.secure, purpose: opts.purpose === 'work' ? 'work' : 'personal', key: null };
-    /* 🔴 암호화 회선이면 열쇠를 **지금** 만듭니다. 결제 뒤에 만들면 늦습니다. */
-    if (keep.secure && typeof window.e2eeGenerateKeyBase64 === 'function') {
+    var keep = { secure: !!opts.secure, purpose: opts.purpose === 'work' ? 'work' : 'personal', key: null,
+                 extend: opts.extendHotlineId || null };
+    /* 🔴 암호화 회선이면 열쇠를 **지금** 만듭니다. 결제 뒤에 만들면 늦습니다.
+       ⚠ 연장이면 만들지 않습니다 — 원래 회선의 열쇠를 그대로 씁니다. */
+    if (keep.secure && !keep.extend && typeof window.e2eeGenerateKeyBase64 === 'function') {
       keep.key = await window.e2eeGenerateKeyBase64();
     }
     try { localStorage.setItem(STASH + sku, JSON.stringify(keep)); } catch (e) {}
@@ -93,7 +95,8 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token },
         body: JSON.stringify({ productId: sku, purchaseToken: token, orderId: ev.b || '',
-                               secure: keep.secure, purpose: keep.purpose }),
+                               secure: keep.secure, purpose: keep.purpose,
+                               extendHotlineId: keep.extend }),
       });
       var out = {};
       try { out = await res.json(); } catch (e) {}
@@ -112,12 +115,12 @@
 
       AliasNative.storeConsume(token);
       var link = null;
-      if (out.hotlineId && keep.key) {
+      if (out.hotlineId && keep.key && !out.extended) {
         try { localStorage.setItem('aliascall_hotline_key_' + out.hotlineId, keep.key); } catch (e) {}
         link = location.origin + '/aliascall_hotline_room.html?hotline=' + out.hotlineId + '#k=' + keep.key;
       }
       stashDel(sku);
-      done({ ok: true, sku: sku, kind: out.kind, months: out.months, hotlineId: out.hotlineId,
+      done({ ok: true, sku: sku, kind: out.kind, months: out.months, hotlineId: out.hotlineId, extended: !!out.extended,
              inviteToken: out.inviteToken, ownerLink: link, already: !!out.already });
     } catch (e) {
       console.error('[store] 확인 실패', e);

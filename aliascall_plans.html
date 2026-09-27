@@ -88,7 +88,7 @@ main{ max-width:430px; margin:0 auto; padding:10px 20px 60px; }
 .sum .v{ font-size:22px; font-weight:800; }
 .buy{ width:100%; border:none; border-radius:16px; padding:17px; font-family:inherit; font-size:16px; font-weight:800; background:var(--teal); color:#fff; cursor:pointer; }
 .buy:disabled{ opacity:.5; cursor:default; }
-.note{ font-size:12px; color:var(--ink-soft); line-height:1.7; margin:14px 2px 0; }
+.note{ font-size:12px; color:var(--ink-soft); line-height:1.7; margin:14px 2px 0; white-space:pre-line; }
 .free{ margin-top:18px; background:rgba(255,255,255,.55); border-radius:14px; padding:12px 14px; font-size:12.5px; line-height:1.65; }
 .free b{ color:var(--teal-deep); }
 
@@ -137,6 +137,9 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
       <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="i4p">④ 4인 회선 · 20GB</span></div>
       <div class="ds" data-i18n="dPrem">가족 · 친한 친구 · 작은 팀까지 네 명이 함께 쓰는 보안통신.</div>
     </button>
+
+    <!-- 2026-09-28: 회선 관리의 [연장하기] 로 왔을 때 -->
+    <div class="free" id="extBox" style="display:none; margin:0 0 12px; background:#fff;"></div>
 
     <div id="lineOpts" style="display:none;">
       <div class="sect" data-i18n="sDur">기간</div>
@@ -210,6 +213,8 @@ const I18N = {
     dTemg:'긴급 이용권이 더해졌습니다', dPemg:'차량 · 소지품 QR과 임시연락처를 12개월 동안 쓰실 수 있습니다.', goHome:'첫 화면으로',
     keyWarn:'아래 링크를 지금 꼭 저장해두세요. 이 링크(#k= 뒷부분 포함)를 잃어버리면 저희도 대화를 복구할 수 없습니다.',
     copy:'복사', copied:'복사됨', home:'첫 화면으로',
+    ext:'🔁 <b>{name}</b> 회선을 연장합니다. 쓰던 방과 대화가 그대로 이어지고, 사용량도 더해집니다.',
+    extKeep:'암호화와 용도는 원래 회선 그대로입니다.', dText:'회선이 연장되었습니다', dPext:'쓰던 방이 그대로 이어집니다.',
   },
   en: {
     title:'Plans', sub:'Every number-free feature comes with one plan. It never renews automatically.',
@@ -239,6 +244,8 @@ const I18N = {
     dTemg:'Emergency plan added', dPemg:'Item QR codes and one-time cards are yours for 12 months.', goHome:'Home',
     keyWarn:'Save this link now. Without it (including everything after #k=), nobody — not even us — can recover the chat.',
     copy:'Copy', copied:'Copied', home:'Home',
+    ext:'🔁 Extending <b>{name}</b>. Your room and messages continue, and usage is added.',
+    extKeep:'Encryption and purpose stay as they are.', dText:'Your line was extended', dPext:'Your room continues as before.',
   },
 };
 let LANG = (localStorage.getItem('aliascall_lang') || 'ko').indexOf('en') === 0 ? 'en' : 'ko';
@@ -263,6 +270,8 @@ const sb = supabase.createClient('https://qmwaraittiurkynszjts.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y');
 let session = null;
 let plan = null, dur = null, secure = false, purpose = 'personal';
+/* 2026-09-28 — 연장할 회선 (회선 관리의 [연장하기]) */
+let extendLine = null;   // { id, title, tier }
 const MODE = ACStore.inApp() ? 'app' : (ACStore.oldApp() ? 'old' : 'web');
 
 function paintText(){
@@ -277,6 +286,12 @@ function paint(){
   document.querySelectorAll('.plan').forEach((b) => b.classList.toggle('on', b.dataset.plan === plan));
   const c = plan ? CATALOG[plan] : null;
   el('lineOpts').style.display = c && c.line ? '' : 'none';
+  /* 연장이면 이용권은 회선 인원에 맞춘 하나로 고정하고, 회선 설정은 감춥니다 */
+  if (extendLine) {
+    document.querySelectorAll('.plan').forEach((b) => { b.style.display = b.dataset.plan === plan ? '' : 'none'; });
+    el('lineOpts').querySelector('.opts').style.display = 'none';
+    el('lineOpts').querySelectorAll('.sect')[1].style.display = 'none';
+  }
   if (c && c.line) {
     el('durs').innerHTML = c.durs.map((d, i) =>
       '<button type="button" class="dur' + (dur === d ? ' on' : '') + '" data-i="' + i + '">' +
@@ -328,7 +343,8 @@ el('buyBtn').addEventListener('click', async () => {
   if (!session) { location.href = 'aliascall_my_account.html?next=' + encodeURIComponent('aliascall_plans.html'); return; }
   if (!dur) return;
   const b = el('buyBtn'); b.disabled = true; b.textContent = T('wait');
-  await ACStore.buy(dur.sku, { secure: CATALOG[plan].line && secure, purpose });
+  await ACStore.buy(dur.sku, { secure: CATALOG[plan].line && secure, purpose,
+                              extendHotlineId: extendLine ? extendLine.id : null });
   setTimeout(() => { if (b.textContent === T('wait')) { b.textContent = T('checking'); } }, 1500);
 });
 
@@ -339,7 +355,10 @@ ACStore.onDone = function(r){
   if (r.ok) {
     el('shop').style.display = 'none';
     el('donePanel').classList.add('show');
-    if (r.kind === 'line') {
+    if (r.kind === 'line' && r.extended) {
+      el('doneT').textContent = T('dText'); el('doneP').textContent = T('dPext');
+      el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
+    } else if (r.kind === 'line') {
       el('doneT').textContent = T('dTline'); el('doneP').textContent = T('dPline');
       el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
       if (r.ownerLink) { el('keyBox').style.display = ''; el('keyLink').value = r.ownerLink; }
@@ -375,8 +394,31 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
   if (MODE === 'old') say(T('oldApp'), true);
   if (MODE === 'web') say(T('web'), true);
   try { session = (await sb.auth.getSession()).data.session; } catch (e) { session = null; }
-  const want = new URLSearchParams(location.search).get('plan');
+  const qs = new URLSearchParams(location.search);
+  const want = qs.get('plan');
   if (want && CATALOG[want]) { plan = want; const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0]; }
+
+  /* 연장할 회선 — 내 회선인지, 몇 인용인지 확인하고 이용권을 맞춥니다 */
+  const extId = qs.get('extend');
+  if (extId && session) {
+    try {
+      const { data: h } = await sb.from('hotlines').select('id, title, client_label, tier, subscription_id')
+        .eq('id', extId).eq('owner_user_id', session.user.id).maybeSingle();
+      if (h && !h.subscription_id) {
+        const four = /^(economy_4|premium_4)/.test(h.tier);
+        const two = /^(hotline_1to1|hotline_everybody)/.test(h.tier);
+        if (four || two) {
+          extendLine = { id: h.id, tier: h.tier, title: h.client_label || h.title || '' };
+          plan = four ? 'premium' : 'basic';
+          const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0];
+          const box = el('extBox');
+          box.innerHTML = T('ext', { name: (extendLine.title || (four ? '4인' : '2인')).replace(/[<>&]/g, '') })
+            + '<br><span style="color:var(--ink-soft)">' + T('extKeep') + '</span>';
+          box.style.display = '';
+        }
+      }
+    } catch (e) { console.warn('[plans] 연장할 회선을 못 읽었습니다', e); }
+  }
   paint();
 })();
 </script>

@@ -1139,7 +1139,7 @@ async function renderHotlineItem(h){
       <div class="expiry-warning">
         <div class="expiry-warning-stage">${stage}</div>
         <div class="expiry-warning-msg">${message}</div>
-        <button class="expiry-warning-btn" onclick="location.href='aliascall_hotline_purchase.html?tier=${h.tier}'">${T('renewBtn')}</button>
+        <button class="expiry-warning-btn" onclick="goRenewLine('${h.id}', '${h.tier}')">${T('renewBtn')}</button>
       </div>`;
   }
 
@@ -1306,6 +1306,18 @@ async function subscribeJoinRequests(){
   await loadHotlines();
   subscribeJoinRequests();
 })();
+</script>
+<script>
+/* 🔴 2026-09-28 — [연장하기]
+   앱 안에서는 새 이용권 화면으로 가되, **이 회선을 연장한다**는 것을 담아 보냅니다.
+   담지 않으면 새 회선이 하나 더 생기고 쓰던 방은 그대로 끝납니다.
+   웹에서는 예전처럼 핫라인 구매 화면으로 갑니다. */
+function goRenewLine(id, tier){
+  var inApp = !!(window.AliasNative && window.AliasNative.storeBuy) ||
+              !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  if (inApp) { location.href = 'aliascall_plans.html?extend=' + encodeURIComponent(id); return; }
+  location.href = 'aliascall_hotline_purchase.html?tier=' + encodeURIComponent(tier);
+}
 </script>
 </body>
 </html>
