@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Aliascall — 핫라인 개설</title>
+<script>
+/* 🔴 2026-09-28 — 앱 안에서는 이 화면(카드 · PayPal)을 쓰지 않습니다.
+   구글 규칙상 앱 안의 디지털 상품은 구글 결제로만 팔 수 있어서, 새 이용권
+   화면(aliascall_plans.html)으로 곧바로 보냅니다. 웹에서는 그대로 씁니다.
+   ⚠ 옛 앱(결제 창구 없음)도 앱이므로 보냅니다 — 새 화면이 업데이트를 안내합니다. */
+(function(){
+  var inApp = !!(window.AliasNative && window.AliasNative.storeBuy) ||
+              !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  if (inApp) location.replace('aliascall_plans.html' + (location.search.indexOf('cat=pro') >= 0 ? '' : '?plan=basic'));
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_hotline_payments.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">

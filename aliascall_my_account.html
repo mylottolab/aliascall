@@ -503,7 +503,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
     <div class="card">
       <div class="info-row"><span class="label" data-i18n="nicknameLabel">닉네임</span><span class="value" id="nicknameVal">-</span></div>
-      <div class="info-row"><span class="label" data-i18n="pointsLabel">보유 포인트</span><span class="value" id="pointsVal">-</span></div>
+      <!-- 2026-09-28: 포인트를 없앴습니다. 줄을 감춥니다(값 칸은 코드가 찾으므로 남김). -->
+      <div class="info-row" style="display:none;"><span class="label" data-i18n="pointsLabel">보유 포인트</span><span class="value" id="pointsVal">-</span></div>
       <div class="info-row"><span class="label" data-i18n="joinedLabel">가입일</span><span class="value" id="joinedVal">-</span></div>
     </div>
 
@@ -526,7 +527,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
          ⚠ 포인트는 Emergency Call에서만 쓰이므로 이 구역 안에 둡니다.
          ⚠ 충전 후 이 화면으로 돌아오도록 return을 붙입니다.
            안 붙이면 결제하고 나서 손님이 여기를 다시 못 찾습니다. -->
-    <div class="card sub-card">
+    <!-- 2026-09-28: 충전소를 닫았습니다. 이 칸을 감춥니다. -->
+    <div class="card sub-card" style="display:none;">
       <div class="sub-top">
         <span class="sub-title" data-i18n="topUpTitle">포인트 충전</span>
         <span class="reg-status" id="topUpBalance">-</span>
@@ -738,12 +740,14 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     <!-- 🔴 2026-08-29 신설: 포인트 환급 안내 (취소·환불 규정 제5조 제4항)
          ⚠ 미사용 포인트는 기간 제한 없이 환급받을 수 있지만, 탈퇴하면 소멸합니다.
            안내 없이 소멸시키면 "몰랐다"는 다툼이 생깁니다. -->
-    <div style="background:#FDF6E3; border:1.5px solid var(--brass,#C9A24B); border-radius:10px; padding:12px; margin:4px 0 12px; text-align:left;">
+    <!-- 2026-09-28: 포인트를 없앴으므로 이 안내를 감추고, 동의 칸은 미리 체크해 둡니다
+         (탈퇴 확인 코드가 이 칸을 봅니다). -->
+    <div style="display:none; background:#FDF6E3; border:1.5px solid var(--brass,#C9A24B); border-radius:10px; padding:12px; margin:4px 0 12px; text-align:left;">
       <div style="font-size:12px; font-weight:700; color:#8a6416; margin-bottom:5px;" data-i18n="ptWarnTitle">💰 보유 포인트 안내</div>
       <div id="ptWarnBalance" style="display:none; font-size:15px; font-weight:700; color:#8a6416; margin-bottom:7px;"></div>
       <div style="font-size:11.5px; line-height:1.7; color:var(--ink-soft);" data-i18n-html="ptWarnBody">사용하지 않은 포인트는 기간 제한 없이 환급받으실 수 있습니다. 다만 <b>탈퇴하시면 함께 소멸</b>되며 이후에는 환급이 불가능합니다. 남은 포인트가 있으시면 탈퇴 전에 <b>weapps.kr@gmail.com</b>으로 환급을 신청해주세요.</div>
       <label style="display:flex; align-items:flex-start; gap:7px; margin-top:10px; font-size:12px; font-weight:600; cursor:pointer;">
-        <input type="checkbox" id="ptWarnCheck" style="width:16px; height:16px; margin-top:1px; flex-shrink:0; accent-color:var(--brass,#C9A24B);">
+        <input type="checkbox" id="ptWarnCheck" checked style="width:16px; height:16px; margin-top:1px; flex-shrink:0; accent-color:var(--brass,#C9A24B);">
         <span data-i18n="ptWarnAgree">위 내용을 확인했으며, 포인트가 소멸되는 데 동의합니다</span>
       </label>
     </div>
@@ -2694,5 +2698,39 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
      감싸는 div 안에 있으면 그 div째로 같이 숨겨져서 백지 인쇄가 됨) -->
 <div id="printSheet" class="print-sheet"></div>
 
+<script>
+/* 🔴 2026-09-28 — 앱 안에서는 구글 결제만 팝니다(구글 규칙).
+   가입 직후의 구독 결제와 [1 · 2 · 3년 연장] 단추를 새 이용권 화면으로 바꿉니다.
+   웹에서는 지금처럼 카드 · PayPal 을 씁니다.
+   ⚠ "비상시 결제 없이 바로 등록" 과 "다음에 결제하기" 는 그대로 둡니다. */
+(function(){
+  var inApp = !!(window.AliasNative && window.AliasNative.storeBuy) ||
+              !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  if (!inApp) return;
+  var en = (localStorage.getItem('aliascall_lang') || '').indexOf('en') === 0;
+  var label = en ? 'See plans' : '이용권 보기';
+  var label2 = en ? 'Extend with a plan' : '이용권으로 연장하기';
+  var css = document.createElement('style');
+  css.textContent =
+    '#newSubscriberGate .sub-period-tabs, #newSubscriberGate .sub-currency-tabs,' +
+    '#newSubscriberGate .sub-summary, #newSubPrice, #newSubPayBtn, #newSubPaypalContainer,' +
+    '#renewModal{ display:none !important; }' +
+    '.ac-plan-go{ display:block; text-align:center; text-decoration:none; }';
+  document.head.appendChild(css);
+
+  function link(text, plan){
+    var a = document.createElement('a');
+    a.className = 'reg-renew-btn sub-pay-main ac-plan-go';
+    a.href = 'aliascall_plans.html' + (plan ? '?plan=' + plan : '');
+    a.textContent = text;
+    return a;
+  }
+  var pay = document.getElementById('newSubPayBtn');
+  if (pay && pay.parentNode) pay.parentNode.insertBefore(link(label, 'emergency'), pay);
+
+  var row = document.querySelector('.sub-card .renew-quick-row');
+  if (row) { row.innerHTML = ''; row.appendChild(link(label2, 'emergency')); }
+})();
+</script>
 </body>
 </html>
