@@ -503,6 +503,12 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
   </div>
   <div class="chat-input-row">
     <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip" multiple>
+    <!-- 2026-09-27 신설: 폰에서는 폰 카메라를 바로 엽니다(부름과 같은 방식).
+         capture 가 있으면 안드로이드 앱(Capacitor)이 카메라 앱을 띄웁니다.
+         ⚠ PC 는 capture 를 무시하고 파일 고르기가 떠서, PC 는 예전처럼
+           브라우저 안 카메라(aliascall_camera_capture.js)를 씁니다. -->
+    <input type="file" id="camPhotoInput" style="display:none;" accept="image/*" capture="environment">
+    <input type="file" id="camVideoInput" style="display:none;" accept="video/*" capture="environment">
     <button type="button" id="plusMenuBtn" title="더보기" data-i18n-title="moreTitle">➕</button>
     <button type="button" id="emojiBtn" title="이모지" data-i18n-title="emojiTitle">😊</button>
     <button type="button" id="voiceInputBtn" title="음성으로 입력" data-i18n-title="voiceInputTitle">🎙️</button>
@@ -517,6 +523,7 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
   <div class="plus-menu-sheet">
     <button type="button" class="plus-menu-item" id="attachBtn"><span>📎</span><span data-i18n="plusAttach">파일 첨부</span></button>
     <button type="button" class="plus-menu-item" id="cameraBtn"><span>📷</span><span data-i18n="plusCamera">사진 촬영</span></button>
+    <button type="button" class="plus-menu-item" id="videoShootBtn" style="display:none;"><span>🎥</span><span data-i18n="plusVideoShoot">영상 촬영</span></button>
     <button type="button" class="plus-menu-item" id="timerBtn"><span>⏱️</span><span data-i18n="plusTimer">타이머 메시지</span></button>
     <button type="button" class="plus-menu-item" id="voiceMsgBtn"><span>🎤</span><span data-i18n="plusVoiceMsg">음성메시지</span></button>
     <button type="button" class="plus-menu-item" id="guideMenuBtn"><span>❓</span><span data-i18n="plusGuide">사용법</span></button>
@@ -826,6 +833,8 @@ const I18N = {
     chatPlaceholder: '메시지 입력…',
     plusAttach: '파일 첨부',
     plusCamera: '사진 촬영',
+    plusVideoShoot: '영상 촬영',
+    videoShootHint: '영상은 80MB까지 보낼 수 있어요. 40초 안쪽으로 찍어주세요.',
     plusTimer: '타이머 메시지',
     plusVoiceMsg: '음성메시지',
     plusGuide: '사용법',
@@ -1077,6 +1086,8 @@ const I18N = {
     chatPlaceholder: 'Type a message…',
     plusAttach: 'Attach file',
     plusCamera: 'Take photo',
+    plusVideoShoot: 'Record video',
+    videoShootHint: 'Videos up to 80MB can be sent. Please keep it under 40 seconds.',
     plusTimer: 'Timed message',
     plusVoiceMsg: 'Voice message',
     plusGuide: 'How to use',
@@ -2720,9 +2731,27 @@ on('attachBtn', 'click', () => { closePlusMenu(); document.getElementById('fileI
 // 2026-08-22 수정: 노트북 웹캠에서도 실제로 카메라가 열리도록, 브라우저 내장 카메라 촬영
 // 모듈(aliascall_camera_capture.js)을 씀 — <input capture>는 데스크톱에서 대부분 무시되고
 // 파일탐색기가 뜨는 문제가 있었음
+// 2026-09-27 수정: 폰에서는 폰 카메라 앱을 바로 엽니다. 화질이 좋고 손에 익숙합니다.
+//   PC 는 그대로 브라우저 안 카메라를 씁니다(위 2026-08-22 이유).
+const IS_PHONE = /Android|iPhone|iPad/i.test(navigator.userAgent);
+if (IS_PHONE) document.getElementById('videoShootBtn').style.display = '';
 on('cameraBtn', 'click', () => {
   closePlusMenu();
+  if (IS_PHONE) { document.getElementById('camPhotoInput').click(); return; }
   aliascallOpenCameraCapture((file) => uploadAndSendFile(file));
+});
+// 2026-09-27 신설: 영상 촬영 (폰에서만). 80MB 한도라 길게 찍으면 못 보냅니다.
+on('videoShootBtn', 'click', () => {
+  closePlusMenu();
+  alert(T('videoShootHint'));
+  document.getElementById('camVideoInput').click();
+});
+['camPhotoInput', 'camVideoInput'].forEach((id) => {
+  on(id, 'change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    for (const file of files) { await uploadAndSendFile(file); }
+  });
 });
 
 // ── 2026-08-22 수정: 이모지 선택 패널 — 공용 함수(아이스콜_emoji.js)로 애니메이션 GIF까지 지원 ──
