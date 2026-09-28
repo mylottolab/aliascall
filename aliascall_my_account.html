@@ -523,6 +523,34 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
       </div>
     </div>
 
+    <!-- 🔴 2026-09-28 신설: 구입 현황
+         무엇을 언제 샀고, 그래서 언제까지 쓸 수 있는지를 한곳에서 봅니다.
+         ⚠ 서버 함수 my_purchase_history() 가 내 것만 돌려줍니다. -->
+    <div class="card" id="purchaseCard">
+      <div class="sub-top"><span class="sub-title" id="phTitle">구입 현황</span></div>
+      <div id="phSummary" style="margin:6px 0 12px;"></div>
+      <div id="phList"></div>
+    </div>
+    <style>
+      .ph-sum{ display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; }
+      .ph-sum:last-child{ border-bottom:none; }
+      .ph-sum .k{ color:var(--ink-soft); }
+      .ph-sum .v{ font-weight:700; text-align:right; }
+      .ph-sum .v small{ display:block; font-weight:500; font-size:11.5px; color:var(--ink-soft); }
+      .ph-head{ font-size:12px; font-weight:700; color:var(--ink-soft); margin:14px 0 6px; }
+      .ph-row{ display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-top:1px solid var(--line); font-size:13px; }
+      .ph-row .d{ flex:0 0 74px; color:var(--ink-soft); font-size:12px; }
+      .ph-row .m{ flex:1; min-width:0; }
+      .ph-row .m b{ display:block; font-size:13.5px; }
+      .ph-row .m span{ font-size:11.5px; color:var(--ink-soft); }
+      .ph-row .r{ text-align:right; flex-shrink:0; }
+      .ph-row .r .a{ font-weight:700; }
+      .ph-badge{ display:inline-block; font-size:10.5px; font-weight:700; border-radius:20px; padding:2px 8px; margin-top:3px; }
+      .ph-badge.ok{ background:#E3F2E8; color:#1F5A36; } .ph-badge.wait{ background:#FFF3D6; color:#7A5E1C; }
+      .ph-badge.bad{ background:#FBEAE7; color:#8E2F22; } .ph-badge.ref{ background:#ECEFEE; color:#5B6664; }
+      .ph-empty{ font-size:12.5px; color:var(--ink-soft); padding:6px 0; }
+    </style>
+
     <!-- 🔴 2026-08-30 신설: 포인트 충전.
          ⚠ 포인트는 Emergency Call에서만 쓰이므로 이 구역 안에 둡니다.
          ⚠ 충전 후 이 화면으로 돌아오도록 return을 붙입니다.
@@ -1616,6 +1644,7 @@ async function showMyPage(session){
   document.getElementById('joinedVal').textContent = profile?.created_at ? new Date(profile.created_at).toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US') : '-';
 
   await loadSubscriptionStatus(session.user.id);
+  loadPurchaseHistory(session.user.id);   // 🔴 2026-09-28 구입 현황
   await loadMyRegistrations(session.user.id);
   initIncomingWatcher(session.user.id);
   renderNotifySettings(sb, 'notifySettingsContainer'); // 2026-08-19 (2차): 통합 알림설정 렌더링
@@ -1902,6 +1931,78 @@ const NEVER_EXPIRES = ['vulnerable_person', 'pet'];
 
 let renewMonths = 12;
 let renewCurrency = 'KRW';
+
+// ── 🔴 2026-09-28 구입 현황 ──
+const PH_T = {
+  ko: { title:'구입 현황', emg:'긴급 서비스 사용 기한', none:'아직 없음', left:'{n}일 남음', ended:'끝남',
+        lines:'회선', lineUntil:'{d}까지', closed:'닫힘', hist:'구입 기록', empty:'아직 구입한 것이 없습니다.',
+        pEmg:'긴급 이용권', pBasic:'일반 이용권', pPrem:'프리미엄 이용권', pSub:'긴급 구독', pLine:'회선',
+        mon:'{n}개월', real:'(실제 {n}개월)',
+        st:{ completed:'완료', pending:'처리 중', failed:'실패', refunded:'환불' },
+        me:{ google_play:'Google Play', paypal:'PayPal', inicis_card:'카드', bank_transfer:'계좌이체' } },
+  en: { title:'Purchases', emg:'Emergency service until', none:'None yet', left:'{n} days left', ended:'Ended',
+        lines:'Lines', lineUntil:'until {d}', closed:'Closed', hist:'History', empty:'No purchases yet.',
+        pEmg:'Emergency plan', pBasic:'Standard plan', pPrem:'Premium plan', pSub:'Emergency subscription', pLine:'Line',
+        mon:'{n} months', real:'({n} months total)',
+        st:{ completed:'Done', pending:'Processing', failed:'Failed', refunded:'Refunded' },
+        me:{ google_play:'Google Play', paypal:'PayPal', inicis_card:'Card', bank_transfer:'Bank transfer' } },
+};
+function phT(k, v){ const d = PH_T[currentLang] || PH_T.ko; let x = d[k]; if (v) Object.keys(v).forEach((z) => { x = String(x).replace('{' + z + '}', v[z]); }); return x; }
+function phDate(iso){ return iso ? new Date(iso).toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US') : ''; }
+function phEsc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function phName(r){
+  const t = r.hotline_tier || '';
+  if (r.purpose === 'subscription') return r.method === 'google_play' ? phT('pEmg') + ' ' + phT('mon', { n: 12 }) : phT('pSub');
+  let base = phT('pLine');
+  if (/^hotline_everybody|^hotline_1to1/.test(t)) base = r.method === 'google_play' ? phT('pBasic') : phT('pLine') + ' 2인';
+  if (/^premium_4|^economy_4/.test(t)) base = r.method === 'google_play' ? phT('pPrem') : phT('pLine') + ' 4인';
+  if (/_secure$/.test(t)) base += ' 🔒';
+  if (r.months) {
+    base += ' ' + phT('mon', { n: r.months });
+    if (r.method === 'google_play') base += ' ' + phT('real', { n: r.months + 1 });
+  }
+  return base;
+}
+async function loadPurchaseHistory(userId){
+  const sumEl = document.getElementById('phSummary'), listEl = document.getElementById('phList');
+  if (!sumEl) return;
+  document.getElementById('phTitle').textContent = phT('title');
+  let rows = [];
+  try {
+    const r = await sb.rpc('my_purchase_history');
+    if (r.error) throw r.error;
+    rows = r.data || [];
+  } catch (e) { console.warn('[purchase] 구입 기록을 못 읽었습니다', e); }
+
+  /* 위 — 지금 쓸 수 있는 기한 */
+  let html = '';
+  const { data: pf } = await sb.from('profiles').select('subscription_expires_at').eq('id', userId).maybeSingle();
+  const until = pf && pf.subscription_expires_at ? new Date(pf.subscription_expires_at) : null;
+  const days = until ? Math.ceil((until - new Date()) / 86400000) : null;
+  html += '<div class="ph-sum"><span class="k">' + phEsc(phT('emg')) + '</span><span class="v">' +
+    (until ? phEsc(phDate(until)) + '<small>' + phEsc(days > 0 ? phT('left', { n: days }) : phT('ended')) + '</small>' : phEsc(phT('none'))) +
+    '</span></div>';
+  const seen = {};
+  rows.filter((r) => r.hotline_id && r.status === 'completed').forEach((r) => {
+    if (seen[r.hotline_id]) return; seen[r.hotline_id] = 1;
+    const nm = r.hotline_name || phName(r).split(' ').slice(0, 2).join(' ');
+    html += '<div class="ph-sum"><span class="k">' + phEsc(phT('lines')) + ' · ' + phEsc(nm) + '</span><span class="v">' +
+      (r.hotline_closed ? phEsc(phT('closed')) : phEsc(phT('lineUntil', { d: phDate(r.hotline_expires_at) }))) + '</span></div>';
+  });
+  sumEl.innerHTML = html;
+
+  /* 아래 — 구입 기록 */
+  if (!rows.length) { listEl.innerHTML = '<div class="ph-empty">' + phEsc(phT('empty')) + '</div>'; return; }
+  const cls = { completed:'ok', pending:'wait', failed:'bad', refunded:'ref' };
+  listEl.innerHTML = '<div class="ph-head">' + phEsc(phT('hist')) + '</div>' + rows.map((r) => {
+    const amt = r.currency === 'KRW' ? Number(r.amount || 0).toLocaleString('ko-KR') + (currentLang === 'ko' ? '원' : ' KRW')
+                                     : '$' + (Number(r.amount || 0) / 100).toFixed(2);
+    return '<div class="ph-row"><span class="d">' + phEsc(phDate(r.completed_at || r.created_at)) + '</span>' +
+      '<span class="m"><b>' + phEsc(phName(r)) + '</b><span>' + phEsc((PH_T[currentLang] || PH_T.ko).me[r.method] || r.method || '') + '</span></span>' +
+      '<span class="r"><span class="a">' + phEsc(amt) + '</span><br><span class="ph-badge ' + (cls[r.status] || 'ref') + '">' +
+      phEsc((PH_T[currentLang] || PH_T.ko).st[r.status] || r.status) + '</span></span></div>';
+  }).join('');
+}
 
 // ── 계정단위 구독 상태 (등록물 개수와 무관, 계정 하나당 하나) ──
 async function loadSubscriptionStatus(userId){
@@ -2614,7 +2715,7 @@ function onRenewPaymentSuccess(){
   document.getElementById('renewModal').classList.remove('show');
   const periodLabel = { 12: I18N[currentLang].period1yr, 24: I18N[currentLang].period2yr, 36: I18N[currentLang].period3yr }[renewMonths];
   alert(I18N[currentLang].renewSuccess(periodLabel));
-  sb.auth.getSession().then(({ data: { session } }) => loadSubscriptionStatus(session.user.id));
+  sb.auth.getSession().then(({ data: { session } }) => { loadSubscriptionStatus(session.user.id); loadPurchaseHistory(session.user.id); });
 }
 
 // 2026-08-30 신설: 포인트 충전 화면으로.
