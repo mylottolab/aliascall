@@ -210,7 +210,7 @@ const I18N = {
     fail:'결제를 확인하지 못했습니다. 돈이 빠져나갔다면 앱을 완전히 껐다 켜주세요. 한 번 더 확인합니다. 그래도 안 되면 고객센터로 알려주세요.',
     loginFirst:'로그인한 뒤 앱을 다시 열면 결제가 이어서 처리됩니다.',
     dTline:'회선이 만들어졌습니다', dPline:'관리 화면에서 초대 링크를 확인하고 상대에게 보내세요.', goManage:'회선 관리로 가기',
-    dTemg:'긴급 이용권이 더해졌습니다', dPemg:'차량 · 소지품 QR과 임시연락처를 12개월 동안 쓰실 수 있습니다.', goHome:'첫 화면으로',
+    dTemg:'긴급 이용권이 더해졌습니다', dPemg:'차량 · 소지품 QR과 임시연락처를 12개월 동안 쓰실 수 있습니다.', goHome:'첫 화면으로', goMy:'My Page에서 확인',
     keyWarn:'아래 링크를 지금 꼭 저장해두세요. 이 링크(#k= 뒷부분 포함)를 잃어버리면 저희도 대화를 복구할 수 없습니다.',
     copy:'복사', copied:'복사됨', home:'첫 화면으로',
     ext:'🔁 <b>{name}</b> 회선을 연장합니다. 쓰던 방과 대화가 그대로 이어지고, 사용량도 더해집니다.',
@@ -241,7 +241,7 @@ const I18N = {
     fail:'We could not verify the payment. If you were charged, fully close and reopen the app and we will check again.',
     loginFirst:'Sign in and reopen the app to finish the payment.',
     dTline:'Your line is ready', dPline:'Open line management to share the invite link.', goManage:'Manage lines',
-    dTemg:'Emergency plan added', dPemg:'Item QR codes and one-time cards are yours for 12 months.', goHome:'Home',
+    dTemg:'Emergency plan added', dPemg:'Item QR codes and one-time cards are yours for 12 months.', goHome:'Home', goMy:'Check in My Page',
     keyWarn:'Save this link now. Without it (including everything after #k=), nobody — not even us — can recover the chat.',
     copy:'Copy', copied:'Copied', home:'Home',
     ext:'🔁 Extending <b>{name}</b>. Your room and messages continue, and usage is added.',
@@ -364,7 +364,8 @@ ACStore.onDone = function(r){
       if (r.ownerLink) { el('keyBox').style.display = ''; el('keyLink').value = r.ownerLink; }
     } else {
       el('doneT').textContent = T('dTemg'); el('doneP').textContent = T('dPemg');
-      el('doneGo').textContent = T('goHome'); el('doneGo').href = 'index.html';
+      /* 2026-09-28: 아래 [첫 화면으로] 와 겹치지 않게, 끝나는 날을 볼 수 있는 곳으로 */
+      el('doneGo').textContent = T('goMy'); el('doneGo').href = 'aliascall_my_account.html';
     }
     return;
   }
