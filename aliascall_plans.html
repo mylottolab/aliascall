@@ -88,6 +88,28 @@ main{ max-width:430px; margin:0 auto; padding:10px 20px 60px; }
 .sum .v{ font-size:22px; font-weight:800; }
 .buy{ width:100%; border:none; border-radius:16px; padding:17px; font-family:inherit; font-size:16px; font-weight:800; background:var(--teal); color:#fff; cursor:pointer; }
 .buy:disabled{ opacity:.5; cursor:default; }
+.modes{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.mode{ background:var(--card); border:2px solid transparent; border-radius:14px; padding:13px 12px; text-align:left; font-family:inherit; color:inherit; cursor:pointer; }
+.mode.on{ border-color:var(--teal); background:#F4FAF9; }
+.mode b{ display:block; font-size:14px; margin-bottom:3px; }
+.mode span{ font-size:11.5px; color:var(--ink-soft); line-height:1.45; }
+.mode:disabled{ opacity:.45; cursor:default; }
+.lines{ background:var(--card); border-radius:16px; padding:4px 12px; margin-top:8px; }
+.ln{ display:flex; align-items:center; gap:10px; width:100%; background:none; border:none; border-bottom:1px solid var(--line); padding:12px 2px; text-align:left; font-family:inherit; color:inherit; cursor:pointer; }
+.ln:last-child{ border-bottom:none; }
+.ln .dot{ width:20px; height:20px; border-radius:50%; border:2px solid #B9C7C2; flex-shrink:0; }
+.ln.on .dot{ border-color:var(--teal); box-shadow:inset 0 0 0 4px #fff; background:var(--teal); }
+.ln .tx{ flex:1; min-width:0; }
+.ln .n{ font-weight:700; font-size:14px; }
+.ln .s{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+.ln .tag{ font-size:10.5px; font-weight:700; border-radius:20px; padding:2px 8px; background:var(--coral-tint); color:#9A4526; flex-shrink:0; }
+.ln:disabled{ opacity:.45; cursor:default; }
+.hint{ font-size:12px; color:var(--ink-soft); line-height:1.6; margin:8px 2px 0; }
+.hint.up{ color:var(--teal-deep); background:#E7F3F0; border-radius:12px; padding:10px 12px; }
+.namebox{ background:var(--card); border-radius:16px; padding:12px 14px; margin-top:8px; }
+.namebox label{ font-size:13px; font-weight:700; }
+.namebox input{ width:100%; box-sizing:border-box; margin-top:7px; border:1.5px solid var(--line); border-radius:11px; padding:11px 12px; font-family:inherit; font-size:15px; }
+.namebox input:focus{ outline:none; border-color:var(--teal); }
 .note{ font-size:12px; color:var(--ink-soft); line-height:1.7; margin:14px 2px 0; white-space:pre-line; }
 .free{ margin-top:18px; background:rgba(255,255,255,.55); border-radius:14px; padding:12px 14px; font-size:12.5px; line-height:1.65; }
 .free b{ color:var(--teal-deep); }
@@ -138,26 +160,45 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
       <div class="ds" data-i18n="dPrem">가족 · 친한 친구 · 작은 팀까지 네 명이 함께 쓰는 보안통신.</div>
     </button>
 
-    <!-- 2026-09-28: 회선 관리의 [연장하기] 로 왔을 때 -->
-    <div class="free" id="extBox" style="display:none; margin:0 0 12px; background:#fff;"></div>
-
+    <!-- 🔴 2026-09-28 — 회선은 "대화 상대" 가 기준입니다.
+         먼저 "지금 대화를 이어가기(연장)" 인지 "새 대화 창구(새 회선)" 인지 묻습니다.
+         · 이어가기: 내 회선 가운데 고름. 2인 회선에 프리미엄이면 4인으로 올리기
+         · 새 회선: 이름을 꼭 붙이고, 암호화 · 용도를 고름
+         ⚠ 암호화 여부는 이어가기로 바꿀 수 없습니다(열쇠가 회선마다 따로). -->
     <div id="lineOpts" style="display:none;">
+      <div class="sect" data-i18n="sHow">어떻게 쓰실 건가요?</div>
+      <div class="modes">
+        <button type="button" class="mode" id="mCont"><b data-i18n="mCont">지금 대화 이어가기</b><span data-i18n="mContD">쓰던 회선의 기간을 늘립니다</span></button>
+        <button type="button" class="mode" id="mNew"><b data-i18n="mNew">새 대화 창구 열기</b><span data-i18n="mNewD">다른 상대와 쓸 회선을 새로 엽니다</span></button>
+      </div>
+
+      <div id="contBox" style="display:none;">
+        <div class="lines" id="lineList"></div>
+        <div class="hint" id="contHint"></div>
+      </div>
+
+      <div id="newBox" style="display:none;">
+        <div class="namebox">
+          <label for="lineName" data-i18n="nameL">누구와 쓰실 회선인가요?</label>
+          <input id="lineName" maxlength="30" autocomplete="off" data-i18n-ph="nameP" placeholder="예) 아내와 · 김 과장 · 우리 가족">
+        </div>
+        <div class="opts" style="margin-top:8px;">
+          <div class="opt">
+            <div class="tx"><div class="t1" data-i18n="oSec">🔒 암호화 (Secure)</div>
+              <div class="t2" id="secHint" data-i18n="oSecOff">서버에 안전하게 보관되며 기기를 바꿔도 이어집니다</div></div>
+            <button type="button" class="sw" id="secSw" aria-label="암호화"></button>
+          </div>
+          <div class="opt">
+            <div class="tx"><div class="t1" data-i18n="oPur">용도</div>
+              <div class="t2" data-i18n="oPurD">업무용이면 대화방에 사적인 질문 카드가 뜨지 않습니다</div></div>
+            <div class="seg" id="purSeg"><button type="button" data-p="personal" class="on" data-i18n="pp">우리끼리</button><button type="button" data-p="work" data-i18n="pw">업무용</button></div>
+          </div>
+        </div>
+        <div class="hint" data-i18n="invited">상대가 이미 회선을 열어 초대했다면 따로 사지 않아도 됩니다. 회선은 여는 사람만 결제하고, 초대받은 분은 무료로 대화합니다.</div>
+      </div>
+
       <div class="sect" data-i18n="sDur">기간</div>
       <div class="durs" id="durs"></div>
-
-      <div class="sect" data-i18n="sOpt">회선 설정</div>
-      <div class="opts">
-        <div class="opt">
-          <div class="tx"><div class="t1" data-i18n="oSec">🔒 암호화 (Secure)</div>
-            <div class="t2" id="secHint" data-i18n="oSecOff">서버에 안전하게 보관되며 기기를 바꿔도 이어집니다</div></div>
-          <button type="button" class="sw" id="secSw" aria-label="암호화"></button>
-        </div>
-        <div class="opt">
-          <div class="tx"><div class="t1" data-i18n="oPur">용도</div>
-            <div class="t2" data-i18n="oPurD">업무용이면 대화방에 사적인 질문 카드가 뜨지 않습니다</div></div>
-          <div class="seg" id="purSeg"><button type="button" data-p="personal" class="on" data-i18n="pp">우리끼리</button><button type="button" data-p="work" data-i18n="pw">업무용</button></div>
-        </div>
-      </div>
     </div>
 
     <div class="sum"><span class="l" id="sumL"></span><span class="v" id="sumV"></span></div>
@@ -213,8 +254,19 @@ const I18N = {
     dTemg:'긴급 이용권이 더해졌습니다', dPemg:'차량 · 소지품 QR과 임시연락처를 12개월 동안 쓰실 수 있습니다.', goHome:'첫 화면으로', goMy:'My Page에서 확인',
     keyWarn:'아래 링크를 지금 꼭 저장해두세요. 이 링크(#k= 뒷부분 포함)를 잃어버리면 저희도 대화를 복구할 수 없습니다.',
     copy:'복사', copied:'복사됨', home:'첫 화면으로',
-    ext:'🔁 <b>{name}</b> 회선을 연장합니다. 쓰던 방과 대화가 그대로 이어지고, 사용량도 더해집니다.',
-    extKeep:'암호화와 용도는 원래 회선 그대로입니다.', dText:'회선이 연장되었습니다', dPext:'쓰던 방이 그대로 이어집니다.',
+    dText:'회선이 연장되었습니다', dPext:'쓰던 방이 그대로 이어집니다.',
+    dTup:'4인 회선으로 올렸습니다', dPup:'대화 · 초대 링크 · 열쇠는 그대로이고, 이제 네 명까지 들어올 수 있습니다.',
+    sHow:'어떻게 쓰실 건가요?', mCont:'지금 대화 이어가기', mContD:'쓰던 회선의 기간을 늘립니다',
+    mNew:'새 대화 창구 열기', mNewD:'다른 상대와 쓸 회선을 새로 엽니다',
+    noLines:'아직 연 회선이 없습니다. 새 대화 창구를 열어주세요.',
+    nameL:'누구와 쓰실 회선인가요?', nameP:'예) 아내와 · 김 과장 · 우리 가족', nameNeed:'회선 이름을 적어주세요',
+    invited:'상대가 이미 회선을 열어 초대했다면 따로 사지 않아도 됩니다. 회선은 여는 사람만 결제하고, 초대받은 분은 무료로 대화합니다.',
+    p2:'2인', p4:'4인', until:'{d}까지', ended:'끝남', peers:'상대: {p}', noPeer:'아직 상대 없음',
+    tUp:'4인으로 올리기', tExt:'연장', tNo:'일반으론 연장 불가',
+    hExt:'고른 회선의 기간을 늘립니다. 대화 · 암호화 · 용도는 그대로이고 사용량이 더해집니다.',
+    hUp:'이 2인 회선을 <b>4인으로 올립니다.</b> 남은 기간은 그대로 두고 그 뒤에 기간을 이어 붙입니다. 대화 · 초대 링크 · 열쇠는 그대로입니다.',
+    h4basic:'4인 회선은 프리미엄 이용권으로 연장해 주세요.', pickLine:'이어갈 회선을 골라주세요',
+    secNo:'암호화 여부는 쓰던 회선을 이어가며 바꿀 수 없습니다. 암호화가 필요하면 새 대화 창구를 열어 같은 상대를 초대하세요.',
   },
   en: {
     title:'Plans', sub:'Every number-free feature comes with one plan. It never renews automatically.',
@@ -244,8 +296,19 @@ const I18N = {
     dTemg:'Emergency plan added', dPemg:'Item QR codes and one-time cards are yours for 12 months.', goHome:'Home', goMy:'Check in My Page',
     keyWarn:'Save this link now. Without it (including everything after #k=), nobody — not even us — can recover the chat.',
     copy:'Copy', copied:'Copied', home:'Home',
-    ext:'🔁 Extending <b>{name}</b>. Your room and messages continue, and usage is added.',
-    extKeep:'Encryption and purpose stay as they are.', dText:'Your line was extended', dPext:'Your room continues as before.',
+    dText:'Your line was extended', dPext:'Your room continues as before.',
+    dTup:'Upgraded to a 4-person line', dPup:'Messages, invite link and key stay the same — up to four people can join now.',
+    sHow:'How will you use it?', mCont:'Continue a conversation', mContD:'Extend a line you already have',
+    mNew:'Open a new line', mNewD:'For a different person or group',
+    noLines:'You have no lines yet. Open a new one.',
+    nameL:'Who is this line for?', nameP:'e.g. My wife · Mr. Kim · Family', nameNeed:'Please name the line',
+    invited:'If someone already invited you to their line, you do not need to buy one — only the person who opens a line pays.',
+    p2:'2-person', p4:'4-person', until:'until {d}', ended:'ended', peers:'With: {p}', noPeer:'No one yet',
+    tUp:'Upgrade to 4', tExt:'Extend', tNo:'Use Premium',
+    hExt:'Extends the chosen line. Messages, encryption and purpose stay; usage is added.',
+    hUp:'This 2-person line becomes <b>4-person</b>. Remaining time is kept and the new period is added after it. Messages, link and key stay.',
+    h4basic:'Please extend 4-person lines with the Premium plan.', pickLine:'Choose a line to continue',
+    secNo:'Encryption cannot be changed on an existing line. To use encryption, open a new line and invite the same person.',
   },
 };
 let LANG = (localStorage.getItem('aliascall_lang') || 'ko').indexOf('en') === 0 ? 'en' : 'ko';
@@ -270,8 +333,11 @@ const sb = supabase.createClient('https://qmwaraittiurkynszjts.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y');
 let session = null;
 let plan = null, dur = null, secure = false, purpose = 'personal';
-/* 2026-09-28 — 연장할 회선 (회선 관리의 [연장하기]) */
-let extendLine = null;   // { id, title, tier }
+/* 🔴 2026-09-28 — 회선 고르기 */
+let mode = null;          // 'cont' 이어가기 | 'new' 새 회선
+let myLines = [];         // 내가 연 회선 [{ id, name, persons, secure, expires, peers }]
+let pick = null;          // 이어갈 회선
+const persons = (t) => /^(economy_4|premium_4)/.test(t) ? 4 : (/^(hotline_1to1|hotline_everybody)/.test(t) ? 2 : 0);
 const MODE = ACStore.inApp() ? 'app' : (ACStore.oldApp() ? 'old' : 'web');
 
 function paintText(){
@@ -286,12 +352,7 @@ function paint(){
   document.querySelectorAll('.plan').forEach((b) => b.classList.toggle('on', b.dataset.plan === plan));
   const c = plan ? CATALOG[plan] : null;
   el('lineOpts').style.display = c && c.line ? '' : 'none';
-  /* 연장이면 이용권은 회선 인원에 맞춘 하나로 고정하고, 회선 설정은 감춥니다 */
-  if (extendLine) {
-    document.querySelectorAll('.plan').forEach((b) => { b.style.display = b.dataset.plan === plan ? '' : 'none'; });
-    el('lineOpts').querySelector('.opts').style.display = 'none';
-    el('lineOpts').querySelectorAll('.sect')[1].style.display = 'none';
-  }
+  if (c && c.line) paintLines();
   if (c && c.line) {
     el('durs').innerHTML = c.durs.map((d, i) =>
       '<button type="button" class="dur' + (dur === d ? ' on' : '') + '" data-i="' + i + '">' +
@@ -301,6 +362,7 @@ function paint(){
       '<div class="p">' + fmt(d.p) + T('won') + '</div></button>').join('');
   }
   el('secSw').classList.toggle('on', secure);
+  el('lineName').placeholder = T('nameP');
   el('secHint').textContent = T(secure ? 'oSecOn' : 'oSecOff');
   el('secHint').classList.toggle('warn', secure);
   document.querySelectorAll('#purSeg button').forEach((b) => b.classList.toggle('on', b.dataset.p === purpose));
@@ -314,9 +376,51 @@ function paint(){
   if (MODE === 'old') { b.disabled = false; b.textContent = T('update'); return; }
   if (MODE === 'web') { b.disabled = false; b.textContent = T('webGo'); return; }
   if (!session) { b.disabled = false; b.textContent = T('login'); return; }
-  b.disabled = !dur;
-  b.textContent = dur ? T('buy') : T('pick');
+  const need = lineNeed();
+  b.disabled = !dur || !!need;
+  b.textContent = !dur ? T('pick') : (need || T('buy'));
 }
+
+/* 회선 고르기 칸 그리기 */
+function lineNeed(){
+  const c = plan ? CATALOG[plan] : null;
+  if (!c || !c.line) return '';
+  if (mode === 'cont') {
+    if (!pick) return T('pickLine');
+    const pp = c === CATALOG.premium ? 4 : 2;
+    if (pick.persons === 4 && pp === 2) return T('h4basic');
+    return '';
+  }
+  if (mode === 'new') return el('lineName').value.trim() ? '' : T('nameNeed');
+  return T('pickLine');
+}
+function paintLines(){
+  const prem = plan === 'premium';
+  const eligible = (l) => prem ? true : l.persons === 2;
+  el('mCont').disabled = !myLines.length;
+  if (!myLines.length && mode === 'cont') mode = 'new';
+  el('mCont').classList.toggle('on', mode === 'cont');
+  el('mNew').classList.toggle('on', mode === 'new');
+  el('contBox').style.display = mode === 'cont' ? '' : 'none';
+  el('newBox').style.display = mode === 'new' ? '' : 'none';
+
+  if (mode === 'cont') {
+    el('lineList').innerHTML = myLines.map((l, i) => {
+      const ok = eligible(l);
+      const tag = !ok ? T('tNo') : (prem && l.persons === 2 ? T('tUp') : T('tExt'));
+      const when = l.expires ? (new Date(l.expires) > new Date() ? T('until', { d: new Date(l.expires).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR') }) : T('ended')) : '';
+      const who = l.peers.length ? T('peers', { p: l.peers.join(', ') }) : T('noPeer');
+      return '<button type="button" class="ln' + (pick === l ? ' on' : '') + '" data-i="' + i + '"' + (ok ? '' : ' disabled') + '>' +
+        '<span class="dot"></span><span class="tx"><div class="n">' + esc(l.name) + (l.secure ? ' 🔒' : '') + '</div>' +
+        '<div class="s">' + esc((l.persons === 4 ? T('p4') : T('p2')) + ' · ' + who + ' · ' + when) + '</div></span>' +
+        '<span class="tag">' + esc(tag) + '</span></button>';
+    }).join('');
+    const h = el('contHint');
+    if (pick && prem && pick.persons === 2) { h.className = 'hint up'; h.innerHTML = T('hUp') + '<br>' + esc(T('secNo')); }
+    else { h.className = 'hint'; h.textContent = (pick ? T('hExt') + ' ' : '') + T('secNo'); }
+  }
+}
+function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 function say(t, ok){ const m = el('msg'); m.textContent = t; m.classList.toggle('ok', !!ok); m.classList.add('show'); }
 function hush(){ el('msg').classList.remove('show'); }
@@ -332,6 +436,13 @@ el('durs').addEventListener('click', (e) => {
   dur = CATALOG[plan].durs[+b.dataset.i]; paint();
 });
 el('secSw').addEventListener('click', () => { secure = !secure; paint(); });
+el('mCont').addEventListener('click', () => { mode = 'cont'; paint(); });
+el('mNew').addEventListener('click', () => { mode = 'new'; pick = null; paint(); });
+el('lineList').addEventListener('click', (e) => {
+  const b = e.target.closest('.ln'); if (!b || b.disabled) return;
+  pick = myLines[+b.dataset.i]; paint();
+});
+el('lineName').addEventListener('input', () => paint());
 el('purSeg').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return; purpose = b.dataset.p; paint();
 });
@@ -343,8 +454,13 @@ el('buyBtn').addEventListener('click', async () => {
   if (!session) { location.href = 'aliascall_my_account.html?next=' + encodeURIComponent('aliascall_plans.html'); return; }
   if (!dur) return;
   const b = el('buyBtn'); b.disabled = true; b.textContent = T('wait');
-  await ACStore.buy(dur.sku, { secure: CATALOG[plan].line && secure, purpose,
-                              extendHotlineId: extendLine ? extendLine.id : null });
+  const line = CATALOG[plan].line;
+  await ACStore.buy(dur.sku, {
+    secure: line && mode === 'new' && secure,
+    purpose,
+    extendHotlineId: line && mode === 'cont' && pick ? pick.id : null,
+    lineName: line && mode === 'new' ? el('lineName').value.trim() : '',
+  });
   setTimeout(() => { if (b.textContent === T('wait')) { b.textContent = T('checking'); } }, 1500);
 });
 
@@ -355,7 +471,10 @@ ACStore.onDone = function(r){
   if (r.ok) {
     el('shop').style.display = 'none';
     el('donePanel').classList.add('show');
-    if (r.kind === 'line' && r.extended) {
+    if (r.kind === 'line' && r.upgraded) {
+      el('doneT').textContent = T('dTup'); el('doneP').textContent = T('dPup');
+      el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
+    } else if (r.kind === 'line' && r.extended) {
       el('doneT').textContent = T('dText'); el('doneP').textContent = T('dPext');
       el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
     } else if (r.kind === 'line') {
@@ -399,26 +518,40 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
   const want = qs.get('plan');
   if (want && CATALOG[want]) { plan = want; const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0]; }
 
-  /* 연장할 회선 — 내 회선인지, 몇 인용인지 확인하고 이용권을 맞춥니다 */
-  const extId = qs.get('extend');
-  if (extId && session) {
+  /* 내가 연 회선 — 이어가기 목록 */
+  if (session) {
     try {
-      const { data: h } = await sb.from('hotlines').select('id, title, client_label, tier, subscription_id')
-        .eq('id', extId).eq('owner_user_id', session.user.id).maybeSingle();
-      if (h && !h.subscription_id) {
-        const four = /^(economy_4|premium_4)/.test(h.tier);
-        const two = /^(hotline_1to1|hotline_everybody)/.test(h.tier);
-        if (four || two) {
-          extendLine = { id: h.id, tier: h.tier, title: h.client_label || h.title || '' };
-          plan = four ? 'premium' : 'basic';
-          const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0];
-          const box = el('extBox');
-          box.innerHTML = T('ext', { name: (extendLine.title || (four ? '4인' : '2인')).replace(/[<>&]/g, '') })
-            + '<br><span style="color:var(--ink-soft)">' + T('extKeep') + '</span>';
-          box.style.display = '';
-        }
+      const { data: hs } = await sb.from('hotlines')
+        .select('id, title, client_label, tier, expires_at, archived_at, subscription_id')
+        .eq('owner_user_id', session.user.id).is('archived_at', null)
+        .order('expires_at', { ascending: false }).limit(50);
+      const list = (hs || []).filter((h) => !h.subscription_id && persons(h.tier));
+      let peers = {};
+      if (list.length) {
+        try {
+          const { data: mem } = await sb.from('hotline_members').select('hotline_id, nickname, role, status')
+            .in('hotline_id', list.map((h) => h.id));
+          (mem || []).forEach((m) => {
+            if (m.role === 'owner' || (m.status && m.status !== 'active') || !m.nickname) return;
+            (peers[m.hotline_id] = peers[m.hotline_id] || []).push(m.nickname);
+          });
+        } catch (e) { peers = {}; }
       }
-    } catch (e) { console.warn('[plans] 연장할 회선을 못 읽었습니다', e); }
+      myLines = list.map((h) => ({
+        id: h.id, persons: persons(h.tier), secure: /_secure$/.test(h.tier), expires: h.expires_at,
+        name: h.client_label || h.title || (persons(h.tier) === 4 ? T('p4') : T('p2')), peers: peers[h.id] || [],
+      }));
+    } catch (e) { console.warn('[plans] 내 회선을 못 읽었습니다', e); }
+  }
+  mode = myLines.length ? null : 'new';
+
+  /* 회선 관리의 [연장하기] 로 왔으면 그 회선을 골라 둡니다 */
+  const extId = qs.get('extend');
+  const hit = extId ? myLines.find((l) => l.id === extId) : null;
+  if (hit) {
+    mode = 'cont'; pick = hit;
+    plan = hit.persons === 4 ? 'premium' : 'basic';
+    const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0];
   }
   paint();
 })();
