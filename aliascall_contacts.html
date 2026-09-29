@@ -171,7 +171,9 @@ const I18N = {
     loginNeed:'긴급 연락처는 로그인해야 보입니다.<br><a href="aliascall_my_account.html">로그인하러 가기</a>',
     emptyEmg:'아직 연락 온 분이 없습니다.<br>등록물의 QR이나 찾습니다 게시판으로 연락이 오면 여기에 모입니다.',
     emptyLine:'아직 이어진 회선이 없습니다.<br>보안통신 화면에서 회선을 열거나, 받은 초대 링크로 들어가시면 여기에 모입니다.',
-    emptyTemp:'1회용 임시연락처가 곧 열립니다.<br>그걸로 연락 온 분들이 여기에 모입니다.',
+    emptyTemp:'아직 임시연락처가 없습니다.<br>중고거래 · 소개팅 · 매물 안내처럼 잠깐 쓸 연락처를 만들어 보세요.',
+    tempNew:'＋ 새 임시연락처 만들기', tempNoLabel:'이름표 없음', tempOne:'한 사람만', tempMany:'여러 사람',
+    tempPeople:'연락 {n}명', tempDays:'{n}일 남음', tempHours:'{n}시간 남음', tempEnded:'끝남',
     groupOpen:'진행 중', groupClosed:'끝난 연락',
     groupOwner:'내가 연 회선', groupMember:'초대받은 회선',
     noteEmg:'익명으로 연락 온 분일수록 이름을 붙여두세요. "강아지 찾아주신 분"처럼 붙여두면 나중에 알아보기 쉽습니다.',
@@ -193,7 +195,9 @@ const I18N = {
     loginNeed:'Sign in to see emergency contacts.<br><a href="aliascall_my_account.html">Go to sign in</a>',
     emptyEmg:'No one has contacted you yet.<br>People who reach you through your item QR or the lost & found board will appear here.',
     emptyLine:'No lines yet.<br>Open a line from Secure communication, or join one with an invite link, and it will appear here.',
-    emptyTemp:'One-time contact cards are coming soon.<br>People who reach you that way will appear here.',
+    emptyTemp:'No one-time cards yet.<br>Make one for a deal, a first meeting or a listing sign.',
+    tempNew:'＋ New one-time card', tempNoLabel:'No label', tempOne:'One person', tempMany:'Anyone',
+    tempPeople:'{n} people', tempDays:'{n}d left', tempHours:'{n}h left', tempEnded:'Ended',
     groupOpen:'Active', groupClosed:'Closed',
     groupOwner:'Lines I opened', groupMember:'Lines I joined',
     noteEmg:'Give anonymous contacts a name you will recognize later, like "Found my dog".',
@@ -237,6 +241,13 @@ const params = new URLSearchParams(location.search);
 let tab = ['line','emergency','temp'].includes(params.get('tab')) ? params.get('tab') : 'emergency';
 let session = null;
 let emg = null;        // 긴급 연락처 (null = 아직 안 읽음)
+let temps = null;      // 2026-09-28 — 내 임시연락처 (my_temp_cards)
+async function loadTemp(){
+  temps = [];
+  if (!session) return;
+  try { const r = await sb.rpc('my_temp_cards'); if (!r.error) temps = r.data || []; }
+  catch (e) { console.warn('[contacts] 임시연락처 읽기 실패', e); }
+}
 let lines = null;      // 회선 연락처
 let emgError = false, lineError = false;
 let serverLabels = {}; // 'kind|ref' → label
@@ -287,6 +298,7 @@ async function loadEmergency(){
     [...open, ...closed].forEach((c) => {
       if (!c || seen.has(c.caseId)) return;
       seen.add(c.caseId);
+      if (c.category === 'temp_contact') return;   // 2026-09-28 — 임시연락처는 [임시] 갈래로
       emg.push({
         kind:'emergency', ref:c.caseId, local:false,
         emoji: CAT_EMOJI[c.category] || '❓',
@@ -418,6 +430,8 @@ function paint(){
   document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
   document.getElementById('nLine').textContent = lines && lines.length ? lines.length : '';
   document.getElementById('nEmg').textContent = emg && emg.length ? emg.length : '';
+  const liveTemp = (temps || []).filter((c) => !c.ended_at && new Date(c.expires_at) > new Date()).length;
+  document.getElementById('nTemp').textContent = liveTemp || '';
   document.getElementById('prevRow').style.display = (tab === 'emergency' && session && emg && emg.length) ? 'flex' : 'none';
   document.getElementById('prevSw').classList.toggle('on', previewOn);
 
@@ -426,8 +440,21 @@ function paint(){
   shown = [];
   note.textContent = '';
 
+  /* 2026-09-28 — [임시] 갈래: 내 임시연락처 한 장이 한 줄. 누르면 그 장(QR · 연락 온 분 · 끊기)으로 */
   if (tab === 'temp') {
-    box.innerHTML = '<div class="empty">' + t.emptyTemp + '</div>';
+    if (!session) { box.innerHTML = '<div class="empty">' + t.loginNeed + '</div>'; return; }
+    if (temps === null) { box.innerHTML = '<div class="empty">' + esc(t.loading) + '</div>'; return; }
+    const head = '<a class="list" href="aliascall_temp.html?new=1" style="display:block;text-align:center;padding:14px;font-weight:700;text-decoration:none;color:var(--teal-deep);margin-bottom:10px;">' + esc(t.tempNew) + '</a>';
+    if (!temps.length) { box.innerHTML = head + '<div class="empty">' + t.emptyTemp + '</div>'; return; }
+    const live = (c) => !c.ended_at && new Date(c.expires_at) > new Date();
+    box.innerHTML = head + '<div class="list">' + temps.map((c) => {
+      const ms = new Date(c.expires_at) - new Date();
+      const left = !live(c) ? t.tempEnded : (ms < 86400000 ? t.tempHours.replace('{n}', Math.max(1, Math.ceil(ms / 3600000))) : t.tempDays.replace('{n}', Math.ceil(ms / 86400000)));
+      return '<a class="row' + (live(c) ? '' : ' closed') + '" href="aliascall_temp.html?id=' + encodeURIComponent(c.id) + '" style="text-decoration:none;color:inherit;">' +
+        '<div class="av" aria-hidden="true">🎫</div><div class="mid"><div class="nm">' + esc(c.label || t.tempNoLabel) + '</div>' +
+        '<div class="sub">' + esc((c.single_person ? t.tempOne : t.tempMany) + ' · ' + t.tempPeople.replace('{n}', c.people || 0) + ' · ' + c.code) + '</div></div>' +
+        '<div class="tm">' + esc(left) + '</div></a>';
+    }).join('') + '</div>';
     return;
   }
   if (tab === 'emergency') {
@@ -562,7 +589,7 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
   applyLang();
   // 기본 이름에 "발견자"·상품 이름이 들어가 있어 다시 읽습니다.
   emg = null; lines = null; paint();
-  await Promise.all([loadEmergency(), loadLines()]);
+  await Promise.all([loadEmergency(), loadLines(), loadTemp()]);
   paint();
 }));
 
@@ -572,7 +599,7 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
   paint();
   try { const r = await sb.auth.getSession(); session = r.data.session; } catch (e) { session = null; }
   await loadLabels();
-  await Promise.all([loadEmergency(), loadLines()]);
+  await Promise.all([loadEmergency(), loadLines(), loadTemp()]);
   paint();
 })();
 </script>

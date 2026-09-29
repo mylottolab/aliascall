@@ -503,6 +503,12 @@ const I18N = {
     notFoundDesc: 'QR이 손상되었거나, 이미 처리된(삭제된) 등록일 수 있어요.<br>직접 검색해보시겠어요?',
     searchDirectly: '번호·이름으로 검색하기',
     expiredTitle: '연결이 잠시 중단되어 있어요',
+    // 2026-09-28: 1회용 임시연락처
+    tmpTitle: '번호 없이 연락하세요', tmpSub: '임시연락처 · {left} · 서로의 번호는 드러나지 않습니다',
+    tmpDays: '{n}일 남음', tmpHours: '{n}시간 남음',
+    tmpEndedT: '이 연락처는 끝났습니다', tmpEndedD: '기한이 지났거나 상대가 연락을 마쳤습니다. 더는 문자나 전화를 보낼 수 없습니다.',
+    tmpTakenT: '이미 다른 분과 연결된 연락처입니다', tmpTakenD: '이 임시연락처는 처음 연락한 한 분만 쓸 수 있습니다.',
+    tmpMine: '나도 번호 없이 연락받고 싶다면 — 1회용 임시연락처 알아보기 ›',
     expiredDesc: '소유자의 수신서비스 기간이 만료되었습니다.<br>소유자에게 갱신을 안내해주시면 다시 연결할 수 있어요.',
     findOther: '다른 등록물 찾기',
     privacyNote: '실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.',
@@ -571,6 +577,11 @@ const I18N = {
     notFoundDesc: "The QR may be damaged, or this registration may have been removed.<br>Would you like to search instead?",
     searchDirectly: 'Search by number or name',
     expiredTitle: 'Connection is temporarily unavailable',
+    tmpTitle: 'Reach them without a number', tmpSub: 'One-time card · {left} · neither number is shown',
+    tmpDays: '{n} days left', tmpHours: '{n} hours left',
+    tmpEndedT: 'This contact has ended', tmpEndedD: 'It expired or the owner cut it off. You can no longer send messages or call.',
+    tmpTakenT: 'Already connected with someone else', tmpTakenD: 'This one-time card only works for the first person who reached it.',
+    tmpMine: 'Want to be reachable without your number? See one-time contact cards ›',
     expiredDesc: "The owner's subscription has expired.<br>Let the owner know to renew, and this will reconnect.",
     findOther: 'Find something else',
     privacyNote: 'Real phone numbers are never revealed. You will connect anonymously right in your browser.',
@@ -647,22 +658,51 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const CATEGORY_EMOJI = {
-  vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓',
+  vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓', temp_contact:'🎫',
 };
 // 2026-08-25: 카테고리 이름도 언어별로. CATEGORY_LABEL()로 호출해서 씀.
 const CATEGORY_LABEL_I18N = {
   ko: {
     vehicle:'차량', lost_item:'분실·도난 우려 물품', vulnerable_person:'아동·치매 어르신·장애우',
-    pet:'반려동물', callback_contact:'부재중 연락', misc_incident:'기타 물품·사건',
+    pet:'반려동물', callback_contact:'부재중 연락', misc_incident:'기타 물품·사건', temp_contact:'1회용 임시연락처',
   },
   en: {
     vehicle:'Vehicle', lost_item:'Valuables at risk of loss or theft', vulnerable_person:'Child, elderly, or person with a disability',
-    pet:'Pet', callback_contact:'Callback contact', misc_incident:'Other item or incident',
+    pet:'Pet', callback_contact:'Callback contact', misc_incident:'Other item or incident', temp_contact:'One-time contact card',
   },
 };
 function CATEGORY_LABEL_OF(cat){
   const dict = CATEGORY_LABEL_I18N[currentLang] || CATEGORY_LABEL_I18N.ko;
   return dict[cat];
+}
+
+/* ═══ 2026-09-28: 1회용 임시연락처 ═══
+   ⚠ 임시연락처는 공개 목록에서 숨겨져 있어(registrations_hide_temp) 토큰으로 바로 못 읽습니다.
+     temp_card_public 이 토큰을 아는 사람에게만 알려줍니다.
+   ⚠ DB 가 끝났거나(temp_ended) 다른 분이 잡은(temp_taken) 연락을 거절하면,
+     그 뜻을 알아듣기 쉬운 화면으로 바꿔 보여줍니다. */
+let tempInfo = null;
+function tempLeft(){
+  if (!tempInfo || !tempInfo.expires_at) return '';
+  const ms = new Date(tempInfo.expires_at) - new Date();
+  return ms < 86400000 ? T().tmpHours.replace('{n}', Math.max(1, Math.ceil(ms / 3600000)))
+                       : T().tmpDays.replace('{n}', Math.ceil(ms / 86400000));
+}
+function showTempState(kind){
+  ['stateLoading', 'stateFound', 'stateError'].forEach((id) => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+  const nav = document.getElementById('bottomNav'); if (nav) nav.style.display = 'none';
+  const box = document.getElementById('stateExpired');
+  box.querySelector('.big').textContent = kind === 'taken' ? '🔒' : '⏳';
+  box.querySelector('h2').textContent = kind === 'taken' ? T().tmpTakenT : T().tmpEndedT;
+  box.querySelector('p').textContent = kind === 'taken' ? T().tmpTakenD : T().tmpEndedD;
+  const a = box.querySelector('a'); a.textContent = T().tmpMine; a.href = 'index.html';
+  box.style.display = 'block';
+}
+function tempGate(msg){
+  const m = String(msg || '');
+  if (m.indexOf('temp_ended') >= 0) { showTempState('ended'); return true; }
+  if (m.indexOf('temp_taken') >= 0) { showTempState('taken'); return true; }
+  return false;
 }
 
 function getTokenFromUrl(){
@@ -681,6 +721,11 @@ function renderFoundRegistration(data){
   document.getElementById('foundEmoji').textContent = CATEGORY_EMOJI[data.category] || '❓';
   document.getElementById('foundTitle').textContent = data.search_key || data.title || CATEGORY_LABEL_OF(data.category) || T().fallbackItem;
   document.getElementById('foundSub').textContent = CATEGORY_LABEL_OF(data.category) || data.category;
+  /* 2026-09-28: 임시연락처 — 주인의 이름표는 보여주지 않습니다(주인만 보는 것) */
+  if (data.category === 'temp_contact') {
+    document.getElementById('foundTitle').textContent = T().tmpTitle;
+    document.getElementById('foundSub').textContent = T().tmpSub.replace('{left}', tempLeft() || CATEGORY_LABEL_OF('temp_contact'));
+  }
   if (data.description) {
     document.getElementById('foundDesc').textContent = data.description;
     document.getElementById('foundDesc').style.display = 'block';
@@ -789,11 +834,22 @@ async function init(){
   }
 
   try {
-    const { data, error } = await sb.from('registrations')
+    let { data, error } = await sb.from('registrations')
       .select('id, category, title, search_key, description')
       .eq('qr_code_token', token)
       .eq('status', 'active')
       .maybeSingle();
+
+    /* 2026-09-28: 임시연락처는 목록에서 숨겨져 있어 위에서 안 나옵니다 */
+    if (!error && !data) {
+      const tr = await sb.rpc('temp_card_public', { p_token: token, p_code: null, p_finder: getFinderAnonId() });
+      if (tr.data) {
+        tempInfo = tr.data;
+        if (tempInfo.ended) { loadingEl.style.display = 'none'; showTempState('ended'); return; }
+        if (tempInfo.taken) { loadingEl.style.display = 'none'; showTempState('taken'); return; }
+        data = { id: tempInfo.registration_id, category: 'temp_contact', title: null, search_key: null, description: null };
+      }
+    }
 
     loadingEl.style.display = 'none';
 
@@ -849,10 +905,15 @@ async function initCaseResumeFlow(caseId, loadingEl, errorEl){
       return;
     }
 
-    const { data: reg, error: regErr } = await sb.from('registrations')
+    let { data: reg, error: regErr } = await sb.from('registrations')
       .select('id, category, title, search_key, description')
       .eq('id', caseData.registrationId)
       .maybeSingle();
+    /* 2026-09-28: 임시연락처는 목록에서 숨겨져 읽히지 않습니다. 연결 가능한 등록물이면 임시연락처로 봅니다 */
+    if (!reg && !regErr) {
+      const okc = await sb.rpc('check_registration_connectable', { p_registration_id: caseData.registrationId });
+      if (okc.data === true) reg = { id: caseData.registrationId, category: 'temp_contact', title: null, search_key: null, description: null };
+    }
     loadingEl.style.display = 'none';
     if (regErr || !reg) { errorEl.style.display = 'block'; return; }
 
@@ -918,10 +979,15 @@ async function initIncomingCallFlow(sessionToken, loadingEl, errorEl){
       return;
     }
 
-    const { data: reg, error: regErr } = await sb.from('registrations')
+    let { data: reg, error: regErr } = await sb.from('registrations')
       .select('id, category, title, search_key, description')
       .eq('id', session.registration_id)
       .maybeSingle();
+    /* 2026-09-28: 임시연락처는 목록에서 숨겨져 읽히지 않습니다. 연결 가능한 등록물이면 임시연락처로 봅니다 */
+    if (!reg && !regErr) {
+      const okc = await sb.rpc('check_registration_connectable', { p_registration_id: session.registration_id });
+      if (okc.data === true) reg = { id: session.registration_id, category: 'temp_contact', title: null, search_key: null, description: null };
+    }
     loadingEl.style.display = 'none';
     if (regErr || !reg) { errorEl.style.display = 'block'; return; }
 
@@ -1294,6 +1360,7 @@ async function startCall(mode){
       body: JSON.stringify({ registrationId, finderAnonId }),
     });
     const openData = await openRes.json();
+    if (!openRes.ok && tempGate(openData.error)) { overlay.classList.remove('show'); return; }   // 2026-09-28
     if (openRes.ok) {
       currentCaseId = openData.caseId;
       renderedMsgIds = new Set();
@@ -1793,6 +1860,7 @@ async function startLiveChatOnly(){
     if (!res.ok) throw new Error(openData.error || '사건 생성 실패');
   } catch (e) {
     console.error('[case] 사건 열기 실패', e);
+    if (tempGate(e.message)) { endCall(true); return; }   // 2026-09-28
     alert(I18N[currentLang].callFailed);
     endCall(true);
     return;
@@ -2323,6 +2391,7 @@ document.getElementById('textMsgSendBtn').addEventListener('click', async () => 
     document.getElementById('textMsgSentNote').classList.add('show');
   } catch (e) {
     console.error('[text-msg] 저장 실패', e);
+    if (tempGate(e.message)) return;   // 2026-09-28
     alert(t.leaveMsgFailed);
   } finally {
     btn.disabled = false;

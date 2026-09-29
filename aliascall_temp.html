@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Aliascall — 1회용 임시연락처</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  ═══════════════════════════════════════════════════════════════
+  2026-09-28 신설: ③ 1회용 임시연락처 (33차 3-5 · 2026-09-27 시안 확정)
+
+  한 화면에서 셋을 합니다.
+    목록      aliascall_temp.html            내 임시연락처 · [새로 만들기]
+    만들기    aliascall_temp.html?new=1      이름표 · 기한(1·3·7·30일) · 한 사람만/여러 사람
+    한 장     aliascall_temp.html?id=…       QR · 코드 · 보내기 · 크게 · 명함 인쇄 · 연락 온 분 · 지금 끊기
+
+  🔴 DB 가 지킵니다 (temp_B_all.sql)
+    · 만들기: 이용권이 있는 계정 · 한도(일반 20/30 · 프로 100/80 · 200/160 · 300/240)
+    · 끊었거나 기한이 지나면 새 연락 · 메시지 · 통화를 거절
+    · 한 사람만: 처음 연락한 분으로 잠그고 다른 분은 거절
+    · 임시연락처는 공개 "찾기" 목록에 나오지 않음
+  ⚠ 인쇄 · 보내기는 앱에서 AliasNative 창구(버전 5)를 씁니다. 없으면 브라우저 방식으로.
+  ═══════════════════════════════════════════════════════════════
+-->
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1; --brass:#C9A24B; --brass-tint:#F4E6C6;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; min-height:100vh; word-break:keep-all;
+      padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+h1,h2,h3{ font-family:'Space Grotesk','Inter',sans-serif; margin:0; font-weight:700; }
+header{ padding:18px 20px 4px; display:flex; align-items:center; gap:9px; }
+.back{ background:none; border:none; font-size:20px; color:var(--ink); cursor:pointer; padding:8px 8px 8px 0; min-width:44px; min-height:44px; }
+.brand{ width:28px; height:28px; border-radius:8px; background:var(--teal); color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.bname{ font-size:16px; font-weight:600; flex:1; }
+.bname em{ font-style:normal; color:var(--coral); }
+main{ max-width:430px; margin:0 auto; padding:10px 20px 60px; }
+.title{ font-size:24px; margin:8px 0 4px; }
+.sub{ font-size:13.5px; color:var(--ink-soft); line-height:1.65; margin:0 0 16px; }
+.view{ display:none; } .view.show{ display:block; }
+
+.btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; border:none; border-radius:16px; padding:16px; min-height:52px;
+      font-family:inherit; font-size:16px; font-weight:800; cursor:pointer; text-decoration:none; }
+.btn.p{ background:var(--teal); color:#fff; } .btn.s{ background:#fff; color:var(--teal-deep); border:2px solid var(--teal); }
+.btn:disabled{ opacity:.5; cursor:default; }
+
+/* 목록 */
+.card{ background:var(--card); border-radius:18px; padding:16px; margin-bottom:10px; }
+.row{ display:block; width:100%; text-align:left; background:var(--card); border:none; border-radius:18px; padding:15px 16px; margin-bottom:10px; font-family:inherit; color:inherit; cursor:pointer; }
+.row .top{ display:flex; align-items:center; gap:8px; }
+.row .nm{ flex:1; font-weight:700; font-size:15.5px; }
+.row .cd{ font-family:'Space Grotesk',monospace; font-size:13px; letter-spacing:1px; color:var(--ink-soft); }
+.row .meta{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+.bar{ height:6px; border-radius:999px; background:#ECE9E2; overflow:hidden; margin-top:10px; }
+.bar i{ display:block; height:6px; background:var(--teal); }
+.row.dead{ opacity:.55; } .row.dead .bar i{ background:#B8B4AA; }
+.tag{ font-size:11px; font-weight:700; border-radius:20px; padding:2px 9px; background:var(--brass-tint); color:#6B4A12; }
+.tag.new{ background:#B4441F; color:#fff; }
+.empty{ background:rgba(255,255,255,.55); border-radius:16px; padding:22px 16px; text-align:center; font-size:13.5px; line-height:1.7; color:var(--ink-soft); }
+.guide{ margin-top:14px; background:rgba(255,255,255,.55); border-radius:14px; padding:12px 14px; font-size:12.5px; line-height:1.7; }
+.guide a{ color:var(--teal-deep); font-weight:700; }
+
+/* 만들기 */
+.fld{ margin-bottom:18px; }
+.fld label, .fld .lb{ display:block; font-size:14px; font-weight:700; margin-bottom:8px; }
+.fld input{ width:100%; border:1.5px solid var(--line); border-radius:12px; padding:13px 14px; font-family:inherit; font-size:16px; background:#fff; }
+.fld input:focus{ outline:none; border-color:var(--teal); }
+.fld .hint{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+.pills{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.pill{ min-height:46px; border-radius:12px; border:1.5px solid #D5D2CA; background:#fff; font-family:inherit; font-size:15px; font-weight:600; color:var(--ink-soft); cursor:pointer; }
+.pill.on{ border:2px solid var(--teal); background:#E3EFEC; color:#0F3E3B; font-weight:800; }
+.who{ display:grid; gap:8px; }
+.who button{ text-align:left; border-radius:14px; border:1.5px solid #D5D2CA; background:#fff; padding:12px 16px; font-family:inherit; color:inherit; cursor:pointer; }
+.who button.on{ border:2px solid var(--teal); background:#E3EFEC; }
+.who b{ display:block; font-size:15px; } .who span{ font-size:12.5px; color:var(--ink-soft); }
+
+/* 한 장 */
+.qrcard{ background:#fff; border-radius:22px; padding:20px; text-align:center; }
+.qrcard .hd{ display:flex; align-items:center; gap:8px; margin-bottom:12px; text-align:left; }
+.qrcard .hd .nm{ flex:1; font-weight:700; font-size:15px; }
+.qrbox{ width:220px; height:220px; margin:0 auto; display:flex; align-items:center; justify-content:center; }
+.qrbox img, .qrbox canvas{ width:200px !important; height:200px !important; }
+.codelb{ font-size:12px; color:var(--ink-soft); margin-top:12px; }
+.code{ font-family:'Space Grotesk',monospace; font-size:30px; font-weight:700; letter-spacing:3px; }
+.left{ font-size:13.5px; color:var(--ink-soft); margin-top:8px; }
+.acts{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+.act{ min-height:74px; border-radius:14px; border:1px solid #D5D2CA; background:#fff; font-family:inherit; color:var(--ink); font-size:13px; font-weight:600;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; cursor:pointer; }
+.act .i{ font-size:20px; }
+.honest{ display:flex; gap:10px; background:#fff; border-radius:14px; padding:13px 14px; margin-top:12px; font-size:12.5px; line-height:1.65; color:var(--ink-soft); }
+.sect{ font-size:13px; font-weight:700; margin:20px 2px 8px; }
+.conv{ display:flex; align-items:center; gap:10px; background:#fff; border-radius:14px; padding:13px 14px; margin-bottom:8px; text-decoration:none; color:inherit; }
+.conv .tx{ flex:1; } .conv b{ display:block; font-size:14px; } .conv span{ font-size:12px; color:var(--ink-soft); }
+.cut{ margin-top:18px; background:var(--coral-tint); color:#8E2F12; border:1.5px solid #E7C2B4; }
+.ended{ background:#ECE9E2; border-radius:14px; padding:14px; text-align:center; font-size:13.5px; color:var(--ink-soft); margin-top:12px; }
+
+.msg{ display:none; margin-top:12px; border-radius:12px; padding:12px 14px; font-size:13.5px; line-height:1.6; white-space:pre-line; background:#FBEAE7; color:#8E2F22; }
+.msg.ok{ background:#E3F2E8; color:#1F5A36; } .msg.show{ display:block; }
+.msg a{ color:inherit; font-weight:700; }
+
+/* 크게 보여주기 */
+.big{ display:none; position:fixed; inset:0; background:#fff; z-index:50; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:20px; }
+.big.show{ display:flex; }
+.big .code{ font-size:40px; }
+.big button{ position:absolute; top:calc(16px + env(safe-area-inset-top,0px)); right:16px; min-width:48px; min-height:48px; border:none; border-radius:24px; background:var(--teal-tint); font-size:20px; cursor:pointer; }
+
+/* 명함 인쇄 — 90 × 50 mm */
+.print-card{ display:none; }
+@media print{
+  @page{ size:90mm 50mm; margin:0; }
+  body{ background:#fff; padding:0; }
+  header, main, .big, .toast{ display:none !important; }
+  .print-card{ display:flex; width:90mm; height:50mm; box-sizing:border-box; padding:5mm; gap:4mm; align-items:center; font-family:'Inter',sans-serif; color:#16201E; }
+  .print-card .pq{ width:34mm; height:34mm; flex-shrink:0; }
+  .print-card .pq img, .print-card .pq canvas{ width:34mm !important; height:34mm !important; }
+  .print-card .pt{ display:flex; flex-direction:column; gap:1.6mm; }
+  .print-card .pdate{ align-self:flex-start; font-size:7pt; font-weight:700; background:#F4E6C6; color:#6B4A12; border-radius:6pt; padding:0.6mm 2mm; }
+  .print-card .ph{ font-size:12pt; font-weight:800; line-height:1.25; }
+  .print-card .pd{ font-size:6.5pt; line-height:1.45; color:#4A5553; }
+  .print-card .pc{ font-family:'Space Grotesk',monospace; font-size:12pt; font-weight:700; letter-spacing:1.2pt; }
+  .print-card .pu{ font-size:6pt; color:#5C6664; }
+}
+.toast{ position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:#12302E; color:#fff;
+        font-size:13px; font-weight:600; padding:10px 16px; border-radius:20px; display:none; z-index:60; }
+.toast.show{ display:block; }
+button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
+</style>
+</head>
+<body>
+<header>
+  <button class="back" id="backBtn" aria-label="뒤로">←</button>
+  <div class="brand">A</div>
+  <div class="bname">Alias<em>call</em></div>
+</header>
+
+<main>
+  <!-- ═══ 목록 ═══ -->
+  <section class="view" id="vList">
+    <h1 class="title" data-i18n="tList">1회용 임시연락처</h1>
+    <p class="sub" data-i18n="sList">번호 대신 건네는 연락처입니다. 정한 날이 지나거나 [지금 끊기]를 누르면 더는 연락이 오지 않습니다.</p>
+    <button type="button" class="btn p" id="goNew" data-i18n="bNew">＋ 새 임시연락처 만들기</button>
+    <div id="list" style="margin-top:14px;"></div>
+    <div class="guide" data-i18n-html="gToReg">🐾 반려동물 목걸이 · 소지품처럼 <b>오래 붙여둘 QR</b>은 긴급등록으로 만드세요. 기한 없이 연락됩니다. <a href="aliascall_registration_mockup.html">긴급등록으로 가기 ›</a></div>
+  </section>
+
+  <!-- ═══ 만들기 ═══ -->
+  <section class="view" id="vNew">
+    <h1 class="title" data-i18n="tNew">임시연락처 만들기</h1>
+    <p class="sub" data-i18n="sNew">상대는 앱을 깔지 않아도 연락할 수 있고, 내 번호는 끝까지 드러나지 않습니다.</p>
+    <div class="fld">
+      <label for="label" data-i18n="lLabel">나만 보는 이름표</label>
+      <input id="label" maxlength="40" autocomplete="off" placeholder="예) 당근 자전거 구매자">
+      <div class="hint" data-i18n="hLabel">상대에게는 보이지 않습니다.</div>
+    </div>
+    <div class="fld">
+      <div class="lb" data-i18n="lDays">얼마나 쓸까요</div>
+      <div class="pills" id="days">
+        <button type="button" class="pill" data-d="1"></button><button type="button" class="pill" data-d="3"></button>
+        <button type="button" class="pill on" data-d="7"></button><button type="button" class="pill" data-d="30"></button>
+      </div>
+      <div class="hint" id="untilHint"></div>
+    </div>
+    <div class="fld">
+      <div class="lb" data-i18n="lWho">누가 연락할 수 있나요</div>
+      <div class="who" id="who">
+        <button type="button" class="on" data-s="1"><b data-i18n="wOne">한 사람만</b><span data-i18n="wOneD">처음 연락한 분만 이어집니다. 중고거래 · 첫 만남에</span></button>
+        <button type="button" data-s="0"><b data-i18n="wMany">여러 사람</b><span data-i18n="wManyD">QR을 본 누구나. 매물 안내판 · 행사 명함에</span></button>
+      </div>
+    </div>
+    <button type="button" class="btn p" id="makeBtn" data-i18n="bMake">만들기</button>
+    <div class="msg" id="makeMsg"></div>
+    <div class="guide" data-i18n-html="gToReg">🐾 반려동물 목걸이 · 소지품처럼 <b>오래 붙여둘 QR</b>은 긴급등록으로 만드세요. 기한 없이 연락됩니다. <a href="aliascall_registration_mockup.html">긴급등록으로 가기 ›</a></div>
+  </section>
+
+  <!-- ═══ 한 장 ═══ -->
+  <section class="view" id="vOne">
+    <div class="qrcard">
+      <div class="hd"><span class="tag" id="oTag"></span><span class="nm" id="oName"></span></div>
+      <div class="qrbox" id="qr"></div>
+      <div class="codelb" data-i18n="codeLb">QR이 안 되면 코드를 넣으세요</div>
+      <div class="code" id="oCode"></div>
+      <div class="left" id="oLeft"></div>
+    </div>
+    <div id="liveActs">
+      <div class="acts">
+        <button type="button" class="act" id="aSend"><span class="i">🔗</span><span data-i18n="aSend">링크 보내기</span></button>
+        <button type="button" class="act" id="aBig"><span class="i">⤢</span><span data-i18n="aBig">크게 보여주기</span></button>
+        <button type="button" class="act" id="aPrint"><span class="i">🖨</span><span data-i18n="aPrint">명함 인쇄</span></button>
+      </div>
+      <div class="honest"><span>🛡️</span><span data-i18n="honest">상대는 앱을 깔지 않아도 연락할 수 있습니다. 내 번호는 끝까지 드러나지 않습니다. 다만 상대가 대화를 캡처하는 것까지 막을 수는 없습니다.</span></div>
+    </div>
+    <div class="ended" id="endedBox" style="display:none;" data-i18n="endedBox">이 임시연락처는 끝났습니다. 더는 연락이 오지 않습니다.</div>
+
+    <div class="sect" data-i18n="convT">연락 온 분</div>
+    <div id="convs"></div>
+
+    <button type="button" class="btn cut" id="cutBtn" data-i18n="bCut">✂ 지금 끊기</button>
+    <div class="msg" id="oneMsg"></div>
+  </section>
+</main>
+
+<!-- 크게 보여주기 -->
+<div class="big" id="big" role="dialog" aria-label="크게 보기">
+  <button type="button" id="bigClose" aria-label="닫기">✕</button>
+  <div id="bigQr"></div>
+  <div class="code" id="bigCode"></div>
+</div>
+
+<!-- 명함 (인쇄할 때만 보입니다) -->
+<div class="print-card" aria-hidden="true">
+  <div class="pq" id="pQr"></div>
+  <div class="pt">
+    <span class="pdate" id="pDate"></span>
+    <div class="ph" data-i18n-html="pHead">번호 없이<br>연락하세요</div>
+    <div class="pd" data-i18n="pDesc">QR을 찍으면 바로 문자 · 전화. 앱 설치는 필요 없습니다.</div>
+    <div class="pu" data-i18n="pUrl">안 찍히면 aliascall.com/c 에서 코드 입력</div>
+    <div class="pc" id="pCode"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://qmwaraittiurkynszjts.supabase.co';
+const sb = supabase.createClient(SUPABASE_URL,
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y');
+const SITE = 'https://aliascall.com';
+
+const I18N = {
+  ko: {
+    tList:'1회용 임시연락처', sList:'번호 대신 건네는 연락처입니다. 정한 날이 지나거나 [지금 끊기]를 누르면 더는 연락이 오지 않습니다.',
+    bNew:'＋ 새 임시연락처 만들기',
+    gToReg:'🐾 반려동물 목걸이 · 소지품처럼 <b>오래 붙여둘 QR</b>은 긴급등록으로 만드세요. 기한 없이 연락됩니다. <a href="aliascall_registration_mockup.html">긴급등록으로 가기 ›</a>',
+    empty:'아직 만든 임시연락처가 없습니다.<br>중고거래 · 소개팅 · 매물 안내처럼 잠깐 쓸 연락처를 만들어 보세요.',
+    tNew:'임시연락처 만들기', sNew:'상대는 앱을 깔지 않아도 연락할 수 있고, 내 번호는 끝까지 드러나지 않습니다.',
+    lLabel:'나만 보는 이름표', hLabel:'상대에게는 보이지 않습니다.', phLabel:'예) 당근 자전거 구매자',
+    lDays:'얼마나 쓸까요', d:'{n}일', until:'{d} 밤까지 쓰고 저절로 끊깁니다.',
+    lWho:'누가 연락할 수 있나요', wOne:'한 사람만', wOneD:'처음 연락한 분만 이어집니다. 중고거래 · 첫 만남에',
+    wMany:'여러 사람', wManyD:'QR을 본 누구나. 매물 안내판 · 행사 명함에', bMake:'만들기', making:'만드는 중…',
+    errPlan:'임시연락처는 이용권이 있어야 만들 수 있습니다. <a href="aliascall_plans.html?plan=emergency">긴급 이용권 보기 ›</a>',
+    errLive:'살아 있는 임시연락처가 {n}장입니다. 다 쓴 것을 [지금 끊기]로 정리하시면 새로 만들 수 있습니다.',
+    errDay:'오늘은 {n}장까지 만들 수 있습니다. 내일 다시 만들어주세요.',
+    errLogin:'로그인이 필요합니다. <a href="aliascall_my_account.html">로그인하기 ›</a>', errGen:'만들지 못했습니다. 잠시 뒤 다시 해주세요.',
+    one:'한 사람만', many:'여러 사람', left:'{n}일 남음 · {d}까지', leftH:'{n}시간 남음', endedT:'끝남',
+    codeLb:'QR이 안 되면 코드를 넣으세요', aSend:'링크 보내기', aBig:'크게 보여주기', aPrint:'명함 인쇄',
+    honest:'상대는 앱을 깔지 않아도 연락할 수 있습니다. 내 번호는 끝까지 드러나지 않습니다. 다만 상대가 대화를 캡처하는 것까지 막을 수는 없습니다.',
+    endedBox:'이 임시연락처는 끝났습니다. 더는 연락이 오지 않습니다.',
+    convT:'연락 온 분', noConv:'아직 연락 온 분이 없습니다.', person:'연락 {i}', open:'진행 중', closed:'끝난 대화',
+    people:'연락 온 분 {n}명', bCut:'✂ 지금 끊기', cutAsk:'지금 끊을까요? 끊으면 이 연락처로는 더는 연락이 오지 않습니다. 되돌릴 수 없습니다.',
+    cutDone:'끊었습니다.', shareText:'번호 없이 연락하실 수 있어요 ({d}까지)\n{url}\n코드 {c}',
+    copied:'링크를 복사했습니다', noTitle:'이름표 없음',
+    pHead:'번호 없이<br>연락하세요', pDesc:'QR을 찍으면 바로 문자 · 전화. 앱 설치는 필요 없습니다.',
+    pUrl:'안 찍히면 aliascall.com/c 에서 코드 입력', pDate:'{d}까지',
+  },
+  en: {
+    tList:'One-time contact cards', sList:'A contact you hand out instead of your number. It stops working on the date you pick, or when you cut it off.',
+    bNew:'＋ New one-time card',
+    gToReg:'🐾 For <b>long-term QR tags</b> like pet collars or belongings, use Emergency registration — it never expires. <a href="aliascall_registration_mockup.html">Go to registration ›</a>',
+    empty:'No cards yet.<br>Make one for a second-hand deal, a first meeting or a listing sign.',
+    tNew:'New one-time card', sNew:'The other person can reach you without installing anything. Your number is never shown.',
+    lLabel:'Private label', hLabel:'Only you can see this.', phLabel:'e.g. Bike buyer',
+    lDays:'How long?', d:'{n}d', until:'Works until midnight on {d}, then cuts off by itself.',
+    lWho:'Who can contact you?', wOne:'One person', wOneD:'Only the first person who reaches you. For deals and first meetings',
+    wMany:'Anyone', wManyD:'Anyone with the QR. For signs and event cards', bMake:'Create', making:'Creating…',
+    errPlan:'You need a plan to create cards. <a href="aliascall_plans.html?plan=emergency">See plans ›</a>',
+    errLive:'You have {n} active cards. Cut off ones you no longer need to create more.',
+    errDay:'You can create {n} cards per day. Please try again tomorrow.',
+    errLogin:'Please sign in. <a href="aliascall_my_account.html">Sign in ›</a>', errGen:'Could not create the card. Please try again.',
+    one:'One person', many:'Anyone', left:'{n} days left · until {d}', leftH:'{n} hours left', endedT:'Ended',
+    codeLb:'If the QR does not scan, enter this code', aSend:'Send link', aBig:'Show large', aPrint:'Print card',
+    honest:'They can reach you without installing anything. Your number is never shown — but we cannot stop them from taking screenshots.',
+    endedBox:'This card has ended. No more contacts will come through it.',
+    convT:'People who reached you', noConv:'No one yet.', person:'Contact {i}', open:'Active', closed:'Closed',
+    people:'{n} people', bCut:'✂ Cut off now', cutAsk:'Cut off now? No one can reach you with this card afterwards. This cannot be undone.',
+    cutDone:'Cut off.', shareText:'You can reach me without my number (until {d})\n{url}\nCode {c}',
+    copied:'Link copied', noTitle:'No label',
+    pHead:'Reach me<br>without my number', pDesc:'Scan for text or call. No app needed.',
+    pUrl:'Or enter the code at aliascall.com/c', pDate:'until {d}',
+  },
+};
+let LANG = (localStorage.getItem('aliascall_lang') || 'ko').indexOf('en') === 0 ? 'en' : 'ko';
+const T = (k, v) => { let s = (I18N[LANG][k] ?? I18N.ko[k] ?? k); if (v) Object.keys(v).forEach((x) => { s = s.split('{' + x + '}').join(v[x]); }); return s; };
+const el = (id) => document.getElementById(id);
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtD = (iso) => new Date(iso).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR', { month:'long', day:'numeric' });
+const link = (tok) => SITE + '/aliascall_connect.html?t=' + encodeURIComponent(tok);
+const fmtCode = (c) => c ? c.slice(0, 3) + ' · ' + c.slice(3) : '';
+function toast(m){ const t = el('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1800); }
+function alive(c){ return !c.ended_at && new Date(c.expires_at) > new Date(); }
+function leftText(c){
+  if (!alive(c)) return T('endedT');
+  const ms = new Date(c.expires_at) - new Date();
+  if (ms < 86400000) return T('leftH', { n: Math.max(1, Math.ceil(ms / 3600000)) });
+  return T('left', { n: Math.ceil(ms / 86400000), d: fmtD(c.expires_at) });
+}
+
+let session = null, cards = [], days = 7, single = true, cur = null;
+const qs = new URLSearchParams(location.search);
+
+function paintText(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = T(n.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach((n) => { n.innerHTML = T(n.dataset.i18nHtml); });
+  el('label').placeholder = T('phLabel');
+  document.querySelectorAll('#days .pill').forEach((b) => { b.textContent = T('d', { n: b.dataset.d }); });
+}
+function show(v){ ['vList', 'vNew', 'vOne'].forEach((x) => el(x).classList.toggle('show', x === v)); window.scrollTo(0, 0); }
+
+async function loadCards(){
+  const r = await sb.rpc('my_temp_cards');
+  if (r.error) throw r.error;
+  cards = r.data || [];
+}
+
+/* ── 목록 ── */
+function paintList(){
+  if (!cards.length) { el('list').innerHTML = '<div class="empty">' + T('empty') + '</div>'; return; }
+  el('list').innerHTML = cards.map((c, i) => {
+    const pct = alive(c) ? Math.max(3, Math.min(100, Math.round((new Date(c.expires_at) - new Date()) / (new Date(c.expires_at) - new Date(c.created_at)) * 100))) : 100;
+    return '<button type="button" class="row' + (alive(c) ? '' : ' dead') + '" data-i="' + i + '">' +
+      '<div class="top"><span class="nm">' + esc(c.label || T('noTitle')) + '</span><span class="cd">' + esc(fmtCode(c.code)) + '</span></div>' +
+      '<div class="meta">' + esc((c.single_person ? T('one') : T('many')) + ' · ' + T('people', { n: c.people || 0 }) + ' · ' + leftText(c)) + '</div>' +
+      '<div class="bar"><i style="width:' + pct + '%"></i></div></button>';
+  }).join('');
+}
+el('list').addEventListener('click', (e) => {
+  const b = e.target.closest('.row'); if (!b) return;
+  const c = cards[+b.dataset.i];
+  history.pushState(null, '', '?id=' + c.id); openOne(c);
+});
+el('goNew').addEventListener('click', () => { history.pushState(null, '', '?new=1'); openNew(); });
+
+/* ── 만들기 ── */
+function paintNew(){
+  document.querySelectorAll('#days .pill').forEach((b) => b.classList.toggle('on', +b.dataset.d === days));
+  document.querySelectorAll('#who button').forEach((b) => b.classList.toggle('on', (b.dataset.s === '1') === single));
+  const d = new Date(Date.now() + days * 86400000);
+  el('untilHint').textContent = T('until', { d: fmtD(d.toISOString()) });
+}
+function openNew(){ el('makeMsg').classList.remove('show'); paintNew(); show('vNew'); }
+el('days').addEventListener('click', (e) => { const b = e.target.closest('.pill'); if (!b) return; days = +b.dataset.d; paintNew(); });
+el('who').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; single = b.dataset.s === '1'; paintNew(); });
+el('makeBtn').addEventListener('click', async () => {
+  const m = el('makeMsg'); m.classList.remove('show');
+  if (!session) { m.innerHTML = T('errLogin'); m.classList.add('show'); return; }
+  const b = el('makeBtn'); b.disabled = true; b.textContent = T('making');
+  try {
+    const r = await sb.rpc('create_temp_card', { p_label: el('label').value.trim(), p_days: days, p_single: single });
+    if (r.error) throw r.error;
+    el('label').value = '';
+    await loadCards();
+    const c = cards.find((x) => x.id === r.data.id);
+    history.replaceState(null, '', '?id=' + r.data.id);
+    if (c) openOne(c);
+  } catch (e) {
+    const s = String(e.message || e);
+    const n = (s.match(/:(\d+)/) || [])[1];
+    m.innerHTML = s.indexOf('plan_required') >= 0 ? T('errPlan')
+      : s.indexOf('limit_live') >= 0 ? esc(T('errLive', { n }))
+      : s.indexOf('limit_day') >= 0 ? esc(T('errDay', { n }))
+      : s.indexOf('login_required') >= 0 ? T('errLogin') : esc(T('errGen'));
+    m.classList.add('show');
+  } finally { b.disabled = false; b.textContent = T('bMake'); }
+});
+
+/* ── 한 장 ── */
+function drawQr(box, text, size){
+  box.innerHTML = '';
+  new QRCode(box, { text, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
+}
+async function openOne(c){
+  cur = c;
+  el('oTag').textContent = c.single_person ? T('one') : T('many');
+  el('oName').textContent = c.label || T('noTitle');
+  el('oCode').textContent = fmtCode(c.code);
+  el('oLeft').textContent = leftText(c);
+  const live = alive(c);
+  el('liveActs').style.display = live ? '' : 'none';
+  el('endedBox').style.display = live ? 'none' : '';
+  el('cutBtn').style.display = live ? '' : 'none';
+  el('qr').style.opacity = live ? '1' : '.25';
+  drawQr(el('qr'), link(c.token), 200);
+  el('oneMsg').classList.remove('show');
+  show('vOne');
+
+  /* 연락 온 분 — 내 등록물의 사건(주인은 볼 수 있습니다) */
+  el('convs').innerHTML = '';
+  try {
+    const { data } = await sb.from('cases').select('id, status, last_activity_at, created_at')
+      .eq('registration_id', c.registration_id).order('created_at', { ascending: true });
+    const list = data || [];
+    el('convs').innerHTML = list.length ? list.map((x, i) =>
+      '<a class="conv" href="aliascall_incoming_calls.html?case=' + encodeURIComponent(x.id) + '"><span>💬</span><span class="tx"><b>' +
+      esc(T('person', { i: i + 1 })) + '</b><span>' + esc((x.status === 'open' ? T('open') : T('closed')) + ' · ' +
+      new Date(x.last_activity_at || x.created_at).toLocaleString(LANG === 'en' ? 'en-US' : 'ko-KR', { month:'numeric', day:'numeric', hour:'numeric', minute:'2-digit' })) +
+      '</span></span><span>›</span></a>').join('')
+      : '<div class="empty" style="padding:14px;">' + esc(T('noConv')) + '</div>';
+  } catch (e) { console.warn('[temp] 연락 온 분을 못 읽었습니다', e); }
+}
+
+el('aSend').addEventListener('click', async () => {
+  if (!cur) return;
+  const text = T('shareText', { d: fmtD(cur.expires_at), url: link(cur.token), c: fmtCode(cur.code) });
+  /* 앱: 자바 창구(버전 5) · 브라우저: 공유창 · 그것도 없으면 복사 */
+  if (window.AliasNative && typeof AliasNative.shareText === 'function') { AliasNative.shareText(text, T('tList')); return; }
+  if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(text); toast(T('copied')); } catch (e) { prompt('', text); }
+});
+el('aBig').addEventListener('click', () => {
+  if (!cur) return;
+  drawQr(el('bigQr'), link(cur.token), Math.min(340, window.innerWidth - 60));
+  el('bigCode').textContent = fmtCode(cur.code);
+  el('big').classList.add('show');
+});
+el('bigClose').addEventListener('click', () => el('big').classList.remove('show'));
+el('aPrint').addEventListener('click', () => {
+  if (!cur) return;
+  drawQr(el('pQr'), link(cur.token), 300);
+  el('pCode').textContent = fmtCode(cur.code);
+  el('pDate').textContent = T('pDate', { d: fmtD(cur.expires_at) });
+  /* 앱 안에서는 window.print 가 아무 일도 하지 않습니다(부름 함정 98) — 자바 창구로 */
+  setTimeout(() => {
+    if (window.AliasNative && typeof AliasNative.printPage === 'function') AliasNative.printPage('Aliascall ' + cur.code);
+    else window.print();
+  }, 300);
+});
+el('cutBtn').addEventListener('click', async () => {
+  if (!cur || !confirm(T('cutAsk'))) return;
+  const r = await sb.rpc('end_temp_card', { p_id: cur.id });
+  if (r.error || !r.data) { el('oneMsg').textContent = T('errGen'); el('oneMsg').classList.add('show'); return; }
+  toast(T('cutDone'));
+  await loadCards();
+  const c = cards.find((x) => x.id === cur.id); if (c) openOne(c);
+});
+
+/* 뒤로 */
+el('backBtn').addEventListener('click', () => {
+  if (el('vList').classList.contains('show')) { location.href = 'index.html'; return; }
+  history.pushState(null, '', location.pathname); paintList(); show('vList');
+});
+window.addEventListener('popstate', route);
+
+async function route(){
+  const p = new URLSearchParams(location.search);
+  if (p.get('new')) return openNew();
+  const id = p.get('id');
+  const c = id ? cards.find((x) => x.id === id) : null;
+  if (c) return openOne(c);
+  paintList(); show('vList');
+}
+
+(async function(){
+  paintText();
+  try { session = (await sb.auth.getSession()).data.session; } catch (e) {}
+  if (session) { try { await loadCards(); } catch (e) { console.warn('[temp] 목록을 못 읽었습니다', e); } }
+  route();
+})();
+</script>
+</body>
+</html>

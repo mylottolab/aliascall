@@ -283,9 +283,23 @@ function normalize(s){ return (s || '').replace(/[\s\-]/g, '').toLowerCase(); }
 // registrations.search_key ilike 검색 + 카테고리 필터. status='active'인 것만
 // (RLS "누구나 활성 등록 검색 가능" 정책 덕분에 비로그인 상태로도 조회됨 — aliascall_functions_v1.sql 참고)
 async function fetchResults(query){
+  /* 🔴 2026-09-28 — 1회용 임시연락처의 6자 코드(예: B7K42Q)를 넣으면 곧바로 연락 화면으로.
+     임시연락처는 공개 목록에는 절대 나오지 않습니다(DB 가 숨김). 코드를 아는 사람만 들어갑니다. */
+  const code = String(query || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (code.length === 6 && /[A-Z]/.test(code) && /[0-9]/.test(code)) {
+    try {
+      const tr = await sb.rpc('temp_card_public', { p_token: null, p_code: code, p_finder: null });
+      if (tr.data && tr.data.token) {
+        location.href = 'aliascall_connect.html?t=' + encodeURIComponent(tr.data.token);
+        return { data: [], error: null };
+      }
+    } catch (e) { /* 코드가 아니면 보통 검색으로 */ }
+  }
+
   let q = sb.from('registrations')
     .select('id, category, search_key, title, description, qr_code_token')
     .eq('status', 'active')
+    .neq('category', 'temp_contact')      // 2026-09-28 — 주인 본인이 검색해도 임시연락처는 빼고
     .limit(20);
 
   if (currentFilter !== 'all') q = q.eq('category', currentFilter);

@@ -153,7 +153,7 @@ const I18N = {
     loginNeed:'긴급 통화기록은 로그인해야 보입니다.<br><a href="aliascall_my_account.html">로그인하러 가기</a>',
     emptyEmg:'아직 긴급 통화가 없습니다.<br>등록물의 QR로 음성·영상 연결이 오면 여기에 남습니다.',
     emptyLine:'아직 회선 통화가 없습니다.<br>회선 대화방에서 음성·영상 통화를 하면 여기에 남습니다.',
-    emptyTemp:'1회용 임시연락처가 곧 열립니다.<br>그걸로 한 통화가 여기에 남습니다.',
+    emptyTemp:'아직 임시연락처로 한 통화가 없습니다.<br>임시연락처로 음성 · 영상 연결이 오면 여기에 남습니다.', tempName:'임시연락처',
     noteEmg:'문자로만 오간 연락은 연락처의 [긴급]에서 보실 수 있습니다.',
     noteLine:'초대받은 회선의 통화는 이 폰에만 기록됩니다.',
     sec:'초', min:'분', hr:'시간',
@@ -170,7 +170,7 @@ const I18N = {
     loginNeed:'Sign in to see emergency calls.<br><a href="aliascall_my_account.html">Go to sign in</a>',
     emptyEmg:'No emergency calls yet.<br>Voice or video calls through your item QR will appear here.',
     emptyLine:'No line calls yet.<br>Voice or video calls in your line chats will appear here.',
-    emptyTemp:'One-time contact cards are coming soon.<br>Calls made that way will appear here.',
+    emptyTemp:'No calls through one-time cards yet.', tempName:'One-time card',
     noteEmg:'Text-only contacts are under Contacts → Emergency.',
     noteLine:'Calls in lines you joined are kept on this phone only.',
     sec:'s', min:'m', hr:'h',
@@ -213,6 +213,7 @@ function dur(a, b){
 const params = new URLSearchParams(location.search);
 let tab = ['line','emergency','temp'].includes(params.get('tab')) ? params.get('tab') : 'emergency';
 let session = null, emg = null, lines = null, emgError = false, lineError = false;
+let tempCalls = [];   // 2026-09-28 — 임시연락처 통화
 let serverLabels = {};
 function localLabels(){ try { return JSON.parse(localStorage.getItem('aliascall_contact_labels_local') || '{}') || {}; } catch (e) { return {}; } }
 
@@ -227,6 +228,7 @@ async function loadLabels(){
 
 // 긴급 — 내 등록물로 온 음성·영상
 async function loadEmergency(){
+  tempCalls = [];
   emg = []; emgError = false;
   if (!session) return;
   try {
@@ -250,10 +252,12 @@ async function loadEmergency(){
         status = t.missed; miss = true;   // 응답 없음 · 받기 전에 상대가 나감
       }
       const label = r.case_id ? serverLabels['emergency|' + r.case_id] : '';
-      emg.push({
+      const isTemp = r.category === 'temp_contact';   // 2026-09-28 — [임시] 갈래로
+      (isTemp ? tempCalls : emg).push({
         at: r.created_at,
         icon: (out ? '↗ ' : '↙ ') + (r.call_type === 'video' ? '🎥' : '📞'),
-        emoji: CAT_EMOJI[r.category] || '❓',
+        emoji: isTemp ? '🎫' : (CAT_EMOJI[r.category] || '❓'),
+        caseId: r.case_id,
         name: label || (r.registration_title || t.item),
         who: label ? (r.registration_title || t.item) + ' · ' + t.finder : t.finder,
         mode: r.call_type === 'video' ? t.video : t.voice,
@@ -263,6 +267,19 @@ async function loadEmergency(){
         kind: 'emg',
       });
     });
+    /* 임시연락처 통화 — 주인이 붙인 이름표로 보여줍니다 */
+    if (tempCalls.length) {
+      try {
+        const ids = [...new Set(tempCalls.map((x) => x.caseId).filter(Boolean))];
+        const [cs, tc] = await Promise.all([
+          sb.from('cases').select('id, registration_id').in('id', ids),
+          sb.rpc('my_temp_cards'),
+        ]);
+        const regOf = {}; (cs.data || []).forEach((c) => { regOf[c.id] = c.registration_id; });
+        const lab = {}; (tc.data || []).forEach((c) => { lab[c.registration_id] = c.label || c.code; });
+        tempCalls.forEach((x) => { x.name = lab[regOf[x.caseId]] || T().tempName; x.who = T().tempName; });
+      } catch (e) { tempCalls.forEach((x) => { x.name = T().tempName; x.who = ''; }); }
+    }
   } catch (e) { console.warn('[calls] 긴급 읽기 실패', e); emgError = true; }
 }
 
@@ -340,7 +357,11 @@ function paint(){
   document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
   const box = document.getElementById('box'), note = document.getElementById('note');
   note.textContent = '';
-  if (tab === 'temp') { box.innerHTML = '<div class="empty">' + t.emptyTemp + '</div>'; return; }
+  if (tab === 'temp') {
+    if (!session) { box.innerHTML = '<div class="empty">' + t.loginNeed + '</div>'; return; }
+    box.innerHTML = tempCalls.length ? listHtml(tempCalls) : '<div class="empty">' + t.emptyTemp + '</div>';
+    return;
+  }
   if (tab === 'emergency') {
     if (!session) { box.innerHTML = '<div class="empty">' + t.loginNeed + '</div>'; return; }
     if (emg === null) { box.innerHTML = '<div class="empty">' + esc(t.loading) + '</div>'; return; }

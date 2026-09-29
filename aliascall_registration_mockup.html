@@ -13,7 +13,7 @@
 <meta name="theme-color" content="#1F6F6B">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_payments.js"></script>
-<script src="aliascall_pet_ai_payments.js"></script>
+<!-- 2026-09-28: 반려동물 AI 구독은 판매하지 않습니다(기능이 없음). aliascall_pet_ai_payments.js 를 부르지 않습니다. -->
 <script src="aliascall_push.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -133,6 +133,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 /* 2026-08-23 신설: 비문 등록 시 웹/앱 차이 안내 */
 .noseprint-web-note{ font-size:11px; color:var(--ink-soft); background:rgba(201,162,75,.12); border-left:3px solid #C9A24B; border-radius:0 6px 6px 0; padding:8px 10px; margin-top:8px; line-height:1.5; }
 
+/* 2026-09-28: AI 비문인식 판매를 멈춥니다. 비문 사진 등록은 그대로. */
+#petAiUpsell{ display:none !important; }
 /* 2026-08-23 신설: AI 비문인식 옵션 업셀 */
 .pet-ai-upsell{ background:var(--card); border:1.5px solid #C9A24B; border-radius:14px; padding:16px; margin-top:22px; }
 .pet-ai-upsell-title{ font-size:14px; font-weight:700; margin-bottom:6px; }
@@ -356,7 +358,7 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     </div>
     <div class="tag-card" data-category="pet">
       <span class="tag-emoji">🐾</span>
-      <span class="tag-titles"><div class="tag-ko" data-i18n="catPetTitle">반려동물</div><div class="tag-en" data-i18n="catPetSub">실종 대비 · 비문 인식</div></span>
+      <span class="tag-titles"><div class="tag-ko" data-i18n="catPetTitle">반려동물</div><div class="tag-en" data-i18n="catPetSub">실종 대비 · 비문 사진</div></span>
       <span class="tag-check"></span>
     </div>
     <div class="tag-card" data-category="callback_contact">
@@ -370,6 +372,11 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
       <span class="tag-check"></span>
     </div>
     <div class="error-text" id="err0" data-i18n="err0">등록할 대상을 하나 선택해주세요.</div>
+    <!-- 2026-09-28: 두 기능이 서로를 가리킵니다. 오래 붙여둘 QR = 긴급등록 · 잠깐 쓸 연락처 = 임시연락처 -->
+    <div style="margin-top:14px;background:rgba(255,255,255,.6);border-radius:14px;padding:12px 14px;font-size:12.5px;line-height:1.7;">
+      <span data-i18n="toTemp">🎫 중고거래 · 소개팅 · 매물 안내처럼 잠깐만 쓸 연락처라면 1회용 임시연락처가 알맞습니다. 정한 날에 저절로 끊깁니다.</span>
+      <a href="aliascall_temp.html?new=1" style="font-weight:700;color:var(--teal-deep);" data-i18n="toTempGo">임시연락처 만들기 ›</a>
+    </div>
   </div>
 
   <!-- STEP 1: 공통 정보 -->
@@ -578,9 +585,10 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     <div class="download-row">
       <div>
         <div style="font-weight:600; font-size:14px;" data-i18n="downloadTitle">A4 인쇄용 다운로드</div>
-        <div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;"><span data-i18n="balanceLabel">보유</span> <span id="balanceInline" class="mono">3,200</span>P</div>
+        <!-- 2026-09-28: QR 인쇄는 무료입니다(포인트 없앰). 보유 포인트 줄을 감춥니다. -->
+        <div style="display:none;"><span data-i18n="balanceLabel">보유</span> <span id="balanceInline" class="mono">0</span>P</div>
       </div>
-      <button class="btn btn-primary" id="downloadBtn" style="flex:0 0 auto; padding:12px 20px;" data-i18n="downloadBtn">100P로 다운로드</button>
+      <button class="btn btn-primary" id="downloadBtn" style="flex:0 0 auto; padding:12px 20px;" data-i18n="downloadBtn">무료 다운로드</button>
     </div>
     <button class="btn btn-primary" id="printNowBtn" style="margin-top:10px; background:var(--teal-deep);" data-i18n="printNowBtn">🖨️ 지금 인쇄하기</button>
     <div class="error-text" id="err5" data-i18n="err5">포인트가 부족합니다. 충전 후 다시 시도해주세요.</div>
@@ -638,10 +646,12 @@ const I18N = {
     urgentBanner: '🚨 긴급 등록 모드입니다. <b>결제 없이 바로 등록</b>하실 수 있어요. 등록을 마치면 <a href="aliascall_public_board_mockup.html">찾습니다 게시판</a>에 올리실 수 있습니다.',
     guideLink: '📖 사용설명서',
     step0Title: '무엇을 등록할까요?', step0Desc: '등록 대상에 따라 다음 화면에서 필요한 정보만 물어봅니다.',
+    toTemp: '🎫 중고거래 · 소개팅 · 매물 안내처럼 잠깐만 쓸 연락처라면 1회용 임시연락처가 알맞습니다. 정한 날에 저절로 끊깁니다.',
+    toTempGo: '임시연락처 만들기 ›',
     catVehicleTitle: '차량', catVehicleSub: '주차 연락 · 파손 안내',
     catLostTitle: '분실 · 도난 우려 물품', catLostSub: '가방 · 노트북 · 전자기기',
     catVulnTitle: '아동 · 치매 어르신 · 장애우', catVulnSub: '실종 대비',
-    catPetTitle: '반려동물', catPetSub: '실종 대비 · 비문 인식',
+    catPetTitle: '반려동물', catPetSub: '실종 대비 · 비문 사진',
     catCallbackTitle: '부재중 연락', optionalBadgeCallback: '연락처 남김', catCallbackSub: '번호 노출 없이 연락받기',
     catMiscTitle: '기타 물품 · 사건', catMiscSub: '위 분류에 해당하지 않는 경우',
     err0: '등록할 대상을 하나 선택해주세요.',
@@ -688,7 +698,7 @@ const I18N = {
     printModeFill: '📄 이 사이즈로 가득채우기', printModeSample: '🔀 4개 사이즈 견본으로 섞어찍기',
     printHintFill: 'A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. PC에서는 아래 "지금 인쇄하기"로 바로 프린터 미리보기를 여실 수 있어요.',
     printHintSample: '4개 사이즈를 한 장에 소량씩 섞어 찍어서, 잘라보고 어느 사이즈가 맞는지 먼저 확인하실 수 있어요.',
-    downloadTitle: 'A4 인쇄용 다운로드', balanceLabel: '보유', downloadBtn: '100P로 다운로드',
+    downloadTitle: 'A4 인쇄용 다운로드', balanceLabel: '보유', downloadBtn: '무료 다운로드',
     printNowBtn: '🖨️ 지금 인쇄하기', err5: '포인트가 부족합니다. 충전 후 다시 시도해주세요.', goRecharge: '💰 충전하러 가기',
     guestSimAlert: '지금은 로그인 없이 체험 중이라 포인트 차감이 시뮬레이션으로만 동작합니다.\n실제 서비스에서는 로그인 후 진행하시면 여기서 바로 실제 포인트가 차감됩니다.',
     downloadSuccess: (size, balance) => 'QR 태그(' + size + 'cm)가 다운로드됩니다. 100P가 차감되었습니다. (남은 포인트: ' + balance + 'P)',
@@ -769,6 +779,8 @@ const I18N = {
     urgentBanner: '🚨 Urgent registration mode. You can <b>register now without any payment</b>. Once done, you can post it to the <a href="aliascall_public_board_mockup.html">Lost &amp; Found Board</a>.',
     guideLink: '📖 User Guide',
     step0Title: 'What would you like to register?', step0Desc: "The next screen will only ask what's needed for your choice.",
+    toTemp: '🎫 Need a contact for just a deal, a first meeting or a listing? A one-time contact card fits better — it cuts off on the date you choose.',
+    toTempGo: 'Make a one-time card ›',
     catVehicleTitle: 'Vehicle', catVehicleSub: 'Parking contact · damage notice',
     catLostTitle: 'Lost / at risk of theft', catLostSub: 'Bags · laptops · electronics',
     catVulnTitle: 'Child · Dementia · Disability', catVulnSub: 'In case of going missing',
@@ -819,7 +831,7 @@ const I18N = {
     printModeFill: '📄 Fill the page with this size', printModeSample: '🔀 Mix all 4 sizes as samples',
     printHintFill: 'One A4 sheet will be filled with your chosen size. On PC, "Print now" below opens the print preview directly.',
     printHintSample: 'Print a few of each of the 4 sizes on one sheet so you can cut and test which one fits.',
-    downloadTitle: 'Download for A4 printing', balanceLabel: 'Balance', downloadBtn: 'Download for 100P',
+    downloadTitle: 'Download for A4 printing', balanceLabel: 'Balance', downloadBtn: 'Free download',
     printNowBtn: '🖨️ Print now', err5: 'Not enough points. Please top up and try again.', goRecharge: '💰 Go top up',
     guestSimAlert: "You're trying this without logging in, so the point deduction is only a simulation.\nIn the real service, log in first and points will be deducted for real here.",
     downloadSuccess: (size, balance) => 'Your QR tag (' + size + 'cm) will download. 100P was deducted. (Balance: ' + balance + 'P)',
@@ -1040,48 +1052,24 @@ document.getElementById('goRechargeLink').addEventListener('click', (e) => {
   window.location.href = 'aliascall_recharge_mockup.html?return=' + encodeURIComponent(returnUrl);
 });
 
+/* 🔴 2026-09-28 — QR 인쇄는 무료입니다(포인트를 없앴습니다).
+   포인트를 빼지 않고 바로 내려받습니다. 누가 언제 받았는지만 적어둡니다. */
 async function attemptDownload({ silent } = {}){
   showError('err5', false);
   document.getElementById('goRechargeLink').style.display = 'none';
-  const { data: { session } } = await sb.auth.getSession();
-
-  if (!session) {
-    if (!silent) alert(I18N[currentLang].guestSimAlert);
-    if (mockBalance < 100) { showError('err5', true); document.getElementById('goRechargeLink').style.display = 'inline-flex'; return; }
-    mockBalance -= 100;
-    document.getElementById('balanceInline').textContent = mockBalance.toLocaleString();
-    return;
+  let session = null;
+  try { session = (await sb.auth.getSession()).data.session; } catch (e) {}
+  if (session) {
+    try {
+      await sb.from('qr_download_logs').insert({
+        registration_id: createdRegistration ? createdRegistration.id : null,
+        user_id: session.user.id,
+        label_size: selectedSize,
+        point_transaction_id: null,
+      });
+    } catch (e) { console.warn('[download] 기록 실패(내려받기는 계속합니다)', e); }
   }
-
-  try {
-    const { data, error } = await sb.rpc('apply_point_transaction', {
-      p_user_id: session.user.id,
-      p_amount: -100,
-      p_txn_type: 'spend',
-      p_action_key: 'qr_a4_download',
-      p_ref_id: createdRegistration ? createdRegistration.id : null,
-    });
-    if (error) throw error;
-
-    await sb.from('qr_download_logs').insert({
-      registration_id: createdRegistration ? createdRegistration.id : null,
-      user_id: session.user.id,
-      label_size: selectedSize,
-      point_transaction_id: data.id,
-    });
-
-    document.getElementById('balanceInline').textContent = Number(data.balance_after).toLocaleString();
-    triggerQrFileDownload(selectedSize); // 2026-08-23 신설: 그동안 빠져있던 실제 파일 다운로드 — 포인트만 차감되고 파일은 안 내려가던 버그 수정
-    alert(I18N[currentLang].downloadSuccess(selectedSize, Number(data.balance_after).toLocaleString()));
-  } catch (e) {
-    console.error('[download] apply_point_transaction 호출 오류', e);
-    if (String(e.message || '').includes(I18N.ko.insufficientPoints) || String(e.message || '').toLowerCase().includes('insufficient')) {
-      showError('err5', true);
-      document.getElementById('goRechargeLink').style.display = 'inline-flex';
-    } else if (!silent) {
-      alert(I18N[currentLang].downloadFailed);
-    }
-  }
+  triggerQrFileDownload(selectedSize);
 }
 
 document.getElementById('downloadBtn').addEventListener('click', () => attemptDownload());
