@@ -1343,6 +1343,12 @@ function generateRealQrCode(token){
 // 고화질 QR을 별도로 새로 만들어 저장함
 function triggerQrFileDownload(size){
   if (!createdRegistration) return;
+  /* 🔴 2026-09-29 — 앱 안에서는 <a download> 가 아무 일도 하지 않습니다.
+     그래서 앱에서는 인쇄 창을 열어 "PDF로 저장" 하거나 바로 인쇄하게 합니다. */
+  if (window.AliasNative && typeof AliasNative.printPage === 'function') {
+    const pb = document.getElementById('printNowBtn');
+    if (pb) { pb.click(); return; }
+  }
   const tempBox = document.createElement('div');
   tempBox.style.cssText = 'position:fixed; left:-9999px; top:-9999px;';
   document.body.appendChild(tempBox);
@@ -1703,7 +1709,10 @@ document.getElementById('printNowBtn').addEventListener('click', () => {
     });
   });
 
-  window.print();
+  /* 🔴 2026-09-29 — 앱 안에서는 window.print 가 아무 일도 하지 않습니다(부름 함정 98).
+     버전 5 의 자바 창구로 인쇄합니다. 인쇄 창에서 "PDF로 저장" 도 됩니다. */
+  if (window.AliasNative && typeof AliasNative.printPage === 'function') AliasNative.printPage('Aliascall QR');
+  else window.print();
 });
 
 // =====================================================

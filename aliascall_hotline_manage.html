@@ -6,6 +6,8 @@
 <title>Aliascall — 핫라인 관리</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_push.js"></script>
+<!-- 2026-09-29: 초대 QR 을 그리는 도구 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -42,6 +44,23 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 .hl-item-meta{ font-size:12px; color:var(--ink-soft); margin-bottom:12px; }
 
 .invite-row{ display:flex; gap:6px; margin-bottom:14px; }
+/* 2026-09-29 — 초대 단추 셋 · 이름 바꾸기 · QR 크게 */
+.inv-acts{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:6px; }
+.inv-acts button{ min-height:48px; border:1.5px solid var(--line); background:#fff; border-radius:12px; font-size:12.5px; font-weight:700; color:var(--ink); cursor:pointer; font-family:inherit; }
+.inv-acts button.main{ background:var(--teal); border-color:var(--teal); color:#fff; }
+.inv-link{ font-size:10.5px; font-family:'IBM Plex Mono',monospace; color:var(--ink-soft); word-break:break-all; margin:0 2px 10px; }
+.inv-sec{ font-size:11.5px; color:#8E2F12; margin:-2px 2px 10px; }
+.ttl-row{ display:flex; align-items:center; gap:6px; }
+.ttl-edit{ border:none; background:none; font-size:15px; cursor:pointer; padding:4px 6px; min-width:36px; min-height:36px; }
+.ttl-box{ display:none; gap:6px; margin:6px 0 10px; }
+.ttl-box.show{ display:flex; }
+.ttl-box input{ flex:1; border:1.5px solid var(--line); border-radius:10px; padding:9px 11px; font-size:14px; font-family:inherit; }
+.ttl-box button{ border:none; border-radius:10px; padding:0 14px; font-weight:700; cursor:pointer; background:var(--teal); color:#fff; font-family:inherit; }
+.qr-big{ display:none; position:fixed; inset:0; background:#fff; z-index:80; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; text-align:center; }
+.qr-big.show{ display:flex; }
+.qr-big .t{ font-size:17px; font-weight:700; }
+.qr-big .d{ font-size:13px; color:var(--ink-soft); line-height:1.6; max-width:320px; }
+.qr-big button{ position:absolute; top:calc(16px + env(safe-area-inset-top,0px)); right:16px; min-width:48px; min-height:48px; border:none; border-radius:24px; background:var(--teal-tint); font-size:20px; cursor:pointer; }
 .key-missing-box{ background:rgba(201,162,75,.12); border:1px dashed var(--brass); border-radius:10px; padding:11px 12px; font-size:11.5px; color:var(--ink-soft); margin-bottom:14px; line-height:1.5; }
 
 /* 2026-08-23 신설: 만료 후 파일삭제 예정 경고 배너 */
@@ -283,6 +302,12 @@ const I18N = {
     keyPlaceholder: '여기에 열쇠(#k= 뒷부분)를 붙여넣으세요',
     keySave: '저장',
     copy: '복사', copied: '복사됨!',
+    invSend: '🔗 초대 보내기', invQr: '▦ QR 보여주기', invCopy: '📋 복사',
+    invText: '번호 없이 대화하는 회선 "{n}"에 초대합니다. 아래 링크를 눌러 들어오세요.\n{u}',
+    invSec: '🔒 암호화 회선입니다. 링크 끝의 #k= 부분까지 그대로 보내야 들어올 수 있습니다.',
+    invQrT: '폰 카메라로 찍으면 바로 들어옵니다', invQrD: '마주 앉아 있을 때 상대에게 이 화면을 보여주세요. 링크를 따로 보내지 않아도 됩니다.',
+    copiedToast: '링크를 복사했습니다. 카카오톡이나 문자에 붙여넣어 보내세요.',
+    ttlEdit: '회선 이름 바꾸기', ttlSave: '저장', ttlPh: '예) 아내와 · 김 과장 · 우리 가족', ttlFail: '이름을 바꾸지 못했습니다.',
     openRoom: '💬 대화방 열기',
     alertNeedKey: '열쇠를 입력해주세요.',
     alertActionFail: '처리에 실패했어요.',
@@ -370,6 +395,12 @@ const I18N = {
     keyPlaceholder: 'Paste the key (the part after #k=) here',
     keySave: 'Save',
     copy: 'Copy', copied: 'Copied!',
+    invSend: '🔗 Send invite', invQr: '▦ Show QR', invCopy: '📋 Copy',
+    invText: 'You are invited to the private line "{n}" — no phone numbers needed. Tap the link to join:\n{u}',
+    invSec: '🔒 Encrypted line: send the whole link including the #k= part.',
+    invQrT: 'Scan with a phone camera to join', invQrD: 'Show this screen when you are together. No need to send a link.',
+    copiedToast: 'Link copied. Paste it into a message to send.',
+    ttlEdit: 'Rename line', ttlSave: 'Save', ttlPh: 'e.g. My wife · Mr. Kim · Family', ttlFail: 'Could not rename the line.',
     openRoom: '💬 Open the room',
     alertNeedKey: 'Please enter the key.',
     alertActionFail: "Couldn't complete that.",
@@ -980,12 +1011,9 @@ function renderRoomRow(sub, r){
   const copyBtn = document.createElement('button');
   copyBtn.type = 'button'; copyBtn.textContent = T('roomCopy');
   copyBtn.addEventListener('click', () => {
+    /* 2026-09-29 — 앱에서는 보내기 창, 아니면 복사 */
     const url = `${window.location.origin}/aliascall_hotline_join.html?t=${r.invite_token}`;
-    navigator.clipboard.writeText(url).then(() => {
-      const o = copyBtn.textContent;
-      copyBtn.textContent = T('copied');
-      setTimeout(() => { copyBtn.textContent = o; }, 1400);
-    });
+    shareInvite(url, r.title || '');
   });
   acts.appendChild(copyBtn);
 
@@ -1187,10 +1215,14 @@ async function renderHotlineItem(h){
       </div>
     </div>
   ` : `
-    <div class="invite-row">
-      <input type="text" readonly value="${inviteUrl}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <button data-action="copy-invite" data-url="${inviteUrl}">${T('copy')}</button>
+    <!-- 2026-09-29 — 초대: 보내기 창 · QR · 복사 (앱에서는 보내기 창구, 없으면 복사) -->
+    <div class="inv-acts">
+      <button type="button" class="main" data-action="share-invite" data-url="${inviteUrl}" data-name="${escAttr(h.title || tierLabel(h.tier))}">${T('invSend')}</button>
+      <button type="button" data-action="qr-invite" data-url="${inviteUrl}">${T('invQr')}</button>
+      <button type="button" data-action="copy-invite" data-url="${inviteUrl}">${T('invCopy')}</button>
     </div>
+    <div class="inv-link">${inviteUrl}</div>
+    ${secure ? `<div class="inv-sec">${T('invSec')}</div>` : ''}
     <button class="req-btn approve" style="width:100%; margin-bottom:12px; padding:9px;" onclick="window.location.href='${roomUrl}'">${T('openRoom')}</button>
   `;
 
@@ -1200,7 +1232,12 @@ async function renderHotlineItem(h){
         <span class="hl-item-callsign">${tierLabel(h.tier)}</span>
         <span class="hl-item-expiry">~${expiresLabel}</span>
       </div>
-      <div class="hl-item-title">${h.title || tierLabel(h.tier)}</div>
+      <div class="ttl-row"><div class="hl-item-title" style="flex:1;">${escAttr(h.title || tierLabel(h.tier))}</div>
+        <button type="button" class="ttl-edit" data-action="ttl-edit" data-hotline="${h.id}" aria-label="${T('ttlEdit')}" title="${T('ttlEdit')}">✏️</button></div>
+      <div class="ttl-box" data-ttl-box="${h.id}">
+        <input type="text" maxlength="30" value="${escAttr(h.title || '')}" placeholder="${T('ttlPh')}" data-ttl-input="${h.id}" data-label="${escAttr(h.client_label || '')}">
+        <button type="button" data-action="ttl-save" data-hotline="${h.id}">${T('ttlSave')}</button>
+      </div>
       <div class="hl-item-meta">${(members || []).length} / ${h.max_participants}${LANG === 'en' ? ' joined' : '명 참가 중'}</div>
 
       ${expiryWarningHtml}
@@ -1216,14 +1253,71 @@ async function renderHotlineItem(h){
   `;
 }
 
+/* 2026-09-29 — 초대 보내기 · QR · 이름 바꾸기 */
+function escAttr(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function acToast(m){
+  let t = document.getElementById('acToast');
+  if (!t) {
+    t = document.createElement('div'); t.id = 'acToast';
+    t.style.cssText = 'position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#12302E;color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:20px;z-index:90;max-width:88vw;text-align:center;line-height:1.5;';
+    document.body.appendChild(t);
+  }
+  t.textContent = m; t.style.display = 'block';
+  clearTimeout(acToast._t); acToast._t = setTimeout(() => { t.style.display = 'none'; }, 3200);
+}
+async function shareInvite(url, name){
+  const text = T('invText').replace('{n}', name || '').replace('{u}', url);
+  /* 앱: 자바 보내기 창구(버전 5) · 브라우저: 공유창 · 없으면 복사 */
+  if (window.AliasNative && typeof AliasNative.shareText === 'function') { AliasNative.shareText(text, T('invSend')); return; }
+  if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(text); acToast(T('copiedToast')); } catch (e) { prompt('', text); }
+}
+function showInviteQr(url){
+  let o = document.getElementById('qrBig');
+  if (!o) {
+    o = document.createElement('div'); o.id = 'qrBig'; o.className = 'qr-big'; o.setAttribute('role', 'dialog');
+    o.innerHTML = '<button type="button" aria-label="닫기">✕</button><div class="t"></div><div id="qrBigBox"></div><div class="d"></div>';
+    o.querySelector('button').addEventListener('click', () => o.classList.remove('show'));
+    document.body.appendChild(o);
+  }
+  o.querySelector('.t').textContent = T('invQrT');
+  o.querySelector('.d').textContent = T('invQrD');
+  const box = o.querySelector('#qrBigBox'); box.innerHTML = '';
+  const size = Math.min(320, window.innerWidth - 60);
+  if (window.QRCode) new QRCode(box, { text: url, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
+  o.classList.add('show');
+}
+
 function wireHotlineItems(){
   document.querySelectorAll('[data-action="copy-invite"]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      navigator.clipboard.writeText(btn.dataset.url).then(() => {
-        const original = btn.textContent;
-        btn.textContent = T('copied');
-        setTimeout(() => { btn.textContent = original; }, 1500);
-      });
+      navigator.clipboard.writeText(btn.dataset.url).then(() => acToast(T('copiedToast')));
+    });
+  });
+  document.querySelectorAll('[data-action="share-invite"]').forEach((btn) => {
+    btn.addEventListener('click', () => shareInvite(btn.dataset.url, btn.dataset.name));
+  });
+  document.querySelectorAll('[data-action="qr-invite"]').forEach((btn) => {
+    btn.addEventListener('click', () => showInviteQr(btn.dataset.url));
+  });
+  document.querySelectorAll('[data-action="ttl-edit"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const box = document.querySelector('[data-ttl-box="' + btn.dataset.hotline + '"]');
+      box.classList.toggle('show');
+      if (box.classList.contains('show')) box.querySelector('input').focus();
+    });
+  });
+  document.querySelectorAll('[data-action="ttl-save"]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.hotline;
+      const inp = document.querySelector('[data-ttl-input="' + id + '"]');
+      btn.disabled = true;
+      try {
+        /* 프로 방과 같은 함수 — 손님에게 보이는 이름(title)만 바꾸고 메모(client_label)는 그대로 */
+        const { data, error } = await sb.rpc('set_room_names', { p_hotline_id: id, p_label: inp.dataset.label || '', p_title: inp.value.trim() });
+        if (error || !data || !data.ok) throw new Error((data && data.error) || (error && error.message) || '');
+        await loadHotlines();
+      } catch (e) { console.error('[lines] 이름 바꾸기 실패', e); alert(T('ttlFail') + (e.message ? '\n' + e.message : '')); btn.disabled = false; }
     });
   });
 
