@@ -111,23 +111,50 @@ main{ max-width:430px; margin:0 auto; padding:10px 20px 60px; }
 .big .code{ font-size:40px; }
 .big button{ position:absolute; top:calc(16px + env(safe-area-inset-top,0px)); right:16px; min-width:48px; min-height:48px; border:none; border-radius:24px; background:var(--teal-tint); font-size:20px; cursor:pointer; }
 
-/* 명함 인쇄 — 90 × 50 mm */
-.print-card{ display:none; }
+/* 명함 인쇄 — A4 한 장에 같은 명함 10장 (2줄 × 5칸) + 점선 자르는 선
+   🔴 2026-09-29 — 처음에는 90×50mm 한 장만 찍었는데, 폰 인쇄가 종이를 A4 로 정하고
+     그 가운데 작게(약 70%) 올렸습니다. 명함 용지는 집에 거의 없으니 A4 에 10장을 찍고
+     가위로 자르게 합니다. 칸을 종이 폭의 비율로 나눠서, 폰이 크기를 줄여도 반듯합니다. */
+.print-sheet{ display:none; }
 @media print{
-  @page{ size:90mm 50mm; margin:0; }
-  body{ background:#fff; padding:0; }
+  @page{ size:A4; margin:10mm; }
+  html, body{ background:#fff !important; padding:0 !important; margin:0 !important; }
   header, main, .big, .toast{ display:none !important; }
-  .print-card{ display:flex; width:90mm; height:50mm; box-sizing:border-box; padding:5mm; gap:4mm; align-items:center; font-family:'Inter',sans-serif; color:#16201E; }
-  .print-card .pq{ width:34mm; height:34mm; flex-shrink:0; }
-  .print-card .pq img, .print-card .pq canvas{ width:34mm !important; height:34mm !important; }
-  .print-card .pt{ display:flex; flex-direction:column; gap:1.6mm; }
-  .print-card .pdate{ align-self:flex-start; font-size:7pt; font-weight:700; background:#F4E6C6; color:#6B4A12; border-radius:6pt; padding:0.6mm 2mm; }
-  .print-card .ph{ font-size:12pt; font-weight:800; line-height:1.25; }
-  .print-card .pd{ font-size:6.5pt; line-height:1.45; color:#4A5553; }
-  .print-card .pc{ font-family:'Space Grotesk',monospace; font-size:12pt; font-weight:700; letter-spacing:1.2pt; }
-  .print-card .pu{ font-size:6pt; color:#5C6664; }
+  .print-sheet{ display:grid; grid-template-columns:1fr 1fr; width:100%; }
+  .pcard{ aspect-ratio:9 / 5; box-sizing:border-box; border:0.3mm dashed #B5B5B5; margin:-0.15mm;
+          display:flex; align-items:center; gap:4%; padding:4.5%; font-family:'Inter',sans-serif; color:#16201E;
+          break-inside:avoid; page-break-inside:avoid; }
+  .pcard .pq{ height:78%; aspect-ratio:1 / 1; flex-shrink:0; }
+  .pcard .pq img{ width:100%; height:100%; display:block; image-rendering:pixelated; }
+  .pcard .pt{ display:flex; flex-direction:column; gap:1.3mm; min-width:0; }
+  .pcard .pdate{ align-self:flex-start; font-size:6.5pt; font-weight:700; background:#F4E6C6; color:#6B4A12; border-radius:6pt; padding:0.4mm 1.8mm; }
+  .pcard .ph{ font-size:11pt; font-weight:800; line-height:1.22; }
+  .pcard .pd{ font-size:6pt; line-height:1.4; color:#4A5553; }
+  .pcard .pu{ font-size:5.5pt; color:#5C6664; }
+  .pcard .pc{ font-family:'Space Grotesk',monospace; font-size:11pt; font-weight:700; letter-spacing:1pt; }
+  .pnote{ grid-column:1 / -1; text-align:center; font-size:7pt; color:#8A8F8E; padding-top:3mm; }
+  /* 15장 — 세 줄 × 다섯 칸, 작은 명함(약 63 × 35mm) */
+  .print-sheet.n15{ grid-template-columns:1fr 1fr 1fr; }
+  .n15 .pcard{ gap:3.5%; padding:4%; }
+  .n15 .pcard .pq{ height:82%; }
+  .n15 .pcard .pt{ gap:0.8mm; }
+  .n15 .pcard .pdate{ font-size:5pt; padding:0.3mm 1.3mm; }
+  .n15 .pcard .ph{ font-size:8pt; }
+  .n15 .pcard .pd{ display:none; }
+  .n15 .pcard .pu{ font-size:4.3pt; }
+  .n15 .pcard .pc{ font-size:8.5pt; letter-spacing:0.6pt; }
 }
-.toast{ position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:#12302E; color:#fff;
+/* 몇 장 찍을지 고르는 창 */
+.pick{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:55; align-items:flex-end; justify-content:center; }
+.pick.show{ display:flex; }
+.pick .box{ background:#fff; width:100%; max-width:430px; border-radius:20px 20px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px)); }
+.pick h3{ font-size:17px; margin-bottom:4px; }
+.pick p{ font-size:12.5px; color:var(--ink-soft); margin:0 0 14px; line-height:1.6; }
+.pick .opt{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:#fff; border:1.5px solid #D5D2CA; border-radius:14px; padding:14px; margin-bottom:8px; font-family:inherit; color:inherit; cursor:pointer; }
+.pick .opt b{ display:block; font-size:15px; } .pick .opt span{ font-size:12.5px; color:var(--ink-soft); }
+.pick .ic{ font-size:26px; }
+.pick .cancel{ width:100%; border:none; background:var(--teal-tint); color:var(--teal-deep); border-radius:12px; padding:13px; font-family:inherit; font-size:15px; font-weight:700; margin-top:4px; cursor:pointer; }
+.toast{ position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:#12302E; color:#fff; max-width:88vw; text-align:center; line-height:1.5;
         font-size:13px; font-weight:600; padding:10px 16px; border-radius:20px; display:none; z-index:60; }
 .toast.show{ display:block; }
 button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
@@ -213,17 +240,18 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
   <div class="code" id="bigCode"></div>
 </div>
 
-<!-- 명함 (인쇄할 때만 보입니다) -->
-<div class="print-card" aria-hidden="true">
-  <div class="pq" id="pQr"></div>
-  <div class="pt">
-    <span class="pdate" id="pDate"></span>
-    <div class="ph" data-i18n-html="pHead">번호 없이<br>연락하세요</div>
-    <div class="pd" data-i18n="pDesc">QR을 찍으면 바로 문자 · 전화. 앱 설치는 필요 없습니다.</div>
-    <div class="pu" data-i18n="pUrl">안 찍히면 aliascall.com/c 에서 코드 입력</div>
-    <div class="pc" id="pCode"></div>
+<!-- 명함 (인쇄할 때만 보입니다) — A4 에 10장. 한 장은 JS 가 만들어 10번 복사합니다 -->
+<div class="print-sheet" id="printSheet" aria-hidden="true"></div>
+<div class="pick" id="pick" role="dialog" aria-label="명함 인쇄">
+  <div class="box">
+    <h3 data-i18n="pkT">A4 한 장에 몇 장 찍을까요?</h3>
+    <p data-i18n="pkD">같은 명함이 점선과 함께 찍힙니다. 가위로 잘라 쓰세요. 인쇄 창에서 "PDF로 저장"도 됩니다.</p>
+    <button type="button" class="opt" data-n="10"><span class="ic">🪪</span><span><b data-i18n="pk10">10장 · 명함 크기</b><span data-i18n="pk10d">약 9 × 5cm · 두 줄 × 다섯 칸</span></span></button>
+    <button type="button" class="opt" data-n="15"><span class="ic">🎫</span><span><b data-i18n="pk15">15장 · 작은 크기</b><span data-i18n="pk15d">약 6.3 × 3.5cm · 세 줄 × 다섯 칸</span></span></button>
+    <button type="button" class="cancel" id="pickNo" data-i18n="cancel">취소</button>
   </div>
 </div>
+<div id="qrTmp" style="position:absolute;left:-9999px;top:0;" aria-hidden="true"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -255,9 +283,12 @@ const I18N = {
     convT:'연락 온 분', noConv:'아직 연락 온 분이 없습니다.', person:'연락 {i}', open:'진행 중', closed:'끝난 대화',
     people:'연락 온 분 {n}명', bCut:'✂ 지금 끊기', cutAsk:'지금 끊을까요? 끊으면 이 연락처로는 더는 연락이 오지 않습니다. 되돌릴 수 없습니다.',
     cutDone:'끊었습니다.', shareText:'번호 없이 연락하실 수 있어요 ({d}까지)\n{url}\n코드 {c}',
-    copied:'링크를 복사했습니다', noTitle:'이름표 없음',
+    copied:'링크를 복사했습니다. 카카오톡이나 문자에 붙여넣어 보내세요.', noTitle:'이름표 없음',
     pHead:'번호 없이<br>연락하세요', pDesc:'QR을 찍으면 바로 문자 · 전화. 앱 설치는 필요 없습니다.',
     pUrl:'안 찍히면 aliascall.com/c 에서 코드 입력', pDate:'{d}까지',
+    pCut:'✂ 점선을 따라 잘라 쓰세요. 같은 명함 {n}장입니다.',
+    pkT:'A4 한 장에 몇 장 찍을까요?', pkD:'같은 명함이 점선과 함께 찍힙니다. 가위로 잘라 쓰세요. 인쇄 창에서 "PDF로 저장"도 됩니다.',
+    pk10:'10장 · 명함 크기', pk10d:'약 9 × 5cm · 두 줄 × 다섯 칸', pk15:'15장 · 작은 크기', pk15d:'약 6.3 × 3.5cm · 세 줄 × 다섯 칸', cancel:'취소',
   },
   en: {
     tList:'One-time contact cards', sList:'A contact you hand out instead of your number. It stops working on the date you pick, or when you cut it off.',
@@ -280,9 +311,12 @@ const I18N = {
     convT:'People who reached you', noConv:'No one yet.', person:'Contact {i}', open:'Active', closed:'Closed',
     people:'{n} people', bCut:'✂ Cut off now', cutAsk:'Cut off now? No one can reach you with this card afterwards. This cannot be undone.',
     cutDone:'Cut off.', shareText:'You can reach me without my number (until {d})\n{url}\nCode {c}',
-    copied:'Link copied', noTitle:'No label',
+    copied:'Link copied. Paste it into a message to send.', noTitle:'No label',
     pHead:'Reach me<br>without my number', pDesc:'Scan for text or call. No app needed.',
     pUrl:'Or enter the code at aliascall.com/c', pDate:'until {d}',
+    pCut:'✂ Cut along the dotted lines — {n} identical cards.',
+    pkT:'How many per A4 sheet?', pkD:'Identical cards with dotted cut lines. You can also "Save as PDF" in the print window.',
+    pk10:'10 · business-card size', pk10d:'about 9 × 5 cm · 2 × 5', pk15:'15 · small size', pk15d:'about 6.3 × 3.5 cm · 3 × 5', cancel:'Cancel',
   },
 };
 let LANG = (localStorage.getItem('aliascall_lang') || 'ko').indexOf('en') === 0 ? 'en' : 'ko';
@@ -292,7 +326,7 @@ const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({'&':'
 const fmtD = (iso) => new Date(iso).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR', { month:'long', day:'numeric' });
 const link = (tok) => SITE + '/aliascall_connect.html?t=' + encodeURIComponent(tok);
 const fmtCode = (c) => c ? c.slice(0, 3) + ' · ' + c.slice(3) : '';
-function toast(m){ const t = el('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1800); }
+function toast(m){ const t = el('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 3200); }
 function alive(c){ return !c.ended_at && new Date(c.expires_at) > new Date(); }
 function leftText(c){
   if (!alive(c)) return T('endedT');
@@ -389,9 +423,18 @@ async function openOne(c){
   drawQr(el('qr'), link(c.token), 200);
   el('oneMsg').classList.remove('show');
   show('vOne');
-
-  /* 연락 온 분 — 내 등록물의 사건(주인은 볼 수 있습니다) */
   el('convs').innerHTML = '';
+  await loadConvs(c);
+  /* 2026-09-29 — 화면을 열어두는 동안 10초마다 새로 읽습니다.
+     처음 한 번만 읽으면, 그 뒤에 연락이 와도 화면을 다시 열어야 보였습니다. */
+  clearInterval(openOne._t);
+  if (live) openOne._t = setInterval(() => {
+    if (el('vOne').classList.contains('show') && cur && cur.id === c.id && !document.hidden) loadConvs(c);
+  }, 10000);
+}
+
+/* 연락 온 분 — 내 등록물의 사건(주인은 볼 수 있습니다) */
+async function loadConvs(c){
   try {
     const { data } = await sb.from('cases').select('id, status, last_activity_at, created_at')
       .eq('registration_id', c.registration_id).order('created_at', { ascending: true });
@@ -420,17 +463,33 @@ el('aBig').addEventListener('click', () => {
   el('big').classList.add('show');
 });
 el('bigClose').addEventListener('click', () => el('big').classList.remove('show'));
-el('aPrint').addEventListener('click', () => {
-  if (!cur) return;
-  drawQr(el('pQr'), link(cur.token), 300);
-  el('pCode').textContent = fmtCode(cur.code);
-  el('pDate').textContent = T('pDate', { d: fmtD(cur.expires_at) });
+el('aPrint').addEventListener('click', () => { if (cur) el('pick').classList.add('show'); });
+el('pickNo').addEventListener('click', () => el('pick').classList.remove('show'));
+el('pick').addEventListener('click', (e) => {
+  if (e.target === el('pick')) { el('pick').classList.remove('show'); return; }
+  const o = e.target.closest('.opt'); if (!o || !cur) return;
+  el('pick').classList.remove('show');
+  printCards(+o.dataset.n);
+});
+
+/* A4 한 장에 n장(10 · 15). QR 을 한 번 그려 그림으로 받아 n번 넣습니다. */
+function printCards(n){
+  drawQr(el('qrTmp'), link(cur.token), 480);
+  const cv = el('qrTmp').querySelector('canvas');
+  const src = cv ? cv.toDataURL('image/png') : ((el('qrTmp').querySelector('img') || {}).src || '');
+  const one = '<div class="pcard"><div class="pq"><img alt="" src="' + src + '"></div><div class="pt">' +
+    '<span class="pdate">' + esc(T('pDate', { d: fmtD(cur.expires_at) })) + '</span>' +
+    '<div class="ph">' + T('pHead') + '</div><div class="pd">' + esc(T('pDesc')) + '</div>' +
+    '<div class="pu">' + esc(T('pUrl')) + '</div><div class="pc">' + esc(fmtCode(cur.code)) + '</div></div></div>';
+  const sheet = el('printSheet');
+  sheet.className = 'print-sheet' + (n === 15 ? ' n15' : '');
+  sheet.innerHTML = one.repeat(n) + '<div class="pnote">' + esc(T('pCut', { n })) + '</div>';
   /* 앱 안에서는 window.print 가 아무 일도 하지 않습니다(부름 함정 98) — 자바 창구로 */
   setTimeout(() => {
     if (window.AliasNative && typeof AliasNative.printPage === 'function') AliasNative.printPage('Aliascall ' + cur.code);
     else window.print();
   }, 300);
-});
+}
 el('cutBtn').addEventListener('click', async () => {
   if (!cur || !confirm(T('cutAsk'))) return;
   const r = await sb.rpc('end_temp_card', { p_id: cur.id });
