@@ -162,7 +162,7 @@ const I18N = {
     nameTitle:'이름 붙이기', cancel:'취소', save:'저장',
     finder:'발견자', item:'등록물', closed:'끝남', owner:'내가 연 회선', member:'초대받은 회선',
     peerPrefix:'상대: ', originalPrefix:'원래 이름: ', me:'나: ', noMsg:'(메시지 없음)',
-    mOpen:'열기', mName:'이름 붙이기', mRename:'이름 바꾸기', mClear:'붙인 이름 지우기',
+    mOpen:'열기', mInvite:'👥 초대하기 · 회선 관리', mName:'이름 붙이기', mRename:'이름 바꾸기', mClear:'붙인 이름 지우기',
     nameHintServer:'나만 보는 이름입니다. 상대에게는 보이지 않습니다.',
     nameHintLocal:'이 폰에만 저장됩니다. 상대에게는 보이지 않습니다.',
     saved:'저장했습니다', cleared:'붙인 이름을 지웠습니다', saveFail:'저장하지 못했습니다. 잠시 뒤 다시 해주세요.',
@@ -186,7 +186,7 @@ const I18N = {
     nameTitle:'Add a name', cancel:'Cancel', save:'Save',
     finder:'Finder', item:'Item', closed:'Closed', owner:'Line I opened', member:'Line I joined',
     peerPrefix:'With: ', originalPrefix:'Original: ', me:'Me: ', noMsg:'(no messages)',
-    mOpen:'Open', mName:'Add a name', mRename:'Rename', mClear:'Remove my name',
+    mOpen:'Open', mInvite:'👥 Invite · manage line', mName:'Add a name', mRename:'Rename', mClear:'Remove my name',
     nameHintServer:'Only you see this name. The other person never does.',
     nameHintLocal:'Saved on this phone only. The other person never sees it.',
     saved:'Saved', cleared:'Name removed', saveFail:'Could not save. Please try again shortly.',
@@ -503,6 +503,7 @@ function openMenu(c){
   menuSheet.innerHTML =
     '<h3>' + esc(labelOf(c) || c.base) + '</h3>' +
     '<button type="button" class="item" data-act="open">' + esc(t.mOpen) + '</button>' +
+    (c.kind === 'line' && c.owner ? '<button type="button" class="item" data-act="invite">' + esc(t.mInvite) + '</button>' : '') +
     '<button type="button" class="item" data-act="name">' + esc(has ? t.mRename : t.mName) + '</button>' +
     (has ? '<button type="button" class="item danger" data-act="clear">' + esc(t.mClear) + '</button>' : '');
   bg.classList.add('show'); menuSheet.classList.add('show');
@@ -511,6 +512,8 @@ menuSheet.addEventListener('click', async (e) => {
   const b = e.target.closest('[data-act]');
   if (!b || !target) return;
   if (b.dataset.act === 'open') { location.href = target.href; return; }
+  /* 2026-09-29 — 회선 관리의 그 회선 카드로 바로 (초대 보내기 · QR · 이름 바꾸기) */
+  if (b.dataset.act === 'invite') { location.href = 'aliascall_hotline_manage.html?focus=' + encodeURIComponent(target.ref); return; }
   if (b.dataset.act === 'name') { menuSheet.classList.remove('show'); openName(target); return; }
   if (b.dataset.act === 'clear') { closeSheets(); await saveLabel(target, ''); }
 });

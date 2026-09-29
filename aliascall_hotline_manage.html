@@ -1127,6 +1127,20 @@ async function loadHotlines(){
   const html = await Promise.all(hotlines.map((h) => renderHotlineItem(h)));
   listEl.innerHTML = html.join('');
   wireHotlineItems();
+  focusHotlineFromUrl();
+}
+
+/* 2026-09-29 — 연락처 ⋯ "초대하기" 로 오면 그 회선 카드로 내려가 잠깐 빛납니다 */
+function focusHotlineFromUrl(){
+  const id = new URLSearchParams(location.search).get('focus');
+  if (!id || focusHotlineFromUrl._done) return;
+  const card = document.querySelector('.hl-item[data-hotline-id="' + CSS.escape(id) + '"]');
+  if (!card) return;
+  focusHotlineFromUrl._done = true;
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  card.style.transition = 'box-shadow .3s';
+  card.style.boxShadow = '0 0 0 3px #E8734A';
+  setTimeout(() => { card.style.boxShadow = ''; }, 2200);
 }
 
 async function renderHotlineItem(h){

@@ -271,7 +271,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 .contacts-link{ display:flex; align-items:center; justify-content:center; gap:8px; max-width:312px; margin:12px auto 0;
                 background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.22); color:#fff; text-decoration:none;
                 border-radius:14px; padding:12px 14px; font-size:14px; font-weight:700; }
-.contacts-row{ display:flex; gap:8px; max-width:312px; margin:12px auto 0; }
+.contacts-row{ display:flex; gap:8px; max-width:360px; margin:12px auto 0; }
 .contacts-row .contacts-link{ flex:1; margin:0; }
 .contacts-link:active{ background:rgba(255,255,255,.18); }
 /* ② 수신 대기 큰 단추 */
@@ -559,6 +559,8 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   <div class="contacts-row" style="margin-bottom:14px;">
     <a class="contacts-link" href="aliascall_contacts.html?tab=line&amp;from=msg"><span>📇</span><span data-i18n="contactsLink">연락처</span></a>
     <a class="contacts-link" href="aliascall_calls.html?tab=line&amp;from=msg"><span>📞</span><span data-i18n="callsLink">통화기록</span></a>
+    <!-- 2026-09-29: 폰에서 회선 관리(초대 · 이름 바꾸기)로 가는 입구가 잘 안 보였습니다 -->
+    <a class="contacts-link" href="aliascall_hotline_manage.html"><span>👥</span><span data-i18n="manageLink">회선 관리</span></a>
   </div>
 
   <div class="mine-head">
@@ -1658,7 +1660,7 @@ const I18N = {
     tTempL2: '한 사람만 / 여러 사람 중에서 고르기',
     tTempL3: '<b>언제든 바로 끊기</b> — 기한 전이라도 성가시면 그 자리에서 끊습니다',
     tMsgName: '사생활보호 안전한 보안통신', tMsgSub: '-첨단메신저/음성/영상/파일전송-',
-    tSoon: '곧 열립니다', backHome: '‹ 첫 화면으로', contactsLink: '연락처', callsLink: '통화기록', plansLink: '이용권',
+    tSoon: '곧 열립니다', backHome: '‹ 첫 화면으로', contactsLink: '연락처', callsLink: '통화기록', plansLink: '이용권', manageLink: '회선 관리',
     secMsgTitle: '💬 Alias The Next-Gen Messenger',
     secMsgSub: '번호 없이, 우리끼리만 아는 회선',
     myPage: 'My Page',
@@ -1777,7 +1779,7 @@ const I18N = {
     tTempL2: 'One person only, or several people',
     tTempL3: '<b>Cut it off anytime</b> — even before it expires',
     tMsgName: 'Private, secure communication', tMsgSub: '-Messenger / Voice / Video / Files-',
-    tSoon: 'Coming soon', backHome: '‹ Back to start', contactsLink: 'Contacts', callsLink: 'Call history', plansLink: 'Plans',
+    tSoon: 'Coming soon', backHome: '‹ Back to start', contactsLink: 'Contacts', callsLink: 'Call history', plansLink: 'Plans', manageLink: 'My lines',
     secMsgTitle: '💬 Alias The Next-Gen Messenger',
     secMsgSub: 'A line only you and your people know — no phone numbers',
     myPage: 'My Page',
