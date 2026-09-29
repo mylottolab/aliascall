@@ -6,6 +6,8 @@
 <title>Aliascall — 1회용 임시연락처</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- 2026-09-29: 긴급 알림이 켜져 있는지 보려고 -->
+<script src="aliascall_push.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!--
@@ -63,6 +65,9 @@ main{ max-width:430px; margin:0 auto; padding:10px 20px 60px; }
 .row.dead{ opacity:.55; } .row.dead .bar i{ background:#B8B4AA; }
 .tag{ font-size:11px; font-weight:700; border-radius:20px; padding:2px 9px; background:var(--brass-tint); color:#6B4A12; }
 .tag.new{ background:#B4441F; color:#fff; }
+.mute{ display:none; gap:10px; align-items:flex-start; background:#FFF3D6; border:1.5px solid #E9C979; border-radius:14px; padding:12px 14px; margin:0 0 14px; font-size:13px; line-height:1.6; color:#5E4410; }
+.mute.show{ display:flex; }
+.mute a{ color:#5E4410; font-weight:800; white-space:nowrap; }
 .empty{ background:rgba(255,255,255,.55); border-radius:16px; padding:22px 16px; text-align:center; font-size:13.5px; line-height:1.7; color:var(--ink-soft); }
 .guide{ margin-top:14px; background:rgba(255,255,255,.55); border-radius:14px; padding:12px 14px; font-size:12.5px; line-height:1.7; }
 .guide a{ color:var(--teal-deep); font-weight:700; }
@@ -168,6 +173,10 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
 </header>
 
 <main>
+  <!-- 2026-09-29 — 긴급 알림이 꺼져 있으면: 뿌린 임시연락처로 연락이 와도 모르고 지나칠 수 있습니다 -->
+  <div class="mute" id="muteBox"><span>🔕</span><span><span data-i18n="mute">긴급 알림이 꺼져 있어, 앱을 보고 있지 않으면 연락이 와도 모를 수 있습니다.</span>
+    <a href="index.html#alert" data-i18n="muteGo">알림 켜기 ›</a></span></div>
+
   <!-- ═══ 목록 ═══ -->
   <section class="view" id="vList">
     <h1 class="title" data-i18n="tList">1회용 임시연락처</h1>
@@ -263,6 +272,7 @@ const SITE = 'https://aliascall.com';
 
 const I18N = {
   ko: {
+    mute:'긴급 알림이 꺼져 있어, 앱을 보고 있지 않으면 연락이 와도 모를 수 있습니다.', muteGo:'알림 켜기 ›',
     tList:'1회용 임시연락처', sList:'번호 대신 건네는 연락처입니다. 정한 날이 지나거나 [지금 끊기]를 누르면 더는 연락이 오지 않습니다.',
     bNew:'＋ 새 임시연락처 만들기',
     gToReg:'🐾 반려동물 목걸이 · 소지품처럼 <b>오래 붙여둘 QR</b>은 긴급등록으로 만드세요. 기한 없이 연락됩니다. <a href="aliascall_registration_mockup.html">긴급등록으로 가기 ›</a>',
@@ -291,6 +301,7 @@ const I18N = {
     pk10:'10장 · 명함 크기', pk10d:'약 9 × 5cm · 두 줄 × 다섯 칸', pk15:'15장 · 작은 크기', pk15d:'약 6.3 × 3.5cm · 세 줄 × 다섯 칸', cancel:'취소',
   },
   en: {
+    mute:'Alerts are off — if you are not looking at the app, you may miss someone reaching you.', muteGo:'Turn on ›',
     tList:'One-time contact cards', sList:'A contact you hand out instead of your number. It stops working on the date you pick, or when you cut it off.',
     bNew:'＋ New one-time card',
     gToReg:'🐾 For <b>long-term QR tags</b> like pet collars or belongings, use Emergency registration — it never expires. <a href="aliascall_registration_mockup.html">Go to registration ›</a>',
@@ -515,8 +526,22 @@ async function route(){
   paintList(); show('vList');
 }
 
+/* 긴급 알림이 켜져 있나 — 앱은 FCM(aliascall_push.js), 브라우저는 웹푸시 구독 */
+async function pushIsOn(){
+  try {
+    if (typeof aliascallIsNativeApp === 'function' && aliascallIsNativeApp()) {
+      return typeof _nativePushIsOn === 'function' ? await _nativePushIsOn() : true;
+    }
+    if (!('serviceWorker' in navigator) || !('Notification' in window)) return false;
+    const reg = await navigator.serviceWorker.getRegistration('/sw.js');
+    const sub = reg ? await reg.pushManager.getSubscription() : null;
+    return !!(sub && Notification.permission === 'granted');
+  } catch (e) { return true; }   // 모르면 조용히 둡니다 — 헛경고가 더 나쁩니다
+}
+
 (async function(){
   paintText();
+  pushIsOn().then((on) => { el('muteBox').classList.toggle('show', !on); });
   try { session = (await sb.auth.getSession()).data.session; } catch (e) {}
   if (session) { try { await loadCards(); } catch (e) { console.warn('[temp] 목록을 못 읽었습니다', e); } }
   route();
