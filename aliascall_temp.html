@@ -282,7 +282,7 @@ const I18N = {
     endedBox:'이 임시연락처는 끝났습니다. 더는 연락이 오지 않습니다.',
     convT:'연락 온 분', noConv:'아직 연락 온 분이 없습니다.', person:'연락 {i}', open:'진행 중', closed:'끝난 대화',
     people:'연락 온 분 {n}명', bCut:'✂ 지금 끊기', cutAsk:'지금 끊을까요? 끊으면 이 연락처로는 더는 연락이 오지 않습니다. 되돌릴 수 없습니다.',
-    cutDone:'끊었습니다.', shareText:'번호 없이 연락하실 수 있어요 ({d}까지)\n{url}\n코드 {c}',
+    cutDone:'끊었습니다.', cutFail:'끊지 못했습니다. 잠시 뒤 다시 눌러주세요.', shareText:'번호 없이 연락하실 수 있어요 ({d}까지)\n{url}\n코드 {c}',
     copied:'링크를 복사했습니다. 카카오톡이나 문자에 붙여넣어 보내세요.', noTitle:'이름표 없음',
     pHead:'번호 없이<br>연락하세요', pDesc:'QR을 찍으면 바로 문자 · 전화. 앱 설치는 필요 없습니다.',
     pUrl:'안 찍히면 aliascall.com/c 에서 코드 입력', pDate:'{d}까지',
@@ -310,7 +310,7 @@ const I18N = {
     endedBox:'This card has ended. No more contacts will come through it.',
     convT:'People who reached you', noConv:'No one yet.', person:'Contact {i}', open:'Active', closed:'Closed',
     people:'{n} people', bCut:'✂ Cut off now', cutAsk:'Cut off now? No one can reach you with this card afterwards. This cannot be undone.',
-    cutDone:'Cut off.', shareText:'You can reach me without my number (until {d})\n{url}\nCode {c}',
+    cutDone:'Cut off.', cutFail:'Could not cut it off. Please try again in a moment.', shareText:'You can reach me without my number (until {d})\n{url}\nCode {c}',
     copied:'Link copied. Paste it into a message to send.', noTitle:'No label',
     pHead:'Reach me<br>without my number', pDesc:'Scan for text or call. No app needed.',
     pUrl:'Or enter the code at aliascall.com/c', pDate:'until {d}',
@@ -493,7 +493,7 @@ function printCards(n){
 el('cutBtn').addEventListener('click', async () => {
   if (!cur || !confirm(T('cutAsk'))) return;
   const r = await sb.rpc('end_temp_card', { p_id: cur.id });
-  if (r.error || !r.data) { el('oneMsg').textContent = T('errGen'); el('oneMsg').classList.add('show'); return; }
+  if (r.error || !r.data) { console.warn('[temp] 끊기 실패', r.error); el('oneMsg').textContent = T('cutFail'); el('oneMsg').classList.add('show'); return; }
   toast(T('cutDone'));
   await loadCards();
   const c = cards.find((x) => x.id === cur.id); if (c) openOne(c);
