@@ -2884,7 +2884,23 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
       ended: '무료 체험이 끝났습니다. 임시연락처와 영상 통화를 계속 쓰시려면 이용권이 필요합니다.',
       claim: '🎁 30일 무료 체험 시작',
     };
-  function devToken(){ try { return localStorage.getItem('aliascall_fcm_token') || null; } catch (e) { return null; } }
+  /* 🔴 2026-09-30 고침 — "한 기기에 한 번" 의 폰 표식
+     처음에는 알림용 기기 번호(FCM)만 썼는데, 그 번호는 긴급 알림을 켤 때에만 생겨서
+     막 가입한 계정에는 없었습니다. 같은 폰의 두 번째 계정이 그대로 통과했습니다.
+     이제 이 폰(이 앱)에만 남는 무작위 표식을 따로 만들어 씁니다. 로그아웃 · 다른 아이디로
+     가입해도 남습니다. ⚠ 앱을 지웠다 다시 깔면 새로 생깁니다 — 다음 AAB 때 ANDROID_ID 를 더합니다.
+     알림용 기기 번호가 있으면 DB 가 그것도 함께 봅니다(push_tokens). */
+  function devToken(){
+    try {
+      let id = localStorage.getItem('aliascall_device_id');
+      if (!id || id.length < 16) {
+        id = 'dev-' + Array.from(crypto.getRandomValues(new Uint8Array(16))).map((b) => b.toString(16).padStart(2, '0')).join('');
+        localStorage.setItem('aliascall_device_id', id);
+      }
+      return id;
+    } catch (e) { return localStorage.getItem('aliascall_fcm_token') || null; }
+  }
+  devToken();   // 화면을 열 때 미리 만들어 둡니다
 
   async function claim(btn, msgEl){
     btn.disabled = true;
