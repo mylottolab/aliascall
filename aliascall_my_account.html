@@ -2901,11 +2901,17 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
     } catch (e) { return localStorage.getItem('aliascall_fcm_token') || null; }
   }
   devToken();   // 화면을 열 때 미리 만들어 둡니다
+  /* 🔴 2026-09-30 — 앱 버전 6 부터: 기기 번호(ANDROID_ID 요약값). 앱을 다시 깔아도 같습니다.
+     옛 앱(버전 5 이하)에는 이 창구가 없어 빈 값 — 그때는 위의 화면 표식만 씁니다. */
+  function nativeDeviceId(){
+    try { return (window.AliasNative && typeof AliasNative.deviceId === 'function') ? (AliasNative.deviceId() || null) : null; }
+    catch (e) { return null; }
+  }
 
   async function claim(btn, msgEl){
     btn.disabled = true;
     try {
-      const r = await sb.rpc('claim_trial', { p_device_token: devToken() });
+      const r = await sb.rpc('claim_trial', { p_device_token: devToken(), p_device_token2: nativeDeviceId() });
       if (r.error) throw r.error;
       const d = r.data || {};
       if (d.ok) {
