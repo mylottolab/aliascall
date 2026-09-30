@@ -772,38 +772,6 @@ function acVideoFallback(pc, stream, isOfferer){
   const lv = document.getElementById('localVideo'); if (lv) lv.style.display = 'none';
 }
 
-/* 🔎 2026-09-30 진단 줄 (시험이 끝나면 지웁니다)
-   통화를 연 뒤 3 · 8 · 15초에 "중계 열쇠가 있나 · 연결됐나 · 어느 길로 붙었나" 를
-   화면 아래 한 줄로 보여줍니다. 폰에서는 콘솔을 볼 수 없어서 넣었습니다. */
-function acWatchPath(pc){
-  if (!pc) return;
-  const hasTurn = JSON.stringify(RTC_CONFIG).indexOf('turn:') >= 0;
-  let bar = document.getElementById('acDiag');
-  if (!bar) {
-    bar = document.createElement('div'); bar.id = 'acDiag';
-    bar.style.cssText = 'position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:9999;background:rgba(0,0,0,.78);color:#fff;font:12px/1.5 system-ui,sans-serif;padding:7px 10px;border-radius:10px;text-align:center;';
-    bar.addEventListener('click', () => bar.remove());
-    document.body.appendChild(bar);
-  }
-  async function look(){
-    let path = '-';
-    try {
-      const st = await pc.getStats();
-      let pair = null;
-      st.forEach((r) => { if (r.type === 'transport' && r.selectedCandidatePairId) pair = st.get(r.selectedCandidatePairId); });
-      if (!pair) st.forEach((r) => { if (r.type === 'candidate-pair' && (r.selected || r.nominated) && r.state === 'succeeded') pair = r; });
-      if (pair) {
-        const l = st.get(pair.localCandidateId), rr = st.get(pair.remoteCandidateId);
-        const t = (c) => c ? (c.candidateType === 'relay' ? '중계' : c.candidateType === 'srflx' ? '공인주소' : c.candidateType === 'host' ? '같은망' : c.candidateType) : '?';
-        path = '나 ' + t(l) + ' ↔ 상대 ' + t(rr);
-      }
-    } catch (e) {}
-    const conn = pc.iceConnectionState;
-    const ok = conn === 'connected' || conn === 'completed';
-    bar.textContent = '진단 · 중계 열쇠: ' + (hasTurn ? '있음' : '없음') + ' · 연결: ' + (ok ? '성공' : conn) + ' · 길: ' + path + '  (눌러서 닫기)';
-  }
-  [3000, 8000, 15000].forEach((ms) => setTimeout(look, ms));
-}
 
 /* 🔴 2026-09-30 — 카메라 · 마이크 열기
    전에는 무엇이 실패하든 "마이크 권한" 창만 떠서 진짜 이유를 알 수 없었습니다.
@@ -1368,7 +1336,6 @@ async function answerCall(session){
       offerLock = true;
       const iceCfg = await acIceReady();
       pc = new RTCPeerConnection(iceCfg);
-      acWatchPath(pc);   // 🔎 진단 줄
       console.log('[webrtc] ② RTCPeerConnection 생성됨');
       pc.onicecandidate = (e) => { if (e.candidate) { console.log('[webrtc] 내 ICE 후보 전송:', e.candidate.type); rtChannel.send({ type:'broadcast', event:'ice-candidate', payload:{ candidate: e.candidate } }); } else { console.log('[webrtc] 내 ICE 후보 수집 완료(null candidate)'); } };
       pc.ontrack = (e) => {
@@ -1584,7 +1551,6 @@ async function startOwnerCall(mode){
 
 async function createOwnerOffer(mode){
   ownerPc = new RTCPeerConnection(await acIceReady());
-      acWatchPath(ownerPc);   // 🔎 진단 줄
   ownerPc.onicecandidate = (e) => {
     if (e.candidate) ownerRtChannel.send({ type: 'broadcast', event: 'ice-candidate', payload: { candidate: e.candidate } });
   };
