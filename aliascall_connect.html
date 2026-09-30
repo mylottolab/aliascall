@@ -1113,8 +1113,10 @@ async function answerIncomingCall(session){
       }
       pendingIceCandidates = [];
 
-      const answer = await finderPc.createAnswer();
-      await finderPc.setLocalDescription(answer);
+      const answer0 = await finderPc.createAnswer();
+      await finderPc.setLocalDescription(answer0);
+      await acGatherDone(finderPc);                 // 🔴 길 정보까지 담아서
+      const answer = finderPc.localDescription;
       finderRtChannel.send({ type: 'broadcast', event: 'answer', payload: { sdp: answer } });
     })
     .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
@@ -1292,6 +1294,23 @@ async function acIceReady(){
 acLoadIce();
 /* 열쇠는 1시간짜리 — 받는 쪽이 늘 새 열쇠를 갖고 있게 45분마다 미리 새로 받습니다 */
 setInterval(() => acLoadIce(true), 45 * 60 * 1000);
+/* 🔴 2026-09-30 — 길 정보(ICE 후보)를 연결 요청 · 대답 안에 모두 담아 보냅니다
+   전에는 요청(offer)은 되풀이해 보냈지만 길 정보는 한 번만 따로 보냈습니다.
+   받는 쪽이 전화를 받기 "전에" 온 길 정보는 아무도 안 듣는 채널에서 사라졌고,
+   휴대폰 망(중계가 꼭 필요한 곳)에서는 받는 쪽이 연결을 시작조차 못 했습니다
+   (진단: 받는 쪽 new · 거는 쪽 checking). 와이파이에서만 되던 이유입니다.
+   이제 길 정보 모으기가 끝날 때까지(최대 3초) 기다린 뒤, 길 정보가 모두 담긴
+   요청 · 대답(pc.localDescription)을 보내고 되풀이합니다. 따로 보내기도 그대로 둡니다. */
+function acGatherDone(pc, ms){
+  return new Promise((resolve) => {
+    if (!pc || pc.iceGatheringState === 'complete') return resolve();
+    const t = setTimeout(done, ms || 3000);
+    function done(){ clearTimeout(t); pc.removeEventListener('icegatheringstatechange', chk); resolve(); }
+    function chk(){ if (pc.iceGatheringState === 'complete') done(); }
+    pc.addEventListener('icegatheringstatechange', chk);
+  });
+}
+
 /* 🔴 2026-09-30 — 내 카메라가 없을 때
    ① 거는 쪽이면 "영상은 받기만" 길을 만들어 상대 얼굴은 보이게 합니다
    ② 까만 내 작은 창은 감춥니다 */
@@ -1700,8 +1719,10 @@ async function createOfferAsCaller(mode){
   if (mode === 'video') document.getElementById('localVideo').srcObject = localStream;
   if (mode === 'video') acVideoFallback(pc, localStream, true);
 
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
+  const offer0 = await pc.createOffer();
+  await pc.setLocalDescription(offer0);
+  await acGatherDone(pc);                          // 🔴 길 정보까지 담아서 되풀이
+  const offer = pc.localDescription;
   console.log('[webrtc] ④ offer 생성 및 설정 완료, 발신 시작');
   sendOfferNow();
 
