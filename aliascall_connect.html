@@ -1059,14 +1059,19 @@ async function answerIncomingCall(session){
   const mode = session.call_type;
   finderRtChannel = sb.channel('webrtc-' + session.session_token, { config: { broadcast: { self: false } } });
   let pendingIceCandidates = [];
+  let offerLock = false;   // 🔴 2026-09-30 첫 offer 를 처리 중인가
 
   finderRtChannel
     .on('broadcast', { event: 'offer' }, async ({ payload }) => {
       // 상대(소유자)가 응답을 못 받아서 offer를 반복 재전송하는 중일 수 있음 — 이미 pc가
       // 있으면(=이미 처리 중이면) 중복 offer는 무시
-      if (finderPc && finderPc.signalingState !== 'closed') return;
-
-      finderPc = new RTCPeerConnection(await acIceReady());   // 🔴 2026-09-30 받는 쪽도 연결 직전에 열쇠가 오래됐으면 새로 받습니다(1시간짜리 · 앱이 뒤에 가면 타이머가 잠듦). 먼저 온 ICE 후보는 줄에 세워 두므로 기다려도 안전합니다
+      if ((finderPc && finderPc.signalingState !== 'closed') || offerLock) return;
+      /* 🔴 2026-09-30 — 문지기를 기다리기 "전에" 세웁니다. 거는 쪽은 offer 를 되풀이해 보내는데,
+         열쇠를 기다리는 몇 초 사이 두 번째 offer 가 문지기를 통과해 통화 줄이 두 개 생기고 엉켰습니다
+         (진단: 받는 쪽 연결 new · 거는 쪽 checking 에 멈춤). */
+      offerLock = true;
+      const iceCfg = await acIceReady();
+      finderPc = new RTCPeerConnection(iceCfg);
       acWatchPath(finderPc);   // 🔎 진단 줄
       finderPc.onicecandidate = (e) => {
         if (e.candidate) finderRtChannel.send({ type: 'broadcast', event: 'ice-candidate', payload: { candidate: e.candidate } });

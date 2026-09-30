@@ -1287,13 +1287,19 @@ async function answerCall(session){
   // ⚠ 상대방 ICE 후보가 setRemoteDescription 끝나기 전에 먼저 도착하면 조용히 유실되던 문제 —
   // 일단 큐에 담아뒀다가 준비되면 한꺼번에 적용함
   let pendingIceCandidates = [];
+  let offerLock = false;   // 🔴 2026-09-30 첫 offer 를 처리 중인가
   rtChannel
     .on('broadcast', { event: 'offer' }, async ({ payload }) => {
       console.log('[webrtc] ① offer 수신됨');
       // ⚠ 발신자가 응답받을 때까지 offer를 반복 재전송하도록 바꿨는데(유실 방지),
       // 이미 처리 중인 offer라면 중복으로 새 연결을 또 만들지 않도록 방어
-      if (pc && pc.signalingState !== 'closed') { console.log('[webrtc] (중복 offer, 이미 처리중이라 무시)'); return; }
-      pc = new RTCPeerConnection(await acIceReady());   // 🔴 2026-09-30 받는 쪽도 연결 직전에 열쇠가 오래됐으면 새로 받습니다(1시간짜리 · 앱이 뒤에 가면 타이머가 잠듦). 먼저 온 ICE 후보는 줄에 세워 두므로 기다려도 안전합니다
+      if ((pc && pc.signalingState !== 'closed') || offerLock) { console.log('[webrtc] (중복 offer, 이미 처리중이라 무시)'); return; }
+      /* 🔴 2026-09-30 — 문지기를 기다리기 "전에" 세웁니다. 거는 쪽은 offer 를 되풀이해 보내는데,
+         열쇠를 기다리는 몇 초 사이 두 번째 offer 가 문지기를 통과해 통화 줄이 두 개 생기고 엉켰습니다
+         (진단: 받는 쪽 연결 new · 거는 쪽 checking 에 멈춤). */
+      offerLock = true;
+      const iceCfg = await acIceReady();
+      pc = new RTCPeerConnection(iceCfg);
       acWatchPath(pc);   // 🔎 진단 줄
       console.log('[webrtc] ② RTCPeerConnection 생성됨');
       pc.onicecandidate = (e) => { if (e.candidate) { console.log('[webrtc] 내 ICE 후보 전송:', e.candidate.type); rtChannel.send({ type:'broadcast', event:'ice-candidate', payload:{ candidate: e.candidate } }); } else { console.log('[webrtc] 내 ICE 후보 수집 완료(null candidate)'); } };

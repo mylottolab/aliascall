@@ -3146,7 +3146,7 @@ function connectToPeer(anonId){
 async function handleSignal(payload){
   const { from, kind } = payload;
   if (!peers[from]) {
-    const pc = new RTCPeerConnection(await acIceReady());   // 🔴 2026-09-30 받는 쪽도 연결 직전에 열쇠가 오래됐으면 새로 받습니다(1시간짜리 · 앱이 뒤에 가면 타이머가 잠듦). 먼저 온 ICE 후보는 줄에 세워 두므로 기다려도 안전합니다
+    const pc = new RTCPeerConnection(RTC_CONFIG);   // 🔴 2026-09-30 기다리지 않습니다 — 기다리는 사이 다음 신호가 오면 통화 줄이 겹칩니다. 열쇠는 통화를 시작할 때 이미 새로 챙깁니다
     peers[from] = { pc, pendingCandidates: [] };
     localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
     pc.onicecandidate = (e) => { if (e.candidate) callChannel.send({ type: 'broadcast', event: 'signal', payload: { to: from, from: mySenderAnonId, kind: 'ice-candidate', candidate: e.candidate } }); };
