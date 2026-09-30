@@ -1278,13 +1278,37 @@ function localizeSystemNote(text){
 }
 
 
-const RTC_CONFIG = { iceServers: [
-  { urls: 'stun:stun.relay.metered.ca:80' },
-  { urls: 'turn:global.relay.metered.ca:80', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-  { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-  { urls: 'turn:global.relay.metered.ca:443', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-  { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-] };
+/* 🔴 2026-09-30 — 통화 중계 열쇠를 서버(aliascall-ice)에서 받습니다.
+   전에는 Metered 아이디 · 비밀번호가 여기 그대로 적혀 있어 누구든 복사해
+   우리 요금으로 통화를 중계할 수 있었습니다. 이제 화면에는 비밀이 없고,
+   통화마다 1시간짜리 열쇠를 받아 씁니다(Cloudflare TURN · 부름과 같은 방식).
+   ⚠ 받기 전에는 STUN 만 씁니다 — 대부분 통화는 그래도 붙습니다.
+   ⚠ 50분마다 새로 받아 둡니다(열쇠는 1시간짜리). */
+let RTC_CONFIG = { iceServers: [{ urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'] }] };
+let _iceAt = 0, _iceP = null;
+function acLoadIce(force){
+  if (!force && _iceP) return _iceP;
+  _iceP = fetch(SUPABASE_URL + '/functions/v1/aliascall-ice', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY },
+    body: '{}',
+  }).then((r) => r.json()).then((d) => {
+    if (d && Array.isArray(d.iceServers) && d.iceServers.length) { RTC_CONFIG = { iceServers: d.iceServers }; _iceAt = Date.now(); }
+    if (d && d.turn === false) console.warn('[ice] 중계(TURN) 없이 STUN 만 받았습니다. aliascall-ice 로그를 확인하세요.');
+    return RTC_CONFIG;
+  }).catch((e) => { console.warn('[ice] 중계 열쇠를 못 받았습니다. STUN 만 씁니다.', e); _iceP = null; return RTC_CONFIG; });
+  return _iceP;
+}
+/* 통화를 열기 직전에 부릅니다. 50분이 지났으면 새로 받습니다(최대 3초 기다림). */
+async function acIceReady(){
+  if (!_iceAt || Date.now() - _iceAt > 50 * 60 * 1000) {
+    await Promise.race([acLoadIce(true), new Promise((r) => setTimeout(r, 3000))]);
+  }
+  return RTC_CONFIG;
+}
+acLoadIce();
+/* 열쇠는 1시간짜리 — 받는 쪽이 늘 새 열쇠를 갖고 있게 45분마다 미리 새로 받습니다 */
+setInterval(() => acLoadIce(true), 45 * 60 * 1000);
 
 function getHotlineAnonId(){
   let id = localStorage.getItem('aliascall_hotline_anon_id');
@@ -3119,7 +3143,7 @@ function connectToPeer(anonId){
 async function handleSignal(payload){
   const { from, kind } = payload;
   if (!peers[from]) {
-    const pc = new RTCPeerConnection(RTC_CONFIG);
+    const pc = new RTCPeerConnection(RTC_CONFIG);   // 🔴 2026-09-30 받는 쪽은 기다리지 않습니다 — 기다리는 사이 상대의 ICE 후보가 먼저 와서 버려졌습니다(소리 안 남)
     peers[from] = { pc, pendingCandidates: [] };
     localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
     pc.onicecandidate = (e) => { if (e.candidate) callChannel.send({ type: 'broadcast', event: 'signal', payload: { to: from, from: mySenderAnonId, kind: 'ice-candidate', candidate: e.candidate } }); };

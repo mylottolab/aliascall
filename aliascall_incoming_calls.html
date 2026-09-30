@@ -666,13 +666,71 @@ let incomingCallConnected = false; // 2026-08-25: 화면 문구를 문자열로 
 
 // Metered.ca TURN 서버 연동 (2026-08-17, Free 500MB 플랜, Global 리전) —
 // STUN만으로 연결 안 되는 이동통신사 데이터망 등에서 이 TURN 서버가 중계를 맡아줌
-const RTC_CONFIG = { iceServers: [
-  { urls: 'stun:stun.relay.metered.ca:80' },
-  { urls: 'turn:global.relay.metered.ca:80', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-  { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-  { urls: 'turn:global.relay.metered.ca:443', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-  { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '22592e7bcf44337c9065129a', credential: '2c10L34CH/qNmG0z' },
-] };
+/* 🔴 2026-09-30 — 통화 중계 열쇠를 서버(aliascall-ice)에서 받습니다.
+   전에는 Metered 아이디 · 비밀번호가 여기 그대로 적혀 있어 누구든 복사해
+   우리 요금으로 통화를 중계할 수 있었습니다. 이제 화면에는 비밀이 없고,
+   통화마다 1시간짜리 열쇠를 받아 씁니다(Cloudflare TURN · 부름과 같은 방식).
+   ⚠ 받기 전에는 STUN 만 씁니다 — 대부분 통화는 그래도 붙습니다.
+   ⚠ 50분마다 새로 받아 둡니다(열쇠는 1시간짜리). */
+let RTC_CONFIG = { iceServers: [{ urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'] }] };
+let _iceAt = 0, _iceP = null;
+function acLoadIce(force){
+  if (!force && _iceP) return _iceP;
+  _iceP = fetch(SUPABASE_URL + '/functions/v1/aliascall-ice', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY },
+    body: '{}',
+  }).then((r) => r.json()).then((d) => {
+    if (d && Array.isArray(d.iceServers) && d.iceServers.length) { RTC_CONFIG = { iceServers: d.iceServers }; _iceAt = Date.now(); }
+    if (d && d.turn === false) console.warn('[ice] 중계(TURN) 없이 STUN 만 받았습니다. aliascall-ice 로그를 확인하세요.');
+    return RTC_CONFIG;
+  }).catch((e) => { console.warn('[ice] 중계 열쇠를 못 받았습니다. STUN 만 씁니다.', e); _iceP = null; return RTC_CONFIG; });
+  return _iceP;
+}
+/* 통화를 열기 직전에 부릅니다. 50분이 지났으면 새로 받습니다(최대 3초 기다림). */
+async function acIceReady(){
+  if (!_iceAt || Date.now() - _iceAt > 50 * 60 * 1000) {
+    await Promise.race([acLoadIce(true), new Promise((r) => setTimeout(r, 3000))]);
+  }
+  return RTC_CONFIG;
+}
+acLoadIce();
+/* 열쇠는 1시간짜리 — 받는 쪽이 늘 새 열쇠를 갖고 있게 45분마다 미리 새로 받습니다 */
+setInterval(() => acLoadIce(true), 45 * 60 * 1000);
+/* 🔴 2026-09-30 — 카메라 · 마이크 열기
+   전에는 무엇이 실패하든 "마이크 권한" 창만 떠서 진짜 이유를 알 수 없었습니다.
+   ① 영상이면 카메라+마이크를 먼저 시도
+   ② 카메라만 안 되면 통화를 포기하지 않고 음성으로 이어감(안내 한 줄)
+   ③ 그래도 안 되면 진짜 이유를 사람 말로 알림
+   ⚠ 카카오톡 안에서 연 화면은 카메라를 막는 경우가 많습니다. */
+function acMediaErrText(e){
+  const en = (typeof currentLang !== 'undefined' && currentLang === 'en');
+  const n = (e && e.name) || '';
+  if (n === 'NotAllowedError' || n === 'SecurityError') return en
+    ? 'Microphone or camera access is blocked. If you opened this inside KakaoTalk, open it in Chrome or Samsung Internet instead.'
+    : '마이크나 카메라 사용이 막혀 있습니다. 카카오톡 안에서 여셨다면 크롬이나 삼성 인터넷으로 열어주세요.';
+  if (n === 'NotReadableError' || n === 'AbortError') return en
+    ? 'Another app is using the microphone or camera. Close it and try again.'
+    : '다른 앱이 마이크나 카메라를 쓰고 있습니다. 그 앱을 닫고 다시 해주세요.';
+  if (n === 'NotFoundError' || n === 'OverconstrainedError') return en
+    ? 'No usable microphone or camera was found.'
+    : '쓸 수 있는 마이크나 카메라를 찾지 못했습니다.';
+  return (en ? 'Could not open the microphone or camera' : '마이크나 카메라를 열지 못했습니다') + (n ? ' (' + n + ')' : '');
+}
+async function acGetMedia(mode){
+  const audio = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+  if (mode !== 'video') return await navigator.mediaDevices.getUserMedia({ audio, video: false });
+  try {
+    return await navigator.mediaDevices.getUserMedia({ audio, video: true });
+  } catch (e) {
+    console.warn('[media] 카메라를 못 열었습니다 — 음성으로 이어갑니다', e && e.name);
+    const s = await navigator.mediaDevices.getUserMedia({ audio, video: false });   // 이것도 실패하면 바깥에서 알림
+    const en = (typeof currentLang !== 'undefined' && currentLang === 'en');
+    setTimeout(() => alert((en ? 'The camera is not available, so this call continues as voice.\n' : '카메라를 쓸 수 없어 음성으로 연결합니다.\n') + acMediaErrText(e)), 50);
+    return s;
+  }
+}
+
 
 let myRegistrationIds = [];
 let pendingSession = null;
@@ -1190,7 +1248,7 @@ async function answerCall(session){
       // ⚠ 발신자가 응답받을 때까지 offer를 반복 재전송하도록 바꿨는데(유실 방지),
       // 이미 처리 중인 offer라면 중복으로 새 연결을 또 만들지 않도록 방어
       if (pc && pc.signalingState !== 'closed') { console.log('[webrtc] (중복 offer, 이미 처리중이라 무시)'); return; }
-      pc = new RTCPeerConnection(RTC_CONFIG);
+      pc = new RTCPeerConnection(RTC_CONFIG);   // 🔴 2026-09-30 받는 쪽은 기다리지 않습니다 — 기다리는 사이 상대의 ICE 후보가 먼저 와서 버려졌습니다(소리 안 남)
       console.log('[webrtc] ② RTCPeerConnection 생성됨');
       pc.onicecandidate = (e) => { if (e.candidate) { console.log('[webrtc] 내 ICE 후보 전송:', e.candidate.type); rtChannel.send({ type:'broadcast', event:'ice-candidate', payload:{ candidate: e.candidate } }); } else { console.log('[webrtc] 내 ICE 후보 수집 완료(null candidate)'); } };
       pc.ontrack = (e) => {
@@ -1234,14 +1292,10 @@ async function answerCall(session){
       console.log('[webrtc] ③ 이벤트 핸들러 등록 완료, getUserMedia 요청 시작');
 
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({
-      // 에코 제거·잡음 억제·음량 자동조절을 켜서 통화 음질을 개선함 (기본값 audio:true만 쓰면 꺼져있는 브라우저가 있음)
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      video: mode === 'video',
-    });
+        localStream = await acGetMedia(mode);   // 에코 제거 · 잡음 억제 · 음량 자동조절 포함
       } catch (e) {
-        console.error('[webrtc] ④ 마이크 권한 실패:', e);
-        alert(T('alertMicPerm'));
+        console.error('[webrtc] ④ 마이크 · 카메라 열기 실패:', e);
+        alert(acMediaErrText(e));
         hangup(true);
         return;
       }
@@ -1403,7 +1457,7 @@ async function startOwnerCall(mode){
 }
 
 async function createOwnerOffer(mode){
-  ownerPc = new RTCPeerConnection(RTC_CONFIG);
+  ownerPc = new RTCPeerConnection(await acIceReady());
   ownerPc.onicecandidate = (e) => {
     if (e.candidate) ownerRtChannel.send({ type: 'broadcast', event: 'ice-candidate', payload: { candidate: e.candidate } });
   };
@@ -1427,13 +1481,10 @@ async function createOwnerOffer(mode){
   };
 
   try {
-    ownerLocalStream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      video: mode === 'video',
-    });
+    ownerLocalStream = await acGetMedia(mode);
   } catch (e) {
-    console.error('[webrtc] 마이크 권한 실패', e);
-    alert(T('alertMicPerm'));
+    console.error('[webrtc] 마이크 · 카메라 열기 실패', e);
+    alert(acMediaErrText(e));
     endOwnerCall(true);
     return;
   }
