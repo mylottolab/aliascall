@@ -142,6 +142,8 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
 <main>
   <div id="shop">
     <h1 class="title" data-i18n="title">이용권</h1>
+    <!-- 🔴 2026-09-30 무료 체험 중이면 덤 안내 -->
+    <div id="trialBonus" style="display:none;background:#FDF3E4;border:1.5px solid #E9C979;border-radius:14px;padding:11px 13px;margin:4px 0 14px;font-size:13px;line-height:1.6;color:#5E4410;"></div>
     <p class="sub" data-i18n="sub">번호를 드러내지 않고 연락하는 모든 기능이 이용권 하나에 들어 있습니다. 자동으로 다시 결제되지 않습니다.</p>
 
     <button type="button" class="plan" data-plan="emergency">
@@ -514,6 +516,20 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
   if (MODE === 'old') say(T('oldApp'), true);
   if (MODE === 'web') say(T('web'), true);
   try { session = (await sb.auth.getSession()).data.session; } catch (e) { session = null; }
+  /* 🔴 2026-09-30 — 무료 체험 중이면: 지금 사면 남은 체험 그대로 + 긴급 기능 1개월 더 */
+  if (session) {
+    try {
+      const tr = await sb.rpc('my_trial');
+      if (tr.data && tr.data.in_trial) {
+        const days = Math.max(0, Math.ceil((new Date(tr.data.ends_at) - new Date()) / 86400000));
+        const b = el('trialBonus');
+        b.textContent = LANG === 'en'
+          ? ('🎁 Free trial · ' + days + ' days left. Buy now and keep your remaining trial days plus 1 extra month of emergency features.')
+          : ('🎁 무료 체험 중 · ' + days + '일 남음. 지금 이용권을 사면 남은 체험 기간은 그대로, 긴급 기능 1개월을 더 드립니다.');
+        b.style.display = '';
+      }
+    } catch (e) {}
+  }
   const qs = new URLSearchParams(location.search);
   const want = qs.get('plan');
   if (want && CATALOG[want]) { plan = want; const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0]; }

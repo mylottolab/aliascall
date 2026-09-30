@@ -1377,7 +1377,9 @@ async function acGetMedia(mode){
   const audio = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
   if (mode !== 'video') return await navigator.mediaDevices.getUserMedia({ audio, video: false });
   try {
-    return await navigator.mediaDevices.getUserMedia({ audio, video: true });
+    /* 🔴 2026-09-30 — 긴급 · 임시연락처 영상은 얼굴과 상황만 보이면 충분합니다.
+       480p · 15프레임으로 낮춰 중계 비용을 크게 줄입니다(체험 여부와 상관없이). */
+    return await navigator.mediaDevices.getUserMedia({ audio, video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15, max: 15 } } });
   } catch (e) {
     console.warn('[media] 카메라를 못 열었습니다 — 음성으로 이어갑니다', e && e.name);
     const s = await navigator.mediaDevices.getUserMedia({ audio, video: false });   // 이것도 실패하면 바깥에서 알림
@@ -1509,13 +1511,25 @@ async function startCall(mode){
   } catch (e) { console.warn('[case] 통화용 사건 열기 실패(통화 자체엔 영향 없음)', e); }
 
   // 1) webrtc_sessions에 통화요청 기록 -> 소유자 화면이 이걸 실시간으로 감지해서 알림을 띄움
-  const { error } = await sb.from('webrtc_sessions').insert({
+  let { error } = await sb.from('webrtc_sessions').insert({
     registration_id: registrationId,
     call_type: mode,
     session_token: currentSessionToken,
     owner_notified_at: new Date().toISOString(),
     case_id: currentCaseId,
   });
+
+  /* 🔴 2026-09-30 — 상대(주인)가 무료 체험 영상 30분을 다 썼으면 DB 가 영상 통화를 거절합니다.
+     통화를 포기하지 않고 음성으로 이어갑니다. */
+  if (error && mode === 'video' && String(error.message || '').indexOf('trial_video_limit') >= 0) {
+    alert(currentLang === 'en' ? 'Video is not available for this contact right now, so the call continues as voice.'
+                               : '지금은 상대가 영상 통화를 받을 수 없어 음성으로 연결합니다.');
+    mode = 'voice'; currentMode = 'voice';
+    ({ error } = await sb.from('webrtc_sessions').insert({
+      registration_id: registrationId, call_type: mode, session_token: currentSessionToken,
+      owner_notified_at: new Date().toISOString(), case_id: currentCaseId,
+    }));
+  }
 
   if (error) {
     alert(I18N[currentLang].callFailed);

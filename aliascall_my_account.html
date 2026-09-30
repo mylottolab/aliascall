@@ -72,6 +72,14 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 /* 2026-09-07 신설: 등록 화면에서 "완료"를 누르고 넘어왔을 때 방금 등록한 것을 잠깐 밝혀줍니다. */
 .reg-card-justadded{ border-color:var(--teal); box-shadow:0 0 0 3px rgba(20,120,110,.16); transition:border-color .3s, box-shadow .3s; }
 .sub-card{ margin-bottom:20px; }
+.trial-box{ background:linear-gradient(135deg,#E4EFEE,#FDF3E4); border:1.5px solid var(--teal,#1F6F6B); border-radius:16px; padding:16px; margin:4px 0 18px; text-align:center; }
+.trial-btn{ width:100%; min-height:54px; border:none; border-radius:14px; background:var(--teal,#1F6F6B); color:#fff; font-size:17px; font-weight:800; font-family:inherit; cursor:pointer; }
+.trial-btn:disabled{ opacity:.55; }
+.trial-note{ font-size:12px; line-height:1.6; color:var(--ink-soft,#3E5654); margin-top:9px; white-space:pre-line; }
+.trial-msg{ display:none; font-size:13px; line-height:1.6; margin-top:10px; padding:9px 11px; border-radius:10px; background:#FBEAE7; color:#8E2F22; }
+.trial-msg.show{ display:block; } .trial-msg.ok{ background:#E3F2E8; color:#1F5A36; }
+.trial-line{ font-size:12.5px; line-height:1.7; background:#FDF3E4; border-radius:10px; padding:9px 11px; margin-bottom:12px; }
+.trial-line button{ margin-top:6px; min-height:40px; border:none; border-radius:10px; padding:0 14px; background:var(--teal,#1F6F6B); color:#fff; font-weight:700; font-family:inherit; cursor:pointer; }
 .sub-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
 .sub-title{ font-size:14px; font-weight:700; }
 .reg-top{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
@@ -420,6 +428,13 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
     <div class="page-desc" data-i18n="welcomeDesc">등록물을 발견자와 연결하려면 구독이 필요해요. 아동·치매어르신·장애우·반려동물 등록은 구독기간이 끝나도 무료로 연결됩니다.</div>
 
+    <!-- 🔴 2026-09-30 무료 체험 — 결제보다 먼저 보여줍니다(회사 합의) -->
+    <div class="trial-box" id="trialBox">
+      <button type="button" class="trial-btn" id="trialStartBtn"></button>
+      <div class="trial-note" id="trialNote"></div>
+      <div class="trial-msg" id="trialMsg"></div>
+    </div>
+
     <div class="sub-period-tabs" style="margin-bottom:14px;">
       <div class="sub-period-tab selected" data-months="12">
         <span data-i18n="period1yr">1년</span>
@@ -514,6 +529,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
         <span class="reg-status" id="subStatusBadge">-</span>
       </div>
       <div class="reg-meta" id="subStatusMeta" style="margin-bottom:12px;"></div>
+      <!-- 🔴 2026-09-30 무료 체험 상태 -->
+      <div class="trial-line" id="trialLine" style="display:none;"></div>
       <div class="reg-meta" id="subUrgentNote" style="display:none; margin-bottom:12px; color:var(--danger); font-weight:600;" data-i18n="subUrgentNote">⏰ 구독 기간이 1개월도 안 남았어요. 지금 갱신해두세요.</div>
       <div class="reg-meta" style="margin-bottom:12px;" data-i18n="subscriptionSub">등록물 개수와 무관하게, 이 구독 하나로 전체 등록물의 연결이 유지됩니다. (아동·치매어르신·장애우·반려동물은 구독 여부와 무관하게 항상 연결됩니다)</div>
       <div class="renew-quick-row">
@@ -1645,6 +1662,7 @@ async function showMyPage(session){
 
   await loadSubscriptionStatus(session.user.id);
   loadPurchaseHistory(session.user.id);   // 🔴 2026-09-28 구입 현황
+  if (window.acPaintTrial) window.acPaintTrial();   // 🔴 2026-09-30 무료 체험 상태
   await loadMyRegistrations(session.user.id);
   initIncomingWatcher(session.user.id);
   renderNotifySettings(sb, 'notifySettingsContainer'); // 2026-08-19 (2차): 통합 알림설정 렌더링
@@ -2715,7 +2733,7 @@ function onRenewPaymentSuccess(){
   document.getElementById('renewModal').classList.remove('show');
   const periodLabel = { 12: I18N[currentLang].period1yr, 24: I18N[currentLang].period2yr, 36: I18N[currentLang].period3yr }[renewMonths];
   alert(I18N[currentLang].renewSuccess(periodLabel));
-  sb.auth.getSession().then(({ data: { session } }) => { loadSubscriptionStatus(session.user.id); loadPurchaseHistory(session.user.id); });
+  sb.auth.getSession().then(({ data: { session } }) => { loadSubscriptionStatus(session.user.id); loadPurchaseHistory(session.user.id); if (window.acPaintTrial) window.acPaintTrial(); });
 }
 
 // 2026-08-30 신설: 포인트 충전 화면으로.
@@ -2831,6 +2849,94 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
 
   var row = document.querySelector('.sub-card .renew-quick-row');
   if (row) { row.innerHTML = ''; row.appendChild(link(label2, 'emergency')); }
+})();
+</script>
+<script>
+/* =====================================================================
+   🔴 2026-09-30 — 긴급 이용권 무료 체험 (회사 합의안)
+   · 30일 · 첫 계정에 한 번 · 한 기기에 한 번 (DB claim_trial 이 판단)
+   · 체험 중: 영상 한 통 5분 · 합계 30분 / 임시연락처 동시 3 · 하루 3
+   · 체험 중에 사면: 남은 체험 그대로 + 긴급 기능 1개월 더
+   · 카드 등록 · 자동 결제 없음
+   ===================================================================== */
+(function(){
+  const en = () => (typeof currentLang !== 'undefined' && currentLang === 'en');
+  const TX = () => en() ? {
+      btn: '🎁 Start free for 30 days',
+      note: 'No card needed · never charges automatically\nIncludes QR tags, emergency contact and one-time contact cards\nDuring the trial: video calls up to 30 minutes in total · 3 one-time cards',
+      ok: 'Your 30-day free trial has started!',
+      already: 'You have already used the free trial on this account.',
+      paid: 'You already have a plan, so the trial does not apply.',
+      device: 'The free trial has already been used on this phone.',
+      fail: 'Could not start the trial. Please try again.',
+      line: '🎁 Free trial · {d} days left · video left {m} min\nBuy a plan during the trial and get 1 extra month.',
+      ended: 'Your free trial has ended. Buy a plan to keep one-time cards and video calls.',
+      claim: '🎁 Start 30-day free trial',
+    } : {
+      btn: '🎁 30일 무료로 시작',
+      note: '카드 등록 없이 · 자동 결제 없음\n차량 · 소지품 QR, 긴급연락, 1회용 임시연락처 모두 사용\n체험 중에는 영상 통화 합계 30분 · 임시연락처 3장까지',
+      ok: '30일 무료 체험이 시작됐습니다!',
+      already: '이 계정은 이미 무료 체험을 사용했습니다.',
+      paid: '이미 이용권이 있어 체험은 해당되지 않습니다.',
+      device: '이 폰에서는 이미 무료 체험을 사용했습니다.',
+      fail: '체험을 시작하지 못했습니다. 잠시 뒤 다시 해주세요.',
+      line: '🎁 무료 체험 중 · {d}일 남음 · 영상 통화 남은 {m}분\n체험 중에 이용권을 사면 남은 체험 그대로 + 긴급 기능 1개월 더 드립니다.',
+      ended: '무료 체험이 끝났습니다. 임시연락처와 영상 통화를 계속 쓰시려면 이용권이 필요합니다.',
+      claim: '🎁 30일 무료 체험 시작',
+    };
+  function devToken(){ try { return localStorage.getItem('aliascall_fcm_token') || null; } catch (e) { return null; } }
+
+  async function claim(btn, msgEl){
+    btn.disabled = true;
+    try {
+      const r = await sb.rpc('claim_trial', { p_device_token: devToken() });
+      if (r.error) throw r.error;
+      const d = r.data || {};
+      if (d.ok) {
+        if (msgEl) { msgEl.textContent = TX().ok; msgEl.className = 'trial-msg show ok'; }
+        setTimeout(() => location.replace('index.html'), 1200);
+        return;
+      }
+      const t = TX();
+      const m = d.reason === 'already' ? t.already : d.reason === 'paid_before' ? t.paid : d.reason === 'device_used' ? t.device : t.fail;
+      if (msgEl) { msgEl.textContent = m; msgEl.className = 'trial-msg show'; } else alert(m);
+    } catch (e) {
+      console.error('[trial] 시작 실패', e);
+      if (msgEl) { msgEl.textContent = TX().fail; msgEl.className = 'trial-msg show'; } else alert(TX().fail);
+    } finally { btn.disabled = false; }
+  }
+
+  /* 가입 직후 화면 */
+  const box = document.getElementById('trialBox');
+  if (box) {
+    const b = document.getElementById('trialStartBtn');
+    b.textContent = TX().btn;
+    document.getElementById('trialNote').textContent = TX().note;
+    b.addEventListener('click', () => claim(b, document.getElementById('trialMsg')));
+  }
+
+  /* My Page 구독 칸 — 로그인 뒤 체험 상태를 그립니다 */
+  window.acPaintTrial = async function(){
+    const line = document.getElementById('trialLine'); if (!line) return;
+    try {
+      const r = await sb.rpc('my_trial'); const d = r.data || {};
+      const t = TX();
+      if (d.in_trial) {
+        const days = Math.max(0, Math.ceil((new Date(d.ends_at) - new Date()) / 86400000));
+        line.textContent = t.line.replace('{d}', days).replace('{m}', Math.floor((d.video_left_sec || 0) / 60));
+        line.style.whiteSpace = 'pre-line'; line.style.display = '';
+      } else if (d.claimed && d.ends_at && new Date(d.ends_at) < new Date()) {
+        line.textContent = t.ended; line.style.display = '';
+      } else if (!d.claimed) {
+        const { data: prof } = await sb.from('profiles').select('subscription_expires_at').eq('id', (await sb.auth.getUser()).data.user.id).maybeSingle();
+        if (prof && prof.subscription_expires_at && new Date(prof.subscription_expires_at) > new Date()) { line.style.display = 'none'; return; }
+        line.innerHTML = '';
+        const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = t.claim;
+        btn.addEventListener('click', () => claim(btn, null));
+        line.appendChild(btn); line.style.display = '';
+      } else { line.style.display = 'none'; }
+    } catch (e) { line.style.display = 'none'; }
+  };
 })();
 </script>
 </body>
