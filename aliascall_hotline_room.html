@@ -3084,6 +3084,9 @@ async function startCall(mode){
     showState('stateChat'); updateNavActive('navChat');
     return;
   }
+  /* 🔴 2026-09-30 — 통화를 시작하는 순간 중계 열쇠가 오래됐으면 새로 받아 둡니다.
+     connectToPeer 는 기다릴 수 없는 함수라 여기서 미리 챙깁니다(열쇠 1시간짜리). */
+  await acIceReady();
 
   if (mode === 'video') {
     document.getElementById('localVideo').srcObject = localStream;
@@ -3143,7 +3146,7 @@ function connectToPeer(anonId){
 async function handleSignal(payload){
   const { from, kind } = payload;
   if (!peers[from]) {
-    const pc = new RTCPeerConnection(RTC_CONFIG);   // 🔴 2026-09-30 받는 쪽은 기다리지 않습니다 — 기다리는 사이 상대의 ICE 후보가 먼저 와서 버려졌습니다(소리 안 남)
+    const pc = new RTCPeerConnection(await acIceReady());   // 🔴 2026-09-30 받는 쪽도 연결 직전에 열쇠가 오래됐으면 새로 받습니다(1시간짜리 · 앱이 뒤에 가면 타이머가 잠듦). 먼저 온 ICE 후보는 줄에 세워 두므로 기다려도 안전합니다
     peers[from] = { pc, pendingCandidates: [] };
     localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
     pc.onicecandidate = (e) => { if (e.candidate) callChannel.send({ type: 'broadcast', event: 'signal', payload: { to: from, from: mySenderAnonId, kind: 'ice-candidate', candidate: e.candidate } }); };
