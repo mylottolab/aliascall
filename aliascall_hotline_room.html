@@ -205,6 +205,11 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .photo-group-more-overlay::after{ content:attr(data-more); position:absolute; inset:0; background:rgba(0,0,0,.5); color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; border-radius:6px; }
 .chat-video{ max-width:200px; border-radius:12px; display:block; }
 .chat-doc{ display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; text-decoration:none; color:var(--ink); font-size:12.5px; max-width:220px; }
+.call-join-hint{ display:flex; flex-direction:column; align-items:center; gap:7px; margin-top:8px; }
+.call-join-hint .cjh-t{ font-size:12px; opacity:.85; }
+.call-join-hint .cjh-b{ border:none; border-radius:20px; padding:9px 16px; min-height:40px; font-size:13.5px; font-weight:700; cursor:pointer;
+                         background:var(--teal,#1F6F6B); color:#fff; font-family:inherit; }
+.call-join-hint .cjh-ended{ font-size:12px; opacity:.7; }
 .chat-system-note{ align-self:center; font-size:11px; color:var(--ink-soft); background:var(--line); padding:5px 12px; border-radius:12px; margin:4px 0; }
 .chat-system-note.partner-divider{ font-weight:700; color:var(--teal-deep); background:none; margin:14px 0 6px; }
 
@@ -1265,6 +1270,44 @@ function displayNickname(nick){
 // ── 통화 기록은 DB(hotline_messages)에 한국어로 저장됨 ──
 // 참가자마다 언어가 다를 수 있어 저장은 한국어로 고정하고, 화면에 보여줄 때만 번역함.
 // 형태: "{닉네임}님이 영상통화를 시작했어요"
+/* 🔴 2026-09-30 — 통화 시작 안내에 "들어가는 법" 붙이기
+   "아무개님이 음성통화를 시작했어요" 만 보고는 아래 아이콘을 눌러야 들어간다는 것을
+   모르는 분이 많았습니다. 상대가 시작한 최근 통화에만 안내와 [지금 들어가기] 단추를
+   붙이고, 그 사람이 통화를 끝내면 단추를 거둡니다. */
+function acCallJoinHint(sysEl, msg){
+  const s = String(msg.content || '');
+  const m = s.match(/^(.+)님이 (영상|음성)통화를 (시작했어요|종료했어요)$/);
+  if (!m) return;
+  const nick = m[1], video = (m[2] === '영상'), started = (m[3] === '시작했어요');
+  const en = (LANG === 'en');
+  if (!started) {
+    // 통화가 끝났으면 그 사람의 앞선 안내에서 단추를 거둡니다
+    document.querySelectorAll('.call-join-hint[data-nick="' + CSS.escape(nick) + '"]').forEach((h) => {
+      h.innerHTML = '<span class="cjh-ended">' + (en ? 'The call has ended.' : '통화가 끝났습니다.') + '</span>';
+    });
+    return;
+  }
+  if (typeof myNickname !== 'undefined' && nick === myNickname) return;           // 내가 시작한 통화
+  const at = msg.created_at ? new Date(msg.created_at).getTime() : Date.now();
+  if (Date.now() - at > 30 * 60 * 1000) return;                                     // 오래된 기록
+  const icon = video ? '🎥' : '🎧';
+  const label = video ? (en ? 'Video' : '화상') : (en ? 'Voice' : '음성');
+  const box = document.createElement('div');
+  box.className = 'call-join-hint';
+  box.dataset.nick = nick;
+  box.innerHTML = '<span class="cjh-t"></span><button type="button" class="cjh-b"></button>';
+  box.querySelector('.cjh-t').textContent = en
+    ? ('To join this call, tap the ' + icon + ' ' + label + ' icon below.')
+    : ('이 통화에 들어가시려면 아래 ' + icon + ' ' + label + ' 아이콘을 누르세요');
+  box.querySelector('.cjh-b').textContent = icon + ' ' + (en ? 'Join now' : '지금 들어가기');
+  box.querySelector('.cjh-b').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const btn = document.getElementById(video ? 'navVideo' : 'navVoice');
+    if (btn) btn.click();
+  });
+  sysEl.appendChild(box);
+}
+
 function localizeSystemNote(text){
   if (LANG !== 'en' || !text) return text;
   const s = String(text);
@@ -1798,6 +1841,7 @@ async function appendChatMessage(msg){
     sysEl.className = 'chat-system-note';
     if (msg.id) sysEl.dataset.sysId = msg.id; // 2026-08-27: 중복 방지용 표식
     sysEl.textContent = localizeSystemNote(msg.content); // 2026-08-25: 저장은 한국어, 표시만 번역
+    acCallJoinHint(sysEl, msg);   // 🔴 2026-09-30 상대가 시작한 통화면 "들어가는 법" 과 [지금 들어가기]
     list.appendChild(sysEl);
     list.scrollTop = list.scrollHeight;
     return;
