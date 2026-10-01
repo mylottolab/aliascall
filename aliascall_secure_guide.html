@@ -6,6 +6,14 @@
 <title>Aliascall — 안심보안회선(Alias Secure Call) 사용설명서</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!--
+  2026-10-01 개정 — 지금 상품 구조에 맞춤
+    · 8종(핫라인 · 에브리바디 · 이코노미 · 프리미엄) → 일반 이용권(2인) · 프리미엄 이용권(4인)
+    · Secure 추가 비용 없음 · 회선 관리(연장 · 4인 올리기 · 이름) · 사용량과 추가 사용량
+    · 프로 등급 이름(스타터 · 비즈니스 · 엔터프라이즈) · 공개 업체 목록 게재(확인 + 게재료)
+  ⚠ 글은 아래 I18N 사전 한 곳에만 있습니다. 본문 칸은 비워 두고 화면을 열 때 채웁니다.
+    고칠 때는 ko 와 en 을 함께 고치세요.
+-->
 <style>
 :root{
   --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
@@ -19,78 +27,44 @@
 body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
 h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
 .mono{ font-family:'IBM Plex Mono',monospace; }
-
 header{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:20px 24px; border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:10; }
 .brand-row{ display:flex; align-items:center; gap:9px; }
 .brand-mark{ width:28px; height:28px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; font-family:'Space Grotesk',sans-serif; }
 .brand-name{ font-size:16px; font-weight:600; }
 .brand-name em{ font-style:normal; color:var(--coral); }
-
 main{ max-width:640px; margin:0 auto; padding:28px 20px 70px; }
 .page-title{ font-size:26px; margin-bottom:6px; }
 .page-desc{ font-size:13.5px; color:var(--ink-soft); margin-bottom:24px; line-height:1.6; }
-
-/* ⚠ 2026-08-27: 원래는 가로 스크롤(overflow-x:auto)이었습니다.
-   PC는 스크롤바가 보이지만, 모바일은 배경색과 비슷한 데다 금방 사라져서
-   "③ 다음에 ④가 잘려 있는" 상태로만 보입니다. 뒤에 5개가 더 있는 줄 모릅니다.
-   목차는 전체를 한눈에 보는 게 목적이므로, 줄바꿈해서 다 보여줍니다. */
+/* 목차는 줄바꿈해서 한눈에 다 보이게 (가로 스크롤이면 뒤가 잘린 줄 모릅니다) */
 .toc{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:30px; }
 .toc a{ flex:0 0 auto; text-decoration:none; padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-size:12.5px; font-weight:600; }
 .toc a:hover{ border-color:var(--brass); color:#8a6416; }
-
 section{ margin-bottom:38px; scroll-margin-top:90px; }
-.sec-num{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--brass); color:#fff; font-size:12.5px; font-weight:700; font-family:'Space Grotesk',sans-serif; margin-right:8px; }
+.sec-num{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--brass); color:#fff; font-size:12.5px; font-weight:700; font-family:'Space Grotesk',sans-serif; margin-right:8px; flex-shrink:0; }
 .sec-title{ font-size:19px; display:flex; align-items:center; margin-bottom:14px; }
-
-/* ⚠ 2026-08-27 신설: 섹션 안의 작은 제목.
-   highlight-box(어두운 배경)에 흰 카드를 넣으면 흰 글씨가 안 보여서,
-   제목만 따로 두고 카드는 밖으로 뺐습니다. */
-
-/* ═══ 2026-08-27 신설: 안내서 안에서 상품 찾기 ═══
-   ⚠ 가격은 여기 적지 않습니다. 구매 화면과 두 곳에서 관리하면
-     언젠가 서로 다른 값을 보여주게 됩니다. 답만 알려주고 결제는 넘깁니다. */
-
-/* 2026-08-27 신설: 회선 세 갈래 */
-.cat3{ display:flex; flex-direction:column; gap:9px; margin:14px 0 20px; }
+.cat3{ display:flex; flex-direction:column; gap:9px; margin:14px 0 6px; }
 .cat3-item{ border-radius:12px; padding:13px 15px; border-left:5px solid var(--line); background:var(--card); border-top:1.5px solid var(--line); border-right:1.5px solid var(--line); border-bottom:1.5px solid var(--line); }
 .cat3-item.love{ border-left-color:#4CAF7D; }
 .cat3-item.work{ border-left-color:#5B8DEF; }
 .cat3-item.pro{ border-left-color:var(--brass); }
-.cat3-h{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; margin-bottom:4px; }
-.cat3-cnt{ font-size:10.5px; font-weight:700; background:var(--line); color:var(--ink-soft); border-radius:20px; padding:2px 9px; }
+.cat3-h{ font-size:14px; font-weight:700; margin-bottom:4px; }
 .cat3-d{ font-size:12px; color:var(--ink-soft); line-height:1.6; }
-.gw-hint{ font-size:12px; color:var(--ink-soft); margin-bottom:12px; }
-.gw-step{ margin-bottom:14px; }
-.gw-q{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; margin-bottom:8px; }
-.gw-n{ flex:0 0 auto; width:22px; height:22px; border-radius:50%; background:var(--brass); color:#fff; font-size:12px; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; }
-.gw-opts{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
-.gw-opt{ border:2px solid var(--line); background:var(--card); border-radius:12px; padding:12px 13px; text-align:left; cursor:pointer; font-family:inherit; color:var(--ink); }
-.gw-opt.on{ border-color:var(--brass); background:#FCF7EC; }
-.gw-opt b{ display:block; font-size:13.5px; margin-bottom:3px; }
-.gw-opt span{ display:block; font-size:11.5px; color:var(--ink-soft); line-height:1.55; }
-.gw-result{ margin-top:16px; border:2px solid var(--brass); border-radius:14px; padding:16px; background:#FCF7EC; }
-.gw-rl{ font-size:11px; font-weight:700; color:#8a6416; letter-spacing:.04em; }
-.gw-rn{ font-size:20px; font-weight:700; margin:5px 0 3px; font-family:'Space Grotesk',sans-serif; color:var(--ink); }
-.gw-rw{ font-size:12px; color:var(--ink-soft); line-height:1.7; }
-.gw-go{ display:inline-block; margin-top:11px; padding:11px 18px; border-radius:10px; background:var(--brass); color:#fff; font-size:13px; font-weight:700; text-decoration:none; }
-@media (max-width:520px){ .gw-opts{ grid-template-columns:1fr; } }
+.gw-hint{ font-size:12px; color:var(--ink-soft); }
+.gw-go{ display:inline-block; margin-top:14px; padding:11px 18px; border-radius:10px; background:var(--brass); color:#fff; font-size:13px; font-weight:700; text-decoration:none; }
 .sec-sub{ font-size:14px; font-weight:700; color:var(--ink); margin:20px 0 10px; }
 .step-list{ display:flex; flex-direction:column; gap:10px; }
 .step-item{ display:flex; gap:12px; background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px 16px; }
 .step-item .n{ flex:0 0 auto; font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--brass); font-size:13px; }
 .step-item .t{ font-size:13.5px; line-height:1.6; }
-.step-item .t b{ display:block; font-size:14px; margin-bottom:2px; }
-
+.step-item .t b:first-child{ display:block; font-size:14px; margin-bottom:2px; }
 .category-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .category-card{ background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px; }
 .category-card .h{ font-size:13px; font-weight:700; margin-bottom:5px; }
 .category-card .d{ font-size:11.5px; color:var(--ink-soft); line-height:1.5; }
-
-.highlight-box{ background:var(--teal-deep); color:#fff; border-radius:18px; padding:24px 22px; margin-bottom:20px; }
+.highlight-box{ background:var(--teal-deep); color:#fff; border-radius:18px; padding:24px 22px; margin-bottom:16px; }
 .highlight-box .tag{ display:inline-block; font-size:10.5px; font-weight:700; background:var(--brass); padding:3px 10px; border-radius:8px; margin-bottom:10px; }
 .highlight-box h3{ font-size:18px; margin-bottom:8px; }
-.highlight-box p{ font-size:13px; color:rgba(255,255,255,.8); line-height:1.6; margin:0; }
-
+.highlight-box p{ font-size:13px; color:rgba(255,255,255,.85); line-height:1.6; margin:0 0 6px; }
 .dodont-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0; }
 .dodont-col .head{ display:flex; align-items:center; gap:6px; font-weight:700; font-size:14px; margin-bottom:10px; }
 .dodont-col.do .head{ color:var(--found); }
@@ -99,22 +73,19 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
 .dodont-col.do .dodont-item{ background:var(--found-tint); }
 .dodont-col.dont .dodont-item{ background:var(--danger-tint); }
 .dodont-item .icon{ flex-shrink:0; font-size:14px; }
-
+@media (max-width:520px){ .dodont-grid{ grid-template-columns:1fr; } .category-grid{ grid-template-columns:1fr; } }
 .tip-callout{ background:var(--amber-tint); border-left:4px solid var(--amber); border-radius:0 10px 10px 0; padding:14px 16px; font-size:12.5px; line-height:1.6; margin-top:14px; }
 .tip-callout b{ color:#8a6416; }
-
 .faq-item{ border-bottom:1px solid var(--line); padding:16px 0; }
 .faq-item:last-child{ border-bottom:none; }
 .faq-q{ font-size:13.5px; font-weight:700; margin-bottom:6px; display:flex; gap:8px; }
-.faq-q span{ color:var(--brass); }
+.faq-q span:first-child{ color:var(--brass); }
 .faq-a{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; padding-left:22px; }
-
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
-
-/* 2026-08-25 신설: 언어 전환 버튼 */
 .lang-toggle{ background:var(--card,#fff); color:inherit; border:1.5px solid var(--line); border-radius:20px; padding:6px 13px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; }
 .lang-toggle:active{ opacity:.6; }
+
 </style>
 </head>
 <body>
@@ -131,303 +102,316 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
 </header>
 
 <main>
-  <div class="page-title" data-i18n-html="s001">안심보안회선(Alias Secure Call) 사용설명서</div>
-  <div class="page-desc" data-i18n-html="s002">둘 또는 몇 명만 아는 우리끼리의 회선, 핫라인을 처음 쓰시는 분들을 위한 안내입니다. 궁금한 항목을 눌러 바로 이동하세요.</div>
+  <div class="page-title" data-i18n-html="s001"></div>
+  <div class="page-desc" data-i18n-html="s002"></div>
 
   <div class="toc">
-    <a href="#sec-overview" data-i18n-html="s003">① 전체 흐름</a>
-    <a href="#sec-products" data-i18n-html="s004">② 상품 고르기</a>
-    <a href="#sec-invite" data-i18n-html="s005">③ 초대·참가하기</a>
-    <a href="#sec-chat" data-i18n-html="s006">④ 대화방 기능 ⭐</a>
-    <a href="#sec-secure" data-i18n-html="s007">⑤ 암호화(Secure) 주의사항 ⭐</a>
-    <a href="#sec-pro" data-i18n-html="y10">⑥ 프로 비즈니스 ⭐</a>
-    <a href="#sec-export" data-i18n-html="x10">⑦ 대화 내보내기 ⭐</a>
-    <a href="#sec-faq" data-i18n-html="s008">⑧ 자주 묻는 질문</a>
+    <a href="#sec-overview" data-i18n-html="toc00"></a>
+    <a href="#sec-products" data-i18n-html="toc01"></a>
+    <a href="#sec-invite" data-i18n-html="toc02"></a>
+    <a href="#sec-manage" data-i18n-html="toc03"></a>
+    <a href="#sec-chat" data-i18n-html="toc04"></a>
+    <a href="#sec-secure" data-i18n-html="toc05"></a>
+    <a href="#sec-usage" data-i18n-html="toc06"></a>
+    <a href="#sec-pro" data-i18n-html="toc07"></a>
+    <a href="#sec-listing" data-i18n-html="toc08"></a>
+    <a href="#sec-export" data-i18n-html="toc09"></a>
+    <a href="#sec-faq" data-i18n-html="toc10"></a>
   </div>
 
   <section id="sec-overview">
-    <div class="sec-title"><span class="sec-num">1</span><span data-i18n-html="s009">전체 흐름</span></div>
+    <div class="sec-title"><span class="sec-num">1</span><span data-i18n-html="s009"></span></div>
     <div class="step-list">
-      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="s010"><b>상품 선택·결제</b>2인용부터 4인용까지, 일반 상품과 암호화(Secure) 상품 중 원하는 걸 고릅니다.</span></div>
-      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="s011"><b>초대링크 발급</b>결제가 끝나면 관리 화면에서 초대링크가 만들어집니다.</span></div>
-      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="s012"><b>공유·승인</b>초대링크를 상대에게 보내면, 상대가 별명을 입력하고 대기실에서 기다립니다. 개설자가 승인하면 입장 완료.</span></div>
-      <div class="step-item"><span class="n">4</span><span class="t" data-i18n-html="s013"><b>대화 시작</b>문자·사진·동영상·음성메시지·음성통화·영상통화·같이 듣기까지, 우리끼리만 쓰는 회선이 열립니다.</span></div>
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="o1"></span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="o2"></span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="o3"></span></div>
+      <div class="step-item"><span class="n">4</span><span class="t" data-i18n-html="o4"></span></div>
     </div>
   </section>
-
   <section id="sec-products">
-    <div class="sec-title"><span class="sec-num">2</span><span data-i18n-html="s014">상품 고르기</span></div>
-
-    <p data-i18n-html="y01">회선은 <b>세 갈래</b>입니다. 먼저 어느 쪽인지 정하시면 훨씬 쉽습니다.</p>
-
+    <div class="sec-title"><span class="sec-num">2</span><span data-i18n-html="s014"></span></div>
+    <p data-i18n-html="p0"></p>
     <div class="cat3">
-      <div class="cat3-item love">
-        <div class="cat3-h"><span data-i18n-html="y02">💚 우리끼리 회선</span><span class="cat3-cnt" data-i18n-html="y70">8종</span></div>
-        <div class="cat3-d" data-i18n-html="y03">연인 · 가족 · 친구 · 친지 · 동창 사이에 쓰는 회선입니다.</div>
-      </div>
-      <div class="cat3-item work">
-        <div class="cat3-h"><span data-i18n-html="y04">🗂️ 일상 업무용 회선</span><span class="cat3-cnt" data-i18n-html="y70">8종</span></div>
-        <div class="cat3-d" data-i18n-html="y05">임원 · 중역 · 간부 · 비서 · 프로젝트 구성원 · 회사 업무 등에 쓰는 회선입니다.</div>
-      </div>
-      <div class="cat3-item pro">
-        <div class="cat3-h"><span data-i18n-html="y71">💼 프로 비즈니스 회선</span><span class="cat3-cnt" data-i18n-html="y72">각 3종</span></div>
-        <div class="cat3-d" data-i18n-html="y73">고객마다 방을 따로 열어 관리합니다. 광고형은 상호를 공개 목록에 올립니다. 아래 ⑥번에서 자세히 다룹니다.</div>
-      </div>
+      <div class="cat3-item love"><div class="cat3-h" data-i18n-html="p1h"></div><div class="cat3-d" data-i18n-html="p1d"></div></div>
+      <div class="cat3-item work"><div class="cat3-h" data-i18n-html="p2h"></div><div class="cat3-d" data-i18n-html="p2d"></div></div>
+      <div class="cat3-item pro"><div class="cat3-h" data-i18n-html="p3h"></div><div class="cat3-d" data-i18n-html="p3d"></div></div>
     </div>
-
-    <div class="sec-sub" data-i18n-html="y74">① 우리끼리 회선 · ② 일상 업무용 회선 — 8종</div>
-    <p class="gw-hint" data-i18n-html="y75">두 갈래는 <b>같은 8종</b>을 씁니다. 쓰는 분과 쓰임새가 다를 뿐, 고르는 방법은 똑같습니다.</p>
-
-    <div class="category-grid">
-      <div class="category-card"><div class="h" data-i18n-html="s015">📌 핫라인 (2인)</div><div class="d" data-i18n-html="s016">단둘이, 정해진 상대와 고정으로 씁니다.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s017">🔄 에브리바디 (2인)</div><div class="d" data-i18n-html="s018">단둘이 쓰되, 개설자가 언제든 상대를 교체할 수 있습니다.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s019">👥 이코노미 (4인)</div><div class="d" data-i18n-html="s020">최대 4명이 함께 쓰는 가벼운 모임용입니다.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s021">✨ 프리미엄 (4인)</div><div class="d" data-i18n-html="s022">이코노미와 인원은 같지만 고화질 영상통화가 가능합니다.</div></div>
-    </div>
-    <div class="sec-sub" data-i18n-html="y06">세 가지만 정하면 8종 중 하나가 정해집니다</div>
-    <div class="gw-hint" data-i18n-html="y50">아래에서 눌러보세요. 맨 아래 답이 바로 바뀝니다.</div>
-
-    <div class="gw-step">
-      <div class="gw-q"><span class="gw-n">1</span><span data-i18n-html="y51">몇 명이 쓰시나요?</span></div>
-      <div class="gw-opts">
-        <button type="button" class="gw-opt on" data-k="ppl" data-v="2"><b data-i18n-html="y52">둘이서</b><span data-i18n-html="y53">나와 상대 한 사람</span></button>
-        <button type="button" class="gw-opt" data-k="ppl" data-v="4"><b data-i18n-html="y54">여럿이서</b><span data-i18n-html="y55">최대 4명까지</span></button>
-      </div>
-    </div>
-
-    <div class="gw-step">
-      <div class="gw-q"><span class="gw-n">2</span><span data-i18n-html="y56">상대를 바꿀 일이 있나요?</span></div>
-      <div class="gw-opts">
-        <button type="button" class="gw-opt on" data-k="swap" data-v="fixed"><b data-i18n-html="y57">한 사람과 계속</b><span data-i18n-html="y58">처음 들어온 분과 쭉 씁니다. 더 저렴합니다.</span></button>
-        <button type="button" class="gw-opt" data-k="swap" data-v="swap"><b data-i18n-html="y59">바꿔가며</b><span data-i18n-html="y60">상대를 내보내고 다시 초대할 수 있습니다. 이전 대화는 새 상대에게 안 보입니다.</span></button>
-      </div>
-    </div>
-
-    <div class="gw-step">
-      <div class="gw-q"><span class="gw-n">3</span><span data-i18n-html="y61">암호화가 필요한가요?</span></div>
-      <div class="gw-opts">
-        <button type="button" class="gw-opt on" data-k="sec" data-v="normal"><b data-i18n-html="y62">일반</b><span data-i18n-html="y63">서버에 안전하게 보관되며, 기기를 바꿔도 대화가 이어집니다.</span></button>
-        <button type="button" class="gw-opt" data-k="sec" data-v="secure"><b data-i18n-html="y64">Secure 🔒</b><span data-i18n-html="y65">열쇠가 초대링크에만 있어 저희조차 내용을 볼 수 없습니다. ⚠ 링크를 잃으면 복구가 안 됩니다.</span></button>
-      </div>
-    </div>
-
-    <div class="gw-result">
-      <div class="gw-rl" data-i18n-html="y66">이 상품이 맞습니다</div>
-      <div class="gw-rn" id="gwName">핫라인</div>
-      <div class="gw-rw" id="gwWhy"></div>
-      <a class="gw-go" id="gwGo" href="aliascall_hotline_purchase.html" data-i18n-html="y67">이 상품 보러 가기 ▷</a>
-    </div>
-
-    <div class="tip-callout" data-i18n-html="s023"><b>Secure 버전이 궁금하다면?</b> 위 4종 모두 "🔒 Secure" 버전이 따로 있습니다 — 인원·기능은 동일하고, 문자·사진·음성 등 모든 내용을 저희(Aliascall)조차 볼 수 없게 암호화됩니다. 자세한 가격은 <a href="aliascall_hotline_guide.html" style="color:var(--brass); font-weight:700;">상품 안내 페이지</a>에서 확인하실 수 있어요.</div>
+    <div class="tip-callout" data-i18n-html="p4"></div>
+    <div class="tip-callout" data-i18n-html="p5"></div>
+    <a class="gw-go" href="aliascall_plans.html" data-i18n-html="p6"></a>
+    <p class="gw-hint" style="margin-top:9px;" data-i18n-html="p7"></p>
   </section>
-
   <section id="sec-invite">
-    <div class="sec-title"><span class="sec-num">3</span><span data-i18n-html="s024">초대·참가하기</span></div>
+    <div class="sec-title"><span class="sec-num">3</span><span data-i18n-html="s024"></span></div>
     <div class="step-list">
-      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="s025"><b>초대링크 복사</b>관리 화면의 "복사" 버튼으로 초대링크를 가져옵니다.</span></div>
-      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="s026"><b>상대에게 전달</b>카톡·문자 등 어떤 방법으로 보내셔도 됩니다.</span></div>
-      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="s027"><b>대기실에서 대기</b>상대가 링크를 열고 별명을 입력하면 대기실에서 승인을 기다립니다.</span></div>
-      <div class="step-item"><span class="n">4</span><span class="t" data-i18n-html="s028"><b>개설자가 승인</b>관리 화면에서 "승인"을 누르면 바로 입장되어 대화가 시작됩니다.</span></div>
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="s025"></span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="s026"></span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="s027"></span></div>
+      <div class="step-item"><span class="n">4</span><span class="t" data-i18n-html="s028"></span></div>
     </div>
-    <div class="tip-callout" data-i18n-html="s029"><b>에브리바디 상품이라면?</b> 관리 화면에서 "내보내기"를 누르면 그 상대는 나가고, 새 초대링크가 자동으로 발급됩니다. 대화 기록은 상대가 바뀐 구간마다 색깔로 구분되어 계속 보여요.</div>
+    <div class="tip-callout" data-i18n-html="s029"></div>
   </section>
-
+  <section id="sec-manage">
+    <div class="sec-title"><span class="sec-num">4</span><span data-i18n-html="m0"></span></div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="m1"></span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="m2"></span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="m3"></span></div>
+      <div class="step-item"><span class="n">4</span><span class="t" data-i18n-html="m4"></span></div>
+    </div>
+  </section>
   <section id="sec-chat">
-    <div class="sec-title"><span class="sec-num">4</span><span data-i18n-html="s030">대화방 기능 총정리</span></div>
-
+    <div class="sec-title"><span class="sec-num">5</span><span data-i18n-html="s030"></span></div>
     <div class="highlight-box">
-      <div class="tag" data-i18n-html="s031">오늘 가장 많이 쓰게 될 기능들</div>
-      <h3 data-i18n-html="s032">기본을 넘어선, 진짜 채팅다운 채팅</h3>
-      <p data-i18n-html="s033">단순한 문자 주고받기를 넘어, 흔적을 남기지 않는 대화부터 함께 듣는 음악까지 — 다른 메신저에서도 보기 드문 기능들을 담았습니다.</p>
+      <div class="tag" data-i18n-html="s031"></div>
+      <h3 data-i18n-html="s032"></h3>
+      <p data-i18n-html="s033"></p>
     </div>
-
     <div class="category-grid">
-      <div class="category-card"><div class="h" data-i18n-html="s034">💬 문자·사진·동영상·문서</div><div class="d" data-i18n-html="s035">기본적인 파일 공유는 물론, 이모지 584개(움직이는 것 포함)까지 다양하게 보낼 수 있어요.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s036">🎤 음성메시지 · 🎙️ 음성입력</div><div class="d" data-i18n-html="s037">녹음해서 보내거나, 말하면 자동으로 글자가 되는 받아쓰기도 지원해요.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s038">↩️ 답장 · ✏️ 수정·삭제</div><div class="d" data-i18n-html="s039">특정 메시지에 답장하거나, 내가 보낸 메시지를 나중에 고치거나 지울 수 있어요.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s040">⭐ 즐겨찾기 · 📌 나만의 메모함</div><div class="d" data-i18n-html="s041">중요한 메시지를 저장해두거나, 상대는 절대 못 보는 나만의 메모를 남길 수 있어요.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s042">⏱️ 타이머 메시지</div><div class="d" data-i18n-html="s043">시간을 정해두면, 그 시간이 지난 뒤 대화방에서 자동으로 사라져요.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s044">🎯 목표(D-DAY)</div><div class="d" data-i18n-html="s045">두 가지 방식이 있어요 — "D-day"는 여행처럼 다가올 날까지 며칠 남았는지, "D+day"는 "우리 사귄 날"처럼 이미 지난 날부터 며칠째인지 세줍니다(연인들이 세는 "1일, 2일…"이 바로 이 방식이에요). 채팅 상단에 표시되고, 참가자 누구나 등록 가능합니다.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s046">🔍 대화 검색 · 🔗 링크 미리보기</div><div class="d" data-i18n-html="s047">지난 대화를 찾아보거나, URL을 보내면 자동으로 미리보기 카드가 붙어요.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s048">✓ 읽음 표시</div><div class="d" data-i18n-html="s049">내가 보낸 메시지를 상대가 읽으면 시간 옆에 "읽음"이 표시돼요.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s050">🎵 같이 듣기</div><div class="d" data-i18n-html="s051">유튜브 링크나 음원 파일을 올리면, 방에 있는 모두가 같은 지점에서 동시에 들을 수 있어요.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="s052">🎧 음성통화 · 🎥 영상통화</div><div class="d" data-i18n-html="s053">최대 4인까지 다자간 통화가 가능해요.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="y80">🟡 자리비움 자동응답</div><div class="d" data-i18n-html="y81">자리를 비운 동안 상대가 메시지를 보내면 "지금 회의 중이에요" 같은 문구가 한 번 자동으로 나갑니다. 문구는 직접 만들어 저장해두고 골라 쓰실 수 있어요. 개설자와 참가자 모두 쓸 수 있습니다.</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="x01">🖨️ 대화 내보내기</div><div class="d" data-i18n-html="x02">주고받은 대화를 종이로 인쇄하거나 PDF로 저장할 수 있어요. 기간과 참가자를 골라서 필요한 부분만 뽑을 수 있습니다.</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="s034"></div><div class="d" data-i18n-html="s035"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="s036"></div><div class="d" data-i18n-html="s037"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="s038"></div><div class="d" data-i18n-html="s039"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="s040"></div><div class="d" data-i18n-html="s041"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="s042"></div><div class="d" data-i18n-html="s043"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="s044"></div><div class="d" data-i18n-html="s045"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="s046"></div><div class="d" data-i18n-html="s047"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="s048"></div><div class="d" data-i18n-html="s049"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="s050"></div><div class="d" data-i18n-html="s051"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="s052"></div><div class="d" data-i18n-html="s053"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="c01"></div><div class="d" data-i18n-html="c02"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="y80"></div><div class="d" data-i18n-html="y81"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="x01"></div><div class="d" data-i18n-html="x02"></div></div>
     </div>
   </section>
-
   <section id="sec-secure">
-    <div class="sec-title"><span class="sec-num">5</span><span data-i18n-html="s054">암호화(Secure) 상품 주의사항</span></div>
-
+    <div class="sec-title"><span class="sec-num">6</span><span data-i18n-html="s054"></span></div>
     <div class="dodont-grid">
       <div class="dodont-col do">
-        <div class="head" data-i18n-html="s055">✅ Secure 상품이 좋은 점</div>
-        <div class="dodont-item"><span class="icon">🔒</span><span><span data-i18n-html="s056">문자·사진·동영상·음성 등 모든 내용을 저희 서버조차 볼 수 없게 암호화됩니다.</span></span></div>
-        <div class="dodont-item"><span class="icon">🔑</span><span><span data-i18n-html="s057">암호화 열쇠는 브라우저에서 직접 만들어지고, 초대링크 안에만 담깁니다.</span></span></div>
-        <div class="dodont-item"><span class="icon">💰</span><span><span data-i18n-html="s058">추가 비용은 일반 상품 대비 약 1.5배 수준으로, 인원·기능은 완전히 동일합니다.</span></span></div>
+        <div class="head" data-i18n-html="s055"></div>
+        <div class="dodont-item"><span class="icon">🔒</span><span data-i18n-html="s056"></span></div>
+        <div class="dodont-item"><span class="icon">🔑</span><span data-i18n-html="s057"></span></div>
+        <div class="dodont-item"><span class="icon">💰</span><span data-i18n-html="s058"></span></div>
       </div>
       <div class="dodont-col dont">
-        <div class="head" data-i18n-html="s059">⚠️ 꼭 알아두셔야 할 점</div>
-        <div class="dodont-item"><span class="icon">❌</span><span><span data-i18n-html="s060">초대링크(정확히는 <span class="mono">#k=</span> 뒷부분)를 잃어버리면, 그 대화는 저희를 포함해서 <b>아무도</b> 복구할 수 없습니다.</span></span></div>
-        <div class="dodont-item"><span class="icon">❌</span><span><span data-i18n-html="s061">링크를 캡처만 해두거나 메모장에 저장해두시길 권해드립니다. 문자·메일로 전달하다가 유실되지 않도록 주의해주세요.</span></span></div>
-        <div class="dodont-item"><span class="icon">❌</span><span><span data-i18n-html="s062">새 기기·브라우저에서 접속하실 땐 저장해둔 열쇠를 직접 붙여넣어야 다시 열립니다.</span></span></div>
+        <div class="head" data-i18n-html="s059"></div>
+        <div class="dodont-item"><span class="icon">❌</span><span data-i18n-html="s060"></span></div>
+        <div class="dodont-item"><span class="icon">❌</span><span data-i18n-html="s061"></span></div>
+        <div class="dodont-item"><span class="icon">❌</span><span data-i18n-html="s062"></span></div>
+        <div class="dodont-item"><span class="icon">ℹ️</span><span data-i18n-html="s062b"></span></div>
       </div>
     </div>
   </section>
-
-
-
+  <section id="sec-usage">
+    <div class="sec-title"><span class="sec-num">7</span><span data-i18n-html="u0"></span></div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="u1"></span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="u2"></span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="u3"></span></div>
+    </div>
+    <div class="tip-callout" data-i18n-html="u4"></div>
+  </section>
   <section id="sec-pro">
-    <div class="sec-title"><span class="sec-num">6</span><span data-i18n-html="y11">프로 비즈니스 (고객 관리용)</span></div>
-
+    <div class="sec-title"><span class="sec-num">8</span><span data-i18n-html="y11"></span></div>
     <div class="highlight-box">
-      <div class="tag" data-i18n-html="y12">구독 하나로 방을 여러 개</div>
-      <p data-i18n-html="y13">변호사 · 세무사 · 회계사 · 병원 · 상점 · 식당 · 부동산처럼 <b>고객이 여러 명</b>인 분들을 위한 상품입니다. 위 8종은 결제할 때마다 방이 하나 생기지만, 프로 비즈니스는 <b>구독 하나로 고객마다 방을 따로</b> 열 수 있습니다.</p>
+      <div class="tag" data-i18n-html="y12"></div>
+      <p data-i18n-html="y13"></p>
     </div>
-
     <div class="category-grid">
-      <div class="category-card"><div class="h" data-i18n-html="y14">스타터 — 방 50개 · 50GB · 월 9,900원</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="y15">프로 — 방 100개 · 150GB · 월 19,900원</div></div>
-      <div class="category-card"><div class="h" data-i18n-html="y16">비즈니스 — 방 150개 · 400GB · 월 39,900원</div></div>
+      <div class="category-card"><div class="h" data-i18n-html="y14"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="y15"></div></div>
+      <div class="category-card"><div class="h" data-i18n-html="y16"></div></div>
     </div>
-    <p data-i18n-html="y17">6개월은 10%, 12개월은 17% 할인됩니다. <b>1년 쓰시면 두 달치가 공짜</b>인 셈입니다.</p>
-
+    <p data-i18n-html="y17"></p>
     <div class="highlight-box">
-      <div class="tag" data-i18n-html="y18">⭐ 방 개수는 "최근 3개월 안에 대화가 오간 방"만 셉니다</div>
-      <p data-i18n-html="y19">고객이 120명이어도, 지금 대화가 오가는 곳이 20곳이면 <b>20개로 셉니다.</b> 조용한 방은 세지 않으니 고객 수가 많다고 비싼 등급을 고르실 필요가 없습니다.</p>
-      <p data-i18n-html="y20">끝난 방은 <b>접어두기</b>를 누르시면 개수에서 빠집니다. 대화는 그대로 남고, 언제든 다시 열 수 있습니다.</p>
+      <div class="tag" data-i18n-html="y18"></div>
+      <p data-i18n-html="y19"></p>
+      <p data-i18n-html="y20"></p>
     </div>
-
-    <div class="sec-sub" data-i18n-html="y21">프로 비즈니스에서 더 되는 것</div>
+    <div class="sec-sub" data-i18n-html="y21"></div>
     <div class="step-list">
-      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="y22"><b>관리 화면</b>의뢰인 이름을 붙여 방을 만들고, 이름으로 검색합니다.</span></div>
-      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="y23"><b>안내판</b>진료 안내 · 상담료 · 메뉴판을 방 위에 고정해 둡니다.</span></div>
-      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="y24"><b>자리비움 자동응답</b>"진료 중입니다" 같은 문구가 자동으로 한 번 나갑니다.</span></div>
-      <div class="step-item"><span class="n">4</span><span class="t" data-i18n-html="y25"><b>내 이름 표시</b>"개설자" 대신 "김변호사"처럼 보이게 할 수 있습니다.</span></div>
-    </div>
-
-    <div class="highlight-box">
-      <div class="tag" data-i18n-html="y30">📣 광고형 프로 비즈니스</div>
-      <p data-i18n-html="y31">상호를 <b>공개 목록</b>에 올려, 아직 모르는 분들이 찾아와 문의할 수 있게 하는 상품입니다. 위 프로 비즈니스에 게재료(월 5,500원부터)가 더해집니다.</p>
-      <p data-i18n-html="y32">⚠️ 사업자등록증 확인이 필요하며, 법률·세무·회계·의료·약국·동물병원·부동산은 <b>해당 자격증까지</b> 확인합니다. 제출하신 서류는 <b>공개되지 않고</b> 관리자만 확인합니다. 목록에는 "확인된 사업자" 표시만 붙습니다.</p>
-      <p data-i18n-html="y33">⚠️ 예약이나 주문은 <b>대화로만</b> 주고받습니다. 앱 안에서 결제하거나 주문서를 접수하지 않습니다.</p>
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="y22"></span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="y23"></span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="y24"></span></div>
+      <div class="step-item"><span class="n">4</span><span class="t" data-i18n-html="y25"></span></div>
+      <div class="step-item"><span class="n">5</span><span class="t" data-i18n-html="y26"></span></div>
     </div>
   </section>
-
-  <section id="sec-export">
-    <div class="sec-title"><span class="sec-num">7</span><span data-i18n-html="x11">대화 내보내기 (인쇄 · PDF)</span></div>
-
+  <section id="sec-listing">
+    <div class="sec-title"><span class="sec-num">9</span><span data-i18n-html="l0"></span></div>
     <div class="highlight-box">
-      <div class="tag" data-i18n-html="x12">상담 기록을 남겨야 할 때</div>
-      <p data-i18n-html="x13">변호사·의사·세무사처럼 <b>기록을 보관할 의무</b>가 있는 분들을 위해 만들었습니다. 대화방 오른쪽 위 <b>"⋯" → 🖨️ 대화 내보내기</b>에서 바로 뽑으실 수 있어요.</p>
+      <div class="tag" data-i18n-html="l1"></div>
+      <p data-i18n-html="l2"></p>
     </div>
-
     <div class="step-list">
-      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="x20"><b>기간 고르기</b>시작일과 종료일을 지정합니다. 하루치만 뽑는 것도 됩니다.</span></div>
-      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="x21"><b>참가자 고르기</b>"전체"를 그대로 두거나, 특정 참가자만 골라서 그 사람과의 대화만 뽑을 수 있습니다. 여러 명을 함께 고르셔도 됩니다.</span></div>
-      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="x22"><b>인쇄 / PDF로 저장</b>인쇄창이 열립니다. 프린터로 바로 뽑으셔도 되고, "PDF로 저장"을 고르시면 파일로 남습니다.</span></div>
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="l3"></span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="l4"></span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="l5"></span></div>
+      <div class="step-item"><span class="n">4</span><span class="t" data-i18n-html="l6"></span></div>
     </div>
-
-    <div class="dodont">
+    <div class="tip-callout" data-i18n-html="l7"></div>
+  </section>
+  <section id="sec-export">
+    <div class="sec-title"><span class="sec-num">10</span><span data-i18n-html="x11"></span></div>
+    <div class="highlight-box">
+      <div class="tag" data-i18n-html="x12"></div>
+      <p data-i18n-html="x13"></p>
+    </div>
+    <div class="step-list">
+      <div class="step-item"><span class="n">1</span><span class="t" data-i18n-html="x20"></span></div>
+      <div class="step-item"><span class="n">2</span><span class="t" data-i18n-html="x21"></span></div>
+      <div class="step-item"><span class="n">3</span><span class="t" data-i18n-html="x22"></span></div>
+    </div>
+    <div class="dodont-grid">
       <div class="dodont-col do">
-        <div class="head" data-i18n-html="x30">📎 사진과 파일은 어떻게 되나요?</div>
-        <div class="dodont-item"><span class="icon">🖼️</span><span><span data-i18n-html="x31"><b>사진</b>은 인쇄물 안에 그대로 실립니다.</span></span></div>
-        <div class="dodont-item"><span class="icon">📄</span><span><span data-i18n-html="x32"><b>동영상·음성메시지·문서</b>는 종이에 담을 수 없습니다. 대신 문서 맨 뒤에 <b>첨부파일 목록</b>이 붙어서, 언제 누가 어떤 파일을 주고받았는지가 기록으로 남습니다.</span></span></div>
-        <div class="dodont-item"><span class="icon">⬇️</span><span><span data-i18n-html="x33">파일 실물이 필요하시면 같은 화면의 <b>"첨부파일 내려받기"</b>를 누르세요. 고르신 기간·참가자 조건이 그대로 적용됩니다.</span></span></div>
+        <div class="head" data-i18n-html="x30"></div>
+        <div class="dodont-item"><span class="icon">🖼️</span><span data-i18n-html="x31"></span></div>
+        <div class="dodont-item"><span class="icon">📄</span><span data-i18n-html="x32"></span></div>
+        <div class="dodont-item"><span class="icon">⬇️</span><span data-i18n-html="x33"></span></div>
       </div>
       <div class="dodont-col dont">
-        <div class="head" data-i18n-html="x40">🔒 암호화 방에서도 됩니다</div>
-        <div class="dodont-item"><span class="icon">🔐</span><span><span data-i18n-html="x41">Secure 상품은 저희 서버가 대화 내용을 볼 수 없습니다. 그래서 내보내기도 <b>회원님의 브라우저 안에서</b> 만들어집니다. 저희를 거치지 않고 바로 인쇄물이 됩니다.</span></span></div>
-        <div class="dodont-item"><span class="icon">⚠️</span><span><span data-i18n-html="x42">⚠️ 다만 그렇기 때문에 <b>초대링크(열쇠)를 잃어버리면 내보내기도 불가능합니다.</b> 기록을 남겨야 하는 용도라면 링크를 반드시 안전한 곳에 보관해주세요.</span></span></div>
+        <div class="head" data-i18n-html="x40"></div>
+        <div class="dodont-item"><span class="icon">🔐</span><span data-i18n-html="x41"></span></div>
+        <div class="dodont-item"><span class="icon">⚠️</span><span data-i18n-html="x42"></span></div>
       </div>
     </div>
   </section>
-
   <section id="sec-faq">
-    <div class="sec-title"><span class="sec-num">8</span><span data-i18n-html="s063">자주 묻는 질문</span></div>
+    <div class="sec-title"><span class="sec-num">11</span><span data-i18n-html="s063"></span></div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span><span data-i18n-html="y40">고객이 많은데 어느 등급을 골라야 하나요?</span></div>
-      <div class="faq-a" data-i18n-html="y41">지금 <b>실제로 대화가 오가는 고객 수</b>를 기준으로 고르세요. 명단에 있는 전체 인원이 아니라, 최근 3개월 안에 연락을 주고받을 만한 분들만 세시면 됩니다. 부족하면 언제든 올리실 수 있습니다.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="y40"></span></div>
+      <div class="faq-a" data-i18n-html="y41"></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span><span data-i18n-html="y42">의뢰인마다 방을 만들면 제 번호가 노출되나요?</span></div>
-      <div class="faq-a" data-i18n-html="y43">아니요. 초대링크만 전달하시면 되고, 양쪽 모두 전화번호를 주고받지 않습니다. 의뢰인 화면에는 회원님이 정하신 이름(예: "김변호사")으로 보입니다.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="y42"></span></div>
+      <div class="faq-a" data-i18n-html="y43"></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span><span data-i18n-html="x50">상담 기록을 나중에 볼 수 있나요?</span></div>
-      <div class="faq-a" data-i18n-html="x51">네. 대화방은 구독 기간 동안 그대로 남아 있고, 언제든 "⋯ → 🖨️ 대화 내보내기"로 인쇄하거나 PDF로 저장하실 수 있습니다. 다만 구독이 만료되고 30일이 지나면 사진·동영상·음성 파일이 삭제되니, 보관이 필요하시면 그 전에 내보내두세요.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="s064"></span></div>
+      <div class="faq-a" data-i18n-html="s065"></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span><span data-i18n-html="x52">단톡방에서 특정 사람과의 대화만 뽑을 수 있나요?</span></div>
-      <div class="faq-a" data-i18n-html="x53">네. 내보내기 화면에서 참가자를 골라주시면 그 사람의 메시지만 나옵니다. 여러 명을 함께 고르셔도 됩니다. 다만 통화 기록과 입퇴장 기록은 특정인의 발언이 아니라 방 전체에서 일어난 일이라, 사람을 골라도 그대로 포함됩니다(체크박스로 끄실 수 있어요).</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="f01"></span></div>
+      <div class="faq-a" data-i18n-html="f02"></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span><span data-i18n-html="s064">사용량 한도를 넘으면 어떻게 되나요?</span></div>
-      <div class="faq-a" data-i18n-html="s065">한도를 넘는 시점에 추가결제 안내가 뜹니다. 한도 이하로 쓰시면 별도 알림 없이 그대로 이용하실 수 있어요.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="x50"></span></div>
+      <div class="faq-a" data-i18n-html="x51"></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span><span data-i18n-html="s066">Secure 상품의 열쇠를 잃어버렸어요. 복구할 수 있나요?</span></div>
-      <div class="faq-a" data-i18n-html="s067">안타깝지만 불가능합니다. 종단간 암호화의 특성상, 저희도 그 열쇠를 갖고 있지 않기 때문입니다. 열쇠(초대링크)는 반드시 안전한 곳에 따로 저장해두세요.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="x52"></span></div>
+      <div class="faq-a" data-i18n-html="x53"></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span><span data-i18n-html="s068">타이머 메시지가 정확한 시간에 안 지워져요.</span></div>
-      <div class="faq-a" data-i18n-html="s069">타이머 메시지는 방을 실제로 열어보고 있는 쪽 화면이 삭제를 처리합니다. 양쪽 다 탭을 닫아버리면, 다음에 누군가 다시 들어올 때 정리됩니다.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="s066"></span></div>
+      <div class="faq-a" data-i18n-html="s067"></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q"><span>Q.</span><span data-i18n-html="s070">기간이 만료되면 대화 내용은 어떻게 되나요?</span></div>
-      <div class="faq-a" data-i18n-html="s071">결제하신 기간이 끝나면 회선이 종료됩니다. 연장하시려면 만료 전에 재결제해주세요.</div>
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="s068"></span></div>
+      <div class="faq-a" data-i18n-html="s069"></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Q.</span><span data-i18n-html="s070"></span></div>
+      <div class="faq-a" data-i18n-html="s071"></div>
     </div>
   </section>
 </main>
 
 <script>
-// =====================================================================
-// 2026-08-25 신설: 다국어(한국어/영어)
-// 이 페이지는 순수 문서라 본문 덩어리를 통째로 사전에 담았음.
-// 글을 고치실 때는 ko와 en 양쪽을 같이 고쳐야 합니다.
-// =====================================================================
 const I18N = {
  "ko": {
+  "s001": "안심보안회선(Alias Secure Call) 사용설명서",
+  "docTitle": "안심보안회선(Alias Secure Call) 사용설명서",
+  "s002": "둘 또는 몇 명만 아는 우리끼리의 회선(보안회선)을 처음 쓰시는 분들을 위한 안내입니다. 궁금한 항목을 눌러 바로 이동하세요.",
+  "toc00": "① 전체 흐름",
+  "toc01": "② 이용권 고르기",
+  "toc02": "③ 초대·참가하기",
+  "toc03": "④ 회선 관리 ⭐",
+  "toc04": "⑤ 대화방 기능",
+  "toc05": "⑥ 암호화(Secure) 주의사항 ⭐",
+  "toc06": "⑦ 사용량 · 추가 사용량 ⭐",
+  "toc07": "⑧ 프로 비즈니스",
+  "toc08": "⑨ 공개 업체 목록 게재 ⭐",
+  "toc09": "⑩ 대화 내보내기",
+  "toc10": "⑪ 자주 묻는 질문",
+  "s009": "전체 흐름",
+  "o1": "<b>이용권 고르기 · 결제</b>일반 이용권(2인 회선)이나 프리미엄 이용권(4인 회선)을 고릅니다. 두 이용권 모두 긴급등록 · 긴급연락 · 1회용 임시연락처가 함께 들어 있어요.",
+  "o2": "<b>초대 보내기</b>결제가 끝나면 회선이 바로 만들어지고, 회선 관리에서 초대 링크 · QR을 보낼 수 있어요.",
+  "o3": "<b>상대 입장</b>상대가 링크를 열고 별명을 넣으면 대기실에서 기다리고, 회선을 연 분이 승인하면 들어옵니다.",
+  "o4": "<b>대화 시작</b>문자 · 사진 · 동영상 · 음성메시지 · 음성통화 · 영상통화 · 같이 듣기까지, 우리끼리만 쓰는 회선이 열립니다.",
+  "s014": "이용권 고르기",
+  "p0": "보안회선은 <b>이용권</b>으로 엽니다. 이용권마다 회선 하나와 긴급 기능이 함께 들어 있어요.",
+  "p1h": "💚 일반 이용권 — 2인 회선 · 5GB",
+  "p1d": "단둘이 쓰는 회선입니다. 필요하면 상대를 내보내고 다른 분을 초대할 수 있어요. 3 · 6 · 12개월이고, 기간마다 1개월을 더 드립니다.",
+  "p2h": "✨ 프리미엄 이용권 — 4인 회선 · 20GB",
+  "p2d": "가족 · 친한 친구 · 작은 팀처럼 최대 네 명이 함께 쓰는 회선입니다. 3 · 6 · 12개월이고, 기간마다 1개월을 더 드립니다.",
+  "p3h": "💼 프로 비즈니스 — 방 여러 개",
+  "p3d": "가게 · 사무소 · 상담 창구처럼 손님마다 방을 따로 엽니다. 아래 ⑧번에서 자세히 다룹니다.",
+  "p4": "<b>우리끼리 · 일상 업무용</b> 회선을 만들 때 쓰임새를 고를 수 있어요. 연인 · 가족 · 친구 사이라면 \"우리끼리\", 임원 · 비서 · 프로젝트 구성원처럼 일하는 사이라면 \"일상 업무용\"을 고르세요. 값과 기능은 같고, 업무용 방에는 \"오늘의 질문\" 같은 가벼운 기능이 뜨지 않습니다.",
+  "p5": "<b>암호화(Secure) 🔒</b> 회선을 만들 때 \"암호화\"를 켜면 문자 · 사진 · 음성 등 모든 내용을 저희조차 볼 수 없게 잠급니다. <b>추가 비용은 없습니다.</b> 다만 열쇠가 초대 링크에만 있어 잃으면 복구할 수 없으니 ⑥번을 꼭 읽어주세요.",
+  "p6": "이용권 보러 가기 ▷",
+  "p7": "값은 이용권 화면에서 확인하세요. 앱에서는 Google Play로 결제하며, 자동 결제는 없습니다.",
+  "s024": "초대·참가하기",
+  "s025": "<b>초대 보내기</b>회선 관리에서 [🔗 초대 보내기]를 누르면 카톡 · 문자로 바로 보낼 수 있고, QR을 보여주거나 링크를 복사할 수도 있어요.",
+  "s026": "<b>상대가 링크 열기</b>앱이 없어도 링크만 열면 됩니다.",
+  "s027": "<b>대기실에서 대기</b>상대가 별명을 입력하면 대기실에서 승인을 기다립니다.",
+  "s028": "<b>회선을 연 분이 승인</b>회선 관리에서 \"승인\"을 누르면 바로 입장되어 대화가 시작됩니다.",
+  "s029": "<b>2인 회선의 상대를 바꾸려면?</b> 회선 관리에서 \"내보내기\"를 누르면 그 상대는 나가고 새 초대 링크가 만들어집니다. 이전 대화는 새 상대에게 보이지 않아요.",
+  "m0": "회선 관리",
+  "m1": "<b>회선 이어가기</b>회선 관리의 [연장하기]를 누르면 같은 회선의 기간이 늘어납니다. 남은 기간 뒤에 이어 붙고, 대화 · 초대 링크 · 열쇠는 그대로예요.",
+  "m2": "<b>2인 → 4인 올리기</b>2인 회선에서 프리미엄 이용권을 고르면, 새로 만들지 않고 그 회선을 4인으로 올립니다. 대화는 그대로 이어집니다.",
+  "m3": "<b>이름 붙이기</b>✏️를 눌러 \"아내와\", \"김 과장\"처럼 이름을 붙이면 여러 회선을 쉽게 구분할 수 있어요.",
+  "m4": "<b>사용량 보기 · 더하기</b>회선마다 쓴 양이 막대로 보이고, [＋ 사용량 추가]로 그 회선에 바로 더할 수 있어요(⑦번).",
+  "s030": "대화방 기능 총정리",
+  "s031": "가장 많이 쓰게 될 기능들",
+  "s032": "기본을 넘어선, 진짜 채팅다운 채팅",
+  "s033": "단순한 문자 주고받기를 넘어, 흔적을 남기지 않는 대화부터 함께 듣는 음악까지 — 다른 메신저에서도 보기 드문 기능들을 담았습니다.",
+  "s034": "💬 문자·사진·동영상·문서",
+  "s035": "기본적인 파일 공유는 물론, 이모지 584개(움직이는 것 포함)까지 다양하게 보낼 수 있어요.",
+  "s036": "🎤 음성메시지 · 🎙️ 음성입력",
+  "s037": "녹음해서 보내거나, 말하면 자동으로 글자가 되는 받아쓰기도 지원해요.",
+  "s038": "↩️ 답장 · ✏️ 수정·삭제",
+  "s039": "특정 메시지에 답장하거나, 내가 보낸 메시지를 나중에 고치거나 지울 수 있어요.",
+  "s040": "⭐ 즐겨찾기 · 📌 나만의 메모함",
+  "s041": "중요한 메시지를 저장해두거나, 상대는 절대 못 보는 나만의 메모를 남길 수 있어요.",
+  "s042": "⏱️ 타이머 메시지",
+  "s043": "시간을 정해두면, 그 시간이 지난 뒤 대화방에서 자동으로 사라져요.",
+  "s044": "🎯 목표(D-DAY)",
+  "s045": "\"D-day\"는 여행처럼 다가올 날까지 며칠 남았는지, \"D+day\"는 \"우리 사귄 날\"처럼 이미 지난 날부터 며칠째인지 세줍니다. 채팅 상단에 표시되고, 참가자 누구나 등록할 수 있어요.",
+  "s046": "🔍 대화 검색 · 🔗 링크 미리보기",
+  "s047": "지난 대화를 찾아보거나, URL을 보내면 자동으로 미리보기 카드가 붙어요.",
+  "s048": "✓ 읽음 표시",
+  "s049": "내가 보낸 메시지를 상대가 읽으면 시간 옆에 \"읽음\"이 표시돼요.",
+  "s050": "🎵 같이 듣기",
+  "s051": "유튜브 링크나 음원 파일을 올리면, 방에 있는 모두가 같은 지점에서 동시에 들을 수 있어요.",
+  "s052": "🎧 음성통화 · 🎥 영상통화",
+  "s053": "최대 4인까지 다자간 통화가 가능해요.",
+  "c01": "📞 통화 들어가기",
+  "c02": "상대가 통화를 시작하면 대화에 안내와 <b>[지금 들어가기]</b> 단추가 떠요. 누르면 바로 통화에 함께합니다. 아래쪽 🎧 · 🎥 아이콘을 눌러도 됩니다.",
   "y80": "🟡 자리비움 자동응답",
-  "y81": "자리를 비운 동안 상대가 메시지를 보내면 \"지금 회의 중이에요\" 같은 문구가 한 번 자동으로 나갑니다. 문구는 직접 만들어 저장해두고 골라 쓰실 수 있어요. 개설자와 참가자 모두 쓸 수 있습니다.",
-  "y70": "8종",
-  "y71": "💼 프로 비즈니스 회선",
-  "y72": "각 3종",
-  "y73": "고객마다 방을 따로 열어 관리합니다. 광고형은 상호를 공개 목록에 올립니다. 아래 ⑥번에서 자세히 다룹니다.",
-  "y74": "① 우리끼리 회선 · ② 일상 업무용 회선 — 8종",
-  "y75": "두 갈래는 <b>같은 8종</b>을 씁니다. 쓰는 분과 쓰임새가 다를 뿐, 고르는 방법은 똑같습니다.",
-  "y50": "아래에서 눌러보세요. 맨 아래 답이 바로 바뀝니다.",
-  "y51": "몇 명이 쓰시나요?",
-  "y52": "둘이서",
-  "y53": "나와 상대 한 사람",
-  "y54": "여럿이서",
-  "y55": "최대 4명까지",
-  "y56": "상대를 바꿀 일이 있나요?",
-  "y57": "한 사람과 계속",
-  "y58": "처음 들어온 분과 쭉 씁니다. 더 저렴합니다.",
-  "y59": "바꿔가며",
-  "y60": "상대를 내보내고 다시 초대할 수 있습니다. 이전 대화는 새 상대에게 안 보입니다.",
-  "y61": "암호화가 필요한가요?",
-  "y62": "일반",
-  "y63": "서버에 안전하게 보관되며, 기기를 바꿔도 대화가 이어집니다.",
-  "y64": "Secure 🔒",
-  "y65": "열쇠가 초대링크에만 있어 저희조차 내용을 볼 수 없습니다. ⚠ 링크를 잃으면 복구가 안 됩니다.",
-  "y66": "이 상품이 맞습니다",
-  "y67": "이 상품 보러 가기 ▷",
-  "y01": "회선은 <b>세 갈래</b>입니다. 먼저 어느 쪽인지 정하시면 훨씬 쉽습니다.",
-  "y02": "💚 우리끼리 회선",
-  "y03": "연인 · 가족 · 친구 · 친지 · 동창 사이에 쓰는 회선입니다.",
-  "y04": "🗂️ 일상 업무용 회선",
-  "y05": "임원 · 중역 · 간부 · 비서 · 프로젝트 구성원 · 회사 업무 등에 쓰는 회선입니다.",
-  "y06": "세 가지만 정하면 8종 중 하나가 정해집니다",
-  "y10": "⑥ 프로 비즈니스 ⭐",
+  "y81": "자리를 비운 동안 상대가 메시지를 보내면 \"지금 회의 중이에요\" 같은 문구가 한 번 자동으로 나갑니다. 문구는 직접 만들어 저장해두고 골라 쓰실 수 있어요.",
+  "x01": "🖨️ 대화 내보내기",
+  "x02": "주고받은 대화를 종이로 인쇄하거나 PDF로 저장할 수 있어요. 기간과 참가자를 골라서 필요한 부분만 뽑을 수 있습니다.",
+  "s054": "암호화(Secure) 회선 주의사항",
+  "s055": "✅ Secure 회선이 좋은 점",
+  "s056": "문자·사진·동영상·음성 등 모든 내용을 저희 서버조차 볼 수 없게 암호화됩니다.",
+  "s057": "암호화 열쇠는 기기에서 직접 만들어지고, 초대 링크 안에만 담깁니다.",
+  "s058": "<b>추가 비용이 없습니다.</b> 인원 · 기능도 일반 회선과 똑같습니다.",
+  "s059": "⚠️ 꼭 알아두셔야 할 점",
+  "s060": "초대 링크(정확히는 <span class=\"mono\">#k=</span> 뒷부분)를 잃어버리면, 그 대화는 저희를 포함해서 <b>아무도</b> 복구할 수 없습니다.",
+  "s061": "링크를 캡처해 두거나 메모장에 저장해 두시길 권해드립니다. 전달하다가 유실되지 않도록 주의해주세요.",
+  "s062": "새 기기 · 브라우저에서 접속하실 땐 저장해둔 열쇠(링크)로 다시 열어야 합니다.",
+  "s062b": "암호화 여부는 회선을 만들 때 정하며, 나중에 바꿀 수 없습니다. 4인으로 올려도 암호화 여부는 그대로입니다.",
+  "u0": "사용량 · 추가 사용량",
+  "u1": "<b>무엇을 세나요</b>통화 중 중계 서버를 거친 데이터만 셉니다. 문자 · 사진은 세지 않고, 서로 직접 연결된 통화도 세지 않아요.",
+  "u2": "<b>다 쓰면</b>새 통화 걸기가 멈춥니다. 문자 보내기 · 받기 · 읽기는 계속 됩니다. 회선을 연 분에게는 사용량을 더할지 묻는 안내가 뜹니다.",
+  "u3": "<b>추가 사용량 1GB · 2,000원</b>이용권 화면 맨 아래나 회선 관리의 [＋ 사용량 추가]에서 <b>붙일 회선을 골라</b> 1GB씩(한 번에 최대 10개) 더합니다. 산 날부터 3개월 동안 쓰고, 남은 양은 그 뒤 사라집니다.",
+  "u4": "<b>Tip.</b> 회선이 끝나면 추가분도 함께 쓸 수 없으니, 한 달도 남지 않았다면 먼저 연장하시길 권합니다. <b>프로 비즈니스</b>는 모든 방이 쓴 양을 합쳐 구독 한도와 비교하고, 추가 사용량도 구독 전체에 더해집니다.",
   "y11": "프로 비즈니스 (고객 관리용)",
   "y12": "구독 하나로 방을 여러 개",
-  "y13": "변호사 · 세무사 · 회계사 · 병원 · 상점 · 식당 · 부동산처럼 <b>고객이 여러 명</b>인 분들을 위한 상품입니다. 위 8종은 결제할 때마다 방이 하나 생기지만, 프로 비즈니스는 <b>구독 하나로 고객마다 방을 따로</b> 열 수 있습니다.",
+  "y13": "변호사 · 세무사 · 회계사 · 병원 · 상점 · 식당 · 부동산처럼 <b>고객이 여러 명</b>인 분들을 위한 상품입니다. 일반 · 프리미엄은 이용권마다 회선이 하나지만, 프로 비즈니스는 <b>구독 하나로 고객마다 방을 따로</b> 열 수 있습니다.",
   "y14": "스타터 — 방 50개 · 50GB · 월 9,900원",
-  "y15": "프로 — 방 100개 · 150GB · 월 19,900원",
-  "y16": "비즈니스 — 방 150개 · 400GB · 월 39,900원",
+  "y15": "비즈니스 — 방 100개 · 150GB · 월 19,900원",
+  "y16": "엔터프라이즈 — 방 150개 · 400GB · 월 39,900원",
   "y17": "6개월은 10%, 12개월은 17% 할인됩니다. <b>1년 쓰시면 두 달치가 공짜</b>인 셈입니다.",
   "y18": "⭐ 방 개수는 \"최근 3개월 안에 대화가 오간 방\"만 셉니다",
   "y19": "고객이 120명이어도, 지금 대화가 오가는 곳이 20곳이면 <b>20개로 셉니다.</b> 조용한 방은 세지 않으니 고객 수가 많다고 비싼 등급을 고르실 필요가 없습니다.",
@@ -437,266 +421,201 @@ const I18N = {
   "y23": "<b>안내판</b>진료 안내 · 상담료 · 메뉴판을 방 위에 고정해 둡니다.",
   "y24": "<b>자리비움 자동응답</b>\"진료 중입니다\" 같은 문구가 자동으로 한 번 나갑니다.",
   "y25": "<b>내 이름 표시</b>\"개설자\" 대신 \"김변호사\"처럼 보이게 할 수 있습니다.",
-  "y30": "📣 광고형 프로 비즈니스",
-  "y31": "상호를 <b>공개 목록</b>에 올려, 아직 모르는 분들이 찾아와 문의할 수 있게 하는 상품입니다. 위 프로 비즈니스에 게재료(월 5,500원부터)가 더해집니다.",
-  "y32": "⚠️ 사업자등록증 확인이 필요하며, 법률·세무·회계·의료·약국·동물병원·부동산은 <b>해당 자격증까지</b> 확인합니다. 제출하신 서류는 <b>공개되지 않고</b> 관리자만 확인합니다. 목록에는 \"확인된 사업자\" 표시만 붙습니다.",
-  "y33": "⚠️ 예약이나 주문은 <b>대화로만</b> 주고받습니다. 앱 안에서 결제하거나 주문서를 접수하지 않습니다.",
-  "y40": "고객이 많은데 어느 등급을 골라야 하나요?",
-  "y41": "지금 <b>실제로 대화가 오가는 고객 수</b>를 기준으로 고르세요. 명단에 있는 전체 인원이 아니라, 최근 3개월 안에 연락을 주고받을 만한 분들만 세시면 됩니다. 부족하면 언제든 올리실 수 있습니다.",
-  "y42": "의뢰인마다 방을 만들면 제 번호가 노출되나요?",
-  "y43": "아니요. 초대링크만 전달하시면 되고, 양쪽 모두 전화번호를 주고받지 않습니다. 의뢰인 화면에는 회원님이 정하신 이름(예: \"김변호사\")으로 보입니다.",
-  "x01": "🖨️ 대화 내보내기",
-  "x02": "주고받은 대화를 종이로 인쇄하거나 PDF로 저장할 수 있어요. 기간과 참가자를 골라서 필요한 부분만 뽑을 수 있습니다.",
-  "x10": "⑦ 대화 내보내기 ⭐",
+  "y26": "<b>연장하면 방도 함께</b>같은 등급을 다시 사면 그 구독의 기간이 늘고, 만들어 둔 방들도 같은 날까지 함께 늘어납니다.",
+  "l0": "공개 업체 목록 게재 (광고형)",
+  "l1": "📣 프로 비즈니스 + 게재 이용권 = 광고 게재형",
+  "l2": "프로 비즈니스에 <b>게재 이용권</b>(1개월 5,500원 · 6개월 29,700원 · 12개월 54,800원)을 더하면 <b>광고 게재형</b>이 됩니다. 상호가 공개 목록에 올라, 아직 모르는 분들이 찾아와 번호 없이 문의할 수 있어요. 게재는 <b>프로 구독이 끝나는 날까지</b>입니다.",
+  "l3": "<b>게재 이용권 사기</b>이용권 화면에서 프로 상품 아래의 \"공개 업체 목록 게재\"를 고릅니다. 프로가 있어야 살 수 있어요.",
+  "l4": "<b>업체 정보 · 서류 올리기</b>업체 공개 등록 화면에서 상호 · 업종 · 소개 · 영업시간을 적고 사업자등록증을 올립니다. 법률 · 세무 · 회계 · 의료 · 약국 · 동물병원 · 부동산은 해당 자격증까지 올립니다.",
+  "l5": "<b>저희 확인</b>관리자가 서류를 대조해 승인하거나, 고칠 점을 적어 반려합니다. 반려되면 사유를 보고 다시 올리시면 됩니다.",
+  "l6": "<b>[공개 켜기]</b>확인이 끝나면 업체 공개 등록 화면에서 [공개 켜기]를 눌러 게시합니다. 언제든 끄실 수 있어요.",
+  "l7": "⚠️ 제출하신 서류는 <b>공개되지 않고</b> 관리자만 봅니다. 목록에는 \"확인된 사업자\" 표시만 붙습니다. 예약이나 주문은 <b>대화로만</b> 주고받고, 앱 안에서 결제나 주문서를 받지 않습니다.",
   "x11": "대화 내보내기 (인쇄 · PDF)",
   "x12": "상담 기록을 남겨야 할 때",
-  "x13": "변호사·의사·세무사처럼 <b>기록을 보관할 의무</b>가 있는 분들을 위해 만들었습니다. 대화방 오른쪽 위 <b>\"⋯\" → 🖨️ 대화 내보내기</b>에서 바로 뽑으실 수 있어요.",
+  "x13": "변호사 · 의사 · 세무사처럼 <b>기록을 보관할 의무</b>가 있는 분들을 위해 만들었습니다. 대화방 오른쪽 위 <b>\"⋯\" → 🖨️ 대화 내보내기</b>에서 바로 뽑으실 수 있어요.",
   "x20": "<b>기간 고르기</b>시작일과 종료일을 지정합니다. 하루치만 뽑는 것도 됩니다.",
-  "x21": "<b>참가자 고르기</b>\"전체\"를 그대로 두거나, 특정 참가자만 골라서 그 사람과의 대화만 뽑을 수 있습니다. 여러 명을 함께 고르셔도 됩니다.",
-  "x22": "<b>인쇄 / PDF로 저장</b>인쇄창이 열립니다. 프린터로 바로 뽑으셔도 되고, \"PDF로 저장\"을 고르시면 파일로 남습니다.",
+  "x21": "<b>참가자 고르기</b>\"전체\"를 그대로 두거나, 특정 참가자만 골라서 그 사람과의 대화만 뽑을 수 있습니다.",
+  "x22": "<b>인쇄 / PDF로 저장</b>인쇄 창이 열립니다. 프린터로 바로 뽑으셔도 되고, \"PDF로 저장\"을 고르시면 파일로 남습니다.",
   "x30": "📎 사진과 파일은 어떻게 되나요?",
   "x31": "<b>사진</b>은 인쇄물 안에 그대로 실립니다.",
-  "x32": "<b>동영상·음성메시지·문서</b>는 종이에 담을 수 없습니다. 대신 문서 맨 뒤에 <b>첨부파일 목록</b>이 붙어서, 언제 누가 어떤 파일을 주고받았는지가 기록으로 남습니다.",
-  "x33": "파일 실물이 필요하시면 같은 화면의 <b>\"첨부파일 내려받기\"</b>를 누르세요. 고르신 기간·참가자 조건이 그대로 적용됩니다.",
+  "x32": "<b>동영상 · 음성메시지 · 문서</b>는 종이에 담을 수 없어, 문서 맨 뒤에 <b>첨부파일 목록</b>이 붙습니다.",
+  "x33": "파일 실물이 필요하시면 같은 화면의 <b>\"첨부파일 내려받기\"</b>를 누르세요.",
   "x40": "🔒 암호화 방에서도 됩니다",
-  "x41": "Secure 상품은 저희 서버가 대화 내용을 볼 수 없습니다. 그래서 내보내기도 <b>회원님의 브라우저 안에서</b> 만들어집니다. 저희를 거치지 않고 바로 인쇄물이 됩니다.",
-  "x42": "⚠️ 다만 그렇기 때문에 <b>초대링크(열쇠)를 잃어버리면 내보내기도 불가능합니다.</b> 기록을 남겨야 하는 용도라면 링크를 반드시 안전한 곳에 보관해주세요.",
+  "x41": "Secure 회선은 저희 서버가 대화 내용을 볼 수 없어, 내보내기도 <b>회원님의 기기 안에서</b> 만들어집니다.",
+  "x42": "⚠️ 그래서 <b>초대 링크(열쇠)를 잃어버리면 내보내기도 불가능합니다.</b>",
+  "y40": "고객이 많은데 어느 등급을 골라야 하나요?",
+  "y41": "지금 <b>실제로 대화가 오가는 고객 수</b>를 기준으로 고르세요. 최근 3개월 안에 연락을 주고받을 만한 분들만 세시면 됩니다. 부족하면 언제든 올리실 수 있습니다.",
+  "y42": "의뢰인마다 방을 만들면 제 번호가 노출되나요?",
+  "y43": "아니요. 초대 링크만 전달하시면 되고, 양쪽 모두 전화번호를 주고받지 않습니다. 의뢰인 화면에는 회원님이 정하신 이름(예: \"김변호사\")으로 보입니다.",
+  "s064": "사용량을 다 쓰면 어떻게 되나요?",
+  "s065": "새 통화 걸기만 멈추고, 문자 보내기 · 받기 · 읽기는 계속 됩니다. 회선 관리의 [＋ 사용량 추가]로 1GB씩 더하시면 바로 다시 통화하실 수 있어요(⑦번).",
+  "f01": "무료 체험 중에도 보안회선을 쓸 수 있나요?",
+  "f02": "무료 체험은 긴급 기능(긴급등록 · 긴급연락 · 임시연락처)만 해당합니다. 보안회선은 일반 · 프리미엄 이용권으로 여시며, 체험 중에 사셔도 남은 체험 기간은 그대로 남고 1개월을 더 드립니다.",
   "x50": "상담 기록을 나중에 볼 수 있나요?",
-  "x51": "네. 대화방은 구독 기간 동안 그대로 남아 있고, 언제든 \"⋯ → 🖨️ 대화 내보내기\"로 인쇄하거나 PDF로 저장하실 수 있습니다. 다만 구독이 만료되고 30일이 지나면 사진·동영상·음성 파일이 삭제되니, 보관이 필요하시면 그 전에 내보내두세요.",
+  "x51": "네. 대화방은 기간 동안 그대로 남아 있고, 언제든 \"⋯ → 🖨️ 대화 내보내기\"로 인쇄하거나 PDF로 저장하실 수 있습니다. 다만 기간이 끝나고 30일이 지나면 사진 · 동영상 · 음성 파일이 삭제되니, 그 전에 내보내 두세요.",
   "x52": "단톡방에서 특정 사람과의 대화만 뽑을 수 있나요?",
-  "x53": "네. 내보내기 화면에서 참가자를 골라주시면 그 사람의 메시지만 나옵니다. 여러 명을 함께 고르셔도 됩니다. 다만 통화 기록과 입퇴장 기록은 특정인의 발언이 아니라 방 전체에서 일어난 일이라, 사람을 골라도 그대로 포함됩니다(체크박스로 끄실 수 있어요).",
-  "s071": "결제하신 기간이 끝나면 회선이 종료됩니다. 연장하시려면 만료 전에 재결제해주세요.",
-  "s070": "기간이 만료되면 대화 내용은 어떻게 되나요?",
-  "s069": "타이머 메시지는 방을 실제로 열어보고 있는 쪽 화면이 삭제를 처리합니다. 양쪽 다 탭을 닫아버리면, 다음에 누군가 다시 들어올 때 정리됩니다.",
+  "x53": "네. 내보내기 화면에서 참가자를 골라주시면 그 사람의 메시지만 나옵니다. 통화 기록과 입퇴장 기록은 방 전체의 일이라 그대로 포함됩니다(체크박스로 끄실 수 있어요).",
+  "s066": "Secure 회선의 열쇠를 잃어버렸어요. 복구할 수 있나요?",
+  "s067": "안타깝지만 불가능합니다. 종단간 암호화의 특성상 저희도 그 열쇠를 갖고 있지 않습니다. 열쇠(초대 링크)는 반드시 안전한 곳에 따로 저장해두세요.",
   "s068": "타이머 메시지가 정확한 시간에 안 지워져요.",
-  "s067": "안타깝지만 불가능합니다. 종단간 암호화의 특성상, 저희도 그 열쇠를 갖고 있지 않기 때문입니다. 열쇠(초대링크)는 반드시 안전한 곳에 따로 저장해두세요.",
-  "s066": "Secure 상품의 열쇠를 잃어버렸어요. 복구할 수 있나요?",
-  "s065": "한도를 넘는 시점에 추가결제 안내가 뜹니다. 한도 이하로 쓰시면 별도 알림 없이 그대로 이용하실 수 있어요.",
-  "s064": "사용량 한도를 넘으면 어떻게 되나요?",
+  "s069": "타이머 메시지는 방을 실제로 열어보고 있는 쪽 화면이 삭제를 처리합니다. 양쪽 다 닫아버리면, 다음에 누군가 다시 들어올 때 정리됩니다.",
+  "s070": "기간이 끝나면 대화는 어떻게 되나요?",
+  "s071": "그 회선으로 새로 보내기 · 걸기가 멈춥니다. 끝나기 전이든 후든 회선 관리의 [연장하기]로 이어가시면 대화 · 초대 링크가 그대로 이어집니다. 다만 끝나고 30일이 지나면 사진 · 동영상 · 음성 파일이 삭제되니 그 전에 연장하거나 내보내 두세요.",
   "s063": "자주 묻는 질문",
-  "s062": "새 기기·브라우저에서 접속하실 땐 저장해둔 열쇠를 직접 붙여넣어야 다시 열립니다.",
-  "s061": "링크를 캡처만 해두거나 메모장에 저장해두시길 권해드립니다. 문자·메일로 전달하다가 유실되지 않도록 주의해주세요.",
-  "s060": "초대링크(정확히는 <span class=\"mono\">#k=</span> 뒷부분)를 잃어버리면, 그 대화는 저희를 포함해서 <b>아무도</b> 복구할 수 없습니다.",
-  "s059": "⚠️ 꼭 알아두셔야 할 점",
-  "s058": "추가 비용은 일반 상품 대비 약 1.5배 수준으로, 인원·기능은 완전히 동일합니다.",
-  "s057": "암호화 열쇠는 브라우저에서 직접 만들어지고, 초대링크 안에만 담깁니다.",
-  "s056": "문자·사진·동영상·음성 등 모든 내용을 저희 서버조차 볼 수 없게 암호화됩니다.",
-  "s055": "✅ Secure 상품이 좋은 점",
-  "s054": "암호화(Secure) 상품 주의사항",
-  "s053": "최대 4인까지 다자간 통화가 가능해요.",
-  "s052": "🎧 음성통화 · 🎥 영상통화",
-  "s051": "유튜브 링크나 음원 파일을 올리면, 방에 있는 모두가 같은 지점에서 동시에 들을 수 있어요.",
-  "s050": "🎵 같이 듣기",
-  "s049": "내가 보낸 메시지를 상대가 읽으면 시간 옆에 \"읽음\"이 표시돼요.",
-  "s048": "✓ 읽음 표시",
-  "s047": "지난 대화를 찾아보거나, URL을 보내면 자동으로 미리보기 카드가 붙어요.",
-  "s046": "🔍 대화 검색 · 🔗 링크 미리보기",
-  "s045": "두 가지 방식이 있어요 — \"D-day\"는 여행처럼 다가올 날까지 며칠 남았는지, \"D+day\"는 \"우리 사귄 날\"처럼 이미 지난 날부터 며칠째인지 세줍니다(연인들이 세는 \"1일, 2일…\"이 바로 이 방식이에요). 채팅 상단에 표시되고, 참가자 누구나 등록 가능합니다.",
-  "s044": "🎯 목표(D-DAY)",
-  "s043": "시간을 정해두면, 그 시간이 지난 뒤 대화방에서 자동으로 사라져요.",
-  "s042": "⏱️ 타이머 메시지",
-  "s041": "중요한 메시지를 저장해두거나, 상대는 절대 못 보는 나만의 메모를 남길 수 있어요.",
-  "s040": "⭐ 즐겨찾기 · 📌 나만의 메모함",
-  "s039": "특정 메시지에 답장하거나, 내가 보낸 메시지를 나중에 고치거나 지울 수 있어요.",
-  "s038": "↩️ 답장 · ✏️ 수정·삭제",
-  "s037": "녹음해서 보내거나, 말하면 자동으로 글자가 되는 받아쓰기도 지원해요.",
-  "s036": "🎤 음성메시지 · 🎙️ 음성입력",
-  "s035": "기본적인 파일 공유는 물론, 이모지 584개(움직이는 것 포함)까지 다양하게 보낼 수 있어요.",
-  "s034": "💬 문자·사진·동영상·문서",
-  "s033": "단순한 문자 주고받기를 넘어, 흔적을 남기지 않는 대화부터 함께 듣는 음악까지 — 다른 메신저에서도 보기 드문 기능들을 담았습니다.",
-  "s032": "기본을 넘어선, 진짜 채팅다운 채팅",
-  "s031": "오늘 가장 많이 쓰게 될 기능들",
-  "s030": "대화방 기능 총정리",
-  "s029": "<b>에브리바디 상품이라면?</b> 관리 화면에서 \"내보내기\"를 누르면 그 상대는 나가고, 새 초대링크가 자동으로 발급됩니다. 대화 기록은 상대가 바뀐 구간마다 색깔로 구분되어 계속 보여요.",
-  "s028": "<b>개설자가 승인</b>관리 화면에서 \"승인\"을 누르면 바로 입장되어 대화가 시작됩니다.",
-  "s027": "<b>대기실에서 대기</b>상대가 링크를 열고 별명을 입력하면 대기실에서 승인을 기다립니다.",
-  "s026": "<b>상대에게 전달</b>카톡·문자 등 어떤 방법으로 보내셔도 됩니다.",
-  "s025": "<b>초대링크 복사</b>관리 화면의 \"복사\" 버튼으로 초대링크를 가져옵니다.",
-  "s024": "초대·참가하기",
-  "s023": "<b>Secure 버전이 궁금하다면?</b> 위 4종 모두 \"🔒 Secure\" 버전이 따로 있습니다 — 인원·기능은 동일하고, 문자·사진·음성 등 모든 내용을 저희(Aliascall)조차 볼 수 없게 암호화됩니다. 자세한 가격은 <a href=\"aliascall_hotline_guide.html\" style=\"color:var(--brass); font-weight:700;\">상품 안내 페이지</a>에서 확인하실 수 있어요.",
-  "s022": "이코노미와 인원은 같지만 고화질 영상통화가 가능합니다.",
-  "s021": "✨ 프리미엄 (4인)",
-  "s020": "최대 4명이 함께 쓰는 가벼운 모임용입니다.",
-  "s019": "👥 이코노미 (4인)",
-  "s018": "단둘이 쓰되, 개설자가 언제든 상대를 교체할 수 있습니다.",
-  "s017": "🔄 에브리바디 (2인)",
-  "s016": "단둘이, 정해진 상대와 고정으로 씁니다.",
-  "s015": "📌 핫라인 (2인)",
-  "s014": "상품 고르기",
-  "s013": "<b>대화 시작</b>문자·사진·동영상·음성메시지·음성통화·영상통화·같이 듣기까지, 우리끼리만 쓰는 회선이 열립니다.",
-  "s012": "<b>공유·승인</b>초대링크를 상대에게 보내면, 상대가 별명을 입력하고 대기실에서 기다립니다. 개설자가 승인하면 입장 완료.",
-  "s011": "<b>초대링크 발급</b>결제가 끝나면 관리 화면에서 초대링크가 만들어집니다.",
-  "s010": "<b>상품 선택·결제</b>2인용부터 4인용까지, 일반 상품과 암호화(Secure) 상품 중 원하는 걸 고릅니다.",
-  "s009": "전체 흐름",
-  "s008": "⑧ 자주 묻는 질문",
-  "s007": "⑤ 암호화(Secure) 주의사항 ⭐",
-  "s006": "④ 대화방 기능 ⭐",
-  "s005": "③ 초대·참가하기",
-  "s004": "② 상품 고르기",
-  "s003": "① 전체 흐름",
-  "s002": "둘 또는 몇 명만 아는 우리끼리의 회선, 핫라인을 처음 쓰시는 분들을 위한 안내입니다. 궁금한 항목을 눌러 바로 이동하세요.",
-  "s001": "안심보안회선(Alias Secure Call) 사용설명서",
-  "docTitle": "안심보안회선(Alias Secure Call) 사용설명서",
   "backAria": "뒤로가기",
   "langToggle": "EN",
   "langAria": "언어 바꾸기"
  },
  "en": {
+  "s001": "Alias Secure Call — User Guide",
+  "docTitle": "Alias Secure Call — User Guide",
+  "s002": "A private line that only you and a few others know about. This guide is for anyone using a secure line for the first time. Tap any item to jump straight to it.",
+  "toc00": "① How it works",
+  "toc01": "② Choosing a plan",
+  "toc02": "③ Inviting and joining",
+  "toc03": "④ Managing a line ⭐",
+  "toc04": "⑤ Room features",
+  "toc05": "⑥ Encryption (Secure) notes ⭐",
+  "toc06": "⑦ Usage and extra usage ⭐",
+  "toc07": "⑧ Pro Business",
+  "toc08": "⑨ Public business listing ⭐",
+  "toc09": "⑩ Exporting a conversation",
+  "toc10": "⑪ FAQ",
+  "s009": "How it works",
+  "o1": "<b>Choose a plan and pay</b>Pick the Basic plan (a 2-person line) or the Premium plan (a 4-person line). Both also include emergency registration, emergency contact and one-time contact cards.",
+  "o2": "<b>Send an invite</b>Your line is created as soon as payment completes, and you can send the invite link or QR code from Manage lines.",
+  "o3": "<b>They join</b>The other person opens the link, enters a nickname and waits in the lobby until you approve them.",
+  "o4": "<b>Start talking</b>Text, photos, video, voice messages, voice and video calls, listening together — your own private line is open.",
+  "s014": "Choosing a plan",
+  "p0": "A secure line is opened with a <b>plan</b>. Each plan includes one line plus the emergency features.",
+  "p1h": "💚 Basic plan — 2-person line · 5GB",
+  "p1d": "A line for just the two of you. If you need to, you can remove the other person and invite someone else. 3, 6 or 12 months, each with 1 extra month.",
+  "p2h": "✨ Premium plan — 4-person line · 20GB",
+  "p2d": "A line shared by up to four people — family, close friends or a small team. 3, 6 or 12 months, each with 1 extra month.",
+  "p3h": "💼 Pro Business — many rooms",
+  "p3d": "For shops, offices and help desks: open a separate room for each customer. Covered in detail in section ⑧.",
+  "p4": "<b>Personal or everyday work</b> When creating a line you can choose its purpose. Pick \"personal\" for a partner, family or friends, and \"everyday work\" for executives, assistants or project members. Price and features are the same; work rooms simply skip light features such as the \"question of the day\".",
+  "p5": "<b>Encryption (Secure) 🔒</b> Turn on \"Encrypt\" when creating a line and everything — text, photos, voice — is locked so that not even we can read it. <b>There is no extra charge.</b> The key lives only in the invite link, though, and cannot be recovered if lost, so please read section ⑥.",
+  "p6": "See the plans ▷",
+  "p7": "Prices are shown on the plans screen. In the app you pay through Google Play, and nothing renews automatically.",
+  "s024": "Inviting and joining",
+  "s025": "<b>Send the invite</b>Tap [🔗 Send invite] in Manage lines to send it straight through a messaging app or SMS, show a QR code, or copy the link.",
+  "s026": "<b>They open the link</b>No app is needed — opening the link is enough.",
+  "s027": "<b>They wait in the lobby</b>They enter a nickname and wait for your approval.",
+  "s028": "<b>You approve them</b>Tap \"Approve\" in Manage lines and the conversation begins.",
+  "s029": "<b>Need to change the other person on a 2-person line?</b> Tap \"Remove\" in Manage lines; they leave and a new invite link is created. Earlier messages stay hidden from the new person.",
+  "m0": "Managing a line",
+  "m1": "<b>Extend a line</b>Tap [Extend] in Manage lines to add time to the same line. It is added after your remaining time, and the conversation, invite link and key stay the same.",
+  "m2": "<b>Upgrade from 2 to 4 people</b>Choose the Premium plan for an existing 2-person line and that line is upgraded to 4 people instead of creating a new one. The conversation carries on.",
+  "m3": "<b>Name your lines</b>Tap ✏️ and give a line a name such as \"With my wife\" or \"Mr Kim\" so several lines are easy to tell apart.",
+  "m4": "<b>See and add usage</b>Each line shows a usage bar, and [＋ Add usage] adds data to that line directly (section ⑦).",
+  "s030": "Everything the room can do",
+  "s031": "The features you will use most",
+  "s032": "More than the basics — chat that actually feels like chat",
+  "s033": "Beyond simply trading messages: from conversations that leave no trace to music you listen to together, we have packed in features you rarely see even in other messengers.",
+  "s034": "💬 Text, photos, video, documents",
+  "s035": "Share files of all kinds, plus 584 emoji (including animated ones).",
+  "s036": "🎤 Voice messages · 🎙️ Voice input",
+  "s037": "Record and send a clip, or just speak and have it turned into text automatically.",
+  "s038": "↩️ Replies · ✏️ Edit and delete",
+  "s039": "Reply to a specific message, or edit or remove something you sent earlier.",
+  "s040": "⭐ Favorites · 📌 Your private notes",
+  "s041": "Save important messages, or keep notes the other person can never see.",
+  "s042": "⏱️ Timed messages",
+  "s043": "Set a duration and the message disappears from the room automatically once it passes.",
+  "s044": "🎯 Goals (D-DAY)",
+  "s045": "\"D-day\" counts down to something coming up, like a trip; \"D+day\" counts up from a date that has passed, like the day you started dating. It shows at the top of the chat, and any participant can add one.",
+  "s046": "🔍 Message search · 🔗 Link previews",
+  "s047": "Search back through old messages, and any URL you send gets a preview card automatically.",
+  "s048": "✓ Read receipts",
+  "s049": "When the other person reads your message, \"Read\" appears next to the timestamp.",
+  "s050": "🎵 Listen together",
+  "s051": "Paste a YouTube link or upload an audio file and everyone in the room hears the same point at the same time.",
+  "s052": "🎧 Voice calls · 🎥 Video calls",
+  "s053": "Group calls with up to four people.",
+  "c01": "📞 Joining a call",
+  "c02": "When someone starts a call, a notice with a <b>[Join now]</b> button appears in the chat. Tap it to join straight away — or use the 🎧 / 🎥 icon at the bottom.",
   "y80": "🟡 Away auto-reply",
-  "y81": "While you are away, a message such as \"In a meeting right now\" is sent once, automatically. You can write and save your own phrases and pick from them. Both the host and the participant can use it.",
-  "y70": "8 plans",
-  "y71": "💼 Pro Business line",
-  "y72": "3 tiers each",
-  "y73": "Open a separate room for each customer. The listing version also publishes your business in the public directory. Section ⑥ covers this in detail.",
-  "y74": "① Our own line · ② Everyday work line — 8 plans",
-  "y75": "Both families use the <b>same eight plans</b>. Only the people and the purpose differ — the way you choose is identical.",
-  "y50": "Tap the options below — the answer at the bottom updates instantly.",
-  "y51": "How many people will use it?",
-  "y52": "Just two",
-  "y53": "You and one other person",
-  "y54": "A few of us",
-  "y55": "Up to four people",
-  "y56": "Might the other person change?",
-  "y57": "Always the same person",
-  "y58": "You keep using it with whoever joins first. This is the cheaper option.",
-  "y59": "Swap as needed",
-  "y60": "You can remove someone and invite another. The earlier conversation stays hidden from the new person.",
-  "y61": "Do you need encryption?",
-  "y62": "Standard",
-  "y63": "Stored safely on our servers, and your conversation follows you to a new device.",
-  "y64": "Secure 🔒",
-  "y65": "The key lives only in the invite link, so not even we can read it. ⚠ Lose the link and nothing can be recovered.",
-  "y66": "This is the plan for you",
-  "y67": "See this plan ▷",
-  "y01": "There are <b>three families</b> of lines. Deciding which one you need first makes everything simpler.",
-  "y02": "💚 Our own line",
-  "y03": "For a partner, family, friends, relatives or old classmates.",
-  "y04": "🗂️ Everyday work line",
-  "y05": "For executives, directors, managers, assistants, project members and general company work.",
-  "y06": "Three choices decide which of the eight you need",
-  "y10": "⑥ Pro Business ⭐",
+  "y81": "While you are away, a message such as \"In a meeting right now\" is sent once, automatically. You can write and save your own phrases and pick from them.",
+  "x01": "🖨️ Export conversation",
+  "x02": "Print the conversation or save it as a PDF, choosing a period and participants so you only export what you need.",
+  "s054": "Notes on encrypted (Secure) lines",
+  "s055": "✅ What is good about Secure",
+  "s056": "Text, photos, video, voice — everything is encrypted so that not even our servers can read it.",
+  "s057": "The encryption key is generated on your device and lives only inside the invite link.",
+  "s058": "<b>There is no extra charge.</b> Group size and features are exactly the same as a standard line.",
+  "s059": "⚠️ What you must know",
+  "s060": "If you lose the invite link (specifically the part after <span class=\"mono\">#k=</span>), that conversation cannot be recovered by <b>anyone</b>, including us.",
+  "s061": "We recommend taking a screenshot of the link or saving it in a notes app. Be careful not to lose it while forwarding it.",
+  "s062": "When you connect from a new device or browser, you need the saved key (link) to open the room again.",
+  "s062b": "Encryption is chosen when the line is created and cannot be changed later. Upgrading to 4 people keeps the same setting.",
+  "u0": "Usage and extra usage",
+  "u1": "<b>What is counted</b>Only call data that passes through our relay server. Text and photos are not counted, and calls that connect directly are not counted either.",
+  "u2": "<b>When it runs out</b>New calls stop. Sending, receiving and reading messages carry on. The line owner is asked whether to add usage.",
+  "u3": "<b>Extra usage 1GB · KRW 2,000</b>From the bottom of the plans screen or [＋ Add usage] in Manage lines, <b>pick the line</b> and add 1GB at a time (up to 10 at once). It lasts 3 months from purchase; anything left after that expires.",
+  "u4": "<b>Tip.</b> Extra usage cannot be used once the line ends, so if less than a month is left, consider extending first. On <b>Pro Business</b>, usage across all rooms is combined against the subscription limit, and extra usage is added to the whole subscription.",
   "y11": "Pro Business (for managing customers)",
   "y12": "One subscription, many rooms",
-  "y13": "This is for lawyers, tax accountants, clinics, shops, restaurants and agencies — anyone with <b>many customers</b>. The eight plans above create one room per purchase; Pro Business lets you open <b>a separate room for each customer under a single subscription</b>.",
-  "y14": "Starter — 50 rooms · 50GB · 9,900 KRW/month",
-  "y15": "Pro — 100 rooms · 150GB · 19,900 KRW/month",
-  "y16": "Business — 150 rooms · 400GB · 39,900 KRW/month",
+  "y13": "For lawyers, tax accountants, clinics, shops, restaurants and agencies — anyone with <b>many customers</b>. Basic and Premium give you one line per plan; Pro Business lets you open <b>a separate room for each customer under one subscription</b>.",
+  "y14": "Starter — 50 rooms · 50GB · KRW 9,900/month",
+  "y15": "Business — 100 rooms · 150GB · KRW 19,900/month",
+  "y16": "Enterprise — 150 rooms · 400GB · KRW 39,900/month",
   "y17": "Six months saves 10%, twelve months saves 17% — <b>a year works out to two months free</b>.",
   "y18": "⭐ Only rooms with activity in the last three months count",
-  "y19": "Even with 120 customers, if only 20 rooms are active right now, that counts as <b>20</b>. Quiet rooms are not counted, so a large customer list does not force you into a higher tier.",
-  "y20": "Tap <b>Archive</b> on a finished room and it drops out of the count. The conversation stays, and you can reopen it any time.",
+  "y19": "Even with 120 customers, if only 20 rooms are active, that counts as <b>20</b>. Quiet rooms are not counted, so a long customer list does not force a higher tier.",
+  "y20": "Tap <b>Archive</b> on a finished room and it drops out of the count. The conversation stays and can be reopened any time.",
   "y21": "What Pro Business adds",
   "y22": "<b>Management screen</b>Create rooms labelled with a client name and search by that name.",
   "y23": "<b>Info board</b>Pin clinic hours, fees or a menu to the top of the room.",
   "y24": "<b>Away auto-reply</b>A message such as \"With a patient right now\" goes out once, automatically.",
   "y25": "<b>Your display name</b>Appear as \"Attorney Kim\" instead of \"Host\".",
-  "y30": "📣 Pro Business with public listing",
-  "y31": "List your business in the <b>public directory</b> so people who do not know you yet can find you and get in touch. This adds a listing fee (from 5,500 KRW/month) on top of Pro Business.",
-  "y32": "⚠️ A business registration certificate is required. For legal, tax, accounting, medical, pharmacy, veterinary and real-estate categories we also verify the relevant professional licence. <b>Your documents are never published</b> — only an administrator reviews them, and the listing simply shows a \"verified\" badge.",
-  "y33": "⚠️ Bookings and orders happen <b>through conversation only</b>. We do not take payments or process order forms inside the app.",
-  "y40": "I have many customers — which tier should I pick?",
-  "y41": "Count the customers you are <b>actually talking to</b>, not everyone on your list — just those likely to exchange messages within the last three months. You can always upgrade later.",
-  "y42": "If I open a room per client, is my phone number exposed?",
-  "y43": "No. You only share an invite link, and neither side exchanges a phone number. Clients see the name you set — for example \"Attorney Kim\".",
-  "x01": "🖨️ Export conversation",
-  "x02": "Print the conversation on paper or save it as a PDF. Choose a period and which participants to include, so you only export the part you need.",
-  "x10": "⑦ Exporting a conversation ⭐",
+  "y26": "<b>Extending keeps your rooms</b>Buy the same tier again and the subscription is extended — all the rooms you made are extended to the same date.",
+  "l0": "Public business listing (ad listing)",
+  "l1": "📣 Pro Business + listing = ad-listed",
+  "l2": "Add a <b>listing</b> (1 month KRW 5,500 · 6 months KRW 29,700 · 12 months KRW 54,800) to Pro Business and it becomes <b>ad-listed</b>: your business appears in the public directory, so people who do not know you yet can find you and get in touch without a number. The listing lasts <b>until your Pro plan ends</b>.",
+  "l3": "<b>Buy the listing</b>On the plans screen, choose \"Public business listing\" under the Pro plans. You need a Pro plan to buy it.",
+  "l4": "<b>Add details and documents</b>On the business listing screen, enter your name, category, introduction and hours, and upload your business registration. Legal, tax, accounting, medical, pharmacy, veterinary and real-estate businesses also upload the relevant licence.",
+  "l5": "<b>We check them</b>An administrator compares your documents and approves them, or sends them back with what to fix. If returned, read the reason and upload again.",
+  "l6": "<b>[Go public]</b>Once approved, tap [Go public] on the business listing screen. You can turn it off any time.",
+  "l7": "⚠️ Your documents are <b>never published</b> — only an administrator sees them, and the listing just shows a \"verified\" badge. Bookings and orders happen <b>through conversation only</b>; we do not take payments or order forms in the app.",
   "x11": "Exporting a conversation (print · PDF)",
   "x12": "When you need to keep a record",
-  "x13": "We built this for people who have a <b>duty to retain records</b> — lawyers, doctors, tax accountants. Open it from <b>\"⋯\" → 🖨️ Export conversation</b> at the top right of the room.",
+  "x13": "Built for people with a <b>duty to retain records</b> — lawyers, doctors, tax accountants. Open it from <b>\"⋯\" → 🖨️ Export conversation</b> at the top right of the room.",
   "x20": "<b>Choose a period</b>Set a start and end date. A single day works too.",
-  "x21": "<b>Choose participants</b>Leave it on \"Everyone\", or pick specific people to export only their messages. You can select several at once.",
-  "x22": "<b>Print / Save as PDF</b>The print dialog opens. Send it straight to a printer, or choose \"Save as PDF\" to keep it as a file.",
+  "x21": "<b>Choose participants</b>Leave it on \"Everyone\", or pick specific people to export only their messages.",
+  "x22": "<b>Print / Save as PDF</b>The print window opens. Print straight away, or choose \"Save as PDF\" to keep a file.",
   "x30": "📎 What happens to photos and files?",
   "x31": "<b>Photos</b> are printed directly into the document.",
-  "x32": "<b>Videos, voice messages and documents</b> cannot be put on paper. Instead an <b>attachment list</b> is added at the end of the document, recording who sent which file and when.",
-  "x33": "If you need the files themselves, tap <b>\"Download attachments\"</b> on the same screen. The period and participants you chose are applied there too.",
+  "x32": "<b>Videos, voice messages and documents</b> cannot go on paper, so an <b>attachment list</b> is added at the end.",
+  "x33": "If you need the files themselves, tap <b>\"Download attachments\"</b> on the same screen.",
   "x40": "🔒 It works in encrypted rooms too",
-  "x41": "On Secure plans our servers cannot read your conversation, so the export is assembled <b>inside your own browser</b>. It becomes a printout without ever passing through us.",
-  "x42": "⚠️ For that same reason, <b>if you lose the invite link (the key), you cannot export either.</b> If you are keeping records, be sure to store the link somewhere safe.",
+  "x41": "On Secure lines our servers cannot read your conversation, so the export is assembled <b>on your own device</b>.",
+  "x42": "⚠️ For the same reason, <b>if you lose the invite link (the key), you cannot export either.</b>",
+  "y40": "I have many customers — which tier should I pick?",
+  "y41": "Count the customers you are <b>actually talking to</b> — those likely to exchange messages within three months. You can always move up later.",
+  "y42": "If I open a room per client, is my phone number exposed?",
+  "y43": "No. You only share an invite link and neither side exchanges a phone number. Clients see the name you set, such as \"Attorney Kim\".",
+  "s064": "What happens when the usage runs out?",
+  "s065": "Only new calls stop; sending, receiving and reading messages carry on. Add 1GB at a time with [＋ Add usage] in Manage lines and you can call again right away (section ⑦).",
+  "f01": "Can I use a secure line during the free trial?",
+  "f02": "The free trial covers the emergency features only (emergency registration, emergency contact, one-time cards). Secure lines are opened with the Basic or Premium plan; buy during the trial and you keep your remaining trial days plus 1 extra month.",
   "x50": "Can I look at consultation records later?",
-  "x51": "Yes. The room stays as it is for the length of your subscription, and you can print or save it as a PDF at any time from \"⋯ → 🖨️ Export conversation\". Note that photos, videos and voice files are deleted 30 days after a subscription expires, so export anything you need to keep before then.",
+  "x51": "Yes. The room stays for the length of your plan, and you can print or save it as a PDF any time from \"⋯ → 🖨️ Export conversation\". Photos, videos and voice files are deleted 30 days after a plan ends, so export what you need before then.",
   "x52": "In a group room, can I export only one person's messages?",
-  "x53": "Yes. Pick the participants on the export screen and only their messages appear. You can select several. Call records and join/leave records are events for the whole room rather than one person's messages, so they stay included even when you filter by person — you can turn them off with the checkbox.",
-  "s071": "The line closes when the period you paid for ends. To keep it, renew before it expires.",
-  "s070": "What happens to our messages when the plan expires?",
-  "s069": "Timed messages are deleted by whichever screen is actually open in the room. If both sides close the tab, they are cleaned up the next time someone comes back in.",
+  "x53": "Yes. Pick participants on the export screen and only their messages appear. Call and join/leave records are events for the whole room, so they stay included — you can turn them off with the checkbox.",
+  "s066": "I lost the key for my Secure line. Can it be recovered?",
+  "s067": "Unfortunately not. With end-to-end encryption we do not hold the key either. Always keep the key (the invite link) somewhere safe.",
   "s068": "My timed messages are not disappearing exactly on time.",
-  "s067": "Unfortunately not. That is the nature of end-to-end encryption — we do not hold the key either. Always keep the key (the invite link) saved somewhere safe.",
-  "s066": "I lost the key for my Secure plan. Can it be recovered?",
-  "s065": "You will see a notice about an additional charge at the moment you cross the limit. Stay under it and you can keep using the line with no notice at all.",
-  "s064": "What happens if I go over the usage limit?",
+  "s069": "Timed messages are deleted by whichever screen has the room open. If both sides close it, they are cleaned up the next time someone comes back.",
+  "s070": "What happens when my plan ends?",
+  "s071": "New messages and calls on that line stop. Whether before or after it ends, [Extend] in Manage lines carries the conversation and invite link on. Photos, videos and voice files are deleted 30 days after the end, so extend or export before then.",
   "s063": "Frequently asked questions",
-  "s062": "When you connect from a new device or browser, you will need to paste the saved key in yourself to open the room again.",
-  "s061": "We recommend taking a screenshot of the link or saving it in a notes app. Be careful not to lose it while forwarding it by message or email.",
-  "s060": "If you lose the invite link (specifically the part after <span class=\"mono\">#k=</span>), that conversation cannot be recovered by <b>anyone</b>, including us.",
-  "s059": "⚠️ What you must know",
-  "s058": "It costs about 1.5× the standard plan, with exactly the same group size and features.",
-  "s057": "The encryption key is generated in your browser and lives only inside the invite link.",
-  "s056": "Text, photos, video, voice — everything is encrypted so that not even our servers can read it.",
-  "s055": "✅ What is good about Secure",
-  "s054": "Notes on the encrypted (Secure) plans",
-  "s053": "Group calls with up to four people.",
-  "s052": "🎧 Voice calls · 🎥 Video calls",
-  "s051": "Paste a YouTube link or upload an audio file and everyone in the room hears the same point at the same time.",
-  "s050": "🎵 Listen together",
-  "s049": "When the other person reads your message, \"Read\" appears next to the timestamp.",
-  "s048": "✓ Read receipts",
-  "s047": "Search back through old messages, and any URL you send gets a preview card attached automatically.",
-  "s046": "🔍 Message search · 🔗 Link previews",
-  "s045": "There are two modes — \"D-day\" counts down to something coming up, like a trip, while \"D+day\" counts up from a date that has already passed, like the day you started dating (this is the \"day 1, day 2…\" that couples count). It shows at the top of the chat, and any participant can add one.",
-  "s044": "🎯 Goals (D-DAY)",
-  "s043": "Set a duration and the message disappears from the room automatically once it passes.",
-  "s042": "⏱️ Timed messages",
-  "s041": "Save important messages, or keep notes the other person can never see.",
-  "s040": "⭐ Favorites · 📌 Your private notes",
-  "s039": "Reply to a specific message, or edit or remove something you sent earlier.",
-  "s038": "↩️ Replies · ✏️ Edit and delete",
-  "s037": "Record and send a clip, or just speak and have it turned into text automatically.",
-  "s036": "🎤 Voice messages · 🎙️ Voice input",
-  "s035": "Share files of all kinds, plus 584 emoji (including animated ones).",
-  "s034": "💬 Text, photos, video, documents",
-  "s033": "Beyond simply trading messages: from conversations that leave no trace to music you listen to together, we have packed in features you rarely see even in other messengers.",
-  "s032": "More than the basics — chat that actually feels like chat",
-  "s031": "The features you will use most",
-  "s030": "Everything the room can do",
-  "s029": "<b>On the Everybody plan?</b> Tap \"Remove\" on the management screen and that person leaves, with a new invite link issued automatically. Your message history stays, colour-coded by each stretch with a different partner.",
-  "s028": "<b>You approve them</b>Tap \"Approve\" on the management screen and the conversation begins.",
-  "s027": "<b>They wait in the lobby</b>They open the link, enter a nickname, and wait for your approval.",
-  "s026": "<b>Send it to the other person</b>Any channel works — a messaging app, SMS, whatever you prefer.",
-  "s025": "<b>Copy the invite link</b>Use the \"Copy\" button on your management screen.",
-  "s024": "Inviting and joining",
-  "s023": "<b>Curious about the Secure versions?</b> All four plans come in a separate \"🔒 Secure\" version — the same group size and features, but text, photos, voice and everything else is encrypted so that not even we (Aliascall) can read it. You can see exact prices on the <a href=\"aliascall_hotline_guide.html\" style=\"color:var(--brass); font-weight:700;\">plan overview page</a>.",
-  "s022": "The same group size as Economy, with high-definition video calls.",
-  "s021": "✨ Premium (4 people)",
-  "s020": "A light option for small groups of up to four.",
-  "s019": "👥 Economy (4 people)",
-  "s018": "Two at a time, but the owner can swap the other person whenever they like.",
-  "s017": "🔄 Everybody (2 people)",
-  "s016": "Just the two of you, with one fixed partner.",
-  "s015": "📌 Hotline (2 people)",
-  "s014": "Choosing a plan",
-  "s013": "<b>Start talking</b>Text, photos, video, voice messages, voice calls, video calls, listening together — your own private line is open.",
-  "s012": "<b>Share and approve</b>Send the invite link to the other person. They enter a nickname and wait in the lobby. Once you approve them, they are in.",
-  "s011": "<b>Get your invite link</b>Once payment is complete, an invite link is created on your management screen.",
-  "s010": "<b>Choose and pay</b>Pick a plan for two to four people, in either the standard or the encrypted (Secure) version.",
-  "s009": "How it works",
-  "s008": "⑧ FAQ",
-  "s007": "⑤ Encryption (Secure) notes ⭐",
-  "s006": "④ Room features ⭐",
-  "s005": "③ Inviting and joining",
-  "s004": "② Choosing a plan",
-  "s003": "① How it works",
-  "s002": "A private line only you and a few others know about. This guide is for anyone using a hotline for the first time. Tap any item to jump straight to it.",
-  "s001": "Alias Secure Call — User Guide",
-  "docTitle": "Alias Secure Call — User Guide",
   "backAria": "Go back",
   "langToggle": "한국어",
   "langAria": "Change language"
  }
 };
 
-// 공용 스크립트가 없는 페이지라 직접 감지함(키는 다른 화면과 동일).
 const LANG_KEYS = ['aliascall_lang', 'aliascall_language', 'ac_lang', 'lang'];
 function detectLang(){
   try { const q = new URLSearchParams(location.search).get('lang');
@@ -721,91 +640,7 @@ document.getElementById('langToggleBtn').addEventListener('click', () => {
   LANG = (LANG === 'ko') ? 'en' : 'ko';
   LANG_KEYS.forEach((k) => { try { localStorage.setItem(k, LANG); } catch (e) {} });
   applyI18n();
-  // 목차 암커로 이동한 상태에서 바꿔도 위치가 유지되도록 새로고침은 하지 않음
 });
-
-// =====================================================================
-// 2026-08-27 신설: 안내서 안에서 상품 찾기
-//
-// 8개 상품의 차이는 인원수 · 상대 교체 · 암호화 세 가지뿐입니다(2×2×2).
-// 세 가지를 고르면 답이 하나로 정해집니다.
-//
-// ⚠ 가격은 여기 적지 않습니다.
-//   구매 화면에도 같은 질문형이 있는데, 가격을 두 곳에서 관리하면
-//   언젠가 서로 다른 값을 보여주게 됩니다.
-//   안내서는 "어느 상품인지"까지만 알려주고 결제는 구매 화면으로 넘깁니다.
-// =====================================================================
-(function initGuideFinder(){
-  const pick = { ppl:'2', swap:'fixed', sec:'normal' };
-
-  const NAMES = {
-    ko: {
-      hotline_1to1:'핫라인', hotline_everybody:'에브리바디',
-      economy_4:'이코노미', premium_4:'프리미엄',
-      hotline_1to1_secure:'핫라인 Secure', hotline_everybody_secure:'에브리바디 Secure',
-      economy_4_secure:'이코노미 Secure', premium_4_secure:'프리미엄 Secure',
-    },
-    en: {
-      hotline_1to1:'Hotline', hotline_everybody:'Everybody',
-      economy_4:'Economy', premium_4:'Premium',
-      hotline_1to1_secure:'Hotline Secure', hotline_everybody_secure:'Everybody Secure',
-      economy_4_secure:'Economy Secure', premium_4_secure:'Premium Secure',
-    },
-  };
-
-  function tierOf(){
-    const base = (pick.ppl === '2')
-      ? (pick.swap === 'fixed' ? 'hotline_1to1' : 'hotline_everybody')
-      : (pick.swap === 'fixed' ? 'economy_4' : 'premium_4');
-    return base + (pick.sec === 'secure' ? '_secure' : '');
-  }
-
-  function render(){
-    const lang = (typeof LANG !== 'undefined' && LANG === 'en') ? 'en' : 'ko';
-    const tier = tierOf();
-    const nameEl = document.getElementById('gwName');
-    const whyEl = document.getElementById('gwWhy');
-    const goEl = document.getElementById('gwGo');
-    if (!nameEl) return;
-
-    nameEl.textContent = (NAMES[lang] || NAMES.ko)[tier] || tier;
-
-    // ⚠ 고른 답을 되돌려 말해줍니다.
-    //   결과만 툭 나오면 맞게 고른 건지 여전히 알 수 없습니다.
-    const a = [];
-    if (lang === 'en') {
-      a.push(pick.ppl === '2' ? 'Two of you' : 'Up to four of you');
-      a.push(pick.swap === 'fixed' ? 'the same person throughout' : 'with the option to swap');
-      a.push(pick.sec === 'secure' ? 'and the contents locked so even we cannot read them' : 'and conversations kept safely on our servers');
-      whyEl.textContent = a.join(', ') + '.';
-    } else {
-      a.push(pick.ppl === '2' ? '둘이서 쓰시고' : '최대 4명이 쓰시고');
-      a.push(pick.swap === 'fixed' ? '상대는 바꾸지 않으며' : '상대를 바꿔가며 쓰시고');
-      a.push(pick.sec === 'secure' ? '대화는 저희조차 볼 수 없게 잠급니다' : '대화는 서버에 안전하게 보관됩니다');
-      whyEl.textContent = a.join(', ') + '.';
-    }
-
-    // 구매 화면으로 넘길 때 고른 상품이 처음부터 선택되게 합니다.
-    if (goEl) goEl.href = 'aliascall_hotline_purchase.html?tier=' + tier;
-  }
-
-  document.querySelectorAll('.gw-opt').forEach((b) => {
-    b.addEventListener('click', () => {
-      const k = b.dataset.k;
-      document.querySelectorAll('.gw-opt[data-k="' + k + '"]').forEach((x) => x.classList.remove('on'));
-      b.classList.add('on');
-      pick[k] = b.dataset.v;
-      render();
-    });
-  });
-
-  render();
-  // 언어를 바꾸면 답도 다시 그립니다.
-  document.addEventListener('aliascall-lang-changed', render);
-  const langBtn = document.getElementById('langToggleBtn');
-  if (langBtn) langBtn.addEventListener('click', () => setTimeout(render, 50));
-})();
-
 </script>
 
 </body>
