@@ -50,6 +50,10 @@ main{ max-width:430px; margin:0 auto; padding:10px 20px 60px; }
 
 .plan{ background:var(--card); border:2px solid transparent; border-radius:18px; padding:16px; margin-bottom:10px; cursor:pointer; display:block; width:100%; text-align:left; font-family:inherit; color:inherit; }
 .plan.on{ border-color:var(--teal); background:#F4FAF9; }
+.lp-prices{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 6px; }
+.lp-prices span{ font-size:12.5px; background:#E4EFEE; color:#123F3D; border-radius:9px; padding:5px 9px; }
+.lp-prices b{ font-weight:800; margin-right:3px; }
+.lp-warn{ font-size:12px; line-height:1.55; color:#8E2F12; background:#FBEAE7; border-radius:9px; padding:7px 9px; margin-top:7px; }
 .plan .row{ display:flex; align-items:baseline; gap:8px; }
 .plan .nm{ font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; flex:1; }
 .plan .pr{ font-size:15px; font-weight:700; }
@@ -177,11 +181,24 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
       <div class="row"><span class="nm" data-i18n="pEnterprise">프로 엔터프라이즈</span><span class="pr"><small data-i18n="fromPre"></small>39,900<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
       <div class="inc"><span data-i18n="r150">방 150개</span><span data-i18n="g400">400GB</span></div>
     </button>
+    <!-- 🔴 2026-10-01 광고형 덧상품 — 늘 보입니다(프로가 없으면 고를 수는 있고 결제는 잠김) -->
+    <button type="button" class="plan" data-plan="listing" id="listingCard">
+      <div class="row"><span class="nm" data-i18n="pListing">공개 업체 목록 게재</span><span class="pr" style="font-size:12px;" data-i18n="adTag">광고형</span></div>
+      <div class="lp-prices">
+        <span><b data-i18n="m1">1개월</b> 5,500<small data-i18n="won">원</small></span>
+        <span><b data-i18n="m6">6개월</b> 29,700<small data-i18n="won">원</small></span>
+        <span><b data-i18n="m12">12개월</b> 54,800<small data-i18n="won">원</small></span>
+      </div>
+      <div class="ds" data-i18n-html="listTurns">구매하면 업무용 프로가 <b>광고 게재형</b>으로 바뀝니다. 공개 업체 목록에 올라, 손님이 찾아와 번호 없이 문의합니다.</div>
+      <div class="lp-warn" data-i18n="listVerify">⚠ 게시는 사업자등록증과 해당 자격증(면허 · 허가증 등)을 올리고 저희 확인을 통과한 뒤 시작됩니다.</div>
+      <div class="ds" id="listingDs"></div>
+    </button>
+
     <!-- 🔴 2026-10-01 추가 사용량 — 내가 연 회선이나 프로 구독이 있을 때만 보입니다 -->
     <div class="sect" data-i18n="sUsage" id="usageSect" style="margin-top:18px;display:none;">사용량이 모자랄 때</div>
     <button type="button" class="plan" data-plan="usage" id="usageCard" style="display:none;">
       <div class="row"><span class="nm" data-i18n="pUsage">추가 사용량 1GB</span><span class="pr">2,000<small data-i18n="won">원</small> <small data-i18n="per3">/ 3개월</small></span></div>
-      <div class="ds" data-i18n="dUsage">회선의 사용량을 다 쓰면 보내기 · 걸기가 멈춥니다. 붙일 회선을 골라 1GB씩 더하세요.</div>
+      <div class="ds" data-i18n="dUsage">모든 상품 공통. 회선의 사용량을 다 쓰면 새 통화가 멈춥니다(문자는 계속). 붙일 회선을 골라 1GB씩 더하세요.</div>
     </button>
     <div id="usageOpts" style="display:none;">
       <div class="sect" data-i18n="sTarget">어느 회선에 붙일까요?</div>
@@ -189,11 +206,6 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
       <div class="hint" id="usageHint"></div>
     </div>
 
-    <!-- 광고형 덧상품 — 살아 있는 프로 구독이 있을 때만 보입니다 -->
-    <button type="button" class="plan" data-plan="listing" id="listingCard" style="display:none;">
-      <div class="row"><span class="nm" data-i18n="pListing">공개 업체 목록 게재</span><span class="pr"><small data-i18n="fromPre"></small>5,500<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
-      <div class="ds" id="listingDs"></div>
-    </button>
 
     <!-- 🔴 2026-09-28 — 회선은 "대화 상대" 가 기준입니다.
          먼저 "지금 대화를 이어가기(연장)" 인지 "새 대화 창구(새 회선)" 인지 묻습니다.
@@ -293,7 +305,7 @@ const I18N = {
     loginFirst:'로그인한 뒤 앱을 다시 열면 결제가 이어서 처리됩니다.',
     dTline:'회선이 만들어졌습니다', dPline:'관리 화면에서 초대 링크를 확인하고 상대에게 보내세요.', goManage:'회선 관리로 가기',
     sUsage:'사용량이 모자랄 때', pUsage:'추가 사용량 1GB', per3:'/ 3개월',
-    dUsage:'회선의 사용량을 다 쓰면 보내기 · 걸기가 멈춥니다. 붙일 회선을 골라 1GB씩 더하세요.',
+    dUsage:'모든 상품 공통. 회선의 사용량을 다 쓰면 새 통화가 멈춥니다(문자는 계속). 붙일 회선을 골라 1GB씩 더하세요.',
     sTarget:'어느 회선에 붙일까요?', proAll:'프로 구독 전체', roomsShare:'모든 방이 함께 씀',
     usedOf:'{u} / {c}GB 사용 · {p}%', pickTarget:'붙일 회선을 고르세요',
     qtyNote:'수량(1~10개)은 다음 결제 창에서 고르실 수 있어요. 1개 = 1GB · 2,000원.',
@@ -308,8 +320,13 @@ const I18N = {
     listHint:'공개 업체 목록에 우리 가게를 올립니다. 게재는 프로 구독이 끝나는 날({d})까지입니다.',
     listDs:'손님이 업체 목록에서 찾아 번호 없이 문의할 수 있게 올립니다.',
     dTpro:'프로 구독이 열렸습니다', dPpro:'회선 관리에서 손님용 방을 만들고 초대 링크를 건네세요.',
-    dTlist:'공개 업체 목록에 올렸습니다', dPlist:'회선 관리에서 업체 이름 · 소개 · 영업시간을 채우면 손님에게 보입니다.',
+    dTlist:'게재 이용권을 샀습니다', dPlist:'이제 업체 정보를 채우고 사업자등록증(자격증이 필요한 업종은 자격증도)을 올려 주세요. 저희 확인을 통과하면 [공개 켜기]로 게시됩니다.', goBizReg:'업체 공개 등록으로',
     noPro:'공개 게재는 프로 구독이 있어야 합니다. 방금 결제는 곧 자동으로 취소됩니다.',
+    adTag:'광고형', m1:'1개월', m6:'6개월', m12:'12개월',
+    listTurns:'구매하면 업무용 프로가 <b>광고 게재형</b>으로 바뀝니다. 공개 업체 목록에 올라, 손님이 찾아와 번호 없이 문의합니다.',
+    listVerify:'⚠ 게시는 사업자등록증과 해당 자격증(면허 · 허가증 등)을 올리고 저희 확인을 통과한 뒤 시작됩니다.',
+    listVerifyShort:'⚠ 결제 뒤 회선 관리에서 사업자등록증 · 자격증을 올려 주세요. 저희 확인을 통과하면 게시됩니다.',
+    needPro:'공개 게재는 프로(스타터 · 비즈니스 · 엔터프라이즈)가 있어야 살 수 있어요. 프로를 먼저 골라 주세요.',
     dTemg:'긴급 이용권이 더해졌습니다', dPemg:'차량 · 소지품 QR과 임시연락처를 12개월 동안 쓰실 수 있습니다.', goHome:'첫 화면으로', goMy:'My Page에서 확인',
     keyWarn:'아래 링크를 지금 꼭 저장해두세요. 이 링크(#k= 뒷부분 포함)를 잃어버리면 저희도 대화를 복구할 수 없습니다.',
     copy:'복사', copied:'복사됨', home:'첫 화면으로',
@@ -353,7 +370,7 @@ const I18N = {
     loginFirst:'Sign in and reopen the app to finish the payment.',
     dTline:'Your line is ready', dPline:'Open line management to share the invite link.', goManage:'Manage lines',
     sUsage:'Running out of data?', pUsage:'Extra usage 1GB', per3:'/ 3 months',
-    dUsage:'When a line uses up its data, sending and calling stop. Pick a line and add 1GB at a time.',
+    dUsage:'For every plan. When a line uses up its data, new calls stop (messages still work). Pick a line and add 1GB at a time.',
     sTarget:'Which line should get it?', proAll:'Whole Pro plan', roomsShare:'shared by all rooms',
     usedOf:'{u} / {c}GB used · {p}%', pickTarget:'Pick a line',
     qtyNote:'Choose the quantity (1–10) in the next payment window. 1 = 1GB · KRW 2,000.',
@@ -368,8 +385,13 @@ const I18N = {
     listHint:'Lists your business publicly until your Pro plan ends ({d}).',
     listDs:'Customers can find you in the directory and reach you without a number.',
     dTpro:'Your Pro plan is ready', dPpro:'Create customer rooms in My lines and share their invite links.',
-    dTlist:'Your business is now listed', dPlist:'Fill in your name, intro and hours in My lines so customers can see them.',
+    dTlist:'Listing purchased', dPlist:'Now fill in your business details and upload your business registration (and licence if required). Once approved, turn on Go public.', goBizReg:'Go to business listing',
     noPro:'A Pro plan is required for listing. This payment will be canceled automatically.',
+    adTag:'Ad listing', m1:'1 mo', m6:'6 mo', m12:'12 mo',
+    listTurns:'Turns your Pro plan into an <b>ad-listed</b> plan: your business appears in the public directory and customers reach you without a number.',
+    listVerify:'⚠ Your listing goes live after you upload your business registration and any required licence and we approve them.',
+    listVerifyShort:'⚠ After paying, upload your business registration and licence in My lines. Your listing goes live once approved.',
+    needPro:'A Pro plan (Starter, Business or Enterprise) is required for listing. Please choose a Pro plan first.',
     dTemg:'Emergency plan added', dPemg:'Item QR codes and one-time cards are yours for 12 months.', goHome:'Home', goMy:'Check in My Page',
     keyWarn:'Save this link now. Without it (including everything after #k=), nobody — not even us — can recover the chat.',
     copy:'Copy', copied:'Copied', home:'Home',
@@ -483,8 +505,10 @@ function paint(){
       (d.best ? '<span class="best">' + T('best') + '</span>' : '') +
       '<div class="m">' + T('m', { n: d.m }) + '</div>' +
       '<div class="p">' + fmt(d.p) + T('won') + '</div></button>').join('');
-    el('proHint').textContent = c.listing ? T('listHint', { d: myPro ? new Date(myPro.expires_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR') : '' })
-                                          : T('proHint');
+    el('proHint').textContent = c.listing
+      ? (myPro ? T('listHint', { d: new Date(myPro.expires_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR') }) + '\n' + T('listVerifyShort') : T('needPro'))
+      : T('proHint');
+    el('proHint').style.whiteSpace = 'pre-line';
   }
   el('secSw').classList.toggle('on', secure);
   el('lineName').placeholder = T('nameP');
@@ -501,7 +525,7 @@ function paint(){
   if (MODE === 'old') { b.disabled = false; b.textContent = T('update'); return; }
   if (MODE === 'web') { b.disabled = false; b.textContent = T('webGo'); return; }
   if (!session) { b.disabled = false; b.textContent = T('login'); return; }
-  const need = lineNeed() || (c && c.usage && !usagePick ? T('pickTarget') : '');
+  const need = lineNeed() || (c && c.usage && !usagePick ? T('pickTarget') : '') || (c && c.listing && !myPro ? T('needPro') : '');
   b.disabled = !dur || !!need;
   b.textContent = !dur ? T('pick') : (need || T('buy'));
 }
@@ -629,7 +653,7 @@ ACStore.onDone = function(r){
       el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
     } else if (r.kind === 'listing') {
       el('doneT').textContent = T('dTlist'); el('doneP').textContent = T('dPlist');
-      el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
+      el('doneGo').textContent = T('goBizReg'); el('doneGo').href = 'aliascall_business_register.html' + (r.subscriptionId ? '?sub=' + encodeURIComponent(r.subscriptionId) : '');
     } else {
       el('doneT').textContent = T('dTemg'); el('doneP').textContent = T('dPemg');
       /* 2026-09-28: 아래 [첫 화면으로] 와 겹치지 않게, 끝나는 날을 볼 수 있는 곳으로 */
@@ -688,10 +712,7 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
         .eq('owner_user_id', session.user.id).eq('status', 'active').gt('expires_at', new Date().toISOString())
         .order('expires_at', { ascending: false }).limit(1);
       myPro = (ps && ps[0]) || null;
-      if (myPro) {
-        el('listingCard').style.display = '';
-        el('listingDs').textContent = myPro.is_public ? (LANG === 'en' ? 'Already listed.' : '이미 게재 중입니다.') : T('listDs');
-      }
+      if (myPro && myPro.is_public) el('listingDs').textContent = (LANG === 'en' ? '✓ Already listed.' : '✓ 지금 게재 중입니다.');
     } catch (e) {}
   }
   /* 🔴 2026-09-30 — 무료 체험 중이면: 지금 사면 남은 체험 그대로 + 긴급 기능 1개월 더 */
