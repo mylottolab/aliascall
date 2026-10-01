@@ -7,6 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_e2ee.js"></script>
 <script src="aliascall_store.js"></script>
+<script src="aliascall_web_pay.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <!--
@@ -50,6 +51,18 @@ main{ max-width:430px; margin:0 auto; padding:10px 20px 60px; }
 
 .plan{ background:var(--card); border:2px solid transparent; border-radius:18px; padding:16px; margin-bottom:10px; cursor:pointer; display:block; width:100%; text-align:left; font-family:inherit; color:inherit; }
 .plan.on{ border-color:var(--teal); background:#F4FAF9; }
+#webPay{ margin:6px 0 10px; }
+.wp-notice{ background:#fff; border:1.5px solid #C9A24B; border-radius:14px; padding:13px 14px; margin-bottom:10px; }
+.wp-nt{ font-size:12.5px; font-weight:700; color:#8a6416; margin-bottom:7px; }
+.wp-list{ margin:0 0 9px; padding-left:18px; font-size:11.5px; line-height:1.6; color:#3E5654; }
+.wp-list li{ margin-bottom:4px; }
+.wp-agree{ display:flex; gap:8px; align-items:center; font-size:12.5px; font-weight:700; border-top:1px solid #DCE3DE; padding-top:9px; cursor:pointer; }
+.wp-agree input{ width:17px; height:17px; accent-color:#C9A24B; }
+.wp-tabs{ display:flex; gap:8px; margin-bottom:10px; }
+.wp-tabs button{ flex:1; border:1.5px solid #DCE3DE; background:#fff; border-radius:10px; padding:11px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; color:#12302E; }
+.wp-tabs button.on{ border-color:#1F6F6B; background:#E4EFEE; }
+.wp-qty{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:9px; font-size:13px; font-weight:700; }
+.wp-qty select{ border:1.5px solid #DCE3DE; border-radius:9px; padding:8px 10px; font-size:13px; font-family:inherit; }
 .lp-prices{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 6px; }
 .lp-prices span{ font-size:12.5px; background:#E4EFEE; color:#123F3D; border-radius:9px; padding:5px 9px; }
 .lp-prices b{ font-weight:800; margin-right:3px; }
@@ -211,6 +224,13 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
       <div class="sect" data-i18n="sTarget">어느 회선에 붙일까요?</div>
       <div class="lines" id="usageList"></div>
       <div class="hint" id="usageHint"></div>
+      <div class="wp-qty" id="usageQtyRow" style="display:none;">
+        <span data-i18n="wpQty">몇 GB 더할까요?</span>
+        <select id="usageQty">
+          <option value="1">1GB · 2,000</option><option value="2">2GB · 4,000</option><option value="3">3GB · 6,000</option>
+          <option value="5">5GB · 10,000</option><option value="10">10GB · 20,000</option>
+        </select>
+      </div>
     </div>
 
 
@@ -256,6 +276,23 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
     </div>
 
     <div class="sum"><span class="l" id="sumL"></span><span class="v" id="sumV"></span></div>
+    <!-- 🔴 2026-10-01 웹 결제 — 앱은 Google Play, 웹은 국내카드(이니시스) · PayPal -->
+    <div id="webPay" style="display:none;">
+      <div class="wp-notice">
+        <div class="wp-nt" data-i18n="wpNt">⚠️ 결제 전 꼭 확인해주세요</div>
+        <ol class="wp-list">
+          <li data-i18n-html="wp1"></li>
+          <li data-i18n-html="wp2"></li>
+          <li data-i18n-html="wp3"></li>
+        </ol>
+        <label class="wp-agree"><input type="checkbox" id="wpAgree"> <span data-i18n="wpAgree">위 내용을 확인했으며 동의합니다</span></label>
+      </div>
+      <div class="wp-tabs">
+        <button type="button" class="on" data-m="inicis" data-i18n="wpCard">💳 국내카드</button>
+        <button type="button" data-m="paypal">🌐 PayPal</button>
+      </div>
+      <div id="wpPaypal" style="display:none;"></div>
+    </div>
     <button type="button" class="buy" id="buyBtn" disabled></button>
     <div class="msg" id="msg"></div>
 
@@ -298,7 +335,11 @@ const I18N = {
     noteWeb:'· 기간이 끝나도 받기 · 읽기 · 끊기는 그대로 됩니다.\n· 남은 기간이 있으면 이어서 더해집니다.',
     free:'🐾 아동 · 치매 어르신 · 반려동물 등록은 <b>이용권 없이도 무료로</b> 연결됩니다.',
     oldApp:'앱을 최신 판으로 업데이트하시면 이 화면에서 바로 결제하실 수 있습니다.', update:'Play 스토어에서 업데이트',
-    web:'새 이용권은 안드로이드 앱에서 먼저 판매합니다. 웹 결제는 곧 새 상품으로 바뀝니다.', webGo:'지금 쓰는 웹 결제 화면으로',
+    web:'', webGo:'', buyWeb:'결제하기', agreeFirst:'위 확인사항에 먼저 동의해주세요', webFail:'결제를 마치지 못했습니다',
+    wpNt:'⚠️ 결제 전 꼭 확인해주세요', wpAgree:'위 내용을 확인했으며 동의합니다', wpCard:'💳 국내카드', wpQty:'몇 GB 더할까요?',
+    wp1:'자동 결제는 없습니다. 남은 기간이 있으면 그 뒤에 이어서 더해집니다.',
+    wp2:'<b>결제일부터 7일 이내</b>이고 이용을 시작하지 않으셨다면 <b>전액 환불</b>됩니다. 이용을 시작하신 뒤에는 이용하신 기간과 위약금 10%를 뺀 금액을 돌려드립니다.',
+    wp3:'회선 기간이 끝나고 30일이 지나면 사진 · 동영상 · 음성 파일은 삭제됩니다(문자 기록은 유지). <a href="aliascall_refund.html" target="_blank" style="color:#123F3D;font-weight:700;">취소·환불 규정 ›</a>',
     canceled:'결제를 그만두었습니다.', pending:'결제가 확정되면 이용권이 더해집니다. 잠시 기다려 주세요.',
     owned:'마치지 못한 결제가 있어 정리하고 있습니다. 잠시 뒤 다시 눌러주세요.',
     cleared:'취소·환불된 결제를 정리했습니다. 이제 다시 사실 수 있습니다.',
@@ -363,7 +404,11 @@ const I18N = {
     noteWeb:'· Receiving, reading and cutting off keep working after it ends.\n· Remaining time is carried over.',
     free:'🐾 Registering children, elderly with dementia and pets is <b>always free</b>.',
     oldApp:'Update the app to buy right here.', update:'Update on Play Store',
-    web:'The new plans are sold in the Android app first. Web payment will switch soon.', webGo:'Current web checkout',
+    web:'', webGo:'', buyWeb:'Pay', agreeFirst:'Please agree to the notice above first', webFail:'The payment did not complete',
+    wpNt:'⚠️ Please read before paying', wpAgree:'I have read and agree to the above', wpCard:'💳 Korean card', wpQty:'How many GB to add?',
+    wp1:'Nothing renews automatically. Any time you have left is carried over.',
+    wp2:'Within <b>7 days of payment</b> and before you start using it, you get a <b>full refund</b>. After you start, we refund the amount minus the period used and a 10% fee.',
+    wp3:'30 days after a line ends, photos, videos and voice files are deleted (text history is kept). <a href="aliascall_refund_en.html" target="_blank" style="color:#123F3D;font-weight:700;">Refund policy ›</a>',
     canceled:'Payment was cancelled.', pending:'Your plan will be added once the payment clears.',
     owned:'Finishing an earlier payment. Please try again in a moment.',
     cleared:'A cancelled or refunded payment was cleared. You can buy again now.',
@@ -462,6 +507,7 @@ function paintText(){
   document.querySelectorAll('[data-i18n-html]').forEach((n) => { n.innerHTML = T(n.dataset.i18nHtml); });
   document.querySelectorAll('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.lang === LANG));
   if (MODE !== 'app') document.querySelector('.note').textContent = T('noteWeb');
+  if (MODE === 'web') { el('webPay').style.display = ''; el('usageQtyRow').style.display = ''; }
 }
 
 function paint(){
@@ -524,9 +570,20 @@ function paint(){
 
   const b = el('buyBtn');
   if (MODE === 'old') { b.disabled = false; b.textContent = T('update'); return; }
-  if (MODE === 'web') { b.disabled = false; b.textContent = T('webGo'); return; }
   if (!session) { b.disabled = false; b.textContent = T('login'); return; }
   const need = lineNeed() || (c && c.usage && !usagePick ? T('pickTarget') : '') || (c && c.listing && !myPro ? T('needPro') : '');
+  if (MODE === 'web') {
+    /* 🔴 웹: 확인사항 동의 → 국내카드는 이 단추, PayPal 은 아래 노란 단추 */
+    const agreed = el('wpAgree').checked;
+    const viaPaypal = webMethod === 'paypal';
+    el('wpPaypal').style.display = viaPaypal && agreed && dur && !need ? '' : 'none';
+    if (viaPaypal && agreed && dur && !need && !paypalDrawn) { paypalDrawn = true; ACWeb.paypal(sb, 'wpPaypal', webOrder, webDone); }
+    b.style.display = viaPaypal && agreed && dur && !need ? 'none' : '';
+    b.disabled = !dur || !!need || !agreed;
+    b.textContent = !dur ? T('pick') : (need || (!agreed ? T('agreeFirst') : T('buyWeb')));
+    if (c && c.usage) el('sumV').textContent = fmt(dur.p * webQty()) + T('won');
+    return;
+  }
   b.disabled = !dur || !!need;
   b.textContent = !dur ? T('pick') : (need || T('buy'));
 }
@@ -613,8 +670,20 @@ el('purSeg').addEventListener('click', (e) => {
 el('buyBtn').addEventListener('click', async () => {
   hush();
   if (MODE === 'old') { location.href = 'https://play.google.com/store/apps/details?id=com.weaveapp.aliascall'; return; }
-  if (MODE === 'web') { location.href = plan && (CATALOG[plan].line || CATALOG[plan].pro) ? 'aliascall_hotline_purchase.html' : 'aliascall_my_account.html'; return; }
   if (!session) { location.href = 'aliascall_my_account.html?next=' + encodeURIComponent('aliascall_plans.html'); return; }
+  if (MODE === 'web') {
+    const o = webOrder(); if (!o) return;
+    const b = el('buyBtn'); b.disabled = true; b.textContent = T('wait');
+    /* 암호화 새 회선이면 열쇠를 미리 만들어 이 기기에만 잠깐 둡니다(서버로 보내지 않음) */
+    if (o.opts.secure && typeof window.e2eeGenerateKeyBase64 === 'function') {
+      try { sessionStorage.setItem('aliascall_pending_e2ee_key', await window.e2eeGenerateKeyBase64()); } catch (e) {}
+    } else { try { sessionStorage.removeItem('aliascall_pending_e2ee_key'); } catch (e) {} }
+    const ok = await ACWeb.inicis(sb, o.sku, o.opts, {
+      buyername: (session.user.user_metadata && session.user.user_metadata.nickname) || '회원',
+      buyertel: '', buyeremail: session.user.email || '' });
+    if (!ok) { b.disabled = false; b.textContent = T('buyWeb'); }
+    return;
+  }
   if (!dur) return;
   const b = el('buyBtn'); b.disabled = true; b.textContent = T('wait');
   const line = CATALOG[plan].line;
@@ -628,6 +697,41 @@ el('buyBtn').addEventListener('click', async () => {
   });
   setTimeout(() => { if (b.textContent === T('wait')) { b.textContent = T('checking'); } }, 1500);
 });
+
+/* ═══ 🔴 2026-10-01 웹 결제 ═══ */
+let webMethod = 'inicis', paypalDrawn = false;
+function webQty(){ return Math.max(1, Math.min(10, Number(el('usageQty').value) || 1)); }
+/* 지금 고른 것 → 서버로 보낼 주문 (앱의 ACStore.buy 와 같은 선택) */
+function webOrder(){
+  if (!dur) return null;
+  const line = CATALOG[plan].line;
+  return { sku: dur.sku, opts: {
+    secure: !!(line && mode === 'new' && secure), purpose,
+    extendHotlineId: line && mode === 'cont' && pick ? pick.id : null,
+    lineName: line && mode === 'new' ? el('lineName').value.trim() : '',
+    usageKind: plan === 'usage' && usagePick ? usagePick.kind : null,
+    usageTargetId: plan === 'usage' && usagePick ? usagePick.id : null,
+    qty: plan === 'usage' ? webQty() : 1,
+  } };
+}
+/* 결제가 끝나면(국내카드는 돌아온 주소로, PayPal 은 바로) — 앱과 같은 완료 화면 */
+function webDone(r){
+  if (r && r.ok && r.kind === 'line' && r.hotlineId && !r.extended && !r.upgraded) {
+    let key = null; try { key = sessionStorage.getItem('aliascall_pending_e2ee_key'); } catch (e) {}
+    if (key) {
+      try { localStorage.setItem('aliascall_hotline_key_' + r.hotlineId, key); sessionStorage.removeItem('aliascall_pending_e2ee_key'); } catch (e) {}
+      r.ownerLink = location.origin + '/aliascall_hotline_room.html?hotline=' + r.hotlineId + '#k=' + key;
+    }
+  }
+  ACStore.onDone(r || { ok: false });
+}
+el('wpAgree').addEventListener('change', () => paint());
+el('usageQty').addEventListener('change', () => paint());
+document.querySelectorAll('.wp-tabs button').forEach((t) => t.addEventListener('click', () => {
+  document.querySelectorAll('.wp-tabs button').forEach((x) => x.classList.toggle('on', x === t));
+  webMethod = t.dataset.m; paint();
+}));
+if (MODE === 'web' && window.ACWeb) ACWeb.preload().catch(() => {});
 
 /* 결제 결과 — 앱 → aliascall_store.js → 여기 */
 ACStore.onDone = function(r){
@@ -688,7 +792,17 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
 (async function(){
   paintText();
   if (MODE === 'old') say(T('oldApp'), true);
-  if (MODE === 'web') say(T('web'), true);
+  /* 🔴 국내카드 결제창에서 돌아왔을 때 (?webpaid=1 …) */
+  { const q = new URLSearchParams(location.search);
+    if (q.get('webpaid') === '1') {
+      const r = { ok: true, kind: q.get('kind'), extended: q.get('extended') === 'true', upgraded: q.get('upgraded') === 'true',
+                  hotlineId: q.get('hotlineId') || null, inviteToken: q.get('inviteToken') || null, subscriptionId: q.get('subscriptionId') || null };
+      history.replaceState(null, '', 'aliascall_plans.html');
+      setTimeout(() => webDone(r), 0);
+    } else if (q.get('webpaid') === '0') {
+      history.replaceState(null, '', 'aliascall_plans.html');
+      setTimeout(() => say(T('webFail') + (q.get('msg') ? '\n(' + q.get('msg') + ')' : '')), 0);
+    } }
   try { session = (await sb.auth.getSession()).data.session; } catch (e) { session = null; }
   /* 🔴 2026-10-01 — 추가 사용량: 붙일 곳(내 회선 · 프로 구독). 거의 다 쓴 곳을 먼저 */
   if (session) {
