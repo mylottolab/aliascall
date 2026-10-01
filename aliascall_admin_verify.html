@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>업체 심사 — Aliascall Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!--
+  ═══════════════════════════════════════════════════════════════
+  2026-10-01 신설 — 업체 심사 전용 화면 (aliascall_admin_verify.html)
+  무통장입금 화면처럼 따로 뗐습니다. 통합 관리 화면(900줄+)은 건드리지 않습니다.
+  로그인은 통합 관리와 같은 'aliascall-admin-auth' 를 써서 함께 유지됩니다.
+
+  쓰는 DB 함수 (admin_verify.sql)
+    admin_verify_queue(p_show)        업체 하나에 서류를 묶어서 (+ 회원 · 프로 · 업종 · 게재료 · 공개)
+    admin_verify_count()              대기 건수
+    admin_finalize_business(id, ok)   최종 확인(게시 허용) / 취소
+  기존 함수
+    admin_review_verification(id, approve, reason)   서류 한 장 승인 · 반려
+
+  ⚠ 서류는 비공개 보관함(aliascall-verify)에 있습니다. 10분짜리 임시 링크로만 엽니다.
+  ⚠ 무자격자가 "○○변호사사무실" 로 게재되면 게재한 저희에게 책임이 옵니다.
+  ═══════════════════════════════════════════════════════════════
+-->
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1; --amber:#D9A441; --amber-tint:#FBF1DE;
+  --line:#DCE3DE; --danger:#C1483A; --danger-tint:#FBEAE6; --ok:#2E7D4F; --ok-tint:#E3F2E8;
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; word-break:keep-all; }
+h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
+header{ position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; padding:14px 24px; border-bottom:1px solid var(--line); background:var(--card); flex-wrap:wrap; gap:10px; }
+.brand{ display:flex; align-items:center; gap:9px; }
+.brand-mark{ width:26px; height:26px; border-radius:7px; background:var(--teal); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:13px; font-family:'Space Grotesk',sans-serif; }
+.brand-name{ font-size:15px; font-weight:600; } .brand-name em{ font-style:normal; color:var(--coral); }
+.hdr-right{ display:flex; align-items:center; gap:12px; font-size:12px; color:var(--ink-soft); }
+.hdr-right a{ color:var(--teal-deep); font-weight:600; }
+.hdr-right button{ background:transparent; border:1px solid var(--line); color:var(--ink-soft); padding:6px 12px; border-radius:7px; font-size:12px; cursor:pointer; }
+main{ max-width:960px; margin:0 auto; padding:22px 18px 80px; }
+.top{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+.top h1{ font-size:21px; }
+.count{ font-size:12.5px; color:var(--ink-soft); }
+.count b{ font-size:17px; color:var(--danger); }
+.tabs{ display:flex; gap:6px; }
+.tab{ padding:8px 15px; border-radius:20px; font-size:12.5px; font-weight:700; cursor:pointer; border:1.5px solid var(--line); color:var(--ink-soft); background:var(--card); }
+.tab.on{ background:var(--teal); color:#fff; border-color:var(--teal); }
+.rules{ background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:13px 15px; font-size:12px; line-height:1.75; color:var(--ink-soft); margin-bottom:16px; }
+.rules b{ color:var(--ink); }
+
+.biz{ background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
+.biz.need-lic{ border-left:5px solid var(--danger); }
+.biz-h{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.biz-name{ font-size:17px; font-weight:800; flex:1; min-width:160px; }
+.chip{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+.chip.lic{ background:var(--danger); color:#fff; }
+.chip.paid{ background:var(--ok-tint); color:var(--ok); }
+.chip.unpaid{ background:var(--amber-tint); color:#8a6416; }
+.chip.public{ background:var(--teal); color:#fff; }
+.chip.verified{ background:var(--teal-tint); color:var(--teal-deep); }
+.chip.expired{ background:var(--danger-tint); color:var(--danger); }
+.biz-meta{ font-size:12px; color:var(--ink-soft); margin:6px 0 12px; line-height:1.7; }
+.biz-meta b{ color:var(--ink); }
+
+.doc{ display:flex; gap:12px; align-items:flex-start; border-top:1px solid var(--line); padding:12px 0; flex-wrap:wrap; }
+.doc-l{ flex:1; min-width:200px; }
+.doc-t{ font-size:13.5px; font-weight:700; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.st{ font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px; }
+.st.pending{ background:var(--amber-tint); color:#8a6416; }
+.st.approved{ background:var(--ok-tint); color:var(--ok); }
+.st.rejected{ background:var(--danger-tint); color:var(--danger); }
+.doc-s{ font-size:11.5px; color:var(--ink-soft); margin-top:3px; line-height:1.6; }
+.doc-r{ display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
+.btn{ border:none; border-radius:9px; padding:9px 14px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+.btn:disabled{ opacity:.5; cursor:default; }
+.btn.view{ background:#fff; border:1.5px solid var(--line); color:var(--ink); }
+.btn.ok{ background:var(--teal-deep); color:#fff; }
+.btn.no{ background:var(--danger); color:#fff; }
+.btn.final{ background:var(--ok); color:#fff; }
+.btn.ghost{ background:transparent; border:1.5px solid var(--line); color:var(--ink-soft); }
+.final-row{ border-top:1px dashed var(--line); padding-top:12px; margin-top:4px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:12.5px; }
+.final-row .why{ color:var(--ink-soft); flex:1; min-width:200px; }
+.empty{ text-align:center; color:var(--ink-soft); padding:50px 0; font-size:13.5px; }
+
+/* 서류 크게 보기 + 판정 */
+.ov{ display:none; position:fixed; inset:0; background:rgba(18,48,46,.82); z-index:60; padding:18px; }
+.ov.show{ display:flex; gap:14px; }
+.ov-doc{ flex:1; background:#fff; border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center; min-width:0; }
+.ov-doc img{ max-width:100%; max-height:100%; object-fit:contain; }
+.ov-doc iframe{ width:100%; height:100%; border:none; }
+.ov-side{ width:330px; flex-shrink:0; background:#fff; border-radius:14px; padding:16px; overflow-y:auto; }
+.ov-side h2{ font-size:16px; margin-bottom:4px; }
+.ov-side .sub{ font-size:12px; color:var(--ink-soft); margin-bottom:12px; line-height:1.6; }
+.check{ display:flex; gap:8px; align-items:flex-start; font-size:12.5px; line-height:1.5; margin-bottom:8px; cursor:pointer; }
+.check input{ margin-top:2px; width:17px; height:17px; accent-color:var(--teal); }
+.reasons{ display:flex; flex-direction:column; gap:6px; margin:10px 0; }
+.reasons button{ text-align:left; border:1.5px solid var(--line); background:#fff; border-radius:9px; padding:8px 10px; font-size:12px; cursor:pointer; font-family:inherit; color:var(--ink); }
+.reasons button.on{ border-color:var(--danger); background:var(--danger-tint); }
+.ov-side textarea{ width:100%; min-height:62px; border:1.5px solid var(--line); border-radius:9px; padding:8px 10px; font-size:12.5px; font-family:inherit; }
+.ov-btns{ display:flex; gap:8px; margin-top:12px; }
+.ov-btns .btn{ flex:1; padding:12px; }
+.ov-close{ position:absolute; top:10px; right:14px; background:#fff; border:none; border-radius:20px; width:36px; height:36px; font-size:17px; cursor:pointer; }
+@media (max-width:760px){ .ov.show{ flex-direction:column; } .ov-side{ width:auto; max-height:52vh; } }
+
+.login-overlay{ position:fixed; inset:0; background:var(--paper); z-index:70; display:flex; align-items:center; justify-content:center; }
+.login-box{ background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:32px; max-width:360px; width:100%; }
+.login-box h2{ font-size:18px; margin-bottom:6px; }
+.login-box p{ font-size:12.5px; color:var(--ink-soft); margin:0 0 20px; }
+.login-box input{ width:100%; padding:12px 13px; border:1.5px solid var(--line); border-radius:9px; font-size:14px; margin-bottom:10px; }
+.login-box button{ width:100%; padding:12px; border:none; border-radius:9px; background:var(--teal); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
+.login-err{ font-size:12px; color:var(--danger); margin-top:10px; display:none; }
+</style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay" style="display:none;">
+  <div class="login-box">
+    <h2>Aliascall Admin</h2>
+    <p>관리자 계정으로 로그인하세요.</p>
+    <input type="email" id="loginEmail" placeholder="관리자 이메일">
+    <input type="password" id="loginPassword" placeholder="비밀번호">
+    <button id="loginBtn">로그인</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand"><div class="brand-mark">A</div><div class="brand-name">Alias<em>call</em> Admin · 업체 심사</div></div>
+  <div class="hdr-right">
+    <span id="adminEmail"></span>
+    <a href="aliascall_admin_dashboard.html" id="backToAdmin">← 통합 관리</a>
+    <button id="logoutBtn">로그아웃</button>
+  </div>
+</header>
+
+<main>
+  <div class="top">
+    <div>
+      <h1>🔎 업체 심사</h1>
+      <div class="count">확인을 기다리는 업체 <b id="cnt">-</b>곳</div>
+    </div>
+    <div class="tabs">
+      <button class="tab on" data-show="pending">기다리는 것</button>
+      <button class="tab" data-show="all">최근 전체</button>
+    </div>
+  </div>
+
+  <div class="rules">
+    <b>순서</b> — ① 서류마다 크게 열어 대조하고 승인 · 반려 → ② 필요한 서류가 다 승인되면 <b>최종 확인(게시 허용)</b> → ③ 업체가 [공개 켜기]를 누르면 게시됩니다(게재료를 냈어야 켜집니다).<br>
+    <b>대조할 것</b> — 상호 · 대표자 · 업종이 등록 정보와 같은지, 유효기간, 가려진 곳 없이 전체가 보이는지.
+    <b style="color:var(--danger);">법률 · 세무 · 회계 · 의료 · 약국 · 동물병원 · 부동산</b>은 해당 자격증까지 봅니다.<br>
+    ⚠ 서류는 비공개 보관함에 있고, 여는 링크는 10분 뒤 막힙니다. 화면을 캡처해 두지 마세요.
+  </div>
+
+  <div id="list"><div class="empty">불러오는 중…</div></div>
+</main>
+
+<!-- 서류 크게 보기 + 판정 -->
+<div class="ov" id="ov">
+  <button class="ov-close" id="ovClose" aria-label="닫기">✕</button>
+  <div class="ov-doc" id="ovDoc"></div>
+  <div class="ov-side">
+    <h2 id="ovTitle"></h2>
+    <div class="sub" id="ovSub"></div>
+    <label class="check"><input type="checkbox" class="ck"> 상호가 등록 정보와 같습니다</label>
+    <label class="check"><input type="checkbox" class="ck"> 대표자 이름이 확인됩니다</label>
+    <label class="check"><input type="checkbox" class="ck"> 업종이 맞습니다 (자격증이면 자격 종류도)</label>
+    <label class="check"><input type="checkbox" class="ck"> 유효기간이 지나지 않았고, 가려진 곳 없이 전체가 보입니다</label>
+    <div class="ov-btns"><button class="btn ok" id="ovOk" disabled>✓ 승인</button></div>
+    <div style="font-size:12.5px; font-weight:700; margin-top:16px;">반려라면 — 사유 고르기</div>
+    <div class="reasons" id="reasons"></div>
+    <textarea id="ovWhy" placeholder="직접 적기 (업체 화면에 그대로 보입니다)"></textarea>
+    <div class="ov-btns"><button class="btn no" id="ovNo">✕ 반려</button></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+/* ⚠ 통합 관리 화면과 같은 storageKey — 한쪽에서 로그인하면 함께 유지됩니다.
+   일반 회원 화면의 로그인과는 섞이지 않습니다. */
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { storageKey: 'aliascall-admin-auth' } });
+const VERIFY_BUCKET = 'aliascall-verify';
+const LINK_SECONDS = 600;
+const TIER_KO = { pro_starter: '프로 스타터', pro_business: '프로 비즈니스', pro_enterprise: '프로 엔터프라이즈' };
+const REASONS = [
+  '글씨가 흐려 읽을 수 없습니다. 밝은 곳에서 다시 찍어 올려주세요.',
+  '서류의 일부가 잘리거나 가려져 있습니다. 전체가 보이게 다시 올려주세요.',
+  '상호가 등록하신 업체 정보와 다릅니다. 업체 정보를 고치거나 맞는 서류를 올려주세요.',
+  '대표자 이름을 확인할 수 없습니다.',
+  '업종에 필요한 자격증이 아닙니다. 해당 업종의 자격증을 올려주세요.',
+  '유효기간이 지난 서류입니다. 최신 서류를 올려주세요.',
+];
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = (iso) => iso ? new Date(iso).toLocaleString('ko-KR') : '-';
+const fmtD = (iso) => iso ? new Date(iso).toLocaleDateString('ko-KR') : '-';
+let show = 'pending', rows = [], cur = null;
+
+/* 통합 관리 화면의 파일 이름이 무엇이든 돌아갈 수 있게 — 직전 화면이 있으면 그리로 */
+$('backToAdmin').addEventListener('click', (e) => { if (document.referrer && history.length > 1) { e.preventDefault(); history.back(); } });
+
+async function checkLogin(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { $('loginOverlay').style.display = 'flex'; return false; }
+  const { data: isAdmin, error } = await sb.rpc('is_global_admin');
+  if (error || isAdmin !== true) {
+    await sb.auth.signOut();
+    $('loginOverlay').style.display = 'flex';
+    $('loginErr').textContent = '관리자 권한이 없는 계정입니다.'; $('loginErr').style.display = 'block';
+    return false;
+  }
+  $('loginOverlay').style.display = 'none';
+  $('adminEmail').textContent = session.user.email || '';
+  return true;
+}
+$('loginBtn').addEventListener('click', async () => {
+  $('loginErr').style.display = 'none';
+  const { error } = await sb.auth.signInWithPassword({ email: $('loginEmail').value.trim(), password: $('loginPassword').value });
+  if (error) { $('loginErr').textContent = '로그인 실패: ' + error.message; $('loginErr').style.display = 'block'; return; }
+  if (await checkLogin()) load();
+});
+$('logoutBtn').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+
+document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === t));
+  show = t.dataset.show; load();
+}));
+
+async function load(){
+  $('list').innerHTML = '<div class="empty">불러오는 중…</div>';
+  try {
+    const [q, c] = await Promise.all([sb.rpc('admin_verify_queue', { p_show: show }), sb.rpc('admin_verify_count')]);
+    if (q.error) throw q.error;
+    rows = q.data || [];
+    $('cnt').textContent = (c && c.data != null) ? c.data : '-';
+    document.title = (c && c.data ? '(' + c.data + ') ' : '') + '업체 심사 — Aliascall Admin';
+  } catch (e) {
+    console.error('[verify] 불러오기 실패', e);
+    $('list').innerHTML = '<div class="empty">불러오지 못했습니다. admin_verify.sql 을 실행하셨는지 확인해주세요.<br><small>' + esc(e.message || '') + '</small></div>';
+    return;
+  }
+  render();
+}
+
+function needsOf(b){
+  const docs = b.docs || [];
+  const hasBiz = docs.some((d) => d.doc_type === 'business_license' && d.status === 'approved');
+  const hasLic = docs.some((d) => d.doc_type === 'professional_license' && d.status === 'approved');
+  const missing = [];
+  if (!hasBiz) missing.push('사업자등록증 승인');
+  if (b.requires_license && !hasLic) missing.push((b.license_name || '자격증') + ' 승인');
+  return missing;
+}
+
+function render(){
+  if (!rows.length) {
+    $('list').innerHTML = '<div class="empty">' + (show === 'pending' ? '확인을 기다리는 업체가 없습니다. 🎉' : '서류를 낸 업체가 없습니다.') + '</div>';
+    return;
+  }
+  $('list').innerHTML = '';
+  rows.forEach((b, bi) => {
+    const box = document.createElement('div');
+    box.className = 'biz' + (b.requires_license ? ' need-lic' : '');
+    const expired = b.expires_at && new Date(b.expires_at) < new Date();
+    box.innerHTML =
+      '<div class="biz-h"><span class="biz-name">' + esc(b.business_name || '(상호 없음)') + '</span>' +
+      (b.requires_license ? '<span class="chip lic">🔴 자격증 필요: ' + esc(b.license_name || '자격증') + '</span>' : '') +
+      (b.public_paid_krw > 0 ? '<span class="chip paid">💳 게재료 ' + Number(b.public_paid_krw).toLocaleString() + '원</span>' : '<span class="chip unpaid">⚠ 게재료 미납</span>') +
+      (b.verified_at ? '<span class="chip verified">✓ 최종 확인됨</span>' : '') +
+      (b.is_public ? '<span class="chip public">📢 공개 중</span>' : '') +
+      (expired ? '<span class="chip expired">구독 끝남</span>' : '') + '</div>' +
+      '<div class="biz-meta">업종 <b>' + esc(b.category_label || '미지정') + '</b> · 회원 <b>' + esc(b.nickname || '-') + '</b> · ' +
+      esc(TIER_KO[b.tier] || b.tier || '-') + ' · 구독 끝나는 날 <b>' + fmtD(b.expires_at) + '</b></div>';
+    (b.docs || []).forEach((d, di) => {
+      const row = document.createElement('div');
+      row.className = 'doc';
+      const label = d.doc_type === 'business_license' ? '사업자등록증' : (b.license_name || '자격증');
+      const st = { pending: '확인 중', approved: '승인', rejected: '반려' }[d.status] || d.status;
+      row.innerHTML = '<div class="doc-l"><div class="doc-t">📄 ' + esc(label) + ' <span class="st ' + esc(d.status) + '">' + esc(st) + '</span></div>' +
+        '<div class="doc-s">' + esc(d.original_name || '') + ' · 올린 때 ' + fmt(d.created_at) +
+        (d.status === 'rejected' && d.reject_reason ? '<br>반려 사유: ' + esc(d.reject_reason) : '') + '</div></div>' +
+        '<div class="doc-r"><button class="btn view" data-a="open">🔍 크게 보고 판정</button></div>';
+      row.querySelector('[data-a="open"]').addEventListener('click', () => openDoc(bi, di));
+      box.appendChild(row);
+    });
+    // 최종 확인
+    const fin = document.createElement('div');
+    fin.className = 'final-row';
+    const missing = needsOf(b);
+    if (b.verified_at) {
+      fin.innerHTML = '<span class="why">✓ ' + fmt(b.verified_at) + ' 최종 확인 · 업체가 [공개 켜기]를 누르면 게시됩니다.</span><button class="btn ghost" data-a="undo">최종 확인 취소(공개 내림)</button>';
+      fin.querySelector('[data-a="undo"]').addEventListener('click', () => finalize(b, false));
+    } else if (missing.length) {
+      fin.innerHTML = '<span class="why">최종 확인 전에 필요한 것: <b>' + esc(missing.join(' · ')) + '</b></span><button class="btn final" disabled>✓ 최종 확인 (게시 허용)</button>';
+    } else {
+      fin.innerHTML = '<span class="why">필요한 서류가 모두 승인되었습니다.' + (b.public_paid_krw > 0 ? '' : ' (게재료는 아직 미납 — 확인해 두면 납부 뒤 바로 공개할 수 있습니다)') + '</span><button class="btn final" data-a="final">✓ 최종 확인 (게시 허용)</button>';
+      fin.querySelector('[data-a="final"]').addEventListener('click', () => finalize(b, true));
+    }
+    box.appendChild(fin);
+    $('list').appendChild(box);
+  });
+}
+
+/* ── 서류 크게 보기 + 판정 ── */
+async function openDoc(bi, di){
+  const b = rows[bi], d = b.docs[di];
+  cur = { b, d };
+  $('ovTitle').textContent = (d.doc_type === 'business_license' ? '사업자등록증' : (b.license_name || '자격증')) + ' · ' + (b.business_name || '');
+  $('ovSub').innerHTML = '업종 <b>' + esc(b.category_label || '-') + '</b> · 회원 ' + esc(b.nickname || '-') +
+    (b.requires_license ? '<br><span style="color:var(--danger);font-weight:700;">🔴 자격증 필요 업종 — 무자격 게재는 저희 책임입니다</span>' : '');
+  document.querySelectorAll('.ck').forEach((c) => { c.checked = false; });
+  $('ovOk').disabled = true;
+  $('ovWhy').value = '';
+  $('reasons').innerHTML = REASONS.map((r, i) => '<button type="button" data-i="' + i + '">' + esc(r) + '</button>').join('');
+  const reviewed = d.status !== 'pending';
+  $('ovOk').style.display = reviewed ? 'none' : ''; $('ovNo').style.display = reviewed ? 'none' : '';
+  $('ovDoc').innerHTML = '<div style="color:#666;font-size:13px;">서류를 여는 중…</div>';
+  $('ov').classList.add('show');
+  try {
+    const { data, error } = await sb.storage.from(VERIFY_BUCKET).createSignedUrl(d.file_path, LINK_SECONDS);
+    if (error) throw error;
+    const isPdf = /\.pdf($|\?)/i.test(d.file_path) || /\.pdf$/i.test(d.original_name || '');
+    $('ovDoc').innerHTML = isPdf ? '<iframe src="' + data.signedUrl + '"></iframe>' : '<img src="' + data.signedUrl + '" alt="서류">';
+  } catch (e) {
+    console.error('[verify] 서류 열기 실패', e);
+    $('ovDoc').innerHTML = '<div style="color:var(--danger);font-size:13px;padding:20px;text-align:center;">서류를 열지 못했습니다.<br>보관함(aliascall-verify)을 확인해주세요.</div>';
+  }
+}
+function closeOv(){ $('ov').classList.remove('show'); $('ovDoc').innerHTML = ''; cur = null; }
+$('ovClose').addEventListener('click', closeOv);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('ov').classList.contains('show')) closeOv(); });
+document.querySelectorAll('.ck').forEach((c) => c.addEventListener('change', () => {
+  $('ovOk').disabled = !Array.from(document.querySelectorAll('.ck')).every((x) => x.checked);
+}));
+$('reasons').addEventListener('click', (e) => {
+  const btn = e.target.closest('button'); if (!btn) return;
+  btn.classList.toggle('on');
+  const picked = Array.from($('reasons').querySelectorAll('button.on')).map((x) => REASONS[+x.dataset.i]);
+  $('ovWhy').value = picked.join(' ');
+});
+$('ovOk').addEventListener('click', () => review(true));
+$('ovNo').addEventListener('click', () => {
+  const why = $('ovWhy').value.trim();
+  if (!why) { alert('반려 사유를 고르거나 적어주세요. 업체가 무엇을 고쳐야 할지 알아야 합니다.'); return; }
+  review(false, why);
+});
+async function review(approve, reason){
+  if (!cur) return;
+  const b1 = $('ovOk'), b2 = $('ovNo'); b1.disabled = b2.disabled = true;
+  try {
+    const { data, error } = await sb.rpc('admin_review_verification', { p_verification_id: cur.d.id, p_approve: approve, p_reason: reason || null });
+    if (error) throw error;
+    if (data && data.ok === false) { alert(data.error || '처리하지 못했습니다.'); return; }
+    closeOv(); load();
+  } catch (e) {
+    console.error('[verify] 판정 실패', e); alert('처리하지 못했습니다: ' + (e.message || ''));
+  } finally { b1.disabled = false; b2.disabled = false; }
+}
+
+/* ── 최종 확인 (게시 허용) ── */
+async function finalize(b, ok){
+  const msg = ok
+    ? '"' + (b.business_name || '') + '" 을(를) 최종 확인합니다.\n\n상호 · 대표자 · 업종' + (b.requires_license ? ' · 자격증' : '') + '을 모두 대조하셨나요?\n확인 뒤 업체가 [공개 켜기]를 누르면 게시됩니다.'
+    : '"' + (b.business_name || '') + '" 의 최종 확인을 취소합니다.\n지금 공개 중이면 바로 내려갑니다. 계속할까요?';
+  if (!confirm(msg)) return;
+  try {
+    const { data, error } = await sb.rpc('admin_finalize_business', { p_subscription_id: b.subscription_id, p_ok: ok });
+    if (error) throw error;
+    if (!data || !data.ok) { alert((data && data.error) || '처리하지 못했습니다.'); return; }
+    load();
+  } catch (e) { console.error('[verify] 최종 확인 실패', e); alert('처리하지 못했습니다: ' + (e.message || '')); }
+}
+
+(async () => { if (await checkLogin()) load(); })();
+</script>
+</body>
+</html>
