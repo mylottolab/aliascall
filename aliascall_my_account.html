@@ -2820,12 +2820,10 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
 <script>
 /* 🔴 2026-09-28 — 앱 안에서는 구글 결제만 팝니다(구글 규칙).
    가입 직후의 구독 결제와 [1 · 2 · 3년 연장] 단추를 새 이용권 화면으로 바꿉니다.
-   웹에서는 지금처럼 카드 · PayPal 을 씁니다.
+   🔴 2026-10-01 — 웹도 같습니다. 웹 이용권 화면이 국내카드 · PayPal 로 같은 상품
+     (긴급 이용권 1년 2,200원)을 팔게 되어, 예전 1 · 2 · 3년 + 포인트 결제는 앱 · 웹 모두 닫습니다.
    ⚠ "비상시 결제 없이 바로 등록" 과 "다음에 결제하기" 는 그대로 둡니다. */
 (function(){
-  var inApp = !!(window.AliasNative && window.AliasNative.storeBuy) ||
-              !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-  if (!inApp) return;
   var en = (localStorage.getItem('aliascall_lang') || '').indexOf('en') === 0;
   var label = en ? 'See plans' : '이용권 보기';
   var label2 = en ? 'Extend with a plan' : '이용권으로 연장하기';
