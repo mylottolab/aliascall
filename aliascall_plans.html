@@ -194,6 +194,13 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
       <div class="ds" id="listingDs"></div>
     </button>
 
+    <!-- 🔴 2026-10-01 — 프로 · 게재의 기간은 게재 카드 바로 밑 (추가 사용량보다 위) -->
+    <div id="proOpts" style="display:none;">
+      <div class="sect" data-i18n="sDur">기간</div>
+      <div class="durs" id="durs2"></div>
+      <div class="hint" id="proHint"></div>
+    </div>
+
     <!-- 🔴 2026-10-01 추가 사용량 — 내가 연 회선이나 프로 구독이 있을 때만 보입니다 -->
     <div class="sect" data-i18n="sUsage" id="usageSect" style="margin-top:18px;display:none;">사용량이 모자랄 때</div>
     <button type="button" class="plan" data-plan="usage" id="usageCard" style="display:none;">
@@ -246,12 +253,6 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
 
       <div class="sect" data-i18n="sDur">기간</div>
       <div class="durs" id="durs"></div>
-    </div>
-
-    <div id="proOpts" style="display:none;">
-      <div class="sect" data-i18n="sDur">기간</div>
-      <div class="durs" id="durs2"></div>
-      <div class="hint" id="proHint"></div>
     </div>
 
     <div class="sum"><span class="l" id="sumL"></span><span class="v" id="sumV"></span></div>
