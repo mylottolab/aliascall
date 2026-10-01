@@ -162,6 +162,39 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
       <div class="ds" data-i18n="dPrem">가족 · 친한 친구 · 작은 팀까지 네 명이 함께 쓰는 보안통신.</div>
     </button>
 
+    <!-- 🔴 2026-10-01 — 업무용 프로 (웹과 같은 값 · 같은 기간 · 덤 없음) -->
+    <div class="sect" data-i18n="sPro" style="margin-top:18px;">업무용 · 프로</div>
+    <p class="sub" data-i18n="proSub" style="margin-top:-4px;">가게 · 사무소 · 상담 창구처럼 손님 문의를 번호 없이 받는 곳. 방을 여러 개 열어 손님마다 따로 대화합니다.</p>
+    <button type="button" class="plan" data-plan="pro_starter">
+      <div class="row"><span class="nm" data-i18n="pStarter">프로 스타터</span><span class="pr"><small data-i18n="fromPre"></small>9,900<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
+      <div class="inc"><span data-i18n="r50">방 50개</span><span data-i18n="g50">50GB</span></div>
+    </button>
+    <button type="button" class="plan" data-plan="pro_business">
+      <div class="row"><span class="nm" data-i18n="pBusiness">프로 비즈니스</span><span class="pr"><small data-i18n="fromPre"></small>19,900<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
+      <div class="inc"><span data-i18n="r100">방 100개</span><span data-i18n="g150">150GB</span></div>
+    </button>
+    <button type="button" class="plan" data-plan="pro_enterprise">
+      <div class="row"><span class="nm" data-i18n="pEnterprise">프로 엔터프라이즈</span><span class="pr"><small data-i18n="fromPre"></small>39,900<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
+      <div class="inc"><span data-i18n="r150">방 150개</span><span data-i18n="g400">400GB</span></div>
+    </button>
+    <!-- 🔴 2026-10-01 추가 사용량 — 내가 연 회선이나 프로 구독이 있을 때만 보입니다 -->
+    <div class="sect" data-i18n="sUsage" id="usageSect" style="margin-top:18px;display:none;">사용량이 모자랄 때</div>
+    <button type="button" class="plan" data-plan="usage" id="usageCard" style="display:none;">
+      <div class="row"><span class="nm" data-i18n="pUsage">추가 사용량 1GB</span><span class="pr">2,000<small data-i18n="won">원</small> <small data-i18n="per3">/ 3개월</small></span></div>
+      <div class="ds" data-i18n="dUsage">회선의 사용량을 다 쓰면 보내기 · 걸기가 멈춥니다. 붙일 회선을 골라 1GB씩 더하세요.</div>
+    </button>
+    <div id="usageOpts" style="display:none;">
+      <div class="sect" data-i18n="sTarget">어느 회선에 붙일까요?</div>
+      <div class="lines" id="usageList"></div>
+      <div class="hint" id="usageHint"></div>
+    </div>
+
+    <!-- 광고형 덧상품 — 살아 있는 프로 구독이 있을 때만 보입니다 -->
+    <button type="button" class="plan" data-plan="listing" id="listingCard" style="display:none;">
+      <div class="row"><span class="nm" data-i18n="pListing">공개 업체 목록 게재</span><span class="pr"><small data-i18n="fromPre"></small>5,500<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
+      <div class="ds" id="listingDs"></div>
+    </button>
+
     <!-- 🔴 2026-09-28 — 회선은 "대화 상대" 가 기준입니다.
          먼저 "지금 대화를 이어가기(연장)" 인지 "새 대화 창구(새 회선)" 인지 묻습니다.
          · 이어가기: 내 회선 가운데 고름. 2인 회선에 프리미엄이면 4인으로 올리기
@@ -201,6 +234,12 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
 
       <div class="sect" data-i18n="sDur">기간</div>
       <div class="durs" id="durs"></div>
+    </div>
+
+    <div id="proOpts" style="display:none;">
+      <div class="sect" data-i18n="sDur">기간</div>
+      <div class="durs" id="durs2"></div>
+      <div class="hint" id="proHint"></div>
     </div>
 
     <div class="sum"><span class="l" id="sumL"></span><span class="v" id="sumV"></span></div>
@@ -253,6 +292,24 @@ const I18N = {
     fail:'결제를 확인하지 못했습니다. 돈이 빠져나갔다면 앱을 완전히 껐다 켜주세요. 한 번 더 확인합니다. 그래도 안 되면 고객센터로 알려주세요.',
     loginFirst:'로그인한 뒤 앱을 다시 열면 결제가 이어서 처리됩니다.',
     dTline:'회선이 만들어졌습니다', dPline:'관리 화면에서 초대 링크를 확인하고 상대에게 보내세요.', goManage:'회선 관리로 가기',
+    sUsage:'사용량이 모자랄 때', pUsage:'추가 사용량 1GB', per3:'/ 3개월',
+    dUsage:'회선의 사용량을 다 쓰면 보내기 · 걸기가 멈춥니다. 붙일 회선을 골라 1GB씩 더하세요.',
+    sTarget:'어느 회선에 붙일까요?', proAll:'프로 구독 전체', roomsShare:'모든 방이 함께 씀',
+    usedOf:'{u} / {c}GB 사용 · {p}%', pickTarget:'붙일 회선을 고르세요',
+    qtyNote:'수량(1~10개)은 다음 결제 창에서 고르실 수 있어요. 1개 = 1GB · 2,000원.',
+    endsOn:'이 회선은 {d}에 끝납니다.', gone3m:'추가분은 산 날부터 3개월 동안 쓸 수 있고, 남은 양은 그 뒤 사라집니다.',
+    extendFirst:'⚠ 한 달도 남지 않았습니다. 회선이 끝나면 추가분도 함께 쓸 수 없으니 먼저 연장하시길 권합니다.',
+    dTusage:'사용량을 더했습니다', dPusage:'고르신 회선에서 바로 보내기 · 걸기를 이어가실 수 있습니다.',
+    noTarget:'추가 사용량을 붙일 회선을 찾지 못했습니다. 방금 결제는 곧 자동으로 취소됩니다.',
+    sPro:'업무용 · 프로', proSub:'가게 · 사무소 · 상담 창구처럼 손님 문의를 번호 없이 받는 곳. 방을 여러 개 열어 손님마다 따로 대화합니다.',
+    pStarter:'프로 스타터', pBusiness:'프로 비즈니스', pEnterprise:'프로 엔터프라이즈', pListing:'공개 업체 목록 게재', perMo:'/ 월',
+    r50:'방 50개', r100:'방 100개', r150:'방 150개', g50:'50GB', g150:'150GB', g400:'400GB',
+    proHint:'같은 등급의 프로가 있으면 새로 만들지 않고 기간을 늘립니다. 만들어 둔 방은 그대로입니다.',
+    listHint:'공개 업체 목록에 우리 가게를 올립니다. 게재는 프로 구독이 끝나는 날({d})까지입니다.',
+    listDs:'손님이 업체 목록에서 찾아 번호 없이 문의할 수 있게 올립니다.',
+    dTpro:'프로 구독이 열렸습니다', dPpro:'회선 관리에서 손님용 방을 만들고 초대 링크를 건네세요.',
+    dTlist:'공개 업체 목록에 올렸습니다', dPlist:'회선 관리에서 업체 이름 · 소개 · 영업시간을 채우면 손님에게 보입니다.',
+    noPro:'공개 게재는 프로 구독이 있어야 합니다. 방금 결제는 곧 자동으로 취소됩니다.',
     dTemg:'긴급 이용권이 더해졌습니다', dPemg:'차량 · 소지품 QR과 임시연락처를 12개월 동안 쓰실 수 있습니다.', goHome:'첫 화면으로', goMy:'My Page에서 확인',
     keyWarn:'아래 링크를 지금 꼭 저장해두세요. 이 링크(#k= 뒷부분 포함)를 잃어버리면 저희도 대화를 복구할 수 없습니다.',
     copy:'복사', copied:'복사됨', home:'첫 화면으로',
@@ -295,6 +352,24 @@ const I18N = {
     fail:'We could not verify the payment. If you were charged, fully close and reopen the app and we will check again.',
     loginFirst:'Sign in and reopen the app to finish the payment.',
     dTline:'Your line is ready', dPline:'Open line management to share the invite link.', goManage:'Manage lines',
+    sUsage:'Running out of data?', pUsage:'Extra usage 1GB', per3:'/ 3 months',
+    dUsage:'When a line uses up its data, sending and calling stop. Pick a line and add 1GB at a time.',
+    sTarget:'Which line should get it?', proAll:'Whole Pro plan', roomsShare:'shared by all rooms',
+    usedOf:'{u} / {c}GB used · {p}%', pickTarget:'Pick a line',
+    qtyNote:'Choose the quantity (1–10) in the next payment window. 1 = 1GB · KRW 2,000.',
+    endsOn:'This line ends on {d}.', gone3m:'Extra usage lasts 3 months from purchase; anything left after that expires.',
+    extendFirst:'⚠ Less than a month left. When the line ends, extra usage cannot be used either — consider extending first.',
+    dTusage:'Usage added', dPusage:'You can keep sending and calling on the line you picked.',
+    noTarget:'Could not find the line to add usage to. This payment will be canceled automatically.',
+    sPro:'For business · Pro', proSub:'For shops, offices and help desks that take customer inquiries without sharing a number. Open many rooms, one per customer.',
+    pStarter:'Pro Starter', pBusiness:'Pro Business', pEnterprise:'Pro Enterprise', pListing:'Public business listing', perMo:'/ mo',
+    r50:'50 rooms', r100:'100 rooms', r150:'150 rooms', g50:'50GB', g150:'150GB', g400:'400GB',
+    proHint:'If you already have the same Pro tier, its period is extended. Your rooms stay as they are.',
+    listHint:'Lists your business publicly until your Pro plan ends ({d}).',
+    listDs:'Customers can find you in the directory and reach you without a number.',
+    dTpro:'Your Pro plan is ready', dPpro:'Create customer rooms in My lines and share their invite links.',
+    dTlist:'Your business is now listed', dPlist:'Fill in your name, intro and hours in My lines so customers can see them.',
+    noPro:'A Pro plan is required for listing. This payment will be canceled automatically.',
     dTemg:'Emergency plan added', dPemg:'Item QR codes and one-time cards are yours for 12 months.', goHome:'Home', goMy:'Check in My Page',
     keyWarn:'Save this link now. Without it (including everything after #k=), nobody — not even us — can recover the chat.',
     copy:'Copy', copied:'Copied', home:'Home',
@@ -329,7 +404,23 @@ const CATALOG = {
     { m:3,  real:4,  p:16000, sku:'ac_plan_premium_3m' },
     { m:6,  real:7,  p:28000, sku:'ac_plan_premium_6m' },
     { m:12, real:13, p:48000, sku:'ac_plan_premium_12m', best:true } ] },
+  /* 🔴 2026-10-01 — 프로 · 게재 (덤 없음: real = m) */
+  pro_starter:    { name:'pStarter', pro:true, durs: [
+    { m:1, real:1, p:9900, sku:'ac_pro_starter_1m' }, { m:6, real:6, p:53500, sku:'ac_pro_starter_6m' },
+    { m:12, real:12, p:98600, sku:'ac_pro_starter_12m', best:true } ] },
+  pro_business:   { name:'pBusiness', pro:true, durs: [
+    { m:1, real:1, p:19900, sku:'ac_pro_business_1m' }, { m:6, real:6, p:107500, sku:'ac_pro_business_6m' },
+    { m:12, real:12, p:198200, sku:'ac_pro_business_12m', best:true } ] },
+  pro_enterprise: { name:'pEnterprise', pro:true, durs: [
+    { m:1, real:1, p:39900, sku:'ac_pro_enterprise_1m' }, { m:6, real:6, p:215500, sku:'ac_pro_enterprise_6m' },
+    { m:12, real:12, p:397400, sku:'ac_pro_enterprise_12m', best:true } ] },
+  usage:          { name:'pUsage', usage:true, durs: [ { m:3, real:3, p:2000, sku:'ac_usage_1gb_3m' } ] },
+  listing:        { name:'pListing', pro:true, listing:true, durs: [
+    { m:1, real:1, p:5500, sku:'ac_listing_1m' }, { m:6, real:6, p:29700, sku:'ac_listing_6m' },
+    { m:12, real:12, p:54800, sku:'ac_listing_12m' } ] },
 };
+let myPro = null;
+let usageTargets = [], usagePick = null;   // 🔴 추가 사용량을 붙일 곳 [{ kind, id, name, persons, secure, used_gb, cap_gb, expires_at }]   // 🔴 살아 있는 프로 구독 { tier, expires_at, is_public } — 게재 카드에 씁니다
 
 const sb = supabase.createClient('https://qmwaraittiurkynszjts.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y');
@@ -363,6 +454,38 @@ function paint(){
       '<div class="real">' + T('real', { n: d.real }) + '</div>' +
       '<div class="p">' + fmt(d.p) + T('won') + '</div></button>').join('');
   }
+  /* 🔴 추가 사용량 — 붙일 곳 고르기 */
+  el('usageOpts').style.display = c && c.usage ? '' : 'none';
+  if (c && c.usage) {
+    el('usageList').innerHTML = usageTargets.map((t, i) => {
+      const pct = t.cap_gb > 0 ? Math.min(100, Math.round(t.used_gb / t.cap_gb * 100)) : 0;
+      const nm = t.kind === 'pro' ? (T('proAll') + ' · ' + t.name) : t.name;
+      const sub = (t.kind === 'pro' ? T('roomsShare') : (t.persons === 4 ? T('p4') : T('p2'))) + (t.secure ? ' · 🔒' : '') +
+                  ' · ' + T('usedOf', { u: t.used_gb, c: t.cap_gb, p: pct });
+      return '<button type="button" class="ln' + (usagePick === t ? ' on' : '') + '" data-i="' + i + '">' +
+        '<span class="dot"></span><span class="tx"><div class="n">' + esc(nm) + '</div>' +
+        '<div class="s">' + esc(sub) + '</div>' +
+        '<div style="height:5px;border-radius:99px;background:#E4EFEE;margin-top:6px;overflow:hidden;"><i style="display:block;height:5px;width:' + pct + '%;background:' + (pct >= 90 ? '#C0532F' : '#1F6F6B') + ';"></i></div></span></button>';
+    }).join('');
+    const t = usagePick;
+    let h = T('qtyNote');
+    if (t) {
+      const left = (new Date(t.expires_at) - new Date()) / 86400000;
+      h = T('endsOn', { d: new Date(t.expires_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR') }) + ' ' + (left < 30 ? T('extendFirst') : T('gone3m')) + '\n' + h;
+    }
+    el('usageHint').textContent = h; el('usageHint').style.whiteSpace = 'pre-line';
+  }
+  /* 🔴 프로 · 게재 기간 */
+  el('proOpts').style.display = c && c.pro ? '' : 'none';
+  if (c && c.pro) {
+    el('durs2').innerHTML = c.durs.map((d, i) =>
+      '<button type="button" class="dur' + (dur === d ? ' on' : '') + '" data-i="' + i + '">' +
+      (d.best ? '<span class="best">' + T('best') + '</span>' : '') +
+      '<div class="m">' + T('m', { n: d.m }) + '</div>' +
+      '<div class="p">' + fmt(d.p) + T('won') + '</div></button>').join('');
+    el('proHint').textContent = c.listing ? T('listHint', { d: myPro ? new Date(myPro.expires_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR') : '' })
+                                          : T('proHint');
+  }
   el('secSw').classList.toggle('on', secure);
   el('lineName').placeholder = T('nameP');
   el('secHint').textContent = T(secure ? 'oSecOn' : 'oSecOff');
@@ -378,7 +501,7 @@ function paint(){
   if (MODE === 'old') { b.disabled = false; b.textContent = T('update'); return; }
   if (MODE === 'web') { b.disabled = false; b.textContent = T('webGo'); return; }
   if (!session) { b.disabled = false; b.textContent = T('login'); return; }
-  const need = lineNeed();
+  const need = lineNeed() || (c && c.usage && !usagePick ? T('pickTarget') : '');
   b.disabled = !dur || !!need;
   b.textContent = !dur ? T('pick') : (need || T('buy'));
 }
@@ -431,8 +554,21 @@ document.querySelectorAll('.plan').forEach((b) => b.addEventListener('click', ()
   plan = b.dataset.plan;
   const c = CATALOG[plan];
   dur = c.durs.find((d) => d.best) || c.durs[0];
+  if (c.listing && myPro) {
+    /* 게재는 프로가 끝날 때까지 — 남은 달 수에 가장 가까운 기간을 먼저 골라 둡니다 */
+    const left = Math.max(1, Math.round((new Date(myPro.expires_at) - new Date()) / (30.4 * 86400000)));
+    dur = c.durs.reduce((a, d) => Math.abs(d.m - left) < Math.abs(a.m - left) ? d : a, c.durs[0]);
+  }
   hush(); paint();
 }));
+el('usageList').addEventListener('click', (e) => {
+  const b = e.target.closest('.ln'); if (!b) return;
+  usagePick = usageTargets[+b.dataset.i]; paint();
+});
+el('durs2').addEventListener('click', (e) => {
+  const b = e.target.closest('.dur'); if (!b) return;
+  dur = CATALOG[plan].durs[+b.dataset.i]; paint();
+});
 el('durs').addEventListener('click', (e) => {
   const b = e.target.closest('.dur'); if (!b) return;
   dur = CATALOG[plan].durs[+b.dataset.i]; paint();
@@ -452,7 +588,7 @@ el('purSeg').addEventListener('click', (e) => {
 el('buyBtn').addEventListener('click', async () => {
   hush();
   if (MODE === 'old') { location.href = 'https://play.google.com/store/apps/details?id=com.weaveapp.aliascall'; return; }
-  if (MODE === 'web') { location.href = plan && CATALOG[plan].line ? 'aliascall_hotline_purchase.html' : 'aliascall_my_account.html'; return; }
+  if (MODE === 'web') { location.href = plan && (CATALOG[plan].line || CATALOG[plan].pro) ? 'aliascall_hotline_purchase.html' : 'aliascall_my_account.html'; return; }
   if (!session) { location.href = 'aliascall_my_account.html?next=' + encodeURIComponent('aliascall_plans.html'); return; }
   if (!dur) return;
   const b = el('buyBtn'); b.disabled = true; b.textContent = T('wait');
@@ -462,6 +598,8 @@ el('buyBtn').addEventListener('click', async () => {
     purpose,
     extendHotlineId: line && mode === 'cont' && pick ? pick.id : null,
     lineName: line && mode === 'new' ? el('lineName').value.trim() : '',
+    usageKind: plan === 'usage' && usagePick ? usagePick.kind : null,
+    usageTargetId: plan === 'usage' && usagePick ? usagePick.id : null,
   });
   setTimeout(() => { if (b.textContent === T('wait')) { b.textContent = T('checking'); } }, 1500);
 });
@@ -483,6 +621,15 @@ ACStore.onDone = function(r){
       el('doneT').textContent = T('dTline'); el('doneP').textContent = T('dPline');
       el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
       if (r.ownerLink) { el('keyBox').style.display = ''; el('keyLink').value = r.ownerLink; }
+    } else if (r.kind === 'usage') {
+      el('doneT').textContent = T('dTusage'); el('doneP').textContent = T('dPusage');
+      el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
+    } else if (r.kind === 'pro') {
+      el('doneT').textContent = T('dTpro'); el('doneP').textContent = T('dPpro');
+      el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
+    } else if (r.kind === 'listing') {
+      el('doneT').textContent = T('dTlist'); el('doneP').textContent = T('dPlist');
+      el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
     } else {
       el('doneT').textContent = T('dTemg'); el('doneP').textContent = T('dPemg');
       /* 2026-09-28: 아래 [첫 화면으로] 와 겹치지 않게, 끝나는 날을 볼 수 있는 곳으로 */
@@ -495,6 +642,8 @@ ACStore.onDone = function(r){
   if (r.owned)    return say(T('owned'));
   if (r.cleared)  return say(T('cleared'), true);
   if (r.error === 'login') return say(T('loginFirst'));
+  if (r.noPro) return say(T('noPro'));
+  if (r.noTarget) return say(T('noTarget'));
   say(T('fail') + (r.error ? '\n(' + r.error + (r.code != null ? ' · ' + r.code : '') + ')' : ''));
 };
 
@@ -516,6 +665,35 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
   if (MODE === 'old') say(T('oldApp'), true);
   if (MODE === 'web') say(T('web'), true);
   try { session = (await sb.auth.getSession()).data.session; } catch (e) { session = null; }
+  /* 🔴 2026-10-01 — 추가 사용량: 붙일 곳(내 회선 · 프로 구독). 거의 다 쓴 곳을 먼저 */
+  if (session) {
+    try {
+      const { data: ut } = await sb.rpc('my_usage_targets');
+      usageTargets = (ut || []).map((t) => ({ ...t, used_gb: Number(t.used_gb), cap_gb: Number(t.cap_gb) }))
+        .sort((a, b) => (b.cap_gb ? b.used_gb / b.cap_gb : 0) - (a.cap_gb ? a.used_gb / a.cap_gb : 0));
+      if (usageTargets.length) { el('usageSect').style.display = ''; el('usageCard').style.display = ''; }
+      const qp = new URLSearchParams(location.search);
+      const want = qp.get('usage') || qp.get('usagePro');
+      if (want && usageTargets.length) {
+        usagePick = usageTargets.find((t) => t.id === want) || usageTargets[0];
+        plan = 'usage'; dur = CATALOG.usage.durs[0];
+        setTimeout(() => { paint(); el('usageCard').scrollIntoView({ block: 'center' }); }, 0);
+      } else if (usageTargets.length) usagePick = usageTargets[0];
+    } catch (e) {}
+  }
+  /* 🔴 2026-10-01 — 살아 있는 프로 구독이 있으면 게재(광고형) 카드를 보입니다 */
+  if (session) {
+    try {
+      const { data: ps } = await sb.from('hotline_subscriptions').select('tier, expires_at, is_public')
+        .eq('owner_user_id', session.user.id).eq('status', 'active').gt('expires_at', new Date().toISOString())
+        .order('expires_at', { ascending: false }).limit(1);
+      myPro = (ps && ps[0]) || null;
+      if (myPro) {
+        el('listingCard').style.display = '';
+        el('listingDs').textContent = myPro.is_public ? (LANG === 'en' ? 'Already listed.' : '이미 게재 중입니다.') : T('listDs');
+      }
+    } catch (e) {}
+  }
   /* 🔴 2026-09-30 — 무료 체험 중이면: 지금 사면 남은 체험 그대로 + 긴급 기능 1개월 더 */
   if (session) {
     try {

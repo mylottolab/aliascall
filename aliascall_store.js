@@ -59,7 +59,9 @@
     if (!hasNative()) { done({ ok: false, error: 'no_native' }); return; }
     var keep = { secure: !!opts.secure, purpose: opts.purpose === 'work' ? 'work' : 'personal', key: null,
                  extend: opts.extendHotlineId || null,
-                 name: (opts.lineName || '').slice(0, 30) };
+                 name: (opts.lineName || '').slice(0, 30),
+                 /* 🔴 2026-10-01 — 추가 사용량을 붙일 곳 (회선 또는 프로 구독) */
+                 uKind: opts.usageKind || null, uId: opts.usageTargetId || null };
     /* 🔴 암호화 회선이면 열쇠를 **지금** 만듭니다. 결제 뒤에 만들면 늦습니다.
        ⚠ 연장이면 만들지 않습니다 — 원래 회선의 열쇠를 그대로 씁니다. */
     if (keep.secure && !keep.extend && typeof window.e2eeGenerateKeyBase64 === 'function') {
@@ -97,7 +99,8 @@
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token },
         body: JSON.stringify({ productId: sku, purchaseToken: token, orderId: ev.b || '',
                                secure: keep.secure, purpose: keep.purpose,
-                               extendHotlineId: keep.extend, lineName: keep.name || '' }),
+                               extendHotlineId: keep.extend, lineName: keep.name || '',
+                               usageKind: keep.uKind || null, usageTargetId: keep.uId || null }),
       });
       var out = {};
       try { out = await res.json(); } catch (e) {}
