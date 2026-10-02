@@ -465,6 +465,7 @@ const PRO_TIER_LABEL = {
 const ROOMS_PAGE = 15;
 
 let subsCache = [];
+let proUsage = {};   // 🔴 2026-10-01 구독 id → { used, cap } (모든 방 합계 · 추가 사용량 포함)
 let roomsBySub = {};              // subId -> 방 배열
 const subViewState = {};          // subId -> { keyword, showArchived, shown }
 
@@ -502,6 +503,12 @@ async function loadSubscriptions(){
   const { data: subs, error } = await sb.rpc('my_subscriptions_summary');
   if (error) { console.error('[subs] 조회 실패', error); return; }
   subsCache = subs || [];
+  /* 🔴 2026-10-01 — 프로는 모든 방이 쓴 양을 합쳐 구독 한도(+추가 사용량)와 비교합니다(my_usage_targets) */
+  try {
+    const { data: ut } = await sb.rpc('my_usage_targets');
+    proUsage = {};
+    (ut || []).filter((t) => t.kind === 'pro').forEach((t) => { proUsage[t.id] = { used: Number(t.used_gb) || 0, cap: Number(t.cap_gb) || 0 }; });
+  } catch (e) { proUsage = {}; }
   if (subsCache.length === 0) { document.getElementById('subsSection').style.display = 'none'; return; }
 
   // 구독에 속한 방 전부 (한 번에 받아서 화면에서 나눔 — 요청 수를 줄이기 위함)
@@ -556,11 +563,30 @@ function renderSubCard(sub){
   const meta = document.createElement('div');
   meta.className = 'sub-meta';
   const locale = (LANG === 'en') ? 'en-US' : 'ko-KR';
+  const pu = proUsage[sub.id] || { used: 0, cap: Number(sub.usage_cap_gb) || 0 };
+  const upct = pu.cap > 0 ? Math.min(100, Math.round(pu.used / pu.cap * 100)) : 0;
   meta.innerHTML =
-    `<span>${T('subExpires')} <b>${new Date(sub.expires_at).toLocaleDateString(locale)}</b></span>` +
-    `<span>${T('subUsage')} <b>${sub.usage_cap_gb}GB</b></span>` +
+    `<span>${T('subExpires')} <b>${new Date(sub.expires_at).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })}</b></span>` +
+    `<span>${T('subUsage')} <b>${pu.used.toFixed(1)} / ${pu.cap}GB</b></span>` +
     `<span>${T('subArchived')} <b>${sub.archived_rooms || 0}</b></span>`;
   card.appendChild(meta);
+  /* 🔴 2026-10-01 — 사용량 막대(모든 방 합계) · [＋ 사용량 추가](구독 전체에 더함) */
+  const ubar = document.createElement('div');
+  ubar.className = 'usage-bar-track';
+  ubar.title = (LANG === 'en' ? 'Data used by all rooms' : '모든 방이 함께 쓴 사용량');
+  ubar.innerHTML = `<div class="usage-bar-fill" style="width:${upct}%;${upct >= 90 ? 'background:#C0532F;' : ''}"></div>`;
+  card.appendChild(ubar);
+  const ulab = document.createElement('div');
+  ulab.className = 'usage-label';
+  ulab.textContent = (LANG === 'en' ? 'Shared by all rooms · ' : '모든 방이 함께 씀 · ') + upct + '%';
+  card.appendChild(ulab);
+  if (!expired) {
+    const uadd = document.createElement('a');
+    uadd.className = 'usage-add'; uadd.href = 'aliascall_plans.html?usagePro=' + encodeURIComponent(sub.id);
+    if (upct >= 80) uadd.dataset.hot = '1';
+    uadd.textContent = (LANG === 'en' ? '＋ Add usage to the whole plan (1GB · KRW 2,000)' : '＋ 사용량 추가 — 구독 전체에 (1GB · 2,000원)');
+    card.appendChild(uadd);
+  }
 
   const bar = document.createElement('div');
   bar.className = 'sub-bar';

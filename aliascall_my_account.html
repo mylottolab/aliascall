@@ -1968,16 +1968,40 @@ const PH_T = {
 function phT(k, v){ const d = PH_T[currentLang] || PH_T.ko; let x = d[k]; if (v) Object.keys(v).forEach((z) => { x = String(x).replace('{' + z + '}', v[z]); }); return x; }
 function phDate(iso){ return iso ? new Date(iso).toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US') : ''; }
 function phEsc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+/* 🔴 2026-10-01 고침 — 프로 · 게재 · 추가 사용량이 "회선 N개월 (실제 N+1개월)" 로 잘못 보였습니다.
+   상품 번호(google_product_id — 웹 결제도 같은 칸)가 있으면 그것으로 이름을 정하고,
+   "(실제 …)" 는 덤이 있는 일반 · 프리미엄에만 붙입니다. */
+const PH_SKU = {
+  ko: { ac_plan_emergency_12m:'긴급 이용권 12개월', ac_listing_1m:'공개 업체 목록 게재 1개월', ac_listing_6m:'공개 업체 목록 게재 6개월',
+        ac_listing_12m:'공개 업체 목록 게재 12개월', ac_usage_1gb_3m:'추가 사용량 1GB · 3개월' },
+  en: { ac_plan_emergency_12m:'Emergency plan 12 months', ac_listing_1m:'Public listing 1 month', ac_listing_6m:'Public listing 6 months',
+        ac_listing_12m:'Public listing 12 months', ac_usage_1gb_3m:'Extra usage 1GB · 3 months' },
+};
+const PH_PRO = { ko: { pro_starter:'프로 스타터', pro_business:'프로 비즈니스', pro_enterprise:'프로 엔터프라이즈' },
+                 en: { pro_starter:'Pro Starter', pro_business:'Pro Business', pro_enterprise:'Pro Enterprise' } };
 function phName(r){
   const t = r.hotline_tier || '';
+  const L = currentLang === 'en' ? 'en' : 'ko';
+  const sku = r.google_product_id || r.product_id || '';
+  if (PH_SKU[L][sku]) return PH_SKU[L][sku];
+  if (/^pro_/.test(t) || /^ac_pro_/.test(sku)) {
+    const tier = /^pro_/.test(t) ? t : sku.replace(/^ac_/, '').replace(/_\d+m$/, '');
+    const m = r.months || (sku.match(/_(\d+)m$/) || [])[1];
+    return (PH_PRO[L][tier] || 'Pro') + (m ? ' ' + phT('mon', { n: m }) : '');
+  }
   if (r.purpose === 'subscription') return r.method === 'google_play' ? phT('pEmg') + ' ' + phT('mon', { n: 12 }) : phT('pSub');
   let base = phT('pLine');
   if (/^hotline_everybody|^hotline_1to1/.test(t)) base = r.method === 'google_play' ? phT('pBasic') : phT('pLine') + ' 2인';
   if (/^premium_4|^economy_4/.test(t)) base = r.method === 'google_play' ? phT('pPrem') : phT('pLine') + ' 4인';
+  /* 새 상품 번호가 있으면 앱 · 웹 모두 같은 이름 */
+  if (/^ac_plan_basic_/.test(sku)) base = phT('pBasic');
+  if (/^ac_plan_premium_/.test(sku)) base = phT('pPrem');
+  if (/_secure$/.test(t) && base.indexOf('🔒') < 0 && /^ac_plan_/.test(sku)) { /* 아래에서 붙임 */ }
   if (/_secure$/.test(t)) base += ' 🔒';
   if (r.months) {
     base += ' ' + phT('mon', { n: r.months });
-    if (r.method === 'google_play') base += ' ' + phT('real', { n: r.months + 1 });
+    /* 덤(+1개월)은 일반 · 프리미엄 이용권만 — 앱 · 웹 새 상품 모두 */
+    if (/^ac_plan_(basic|premium)_/.test(sku) || (r.method === 'google_play' && /^(hotline_everybody|premium_4)/.test(t))) base += ' ' + phT('real', { n: r.months + 1 });
   }
   return base;
 }
