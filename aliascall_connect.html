@@ -261,6 +261,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .back-btn{ background:none; border:none; font-size:18px; color:var(--ink); cursor:pointer; padding:2px 4px 2px 0; line-height:1; }
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
 </style>
+<script src="aliascall_burum_link.js"></script>
 </head>
 <body>
 
@@ -404,6 +405,8 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
     </div>
     <!-- 2026-08-22 신설: 이모지 선택 패널 -->
     <div class="emoji-panel" id="emojiPanel"></div>
+    <!-- 🔴 2026-10-01 두 앱 잇기 — 계속 연락하고 싶을 때 부름 초대장 보내기 -->
+    <button type="button" id="burumLinkBtn" style="display:block; margin:6px auto 0; background:none; border:1.5px solid var(--line); border-radius:20px; padding:7px 14px; font-size:12px; font-weight:700; color:var(--teal-deep, #123F3D); cursor:pointer; font-family:inherit;">💬 부름으로 이어가기</button>
     <div class="chat-input-row">
       <input type="file" id="chatPhotoInput" accept="image/*" multiple style="display:none;">
       <button type="button" id="plusMenuBtn" data-i18n-title="titleMore" title="더보기">➕</button>
@@ -2332,6 +2335,8 @@ function appendChatMessage(msg, who){
       });
     } else {
       el.textContent = msg.content;
+      /* 🔴 2026-10-01 — 부름 초대 링크는 카드로 크게(두 앱 잇기) */
+      if (window.ACBurum) { const bc = ACBurum.card(msg.content); if (bc) el.appendChild(bc); }
     }
   }
   list.appendChild(el);
@@ -2366,6 +2371,17 @@ function clearNewReceivedHighlight(){
 document.getElementById('chatMessages').addEventListener('click', clearNewReceivedHighlight);
 document.getElementById('chatInput').addEventListener('focus', clearNewReceivedHighlight);
 window.addEventListener('focus', clearNewReceivedHighlight);
+/* 🔴 2026-10-01 두 앱 잇기 — 안내창에서 보낸 글은 보통 메시지와 같은 길로 나갑니다 */
+document.getElementById('burumLinkBtn').addEventListener('click', function(){
+  if (!window.ACBurum) return;
+  ACBurum.openSheet(async function(text){
+    const inp = document.getElementById('chatInput');
+    inp.value = text;
+    await sendChatMessage();
+  });
+});
+try { if ((localStorage.getItem('aliascall_lang') || '').indexOf('en') === 0) document.getElementById('burumLinkBtn').textContent = '💬 Continue on Burum'; } catch (e) {}
+
 async function sendChatMessage(){
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
