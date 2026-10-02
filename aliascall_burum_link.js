@@ -7,17 +7,26 @@
      "계속 연락하고 싶다" 가 되는 순간이 부름이 이어받을 자리입니다.
      번호는 끝까지 서로 모릅니다.
 
-   ⚠ 두 앱은 계정 · 서버가 따로라, 에일리어스콜이 부름 초대장을 대신 만들 수
-     없습니다(그건 3단계 "한 계정" 의 일). 그래서 손님이 부름에서 만든
-     초대 링크를 이 대화에 붙여 보내고, 받는 쪽에서는 카드로 크게 보입니다.
+   🔴 2026-10-01 (2판) — 한 번만 누르면 됩니다
+     [💬 부름으로 이어가기] → 확인 한 번 → 추측할 수 없는 1회용 번호가 담긴
+     "부름 연결 카드"(burum.kr/alias_bridge.html?b=번호)가 양쪽 대화에 올라갑니다.
+     두 분이 각자 카드를 누르고 부름에 로그인하면, 부름이 저절로 두 분을 잇고
+     **같은 대화창**을 열어 줍니다(맨 위 "부름으로 연결되었습니다. 사용하세요.").
+     복사 · 붙여넣기도, 부름에서 초대장을 만드는 일도 없습니다.
 
-   ACBurum.card(text)         글에 부름 초대 링크가 있으면 카드(요소)를, 없으면 null
-   ACBurum.openSheet(sendFn)  [💬 부름으로 이어가기] 안내창 — sendFn(text) 로 보냅니다
+   ACBurum.card(text)         글에 부름 연결 · 초대 링크가 있으면 카드(요소)를, 없으면 null
+   ACBurum.openSheet(sendFn)  [💬 부름으로 이어가기] 확인창 — sendFn(text) 로 보냅니다
    ===================================================================== */
 (function(){
   var BURUM = 'https://burum.kr/';
   var PLAY = 'https://play.google.com/store/apps/details?id=com.weaveapp.alias';
   var RE = /https?:\/\/(?:www\.)?burum\.kr\/alias_join\.html\?c=([A-Za-z0-9_-]{4,40})/;
+  var RE_BR = /https?:\/\/(?:www\.)?burum\.kr\/alias_bridge\.html\?b=([A-Za-z0-9_-]{16,64})/;
+  /* 추측할 수 없는 1회용 번호(24자) */
+  function newToken(){
+    var A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', a = new Uint8Array(24), t = '';
+    crypto.getRandomValues(a); for (var i = 0; i < a.length; i++) t += A[a[i] % A.length]; return t;
+  }
   function en(){ try { return (localStorage.getItem('aliascall_lang') || document.documentElement.lang || '').indexOf('en') === 0; } catch (e) { return false; } }
   function L(ko, e){ return en() ? e : ko; }
 
@@ -51,6 +60,23 @@
 
   /* ── 받는 쪽 · 보낸 쪽 모두: 부름 초대 링크를 카드로 ── */
   function card(text){
+    var mb = RE_BR.exec(String(text || ''));
+    if (mb) {
+      css();
+      var c = document.createElement('div');
+      c.className = 'acb-card';
+      c.innerHTML = '<b>💬 ' + L('부름 연결 카드', 'Burum connection card') + '</b>' +
+        '<small>' + L('두 분 모두 이 카드를 누르면 부름에 같은 대화창이 열립니다. 번호는 서로 보이지 않습니다.',
+                      'When you both tap this card, the same Burum chat opens for you. Numbers stay hidden.') + '</small>';
+      var g = document.createElement('a');
+      g.className = 'go'; g.href = 'https://burum.kr/alias_bridge.html?b=' + mb[1]; g.target = '_blank'; g.rel = 'noopener';
+      g.textContent = L('부름에서 잇기 ›', 'Connect on Burum ›');
+      var ii = document.createElement('a');
+      ii.className = 'inst'; ii.href = PLAY; ii.target = '_blank'; ii.rel = 'noopener';
+      ii.textContent = L('부름이 없으면 먼저 설치하기', 'No Burum yet? Install it first');
+      c.appendChild(g); c.appendChild(ii);
+      return c;
+    }
     var m = RE.exec(String(text || ''));
     if (!m) return null;
     css();
@@ -70,50 +96,31 @@
     return a;
   }
 
-  /* ── 주인(나) 쪽: [💬 부름으로 이어가기] 안내창 ── */
+  /* ── [💬 부름으로 이어가기] — 확인 한 번이면 연결 카드가 양쪽 대화에 올라갑니다 ── */
   function openSheet(sendFn){
     css();
     var bg = document.createElement('div'); bg.className = 'acb-bg';
     var sh = document.createElement('div'); sh.className = 'acb-sh';
     sh.innerHTML =
       '<h3>💬 ' + L('부름으로 이어가기', 'Continue on Burum') + '</h3>' +
-      '<p>' + L('이 분과 계속 연락하고 싶으면 부름 초대장을 보내세요. 서로의 번호는 계속 보이지 않습니다.',
-                'To keep in touch, send a Burum invitation. Neither of you will see the other’s number.') + '</p>' +
-      '<div class="acb-st"><span class="n">1</span><span>' +
-        L('부름에서 <b>초대장 만들기</b>를 누릅니다. ', 'In Burum, tap <b>Create invitation</b>. ') +
-        '<a href="' + BURUM + 'alias_invite.html" target="_blank" rel="noopener">' + L('부름 열기 ›', 'Open Burum ›') + '</a><br>' +
-        '<small style="opacity:.7">' + L('부름이 없으면 ', 'No Burum yet? ') +
-        '<a href="' + PLAY + '" target="_blank" rel="noopener">' + L('설치하기', 'Install') + '</a></small></span></div>' +
-      '<div class="acb-st"><span class="n">2</span><span>' + L('만들어진 <b>링크를 복사</b>합니다.', '<b>Copy</b> the invitation link.') + '</span></div>' +
-      '<div class="acb-st"><span class="n">3</span><span>' + L('여기에 <b>붙여넣고 보냅니다.</b>', '<b>Paste it here</b> and send.') +
-        '<div class="acb-row"><input id="acbIn" placeholder="https://burum.kr/alias_join.html?c=…" autocomplete="off" autocapitalize="off" spellcheck="false">' +
-        '<button type="button" id="acbPaste">' + L('붙여넣기', 'Paste') + '</button></div>' +
-        '<div class="acb-err" id="acbErr"></div></span></div>' +
-      '<button type="button" class="acb-send" id="acbSend" disabled>' + L('초대장 보내기', 'Send invitation') + '</button>' +
+      '<p>' + L('이 대화에 "부름 연결 카드" 를 보냅니다. 두 분이 각자 카드를 누르고 부름에 로그인하면, 부름에 같은 대화창이 바로 열립니다. 서로의 번호는 계속 보이지 않습니다.',
+                'This sends a "Burum connection card" to this chat. When you both tap it and sign in to Burum, the same chat opens for you there. Your numbers stay hidden.') + '</p>' +
+      '<div class="acb-st"><span class="n">1</span><span>' + L('[연결 카드 보내기] 를 누릅니다.', 'Tap [Send connection card].') + '</span></div>' +
+      '<div class="acb-st"><span class="n">2</span><span>' + L('두 분 모두 카드의 <b>[부름에서 잇기]</b> 를 누릅니다.', 'You both tap <b>[Connect on Burum]</b> on the card.') + '</span></div>' +
+      '<div class="acb-st"><span class="n">3</span><span>' + L('부름에 로그인(처음이면 가입)하면 끝 — 같은 대화창이 열립니다.', 'Sign in to Burum (or sign up) — the same chat opens.') + '</span></div>' +
+      '<div class="acb-err" id="acbErr"></div>' +
+      '<button type="button" class="acb-send" id="acbSend">' + L('연결 카드 보내기', 'Send connection card') + '</button>' +
       '<button type="button" class="acb-x" id="acbClose">' + L('닫기', 'Close') + '</button>';
     document.body.appendChild(bg); document.body.appendChild(sh);
-    var inp = sh.querySelector('#acbIn'), btn = sh.querySelector('#acbSend'), err = sh.querySelector('#acbErr');
+    var btn = sh.querySelector('#acbSend'), err = sh.querySelector('#acbErr');
     function close(){ bg.remove(); sh.remove(); }
-    function check(){
-      var ok = RE.test(inp.value.trim());
-      btn.disabled = !ok;
-      err.textContent = (inp.value.trim() && !ok) ? L('부름 초대 링크(burum.kr/alias_join.html?c=…)를 붙여 주세요.', 'Please paste a Burum invitation link (burum.kr/alias_join.html?c=…).') : '';
-    }
-    inp.addEventListener('input', check);
-    sh.querySelector('#acbPaste').addEventListener('click', async function(){
-      try { inp.value = (await navigator.clipboard.readText()) || ''; } catch (e) {
-        err.textContent = L('붙여넣기가 막혀 있어요. 칸을 길게 눌러 붙여 주세요.', 'Paste is blocked. Long-press the box to paste.');
-      }
-      check();
-    });
     bg.addEventListener('click', close);
     sh.querySelector('#acbClose').addEventListener('click', close);
     btn.addEventListener('click', async function(){
-      var m = RE.exec(inp.value.trim()); if (!m) return;
-      var link = BURUM + 'alias_join.html?c=' + m[1];
       btn.disabled = true;
       try {
-        await sendFn(L('부름에서 계속 이야기해요 💬 ', 'Let’s keep talking on Burum 💬 ') + link);
+        await sendFn(L('부름에서 계속 이야기해요 💬 ', 'Let’s keep talking on Burum 💬 ') +
+                     'https://burum.kr/alias_bridge.html?b=' + newToken());
         close();
       } catch (e) { btn.disabled = false; err.textContent = L('보내지 못했습니다. 다시 눌러 주세요.', 'Could not send. Please try again.'); }
     });
