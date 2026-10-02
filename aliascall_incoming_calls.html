@@ -1261,6 +1261,7 @@ document.getElementById('declineBtn').addEventListener('click', async () => {
   document.getElementById('sessionView').classList.remove('show');
   unsubscribeCaseRealtime();
   document.getElementById('chatMessages').innerHTML = '';
+  if (pendingSession) acNative('cancelCall', pendingSession.session_token);   // 🔴 벨 끄기
   if (pendingSession) {
     // 거절 신호를 발견자에게 즉시 보내서, 25초 타임아웃까지 안 기다리고 바로 "메시지 남기기"로 넘어가게 함
     const declineChannel = sb.channel('webrtc-' + pendingSession.session_token, { config: { broadcast: { self: false } } });
@@ -1300,8 +1301,18 @@ document.getElementById('unmuteBtn').addEventListener('click', () => {
   document.getElementById('unmuteBtn').classList.remove('show');
 });
 
+/* 🔴🔴 2026-10-01 (앱 버전 7) — 잠금화면 전화와 짝
+   받을 때   이 폰의 벨(전화 알림)을 끄고, 통화 중 알림줄을 켭니다(뒤로 밀려도 마이크 · 카메라 유지)
+   거절 · 끝  벨을 끄고 알림줄을 끕니다
+   ⚠ 옛 앱(버전 6 이하) · 브라우저에는 이 창구가 없습니다 — 있는지 보고 부릅니다. */
+function acNative(fn, a, b){
+  try { if (window.AliasNative && typeof AliasNative[fn] === 'function') AliasNative[fn](a, b); } catch (e) {}
+}
+
 async function answerCall(session){
   const mode = session.call_type;
+  acNative('cancelCall', session.session_token);
+  acNative('callOngoing', ((typeof currentLang !== 'undefined' && currentLang === 'en') ? 'Aliascall call' : '에일리어스콜 통화'), mode === 'video');
   activeCallDirection = 'incoming'; // 2026-08-20 (3단계)
   // 2026-08-19 (3차): acceptBtn을 거치지 않고 autoaccept로 바로 호출되는 경우(index.html 등에서
   // 넘어온 경우)도 있어서, 여기서 직접 sessionView/incallState를 켜줌 (중복 호출은 무해함)
@@ -1438,6 +1449,7 @@ let callEnding = false; // pc.close() 자체가 connectionstatechange('closed')�
 function hangup(silent){
   if (callEnding) return;
   callEnding = true;
+  acNative('callEnded');   // 🔴 통화 중 알림줄 끄기
   acTrialStop();   // 🔴 체험 타이머
   activeCallDirection = null; // 2026-08-20 (3단계)
   if (answerResendInterval) { clearInterval(answerResendInterval); answerResendInterval = null; } // 2026-08-19
@@ -1602,6 +1614,7 @@ async function createOwnerOffer(mode){
 }
 
 function endOwnerCall(silent){
+  acNative('callEnded');   // 🔴 통화 중 알림줄 끄기
   acTrialStop();   // 🔴 체험 타이머
   if (ownerOfferResendInterval) { clearInterval(ownerOfferResendInterval); ownerOfferResendInterval = null; }
   if (ownerRtChannel && !silent) ownerRtChannel.send({ type: 'broadcast', event: 'hangup', payload: {} });

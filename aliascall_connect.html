@@ -1367,6 +1367,22 @@ const myClientId = 'caller-' + Math.random().toString(36).slice(2);
 let pc = null, localStream = null, rtChannel = null, currentSessionToken = null, currentMode = 'voice';
 let offerResendInterval = null;
 let wakeupPushTimer = null; // 60초 무응답시 긴급 웹푸시 발송용 (2026-08-19 신설)
+/* 🔴 2026-10-01 — 주인 폰 울리기(ring) · 벨 멈추기(cancel). 실패해도 통화에는 영향 없음 */
+let acRang = false;
+function acRing(cancel){
+  try {
+    if (!currentSessionToken || !registrationId) return;
+    if (cancel && !acRang) return;          // 울린 적이 없으면 멈출 것도 없음
+    if (!cancel) acRang = true;
+    fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-wakeup-push`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ registrationId, mode: currentMode, sessionToken: currentSessionToken,
+        registrationTitle: document.getElementById('foundTitle').textContent, caseId: currentCaseId,
+        ring: !cancel, cancel: !!cancel }),
+    }).catch((e) => console.warn('[push] 전화 신호 실패(통화 자체엔 영향 없음)', e));
+    if (cancel) acRang = false;
+  } catch (e) {}
+}
 
 // ── 2026-08-20 신설: "사건(case)" 시스템 — 채팅/사진이 영구 저장되고, 소유자가 나중에라도
 // 답장할 수 있게 하는 대화 저장 구조. finderAnonId는 이 발견자 브라우저의 익명 식별값
@@ -1521,6 +1537,13 @@ async function startCall(mode){
   // 수밖에 없었음. 15초까지 응답이 없으면 웹푸시로 "긴급 알림"을 보내서 앱을 안 보고 있어도
   // 소유자 기기에 알림이 뜨도록 함 (전화번호를 안 쓰는 정책이라 SMS 대신 웹푸시 사용, aliascall_push.js 참고).
   // 이미 답이 왔거나 통화가 끝났으면 아래 answer/declined 핸들러에서 clearTimeout으로 취소됨.
+  /* 🔴🔴 2026-10-01 (앱 버전 7) — 15초 기다리지 않고 **곧바로** 주인 폰을 울립니다.
+     앱이면 잠금화면에 일반 전화처럼 전체 화면 · 벨소리 · [받기], 브라우저면 웹푸시.
+     받거나 · 거절하거나 · 끊으면 acRing(true) 로 주인의 모든 폰에서 벨을 멈춥니다. */
+  acRing(false);
+  /* ⚠ 15초 뒤 알림 한 줄(예전 방식)도 그대로 둡니다 — 아직 버전 6 이하인 앱 · 브라우저는
+     전화 신호를 띄울 자바가 없어, 이것이 있어야 전화를 놓치지 않습니다.
+     받거나 · 거절하거나 · 끊으면 아래 핸들러에서 취소됩니다. */
   wakeupPushTimer = setTimeout(() => {
     fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-wakeup-push`, {
       method: 'POST',
@@ -1545,6 +1568,7 @@ async function startCall(mode){
       console.log('[webrtc] ⑤ answer 수신됨');
       clearTimeout(noAnswerTimer);
       clearTimeout(wakeupPushTimer); // 응답 왔으니 긴급 알림 예약 취소 (2026-08-19)
+      acRing(true);                  // 🔴 주인이 받음 — 다른 폰의 벨도 멈춤
       if (offerResendInterval) { clearInterval(offerResendInterval); offerResendInterval = null; }
       if (!pc || pc.signalingState === 'closed') { console.log('[webrtc] (pc 없음, 무시)'); return; }
       if (pc.signalingState !== 'have-local-offer') { console.log('[webrtc] (중복 answer, 무시). signalingState:', pc.signalingState); return; }
@@ -1573,6 +1597,7 @@ async function startCall(mode){
     .on('broadcast', { event: 'declined' }, () => {
       clearTimeout(noAnswerTimer);
       clearTimeout(wakeupPushTimer); // 소유자가 명시적으로 거절함 -> 응답한 것이므로 긴급 알림 불필요 (2026-08-19)
+      acRing(true);                  // 🔴 거절 — 벨 멈춤
       if (offerResendInterval) { clearInterval(offerResendInterval); offerResendInterval = null; }
       showLeaveMessagePrompt();
     })
@@ -1727,6 +1752,7 @@ function endCall(silent){
   callEnding = true;
   if (offerResendInterval) { clearInterval(offerResendInterval); offerResendInterval = null; }
   if (wakeupPushTimer) { clearTimeout(wakeupPushTimer); wakeupPushTimer = null; } // 2026-08-19
+  acRing(true);   // 🔴 발견자가 끊음 — 주인 폰의 벨을 즉시 멈춤
 
   // ⚠ 통화가 어떻게 끝났는지(정상 종료/응답없음/연결끊김) DB에 남겨서, 소유자의 "부재중" 목록에
   // 최소한의 기록이라도 남도록 함. 실패해도 화면 정리는 계속 진행(연결 종료가 더 중요하므로).
