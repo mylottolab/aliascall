@@ -1548,7 +1548,8 @@ async function startCall(mode){
     fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-wakeup-push`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ registrationId, mode, registrationTitle: document.getElementById('foundTitle').textContent, caseId: currentCaseId }),
+      /* 🔴 세션 번호도 함께 — 이 알림을 누르면 대화창이 아니라 "바로 받기" 로 열립니다 */
+      body: JSON.stringify({ registrationId, mode, registrationTitle: document.getElementById('foundTitle').textContent, caseId: currentCaseId, sessionToken: currentSessionToken }),
     }).catch((e) => console.warn('[push] 긴급 알림 발송 요청 실패(통화 자체엔 영향 없음)', e));
   }, 15000);
 
