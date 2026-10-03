@@ -1371,7 +1371,12 @@ let wakeupPushTimer = null; // 60초 무응답시 긴급 웹푸시 발송용 (20
 let acRang = false;
 function acRing(cancel){
   try {
-    if (!currentSessionToken || !registrationId) return;
+    /* 🔴 2026-10-01 고침 — registrationId 는 startCall() 안에서만 만들어지는 이름이라 여기서는
+       보이지 않았습니다(없는 이름 → 오류 → try 가 삼켜 조용히 아무 일도 안 함 → 벨이 안 울림).
+       화면에 적어 둔 값을 직접 읽습니다(startCall 과 같은 출처). */
+    const registrationId = (document.getElementById('stateFound') || {}).dataset
+      ? document.getElementById('stateFound').dataset.registrationId : '';
+    if (!currentSessionToken || !registrationId) { console.warn('[ring] 번호가 없어 울리지 못했습니다'); return; }
     if (cancel && !acRang) return;          // 울린 적이 없으면 멈출 것도 없음
     if (!cancel) acRang = true;
     fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-wakeup-push`, {
@@ -1381,7 +1386,7 @@ function acRing(cancel){
         ring: !cancel, cancel: !!cancel }),
     }).catch((e) => console.warn('[push] 전화 신호 실패(통화 자체엔 영향 없음)', e));
     if (cancel) acRang = false;
-  } catch (e) {}
+  } catch (e) { console.error('[ring] 전화 신호를 보내지 못했습니다', e); }   // ⚠ 삼키지 말고 남깁니다
 }
 
 // ── 2026-08-20 신설: "사건(case)" 시스템 — 채팅/사진이 영구 저장되고, 소유자가 나중에라도
