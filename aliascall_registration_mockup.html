@@ -1804,6 +1804,10 @@ function initPetAiUpsell(registrationId){
 .print-sheet{ display:none; }
 @media print{
   html, body{ margin:0 !important; padding:0 !important; height:auto !important; }
+  /* 🔴 2026-10-04 — 인쇄할 때는 바탕을 무조건 흰색으로. 화면의 녹색 바탕이 따라 나오면
+       QR 의 검정과 대비가 줄어 인식이 어려워집니다(안드로이드 인쇄는 배경색을 찍기도 합니다). */
+  html, body, #printSheet, .print-tag, .print-qr{ background:#fff !important; background-image:none !important; }
+  .print-label{ color:#000 !important; }
   body > *:not(#printSheet){ display:none !important; }
   #printSheet{ display:block !important; padding:0; margin:0; }
   /* 🔴 2026-10-04 — 줄 수를 A4 기준(mm)으로 못박습니다(아래 JS 가 grid-template-columns 를 정함).
