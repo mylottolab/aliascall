@@ -314,6 +314,15 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
         <div class="media-gallery" id="mediaGallery" style="display:none;"></div>
         <div class="media-audio-list" id="mediaAudioList"></div>
 
+        <!-- 🔴 2026-10-04 — 주인 폰이 울릴 때 보일 내 호칭(선택). 이 폰에만 기억됩니다. -->
+        <div class="caller-name-row" style="margin:12px 0 4px;text-align:left">
+          <label for="callerNameInput" id="callerNameLbl" style="display:block;font-size:12.5px;font-weight:700;margin-bottom:5px">어떻게 불러드릴까요? (선택)</label>
+          <input id="callerNameInput" maxlength="20" autocomplete="off" autocorrect="off" spellcheck="false"
+                 placeholder="예: 주차장 관리인"
+                 style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit">
+          <div id="callerNameHint" style="font-size:11.5px;opacity:.7;margin-top:4px">전화를 걸면 받는 분 화면에 이 이름이 보입니다. 비워 두셔도 됩니다.</div>
+        </div>
+
         <div class="privacy-note">
           <span class="icon">🔒</span>
           <span data-i18n="privacyNote">실제 전화번호는 어떤 경우에도 노출되지 않습니다. 지금 브라우저에서 바로 익명으로 연결됩니다.</span>
@@ -1369,6 +1378,23 @@ let offerResendInterval = null;
 let wakeupPushTimer = null; // 60초 무응답시 긴급 웹푸시 발송용 (2026-08-19 신설)
 /* 🔴 2026-10-01 — 주인 폰 울리기(ring) · 벨 멈추기(cancel). 실패해도 통화에는 영향 없음 */
 let acRang = false;
+/* 🔴 2026-10-04 — 내 호칭(선택) — 이 폰에 기억해 두고, 전화 신호에 실어 보냅니다 */
+(function(){
+  try {
+    const inp = document.getElementById('callerNameInput');
+    if (!inp) return;
+    const saved = localStorage.getItem('aliascall_caller_name') || '';
+    inp.value = saved;
+    inp.addEventListener('input', function(){ try { localStorage.setItem('aliascall_caller_name', inp.value.trim().slice(0, 20)); } catch (e) {} });
+    const en = (localStorage.getItem('aliascall_lang') || navigator.language || '').toLowerCase().indexOf('en') === 0;
+    if (en) {
+      document.getElementById('callerNameLbl').textContent = 'What should we call you? (optional)';
+      inp.placeholder = 'e.g. Parking attendant';
+      document.getElementById('callerNameHint').textContent = 'When you call, the other person sees this name. You can leave it blank.';
+    }
+  } catch (e) {}
+})();
+function acCallerName(){ try { return ((document.getElementById('callerNameInput') || {}).value || '').trim().slice(0, 20); } catch (e) { return ''; } }
 function acRing(cancel){
   try {
     /* 🔴 2026-10-01 고침 — registrationId 는 startCall() 안에서만 만들어지는 이름이라 여기서는
@@ -1383,7 +1409,7 @@ function acRing(cancel){
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ registrationId, mode: currentMode, sessionToken: currentSessionToken,
         registrationTitle: document.getElementById('foundTitle').textContent, caseId: currentCaseId,
-        ring: !cancel, cancel: !!cancel }),
+        ring: !cancel, cancel: !!cancel, callerName: cancel ? '' : acCallerName() }),
     }).catch((e) => console.warn('[push] 전화 신호 실패(통화 자체엔 영향 없음)', e));
     if (cancel) acRang = false;
   } catch (e) { console.error('[ring] 전화 신호를 보내지 못했습니다', e); }   // ⚠ 삼키지 말고 남깁니다
