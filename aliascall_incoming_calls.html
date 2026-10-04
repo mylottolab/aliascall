@@ -1308,11 +1308,17 @@ document.getElementById('unmuteBtn').addEventListener('click', () => {
 function acNative(fn, a, b){
   try { if (window.AliasNative && typeof AliasNative[fn] === 'function') AliasNative[fn](a, b); } catch (e) {}
 }
+/* 🔴 2026-10-04 — 남은 "통화 중" 알림줄 치우기
+   ③ 이 화면이 열릴 때 — 바로 받기(autoaccept)로 온 게 아니면 진행 중인 통화가 없으므로 끕니다
+   ④ 이 화면을 떠날 때(닫기 · 다른 화면) — 통화도 함께 끝나므로 끕니다 */
+if (!new URLSearchParams(location.search).get('autoaccept')) acNative('callEnded');
+window.addEventListener('pagehide', function(){ acNative('callEnded'); });
 
 async function answerCall(session){
   const mode = session.call_type;
   acNative('cancelCall', session.session_token);
-  acNative('callOngoing', ((typeof currentLang !== 'undefined' && currentLang === 'en') ? 'Aliascall call' : '에일리어스콜 통화'), mode === 'video');
+  /* 🔴 2026-10-04 — 통화 중 알림줄은 "실제로 연결됐을 때" 켭니다(아래 connected).
+     받는 순간 켰더니, 연결 전에 상대가 끊거나 실패하면 끄는 길을 안 거쳐 알림줄만 남았습니다. */
   activeCallDirection = 'incoming'; // 2026-08-20 (3단계)
   // 2026-08-19 (3차): acceptBtn을 거치지 않고 autoaccept로 바로 호출되는 경우(index.html 등에서
   // 넘어온 경우)도 있어서, 여기서 직접 sessionView/incallState를 켜줌 (중복 호출은 무해함)
@@ -1369,6 +1375,7 @@ async function answerCall(session){
         console.log('[webrtc] connectionState:', pc.connectionState);
         if (pc.connectionState === 'connected') {
           if (!incomingCallConnected) acTrialLimit(mode, session.registration_id, () => hangup(false));   // 🔴 체험 한도
+          if (!incomingCallConnected) acNative('callOngoing', ((typeof currentLang !== 'undefined' && currentLang === 'en') ? 'Aliascall call' : '에일리어스콜 통화'), mode === 'video');
           incomingCallConnected = true;
           document.getElementById('inCallStatus').textContent = T('inCallConnected');
           if (answerResendInterval) { clearInterval(answerResendInterval); answerResendInterval = null; } // 2026-08-19
@@ -1447,9 +1454,9 @@ async function answerCall(session){
 let callEnding = false; // pc.close() 자체가 connectionstatechange('closed')를 다시 유발해서 재귀호출되는 것 방지
 
 function hangup(silent){
+  acNative('callEnded');   // 🔴 통화 중 알림줄 끄기 — 이미 끝내는 중이어도 한 번 더(남지 않게)
   if (callEnding) return;
   callEnding = true;
-  acNative('callEnded');   // 🔴 통화 중 알림줄 끄기
   acTrialStop();   // 🔴 체험 타이머
   activeCallDirection = null; // 2026-08-20 (3단계)
   if (answerResendInterval) { clearInterval(answerResendInterval); answerResendInterval = null; } // 2026-08-19
