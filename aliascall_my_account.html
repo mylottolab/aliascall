@@ -736,6 +736,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
       <div class="print-mode-tab" id="printModeSampleBtn" data-i18n="printModeMix">🔀 4개 사이즈 견본으로 섞어찍기</div>
     </div>
     <div class="hint" id="printModalHint" data-i18n="printHintFill">A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. 인쇄는 무료입니다.</div>
+    <!-- 🔴 2026-10-04 — 폰에서 바로 인쇄 · 안 되면 PDF 로 저장해 PC 에서 -->
+    <div class="hint" id="printPdfTip" data-i18n="printPdfTip" style="margin-top:8px;padding:9px 11px;border-radius:9px;background:var(--teal-tint, #E4EFEE);font-size:11.5px;line-height:1.6;color:var(--ink-soft, #3E5654)">📱 Wi-Fi 프린터는 폰에서 바로 인쇄됩니다(인쇄 창에서 프린터 선택). 폰과 프린터가 연결되지 않으면, 인쇄 창에서 &quot;PDF로 저장&quot;을 고른 뒤 PC에서 인쇄하세요.</div>
     <button type="button" id="printModalConfirmBtn" style="width:100%; margin-top:14px; background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px; font-size:13px; font-weight:700; cursor:pointer;" data-i18n="printGoBtn">인쇄하기</button>
     <button type="button" class="modal-cancel-btn-pm" id="printModalCloseBtn" data-i18n="cancel">취소</button>
   </div>
@@ -858,6 +860,7 @@ const I18N = {
     printHintFill: 'A4용지 한 장에 선택하신 사이즈로 여러 장 인쇄됩니다. 인쇄는 무료입니다.',
     printHintMix: '4개 사이즈를 한 장에 소량씩 섞어 찍어서, 잘라보고 어느 사이즈가 맞는지 먼저 확인하실 수 있어요. 인쇄는 무료입니다.',
     printGoBtn: '인쇄하기',
+    printPdfTip: '📱 Wi-Fi 프린터는 폰에서 바로 인쇄됩니다(인쇄 창에서 프린터 선택). 폰과 프린터가 연결되지 않으면, 인쇄 창에서 "PDF로 저장"을 고른 뒤 PC에서 인쇄하세요.',
     cancelBtn: '취소',
     saving: '저장 중…',
     saveBtn: '저장',
@@ -1007,6 +1010,7 @@ const I18N = {
     printHintFill: 'One A4 sheet will be filled with the size you chose. Printing is free.',
     printHintMix: 'Prints a few of each of the 4 sizes on one sheet so you can cut them out and see which size fits best. Printing is free.',
     printGoBtn: 'Print',
+    printPdfTip: '📱 Wi-Fi printers can print straight from your phone (pick the printer in the print window). If your printer doesn\'t connect to your phone, choose "Save as PDF" in the print window and print it from your PC.',
     cancelBtn: 'Cancel',
     saving: 'Saving…',
     saveBtn: 'Save',
