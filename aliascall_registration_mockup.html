@@ -1625,6 +1625,14 @@ document.querySelectorAll('.mic-btn-sm').forEach(btn => {
 // 화면에는 안 보이다가(display:none), 인쇄할 때만(@media print) 나타나고 나머지 UI는 숨겨짐
 const PRINT_COUNTS = { '3x3': 54, '4.5x4.5': 24, '5.5x5.5': 16, '6x6': 12 };  // A4 한 장 기준 대략치 (가득채우기용)
 const PRINT_MM = { '3x3': 30, '4.5x4.5': 45, '5.5x5.5': 55, '6x6': 60 };
+
+/* 🔴 2026-10-04 — A4 한 장(여백 5mm → 200 × 287mm, 간격 2mm)에 몇 줄 · 몇 칸 들어가는지 계산합니다.
+     3×3 → 6×9=54 · 4.5×4.5 → 4×6=24 · 5.5×5.5 → 3×5=15 · 6×6 → 3×4=12 */
+function a4Grid(mm){
+  const cols = Math.max(1, Math.floor((200 + 2) / (mm + 2)));
+  const rows = Math.max(1, Math.floor((287 + 2) / (mm + 2)));
+  return { cols: cols, rows: rows, count: cols * rows };
+}
 const SAMPLE_SIZES = ['3x3', '4.5x4.5', '5.5x5.5', '6x6'];
 const SAMPLE_COUNT_PER_SIZE = 3;  // 견본모드에서 사이즈별로 몇 개씩 찍을지
 
@@ -1669,9 +1677,12 @@ document.getElementById('printNowBtn').addEventListener('click', () => {
 
   if (printMode === 'fill') {
     const sizeKey = selectedSize;
-    const count = PRINT_COUNTS[sizeKey] || 24;
     const mm = PRINT_MM[sizeKey] || 45;
+    const g = a4Grid(mm);                       // 🔴 2026-10-04 — A4 한 장 기준 줄 · 칸
+    const count = g.count;
     sheet.style.setProperty('--tag-mm', mm + 'mm');
+    sheet.style.gridTemplateColumns = 'repeat(' + g.cols + ', ' + mm + 'mm)';
+    sheet.style.width = (g.cols * mm + (g.cols - 1) * 2) + 'mm';
     sheet.classList.remove('sample-mode');
     for (let i = 0; i < count; i++) {
       const { cell, qrEl } = buildPrintCell(mm);
@@ -1681,6 +1692,7 @@ document.getElementById('printNowBtn').addEventListener('click', () => {
   } else {
     // 견본섞기 모드: 사이즈별로 소제목 + 소량씩
     sheet.classList.add('sample-mode');
+    sheet.style.gridTemplateColumns = ''; sheet.style.width = '';
     SAMPLE_SIZES.forEach((sizeKey) => {
       const mm = PRINT_MM[sizeKey];
       const sectionTitle = document.createElement('div');
@@ -1794,10 +1806,13 @@ function initPetAiUpsell(registrationId){
   html, body{ margin:0 !important; padding:0 !important; height:auto !important; }
   body > *:not(#printSheet){ display:none !important; }
   #printSheet{ display:block !important; padding:0; margin:0; }
+  /* 🔴 2026-10-04 — 줄 수를 A4 기준(mm)으로 못박습니다(아래 JS 가 grid-template-columns 를 정함).
+       "종이 폭에 들어가는 만큼" 으로 두었더니, 앱(웹뷰) 인쇄는 폰 화면 폭으로 재서 한 줄 → 일곱 장이 나왔습니다. */
   #printSheet:not(.sample-mode){
     display:grid !important;
-    grid-template-columns:repeat(auto-fill, minmax(var(--tag-mm, 45mm), 1fr));
-    gap:4mm;
+    gap:2mm;
+    margin:0 auto !important;
+    justify-content:center;
   }
   .print-tag{
     width:var(--this-tag-mm, var(--tag-mm, 45mm)); height:var(--this-tag-mm, var(--tag-mm, 45mm));
@@ -1810,7 +1825,7 @@ function initPetAiUpsell(registrationId){
   .print-section-title{ font-size:11pt; font-weight:700; margin:3mm 0 2mm; font-family:sans-serif; }
   .print-section-title:first-child{ margin-top:0; }
   .print-sample-row{ display:flex; gap:5mm; flex-wrap:wrap; }
-  @page{ size:A4; margin:8mm; }
+  @page{ size:A4; margin:5mm; }   /* 🔴 2026-10-04 — 8mm → 5mm (3×3cm 54개가 한 장에) */
 }
 </style>
 </body>
