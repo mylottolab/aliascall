@@ -1340,6 +1340,16 @@ window.ALIAS_DECLINE_NOW = function(token){
     }
   } catch (e) { console.warn('[call] 바로 거절 실패', e); }
 };
+/* 🔴 2026-10-05 (앱 버전 16) — 이어폰 · 차의 [끊기] 쪽지를 1초마다 확인합니다(앱이 외친 것을 못 들었을 때 대비) */
+setInterval(function(){
+  try {
+    if (!(pc || ownerPc)) return;   // 통화 중일 때만
+    if (window.AliasNative && typeof AliasNative.takeHangup === 'function' && AliasNative.takeHangup()) {
+      console.log('[call] 이어폰 · 차에서 끊기 쪽지를 받았습니다');
+      window.ALIAS_HANGUP_NOW();
+    }
+  } catch (e) {}
+}, 1000);
 window.ALIAS_HANGUP_NOW = function(){
   try { if (activeCallDirection === 'outgoing') endOwnerCall(false); else hangup(false); }
   catch (e) { console.warn('[call] 바로 끊기 실패', e); }
