@@ -1308,7 +1308,7 @@ document.getElementById('declineBtn').addEventListener('click', () => {
 document.getElementById('acceptBtn').addEventListener('click', () => {
   stopRingtone();
   if (!pendingSession) { console.error('[webrtc] pendingSession이 비어있어 수락 처리를 진행할 수 없음'); return; }
-  window.location.href = 'aliascall_incoming_calls.html?autoaccept=' + encodeURIComponent(pendingSession.session_token);
+  window.location.href = 'aliascall_incoming_calls.html?autoaccept=' + encodeURIComponent(pendingSession.session_token) + '&answered=1';   // 🔴 사람이 직접 받기를 누름
 });
 
 let pendingChatSession = null;

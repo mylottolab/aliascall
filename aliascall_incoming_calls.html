@@ -986,9 +986,15 @@ async function init(){
       if (row && myRegistrationIds.includes(row.registration_id) && !row.ended_at) {
         if (row.call_type === 'chat') {
           openCaseChat(row.case_id); // 2026-08-20: 채팅 분기는 사건(case) 시스템으로 바로 열어줌
-        } else {
+        } else if (new URLSearchParams(window.location.search).get('answered') === '1') {
           pendingSession = row;
-          await answerCall(row); // 음성/영상은 링 UI 없이 바로 이어받아 응답 처리
+          await answerCall(row); // 음성/영상 — 사람이 직접 받기를 눌렀을 때만 바로 이어받음
+        } else {
+          /* 🔴🔴 2026-10-05 — 저절로 받지 않습니다.
+               "전체 화면 알림" 을 켜면 폰이 잠금화면에서 이 주소를 **아무도 누르지 않았는데** 엽니다.
+               예전엔 열리자마자 받아서, 받지 않았는데 저절로 연결되고 마이크가 켜졌습니다.
+               이제 "직접 눌렀다(answered=1)" 표시가 없으면 [받기] [거절] 이 있는 받는 화면만 띄웁니다. */
+          await showIncomingCall(row);
         }
       }
     } catch (e) {
