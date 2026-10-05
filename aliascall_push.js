@@ -610,3 +610,29 @@ async function renderNotifySettings(sb, containerId){
     });
   }
 }
+
+
+/* =====================================================================
+   🔴 2026-10-05 — [❓ 사용법] 단추 (사용설명서 aliascall_help.html · 한국어 · 영어)
+   이 파일을 읽는 주요 화면(홈 · 마이페이지 · 수신 대기 등)의 머리글 언어 단추 옆에 붙입니다.
+   ===================================================================== */
+(function(){
+  function addHelp(){
+    try {
+      if (document.getElementById('acHelpLink')) return;
+      var anchor = document.querySelector('header .lang-toggle, .lang-toggle');
+      if (!anchor || !anchor.parentNode) return;
+      var en = false;
+      try { en = (localStorage.getItem('aliascall_lang') || '').indexOf('en') === 0; } catch (e) {}
+      var a = document.createElement('a');
+      a.id = 'acHelpLink';
+      a.href = 'aliascall_help.html?lang=' + (en ? 'en' : 'ko');
+      a.textContent = en ? '❓ Guide' : '❓ 사용법';
+      a.style.cssText = 'display:inline-flex;align-items:center;margin-right:6px;padding:5px 11px;border-radius:20px;' +
+        'background:#E4EFEE;color:#123F3D;border:1px solid #DCE3DE;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;';
+      anchor.parentNode.insertBefore(a, anchor);
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addHelp);
+  else addHelp();
+})();
