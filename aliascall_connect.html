@@ -1069,6 +1069,7 @@ document.getElementById('incomingAcceptBtn').addEventListener('click', async () 
 
 async function answerIncomingCall(session){
   const mode = session.call_type;
+  acNativeC('callStarted', session.session_token, acCallTitle());   // 🔴 앱 버전 18 — 폰에도 알림
   finderRtChannel = sb.channel('webrtc-' + session.session_token, { config: { broadcast: { self: false } } });
   let pendingIceCandidates = [];
   let offerLock = false;   // 🔴 2026-09-30 첫 offer 를 처리 중인가
@@ -1099,6 +1100,8 @@ async function answerIncomingCall(session){
         if (finderPc.connectionState === 'connected') {
           document.getElementById('callingStatus').textContent = I18N[currentLang].connected;
           document.getElementById('callingSub').textContent = '';
+          if (!acConnectedC) acNativeC('callOngoing', acCallTitle(), mode === 'video');   // 🔴 앱 버전 18 — 통화 모드
+          acConnectedC = true;
         }
         if (['disconnected', 'failed', 'closed'].includes(finderPc.connectionState)) {
           endIncomingCall(true);
@@ -1139,6 +1142,7 @@ async function answerIncomingCall(session){
 }
 
 function endIncomingCall(silent){
+  acNativeC('callEnded'); acConnectedC = false; acOnHoldC = false;   // 🔴 앱 버전 18
   if (finderCallEnding) return;
   finderCallEnding = true;
   if (finderRtChannel && !silent) finderRtChannel.send({ type: 'broadcast', event: 'hangup', payload: {} });
@@ -1374,6 +1378,43 @@ async function acGetMedia(mode){
 const myClientId = 'caller-' + Math.random().toString(36).slice(2);
 
 let pc = null, localStream = null, rtChannel = null, currentSessionToken = null, currentMode = 'voice';
+
+/* =====================================================================
+   🔴🔴 2026-10-05 (앱 버전 18 · 거는 쪽) — 블루투스 이어폰 · 차 · 일반 전화
+   주인 화면(aliascall_incoming_calls.html)과 같은 일을 거는 쪽(발견자) 화면에서도 합니다.
+     통화 시작 → 폰에 알림(callStarted) · 연결되면 통화 모드(callOngoing) · 끝나면(callEnded)
+     이어폰 · 차 [끊기] → ALIAS_HANGUP_NOW · 쪽지(takeHangup) 1초마다 확인
+     일반 전화 "대기 후 받기" → ALIAS_HOLD
+   ⚠ 브라우저(앱이 아님)에서는 창구가 없으므로 아무 일도 안 합니다.
+   ===================================================================== */
+function acNativeC(fn, a, b){
+  try { if (window.AliasNative && typeof AliasNative[fn] === 'function') AliasNative[fn](a, b); } catch (e) {}
+}
+function acCallTitle(){ try { return document.getElementById('foundTitle').textContent || ''; } catch (e) { return ''; } }
+window.ALIAS_HANGUP_NOW = function(){
+  try { if (pc) endCall(false); else if (finderPc) endIncomingCall(false); }
+  catch (e) { console.warn('[call] 바로 끊기 실패', e); }
+};
+window.ALIAS_DECLINE_NOW = function(){ /* 거는 쪽 화면에는 울리는 전화가 없습니다 */ };
+let acOnHoldC = false;
+window.ALIAS_HOLD = function(on){
+  try {
+    on = !!on;
+    if (on === acOnHoldC) return;
+    acOnHoldC = on;
+    const stream = pc ? localStream : finderLocalStream;
+    if (stream) stream.getAudioTracks().forEach((t) => (t.enabled = !on));
+    const a = document.getElementById('remoteAudio');
+    if (a) { a.muted = on; if (!on && a.play) a.play().catch(() => {}); }
+  } catch (e) { console.warn('[call] 대기 바꾸기 실패', e); }
+};
+let acConnectedC = false;
+setInterval(function(){
+  try {
+    if (!acConnectedC || !(pc || finderPc)) return;
+    if (window.AliasNative && typeof AliasNative.takeHangup === 'function' && AliasNative.takeHangup()) window.ALIAS_HANGUP_NOW();
+  } catch (e) {}
+}, 1000);
 let offerResendInterval = null;
 let wakeupPushTimer = null; // 60초 무응답시 긴급 웹푸시 발송용 (2026-08-19 신설)
 /* 🔴 2026-10-01 — 주인 폰 울리기(ring) · 벨 멈추기(cancel). 실패해도 통화에는 영향 없음 */
@@ -1572,6 +1613,7 @@ async function startCall(mode){
      앱이면 잠금화면에 일반 전화처럼 전체 화면 · 벨소리 · [받기], 브라우저면 웹푸시.
      받거나 · 거절하거나 · 끊으면 acRing(true) 로 주인의 모든 폰에서 벨을 멈춥니다. */
   acRing(false);
+  acNativeC('callStarted', currentSessionToken, acCallTitle());   // 🔴 앱 버전 18 — 폰에도 알림(이어폰 · 차 · 일반 전화)
   /* ⚠ 15초 뒤 알림 한 줄(예전 방식)도 그대로 둡니다 — 아직 버전 6 이하인 앱 · 브라우저는
      전화 신호를 띄울 자바가 없어, 이것이 있어야 전화를 놓치지 않습니다.
      받거나 · 거절하거나 · 끊으면 아래 핸들러에서 취소됩니다. */
@@ -1723,6 +1765,8 @@ async function createOfferAsCaller(mode){
       // 됐을 때만 "연결됨"으로 바꿈 — 여기까지 안 오면 진짜 네트워크 문제라는 뜻.
       document.getElementById('callingStatus').textContent = I18N[currentLang].connected;
       document.getElementById('callingSub').textContent = '';
+      if (!callWasConnected) acNativeC('callOngoing', acCallTitle(), currentMode === 'video');   // 🔴 앱 버전 18 — 통화 모드
+      acConnectedC = true;
       callWasConnected = true; // 2026-08-20 (2차): 종료 시점에 "부재중"인지 "연결 후 종료"인지 구분하기 위함
     }
     if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
@@ -1780,6 +1824,7 @@ async function createOfferAsCaller(mode){
 let callEnding = false; // pc.close() 자체가 connectionstatechange('closed')를 다시 유발해서 재귀호출되는 것 방지
 
 function endCall(silent){
+  acNativeC('callEnded'); acConnectedC = false; acOnHoldC = false;   // 🔴 앱 버전 18
   if (callEnding) return;
   callEnding = true;
   if (offerResendInterval) { clearInterval(offerResendInterval); offerResendInterval = null; }
