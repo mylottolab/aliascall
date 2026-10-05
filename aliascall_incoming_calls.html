@@ -1323,7 +1323,9 @@ function acNative(fn, a, b){
 /* 🔴 2026-10-04 — 남은 "통화 중" 알림줄 치우기
    ③ 이 화면이 열릴 때 — 바로 받기(autoaccept)로 온 게 아니면 진행 중인 통화가 없으므로 끕니다
    ④ 이 화면을 떠날 때(닫기 · 다른 화면) — 통화도 함께 끝나므로 끕니다 */
-if (!new URLSearchParams(location.search).get('autoaccept')) acNative('callEnded');
+/* 🔴🔴 2026-10-05 (앱 버전 15) — 화면이 열릴 때 무조건 "통화 끝" 을 보내던 것을 뺐습니다.
+   이어폰으로 받으면 앱이 이 화면을 새로 여는데, 그 "통화 끝" 이 폰에 알린 통화까지 지워
+   통화 중 이어폰 [끊기] 가 전할 곳이 없어졌습니다. (알림줄은 이제 연결된 뒤에만 켜서 남을 일이 없습니다) */
 
 /* =====================================================================
    🔴🔴 2026-10-05 (앱 버전 15) — 블루투스 이어폰 · 차 · 일반 전화 (부름 17 ~ 21 과 같음)
@@ -1381,7 +1383,8 @@ document.getElementById('speakerBtn').addEventListener('click', () => {
   b.textContent = acSpeakerOn ? '🔊' : '🔈';
   b.classList.toggle('active-off', acSpeakerOn);
 });
-window.addEventListener('pagehide', function(){ acNative('callEnded'); });
+/* 🔴 2026-10-05 — 떠날 때도 **이 화면에 실제로 통화가 있었을 때만** "통화 끝" */
+window.addEventListener('pagehide', function(){ if (pc || ownerPc) acNative('callEnded'); });
 
 async function answerCall(session){
   const mode = session.call_type;
