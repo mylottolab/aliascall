@@ -109,6 +109,58 @@ const VAPID_PUBLIC_KEY = 'BJxWgI0hDS1z_PoTu5T5VRkHl5Rti38Dih4Vx4vHryduNlgeuBCRQP
 
 // 앱에서 발급받은 FCM 토큰을 기억해둠 (알림 켜짐/꺼짐 상태 판별 + 해제 시 사용)
 const FCM_TOKEN_KEY = 'aliascall_fcm_token';
+const FCM_OWNER_KEY = 'aliascall_fcm_owner';   // 🔴 2026-10-05 — 이 폰 주소가 어느 계정에 등록됐는지
+const FCM_SYNC_KEY  = 'aliascall_fcm_synced';  // 🔴 2026-10-05 — 마지막으로 서버에 알린 때
+
+/* =====================================================================
+   🔴🔴 2026-10-05 — 폰 주소(FCM 토큰)를 "조용히 자동으로" 등록 · 옮기기
+
+   무슨 일이 있었나
+     폰 주소는 마이페이지의 [긴급 알림 켜기] 를 눌러야만 서버에 올라갔습니다.
+     "데이터 삭제" · 다시 설치 · 다른 계정으로 로그인하면 주소가 사라지거나 옛 계정에 남아,
+     **전화가 와도 아무것도 안 울렸습니다**(서버는 보낼 곳이 없어 조용히 끝남).
+
+   이제
+     앱이고 · 로그인돼 있고 · 알림 허락이 이미 있으면 → 화면을 열 때 버튼 없이 주소를 올립니다.
+       · 주소가 없거나 · 계정이 바뀌었거나 · 하루가 지났으면 다시 올립니다(서버가 같은 주소를 새 계정으로 옮김).
+     알림 허락이 없으면 아무것도 묻지 않습니다(지금처럼 [긴급 알림 켜기] 로 묻습니다).
+   ===================================================================== */
+let _autoPushBusy = false;
+async function aliascallAutoRegisterPush(sb){
+  if (_autoPushBusy || !sb || typeof aliascallIsNativeApp !== 'function' || !aliascallIsNativeApp()) return;
+  _autoPushBusy = true;
+  try {
+    const P = _nativePush(); if (!P) return;
+    const perm = await P.checkPermissions();
+    if (!perm || perm.receive !== 'granted') return;            // 허락은 버튼으로만 묻습니다
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const owner = localStorage.getItem(FCM_OWNER_KEY);
+    const synced = Number(localStorage.getItem(FCM_SYNC_KEY) || 0);
+    const have = localStorage.getItem(FCM_TOKEN_KEY);
+    if (have && owner === session.user.id && Date.now() - synced < 24 * 3600 * 1000) return;   // 이미 맞음
+
+    const token = await new Promise((resolve, reject) => {
+      let done = false;
+      const t = setTimeout(() => { if (!done) { done = true; reject(new Error('토큰 시간 초과')); } }, 15000);
+      P.addListener('registration', (x) => { if (!done) { done = true; clearTimeout(t); resolve(x.value); } });
+      P.addListener('registrationError', (e) => { if (!done) { done = true; clearTimeout(t); reject(new Error(JSON.stringify(e))); } });
+      P.register();
+    });
+    const res = await fetch(`${PUSH_FN_BASE}/aliascall-push-subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ platform: 'android_fcm', token, user_agent: navigator.userAgent, lang: pushLang() }),
+    });
+    if (!res.ok) throw new Error('토큰 저장 실패 ' + res.status);
+    localStorage.setItem(FCM_TOKEN_KEY, token);
+    localStorage.setItem(FCM_OWNER_KEY, session.user.id);
+    localStorage.setItem(FCM_SYNC_KEY, String(Date.now()));
+    console.log('[push] 폰 주소를 자동으로 등록했습니다');
+  } catch (e) {
+    console.warn('[push] 폰 주소 자동 등록 실패(다음에 다시 시도)', e);
+  } finally { _autoPushBusy = false; }
+}
 
 function _urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -303,6 +355,7 @@ async function _subscribeCoreNative(sb){
     if (!res.ok) throw new Error('토큰 저장 실패');
 
     localStorage.setItem(FCM_TOKEN_KEY, token);
+    try { localStorage.setItem(FCM_OWNER_KEY, session.user.id); localStorage.setItem(FCM_SYNC_KEY, String(Date.now())); } catch (e) {}
     return true;
   } catch (e) {
     console.error('[push] 앱 알림 등록 실패', e);
@@ -487,6 +540,7 @@ function aliascallDisableSound(){
 
 // ── 통합 토글 UI 렌더링 ──
 async function renderNotifySettings(sb, containerId){
+  aliascallAutoRegisterPush(sb);   // 🔴 2026-10-05 — 버튼 없이 폰 주소 자동 등록 · 계정 바뀌면 옮김
   const el = document.getElementById(containerId);
   if (!el) return;
 
