@@ -320,6 +320,8 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
       <p id="inCallSub"></p>
       <div class="call-controls show" id="callControls">
         <button class="ctrl-btn" id="muteBtn">🎤</button>
+        <!-- 🔴 2026-10-05 (앱 버전 15) — 수화기 ↔ 스피커 (앱에서만 보임) -->
+        <button class="ctrl-btn" id="speakerBtn" style="display:none;">🔈</button>
         <button class="ctrl-btn hangup" id="hangupBtn">📵</button>
       </div>
       <button class="unmute-btn" id="unmuteBtn" data-i18n="unmuteBtn">🔊 소리가 안 들리면 여기를 탭하세요</button>
@@ -986,6 +988,10 @@ async function init(){
       if (row && myRegistrationIds.includes(row.registration_id) && !row.ended_at) {
         if (row.call_type === 'chat') {
           openCaseChat(row.case_id); // 2026-08-20: 채팅 분기는 사건(case) 시스템으로 바로 열어줌
+        } else if (new URLSearchParams(window.location.search).get('decline') === '1') {
+          /* 🔴 2026-10-05 (앱 버전 15) — 이어폰 · 차에서 [거절] 하고 왔음 → 곧바로 거절(발견자에게도 알림) */
+          await showIncomingCall(row);
+          document.getElementById('declineBtn').click();
         } else if (new URLSearchParams(window.location.search).get('answered') === '1') {
           pendingSession = row;
           await answerCall(row); // 음성/영상 — 사람이 직접 받기를 눌렀을 때만 바로 이어받음
@@ -1318,6 +1324,63 @@ function acNative(fn, a, b){
    ③ 이 화면이 열릴 때 — 바로 받기(autoaccept)로 온 게 아니면 진행 중인 통화가 없으므로 끕니다
    ④ 이 화면을 떠날 때(닫기 · 다른 화면) — 통화도 함께 끝나므로 끕니다 */
 if (!new URLSearchParams(location.search).get('autoaccept')) acNative('callEnded');
+
+/* =====================================================================
+   🔴🔴 2026-10-05 (앱 버전 15) — 블루투스 이어폰 · 차 · 일반 전화 (부름 17 ~ 21 과 같음)
+   ALIAS_DECLINE_NOW(번호)  이어폰 · 차의 [거절] → 발견자에게도 거절을 보냄
+   ALIAS_HANGUP_NOW()       통화 중 이어폰 · 차의 [끊기] → 실제로 끊음
+   ALIAS_HOLD(true/false)   일반 전화를 "대기 후 받기" → 서로 소리 끔 / 돌아오면 원래대로
+   ===================================================================== */
+window.ALIAS_DECLINE_NOW = function(token){
+  try {
+    if (pendingSession && (!token || pendingSession.session_token === token) && document.getElementById('ringState').style.display !== 'none') {
+      document.getElementById('declineBtn').click();
+    }
+  } catch (e) { console.warn('[call] 바로 거절 실패', e); }
+};
+window.ALIAS_HANGUP_NOW = function(){
+  try { if (activeCallDirection === 'outgoing') endOwnerCall(false); else hangup(false); }
+  catch (e) { console.warn('[call] 바로 끊기 실패', e); }
+};
+let acOnHold = false, acMutedBeforeHold = false;
+window.ALIAS_HOLD = function(on){
+  try {
+    on = !!on;
+    if (on === acOnHold) return;
+    acOnHold = on;
+    const stream = activeCallDirection === 'outgoing' ? ownerLocalStream : localStream;
+    const audioEl = document.getElementById('remoteAudio');
+    const en = (typeof LANG !== 'undefined' && LANG === 'en');
+    if (on) {
+      acMutedBeforeHold = isMuted;
+      if (stream) stream.getAudioTracks().forEach((t) => (t.enabled = false));
+      if (audioEl) audioEl.muted = true;
+      document.getElementById('inCallSub').textContent = en ? 'On hold — another call is in progress' : '대기 중 — 다른 전화를 받고 있습니다';
+    } else {
+      if (stream) stream.getAudioTracks().forEach((t) => (t.enabled = !acMutedBeforeHold));
+      if (audioEl) { audioEl.muted = false; audioEl.play && audioEl.play().catch(() => {}); }
+      document.getElementById('inCallSub').textContent = '';
+    }
+  } catch (e) { console.warn('[call] 대기 바꾸기 실패', e); }
+};
+
+/* 🔴 2026-10-05 (앱 버전 15 · 2-3) — 수화기 ↔ 스피커. 음성은 수화기, 영상은 스피커로 시작 */
+let acSpeakerOn = false;
+function acSpeakerReset(mode){
+  acSpeakerOn = (mode === 'video');
+  const b = document.getElementById('speakerBtn');
+  const has = !!(window.AliasNative && typeof AliasNative.setSpeaker === 'function');
+  b.style.display = has ? '' : 'none';
+  b.textContent = acSpeakerOn ? '🔊' : '🔈';
+  b.classList.toggle('active-off', acSpeakerOn);
+}
+document.getElementById('speakerBtn').addEventListener('click', () => {
+  acSpeakerOn = !acSpeakerOn;
+  try { AliasNative.setSpeaker(acSpeakerOn); } catch (e) { console.warn('[call] 스피커 바꾸기 실패', e); }
+  const b = document.getElementById('speakerBtn');
+  b.textContent = acSpeakerOn ? '🔊' : '🔈';
+  b.classList.toggle('active-off', acSpeakerOn);
+});
 window.addEventListener('pagehide', function(){ acNative('callEnded'); });
 
 async function answerCall(session){
@@ -1326,6 +1389,7 @@ async function answerCall(session){
   /* 🔴 2026-10-04 — 통화 중 알림줄은 "실제로 연결됐을 때" 켭니다(아래 connected).
      받는 순간 켰더니, 연결 전에 상대가 끊거나 실패하면 끄는 길을 안 거쳐 알림줄만 남았습니다. */
   activeCallDirection = 'incoming'; // 2026-08-20 (3단계)
+  acSpeakerReset(mode);              // 🔴 버전 15
   // 2026-08-19 (3차): acceptBtn을 거치지 않고 autoaccept로 바로 호출되는 경우(index.html 등에서
   // 넘어온 경우)도 있어서, 여기서 직접 sessionView/incallState를 켜줌 (중복 호출은 무해함)
   document.getElementById('sessionView').classList.add('show');
@@ -1506,6 +1570,7 @@ async function startOwnerCall(mode){
   if (activeCallDirection) return; // 2026-08-21: 이미 통화 진행 중이면 중복 시도 방지
 
   activeCallDirection = 'outgoing';
+  acSpeakerReset(mode);              // 🔴 버전 15
   updateOwnerBottomNavActive(mode);
   ownerCallSessionToken = (window.crypto && crypto.randomUUID) ? crypto.randomUUID().replace(/-/g, '') : Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
 
@@ -1537,6 +1602,9 @@ async function startOwnerCall(mode){
     endOwnerCall(true);
     return;
   }
+
+  /* 🔴 2026-10-05 (앱 버전 15 · 2-4) — 주인이 건 통화도 폰에 알립니다(일반 전화가 오면 "대기" 로) */
+  acNative('callStarted', ownerCallSessionToken, document.getElementById('chatHeaderTitle').textContent || '');
 
   // 2) 발견자에게 "전화왔어요" 익명 푸시 발송 (발견자가 화면을 안 보고 있을 가능성이 높으므로)
   fetch(`${SUPABASE_URL}/functions/v1/aliascall-send-finder-call-push`, {
@@ -1595,6 +1663,7 @@ async function createOwnerOffer(mode){
       document.getElementById('inCallStatus').textContent = T('inCallConnected');
       document.getElementById('inCallSub').textContent = '';
       if (!ownerCallWasConnected) acTrialLimit(mode, currentCaseRegistrationId, () => endOwnerCall(false));   // 🔴 체험 한도
+      if (!ownerCallWasConnected) acNative('callOngoing', ((typeof LANG !== 'undefined' && LANG === 'en') ? 'Aliascall call' : '에일리어스콜 통화'), mode === 'video');   // 🔴 버전 15 — 통화 모드 · 알림줄
       ownerCallWasConnected = true;
     }
     if (['disconnected', 'failed', 'closed'].includes(ownerPc.connectionState)) {
