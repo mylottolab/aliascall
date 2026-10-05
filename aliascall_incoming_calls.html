@@ -1344,6 +1344,7 @@ window.ALIAS_DECLINE_NOW = function(token){
 setInterval(function(){
   try {
     if (!(pc || ownerPc)) return;   // 통화 중일 때만
+    if (!(incomingCallConnected || ownerCallWasConnected)) return;   // 🔴 버전 18 — 실제로 연결된 뒤에만
     if (window.AliasNative && typeof AliasNative.takeHangup === 'function' && AliasNative.takeHangup()) {
       console.log('[call] 이어폰 · 차에서 끊기 쪽지를 받았습니다');
       window.ALIAS_HANGUP_NOW();
