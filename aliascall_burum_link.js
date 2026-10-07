@@ -110,12 +110,22 @@
       '<div class="acb-st"><span class="n">3</span><span>' + L('부름에 로그인(처음이면 가입)하면 끝 — 같은 대화창이 열립니다.', 'Sign in to Burum (or sign up) — the same chat opens.') + '</span></div>' +
       '<div class="acb-err" id="acbErr"></div>' +
       '<button type="button" class="acb-send" id="acbSend">' + L('연결 카드 보내기', 'Send connection card') + '</button>' +
+      /* 🔴 2026-10-07 — 상대의 부름 닉네임을 이미 알면, 부름에서 바로 연결 요청 */
+      '<div style="margin:16px 0 4px;padding-top:14px;border-top:1px solid #DCE3DE;font-size:13px;line-height:1.6">' +
+        '<b>' + L('상대의 부름 닉네임을 알고 있다면', 'Already know their Burum nickname?') + '</b><br>' +
+        L('부름에서 바로 연결 요청을 보낼 수 있어요. 번호는 드러나지 않습니다.', 'Send a connection request straight from Burum. No number is shown.') +
+        '<input id="acbNick" maxlength="30" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="' +
+          L('부름 닉네임', 'Burum nickname') + '" style="display:block;width:100%;box-sizing:border-box;margin:8px 0;padding:10px 12px;' +
+          'border:1.5px solid #DCE3DE;border-radius:10px;font-size:14px;font-family:inherit">' +
+        '<button type="button" class="acb-x" id="acbNickGo" style="margin-top:0">' + L('📨 부름에서 연결 요청 보내기', '📨 Send request on Burum') + '</button>' +
+      '</div>' +
       '<button type="button" class="acb-x" id="acbClose">' + L('닫기', 'Close') + '</button>';
     document.body.appendChild(bg); document.body.appendChild(sh);
     var btn = sh.querySelector('#acbSend'), err = sh.querySelector('#acbErr');
     function close(){ bg.remove(); sh.remove(); }
     bg.addEventListener('click', close);
     sh.querySelector('#acbClose').addEventListener('click', close);
+    sh.querySelector('#acbNickGo').addEventListener('click', function(){ openNickRequest(sh.querySelector('#acbNick').value); });
     btn.addEventListener('click', async function(){
       btn.disabled = true;
       try {
@@ -126,5 +136,12 @@
     });
   }
 
-  window.ACBurum = { card: card, openSheet: openSheet };
+  /* 🔴 2026-10-07 — 부름의 "닉네임으로 연결하기" 화면을 엽니다(닉네임이 미리 채워짐).
+     ⚠ 요청은 **부름 계정**으로 나갑니다. 부름에 로그인(처음이면 가입)하면 바로 보낼 수 있습니다. */
+  function openNickRequest(nick){
+    var url = BURUM + 'alias_requests.html?src=aliascall' + (nick && String(nick).trim() ? '&to=' + encodeURIComponent(String(nick).trim().slice(0, 30)) : '');
+    try { window.open(url, '_blank', 'noopener'); } catch (e) { location.href = url; }
+  }
+
+  window.ACBurum = { card: card, openSheet: openSheet, openNickRequest: openNickRequest };
 })();

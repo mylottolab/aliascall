@@ -459,6 +459,22 @@ async function loadConvs(c){
   } catch (e) { console.warn('[temp] 연락 온 분을 못 읽었습니다', e); }
 }
 
+/* 🔴 2026-10-07 — "번호가 드러나지 않게 전하는 방법" 안내 (공유 단추 줄 아래) */
+(function(){
+  try {
+    const row = el('aSend').parentNode;
+    if (!row || document.getElementById('acSafeTip')) return;
+    const en = (typeof LANG !== 'undefined' && LANG === 'en');
+    const box = document.createElement('div');
+    box.id = 'acSafeTip';
+    box.style.cssText = 'margin:12px 0;padding:12px 14px;border-radius:12px;font-size:12.5px;line-height:1.75;' +
+      'background:#FBF1DE;border:1px solid #E9CE94;color:#5c4512;word-break:keep-all';
+    box.innerHTML = en
+      ? '<b>🔒 Share without revealing your number</b><br>· <b>Text messages</b> show your phone number, and <b>KakaoTalk</b> shows your profile to people who aren&#39;t friends yet.<br>· Safer: paste the link into a <b>marketplace chat</b> (e.g. Danggeun) or a listing, <b>show the QR</b> in person, or <b>print a card</b>.'
+      : '<b>🔒 번호가 드러나지 않게 전하는 방법</b><br>· <b>문자</b>로 보내면 내 전화번호가 찍히고, <b>카톡</b>은 친구가 아닌 분에게 내 프로필이 보입니다.<br>· 더 안전한 길: <b>당근 · 번개장터 같은 거래 채팅</b>이나 게시글에 링크 붙이기, 마주 보고 <b>QR 보여주기</b>, <b>명함 인쇄해서 건네기</b>';
+    row.parentNode.insertBefore(box, row.nextSibling);
+  } catch (e) {}
+})();
 el('aSend').addEventListener('click', async () => {
   if (!cur) return;
   const text = T('shareText', { d: fmtD(cur.expires_at), url: link(cur.token), c: fmtCode(cur.code) });
