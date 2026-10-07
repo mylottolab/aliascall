@@ -83,9 +83,11 @@
 
   /* ── 메뉴 ──────────────────────────────────────────────────────── */
   function sheet(title, items){
+    if (document.querySelector('.acdel-sheet')) return;   // 두 번 열리지 않게
     var bg = document.createElement('div');
     bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99990;';
     var sh = document.createElement('div');
+    sh.className = 'acdel-sheet';
     sh.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99991;background:var(--card,#fff);color:var(--ink,#12302E);' +
       'border-radius:18px 18px 0 0;padding:14px 16px 20px;max-width:520px;margin:0 auto;box-shadow:0 -8px 30px rgba(0,0,0,.25);';
     var h = document.createElement('div');
@@ -116,7 +118,11 @@
       }
     } catch (e) {
       console.error('[delete] 실패', e);
-      alert(L('지우지 못했습니다. ', 'Could not delete. ') + (e && e.message ? e.message : ''));
+      var net = e && /Failed to fetch|NetworkError|Load failed/i.test(e.message || '');
+      alert(net
+        ? L('지우지 못했습니다.\n서버에 닿지 못했습니다. 인터넷이 되는지 확인해 주세요.\n(관리자: 삭제 서버 함수가 배포되어 있고 Verify JWT 가 꺼져 있는지 확인)',
+            'Could not delete.\nCould not reach the server. Check your connection.')
+        : L('지우지 못했습니다. ', 'Could not delete. ') + (e && e.message ? e.message : ''));
     } finally { busy = false; }
   }
 
@@ -144,17 +150,26 @@
 
   /* 꾹 누르기 · 오른쪽 클릭 */
   function bind(list){
-    var tm = null, sx = 0, sy = 0, held = false;
+    var tm = null, sx = 0, sy = 0, held = false, pressed = null;
+    function unpress(){ if (pressed) { pressed.classList.remove('acdel-pressing'); pressed = null; } }
+    if (!document.getElementById('acdelCss')) {
+      var st = document.createElement('style'); st.id = 'acdelCss';
+      st.textContent = '.chat-bubble.me{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .12s,filter .12s;}' +
+        '.chat-bubble.acdel-pressing{transform:scale(.97);filter:brightness(.82);}';
+      document.head.appendChild(st);
+    }
     list.addEventListener('touchstart', function(e){
       var t = e.target; if (!t.closest || !t.closest('.chat-bubble.me')) return;
       var p = e.touches[0]; sx = p.clientX; sy = p.clientY; held = false;
-      tm = setTimeout(function(){ tm = null; held = true; openFor(t); }, 550);
+      pressed = t.closest('.chat-bubble'); pressed.classList.add('acdel-pressing');
+      tm = setTimeout(function(){ tm = null; held = true; unpress(); openFor(t); }, 450);
     }, { passive: true });
     list.addEventListener('touchmove', function(e){
       if (!tm) return; var p = e.touches[0];
-      if (Math.abs(p.clientX - sx) > 10 || Math.abs(p.clientY - sy) > 10) { clearTimeout(tm); tm = null; }
+      if (Math.abs(p.clientX - sx) > 10 || Math.abs(p.clientY - sy) > 10) { clearTimeout(tm); tm = null; unpress(); }
     }, { passive: true });
-    list.addEventListener('touchend', function(){ if (tm) { clearTimeout(tm); tm = null; } });
+    list.addEventListener('touchend', function(){ if (tm) { clearTimeout(tm); tm = null; } unpress(); });
+    list.addEventListener('touchcancel', function(){ if (tm) { clearTimeout(tm); tm = null; } unpress(); });
     // 꾹 누른 뒤 손을 떼면 사진이 크게 열리지 않게 막습니다
     list.addEventListener('click', function(e){ if (held) { held = false; e.stopPropagation(); e.preventDefault(); } }, true);
     list.addEventListener('contextmenu', function(e){
