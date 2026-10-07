@@ -1832,6 +1832,8 @@ async function appendChatMessage(msg){
     if (list.querySelector('[data-sys-id="' + msg.id + '"]')) return;
   }
   const isMe = msg.sender_anon_id === mySenderAnonId;
+  // 🔴 2026-10-08 — 내 화면에서 지운 받은 메시지는 그리지 않습니다
+  if (window.ACMsgDel && msg.id && ACMsgDel.isHidden(msg.id)) return;
   const newDate = insertDateDividerIfNeeded(list, msg.created_at); // 2026-08-23 신설
   if (newDate) photoGroupState = null; // 날짜가 바뀌면 사진 묶음도 새로 시작
 

@@ -368,6 +368,8 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
   <div class="plus-menu-overlay" id="plusMenuOverlay">
     <div class="plus-menu-sheet">
       <button type="button" class="plus-menu-item" id="chatAttachBtn"><span>📎</span><span data-i18n="plusAttach">사진 첨부</span></button>
+      <button type="button" class="plus-menu-item" id="chatFileBtn"><span>🗂</span><span id="chatFileBtnLabel">파일 · 동영상 보내기</span></button>
+      <input type="file" id="chatFileInput" multiple style="display:none;">
       <button type="button" class="plus-menu-item" id="chatCameraBtn"><span>📷</span><span data-i18n="plusCamera">사진 촬영</span></button>
       <button type="button" class="plus-menu-item" id="guideMenuBtn"><span>❓</span><span data-i18n="plusGuide">사용법</span></button>
     </div>
@@ -1863,6 +1865,36 @@ renderAliascallEmojiPanel(emojiPanel, (char) => {
 document.getElementById('emojiBtn').addEventListener('click', () => {
   emojiPanel.classList.toggle('show');
 });
+
+/* 🔴 2026-10-08 — 사진 말고도 무엇이든 보내기 (동영상 · 음성 · PDF · 문서 · 압축 …) */
+try { if ((localStorage.getItem('aliascall_lang') || '').indexOf('en') === 0) document.getElementById('chatFileBtnLabel').textContent = 'Send file · video'; } catch (e) {}
+document.getElementById('chatFileBtn').addEventListener('click', () => { closePlusMenu(); document.getElementById('chatFileInput').click(); });
+document.getElementById('chatFileInput').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  e.target.value = '';
+  if (!files.length || !currentCaseId || !window.ACFiles) return;
+  await ACFiles.send(files, {
+    sb, url: SUPABASE_URL, caseId: currentCaseId,
+    token: async () => { const { data: { session } } = await sb.auth.getSession(); return session ? session.access_token : null; },
+    sendPhoto: (f) => sendCasePhoto(f),
+    post: async (content) => {
+      const { data: { session } } = await sb.auth.getSession();
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (session ? session.access_token : '') },
+        body: JSON.stringify({ caseId: currentCaseId, photoUrl: content }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+      return d;
+    },
+    append: (msg) => {
+      if (msg.id && renderedMsgIds.has(msg.id)) return;
+      appendChatMessage(msg, 'me');
+      if (msg.id) renderedMsgIds.add(msg.id);
+    },
+  });
+});
+
 document.getElementById('chatPhotoInput').addEventListener('change', async (e) => {
   const files = Array.from(e.target.files || []);
   e.target.value = '';
@@ -2017,11 +2049,13 @@ function appendChatMessage(msg, who){
     return null;
   }
   if (window.ACMsgDel) ACMsgDel.track(msg); // 🔴 2026-10-08
+  if (window.ACMsgDel && ACMsgDel.isHidden(msg.id)) return null; // 🔴 내 화면에서 지운 것
+  const fi = window.ACFiles ? ACFiles.info(msg) : null;         // 🔴 사진이 아닌 파일
   const newDate = insertDateDividerIfNeeded(list, msg.created_at); // 2026-08-23 신설
   if (newDate) photoGroupState = null;
 
   // 2026-08-23 신설: 사진이면서 바로 직전 사진과 같은 사람이 보낸 거면 → 기존 묶음에 타일로 추가
-  if (msg.message_type === 'photo' && photoGroupState && photoGroupState.who === who) {
+  if (msg.message_type === 'photo' && !fi && photoGroupState && photoGroupState.who === who) {
     photoGroupState.items.push({ id: msg.id, url: msg.content, filename: null });
     renderPhotoGroupGrid(photoGroupState);
     const oldTimeRow = list.querySelector('.msg-time-row[data-message-id="' + photoGroupState.lastMessageId + '"]');
@@ -2035,10 +2069,10 @@ function appendChatMessage(msg, who){
     list.scrollTop = list.scrollHeight;
     return photoGroupState.groupEl;
   }
-  if (msg.message_type !== 'photo') photoGroupState = null;
+  if (msg.message_type !== 'photo' || fi) photoGroupState = null;
 
   const el = document.createElement('div');
-  const isPhoto = msg.message_type === 'photo';
+  const isPhoto = msg.message_type === 'photo' && !fi;
   el.className = 'chat-bubble ' + who + (isPhoto ? ' photo photo-group' : '');
   if (isPhoto) {
     const grid = document.createElement('div');
@@ -2046,6 +2080,8 @@ function appendChatMessage(msg, who){
     photoGroupState = { who, groupEl: el, gridEl: grid, items: [{ id: msg.id, url: msg.content, filename: null }], lastMessageId: msg.id };
     el._pg = photoGroupState; // 🔴 2026-10-08 지우기에서 묶음을 찾습니다
     renderPhotoGroupGrid(photoGroupState);
+  } else if (fi) {
+    ACFiles.render(el, fi); // 🔴 2026-10-08 동영상·음성·문서
   } else {
     // 2026-08-22 신설: 메시지가 이모지 1~3개로만 이루어져 있으면 큰 애니메이션 스티커로 표시
     const emojiOnly = aliascallExtractEmojiOnly(msg.content);
