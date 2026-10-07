@@ -462,4 +462,13 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addButtons);
   else addButtons();
+
+  /* 🔴 2026-10-08 — 영어 보충(남은 한글을 영어로). 화면마다 따로 넣지 않으려고 여기서 부릅니다. */
+  try {
+    if (!document.querySelector('script[src*="aliascall_en.js"]')) {
+      var se = document.createElement('script');
+      se.src = 'aliascall_en.js?v=20261008';
+      (document.head || document.documentElement).appendChild(se);
+    }
+  } catch (e) {}
 })();
