@@ -195,6 +195,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 
 /* 2026-08-23 신설: 연속 사진 묶음(타일) — 카톡 방식 */
 .chat-bubble.photo-group{ padding:4px !important; }
+.chat-bubble.deleted{ opacity:.6; font-style:italic; font-size:12.5px; }
 .photo-group-grid{ display:grid; gap:3px; width:170px; }
 .photo-group-grid.count-1{ grid-template-columns:1fr; }
 .photo-group-grid.count-1 .photo-group-thumb{ width:170px; max-height:220px; aspect-ratio:auto; border-radius:10px; }
@@ -262,6 +263,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 .brand-home-link{ display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
 </style>
 <script src="aliascall_burum_link.js"></script>
+<script src="aliascall_msg_delete.js"></script>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
 <script src="aliascall_theme.js"></script>
 </head>
@@ -2135,6 +2137,7 @@ async function refreshCaseMessages(caseId, silent){
       const el = appendChatMessage(m, m.sender === 'finder' ? 'me' : 'them');
       if (silent && m.sender !== 'finder') { playChatPing(); markNewReceivedHighlight(el); gotNewFromOwner = true; }
     });
+    if (window.ACMsgDel) ACMsgDel.syncFromList(data.messages || []); // 🔴 2026-10-08 상대가 지운 것
     if (gotNewFromOwner) markCaseAsRead(); // 2026-08-23 신설: 채팅화면을 보고 있는 중이니 바로 읽음 처리
     if (data.status === 'closed') {
       document.getElementById('chatClosedNote').classList.add('show');
@@ -2364,6 +2367,7 @@ function renderPhotoGroupGrid(state){
     const isLastVisibleWithMore = i === visibleCount - 1 && items.length > PHOTO_GROUP_MAX_VISIBLE;
     const thumb = document.createElement('img');
     thumb.className = 'photo-group-thumb';
+    thumb.dataset.mid = items[i].id || ''; // 🔴 2026-10-08 한 장씩 지우기
     thumb.src = items[i].url;
     thumb.alt = T().altPhoto;
     thumb.loading = 'lazy';
@@ -2398,6 +2402,7 @@ function appendChatMessage(msg, who){
     list.scrollTop = list.scrollHeight;
     return null;
   }
+  if (window.ACMsgDel) ACMsgDel.track(msg); // 🔴 2026-10-08
   const newDate = insertDateDividerIfNeeded(list, msg.created_at); // 2026-08-23 신설
   if (newDate) photoGroupState = null;
 
@@ -2425,6 +2430,7 @@ function appendChatMessage(msg, who){
     const grid = document.createElement('div');
     el.appendChild(grid);
     photoGroupState = { who, groupEl: el, gridEl: grid, items: [{ id: msg.id, url: msg.content, filename: null }], lastMessageId: msg.id };
+    el._pg = photoGroupState; // 🔴 2026-10-08 지우기에서 묶음을 찾습니다
     renderPhotoGroupGrid(photoGroupState);
   } else {
     // 2026-08-22 신설: 메시지가 이모지 1~3개로만 이루어져 있으면 큰 애니메이션 스티커로 표시
@@ -2460,6 +2466,20 @@ function appendChatMessage(msg, who){
   list.scrollTop = list.scrollHeight;
   return el; // 2026-08-21: 마지막으로 받은 메시지 반짝임 표시에 쓰기 위해 요소를 반환하도록 수정
 }
+
+/* 🔴 2026-10-08 — 내가 보낸 글 · 사진을 꾹 눌러 지웁니다 (aliascall_msg_delete.js) */
+if (window.ACMsgDel) ACMsgDel.init({
+  list: document.getElementById('chatMessages'),
+  renderGroup: renderPhotoGroupGrid,
+  del: async (id) => {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message-delete`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId: id, caseId: currentCaseId, finderAnonId }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+  },
+});
 
 // ── 2026-08-21 신설: "마지막으로 받은 메시지" 반짝임 표시 — 상대가 보낸 것 중 가장 최근 것만
 // 눈에 띄게 표시하고, 클릭/포커스하면 원래대로 돌아옴 ──
