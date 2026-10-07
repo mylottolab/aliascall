@@ -435,12 +435,12 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   <!-- 2026-09-28 (2차): 회사가 주신 메뉴판 문안대로. 가운데 "내 번호 노출 없음" 띠. -->
   <div class="home-grid">
     <button type="button" class="tile t-reg" onclick="showView('reg')">
-      <div class="t-name" data-i18n="tRegName">사건발생 긴급등록</div>
-      <div class="t-sub" data-i18n="tRegSub">-차량/분실/실종/도난/부재-</div>
+      <div class="t-name" data-i18n="tRegName">긴급등록 · 찾기 · 연락</div>
+      <div class="t-sub" data-i18n="tRegSub">-차량/분실/실종/도난/부재 등록 · 찾아서 연락하기-</div>
     </button>
     <button type="button" class="tile t-alert" onclick="showView('alert')">
-      <div class="t-name" data-i18n="tAlertName">사건발생 긴급연락</div>
-      <div class="t-sub" data-i18n="tAlertSub">-연락받기/연락하기/알림설정-</div>
+      <div class="t-name" data-i18n="tAlertName">긴급연락받기 설정</div>
+      <div class="t-sub" data-i18n="tAlertSub">-수신 대기 · 연락처 · 소통 내역 · 알림 설정-</div>
     </button>
     <!-- 2026-09-28: ③ 은 이제 실제 화면(aliascall_temp.html)으로 갑니다 -->
     <button type="button" class="tile t-temp" onclick="location.href='aliascall_temp.html'">
@@ -489,7 +489,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 <div class="view" id="viewEmg">
 
 <div class="sub-head">
-  <div class="sh-t" data-i18n="tRegName">긴급등록 &amp; 조회</div>
+  <div class="sh-t" data-i18n="tRegName">긴급등록 · 찾기 · 연락</div>
   <div class="sh-s" data-i18n="secEmergencySub">양방향 모두 번호노출 없는 비상연락 안심수단</div>
 </div>
 
@@ -727,7 +727,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 <div class="view" id="viewEmg2">
 <!-- 2026-08-21 신설: 세 번째 구역 헤더 -->
 <div class="sub-head">
-  <div class="sh-t" data-i18n="tAlertName">긴급연락 &amp; 알림</div>
+  <div class="sh-t" data-i18n="tAlertName">긴급연락받기 설정</div>
   <div class="sh-s" data-i18n="tAlertHead">등록물로 걸려온 연락을 받고, 알림을 켜두세요</div>
 </div>
 
@@ -1651,8 +1651,8 @@ const I18N = {
     roleOwner: '개설자', roleMember: '참여 중',
     backHomeAria: '첫 화면으로',
     // 2026-09-28 신설: 첫 화면 네 칸
-    tRegName: '사건발생 긴급등록', tRegSub: '-차량/분실/실종/도난/부재-', noNumber: '내 번호 노출 없음',
-    tAlertName: '사건발생 긴급연락', tAlertSub: '-연락받기/연락하기/알림설정-',
+    tRegName: '긴급등록 · 찾기 · 연락', tRegSub: '-차량/분실/실종/도난/부재 등록 · 찾아서 연락하기-', noNumber: '내 번호 노출 없음',
+    tAlertName: '긴급연락받기 설정', tAlertSub: '-수신 대기 · 연락처 · 소통 내역 · 알림 설정-',
     tAlertHead: '등록물로 걸려온 연락을 받고, 알림을 켜두세요',
     tIncomingSub: '걸려오는 연결 요청을 기다리는 화면',
     tTempName: '1회용 임시연락처 발급', tTempSub: '-신원미상 상대하는 현명한 선택-',
@@ -1770,8 +1770,8 @@ const I18N = {
     myLinesEmpty: 'No lines yet.<br>Pick a plan to get started.',
     roleOwner: 'Host', roleMember: 'Joined',
     backHomeAria: 'Back to start',
-    tRegName: 'Register for emergencies', tRegSub: '-Car / Lost / Missing / Theft / Away-', noNumber: 'Your number stays hidden',
-    tAlertName: 'Emergency contact', tAlertSub: '-Receive / Call / Alert settings-',
+    tRegName: 'Register · Find · Contact', tRegSub: '-Register car / lost / missing / theft / away · Find & contact-', noNumber: 'Your number stays hidden',
+    tAlertName: 'Receive emergency contacts', tAlertSub: '-Waiting · Contacts · Conversations · Alert settings-',
     tAlertHead: 'Answer contacts about your items and keep alerts on',
     tIncomingSub: 'The screen that waits for incoming requests',
     tTempName: 'Get a one-time contact card', tTempSub: '-The smart choice with strangers-',
