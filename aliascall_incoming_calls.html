@@ -242,6 +242,7 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 </style>
 <script src="aliascall_burum_link.js"></script>
 <script src="aliascall_msg_delete.js"></script>
+<script src="aliascall_rec.js?v=20261009"></script>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
 <script src="aliascall_theme.js"></script>
 </head>
@@ -1468,6 +1469,7 @@ async function answerCall(session){
           if (!incomingCallConnected) acTrialLimit(mode, session.registration_id, () => hangup(false));   // 🔴 체험 한도
           if (!incomingCallConnected) acNative('callOngoing', ((typeof currentLang !== 'undefined' && currentLang === 'en') ? 'Aliascall call' : '에일리어스콜 통화'), mode === 'video');
           incomingCallConnected = true;
+          acRecBegin('in', mode, session.case_id || currentCaseId);   // 🔴 2026-10-09 녹음 · 카메라 단추
           document.getElementById('inCallStatus').textContent = T('inCallConnected');
           if (answerResendInterval) { clearInterval(answerResendInterval); answerResendInterval = null; } // 2026-08-19
         }
@@ -1485,6 +1487,7 @@ async function answerCall(session){
         if ((pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') && !incomingCallConnected) {
           acTrialLimit(mode, session.registration_id, () => hangup(false));   // 🔴 체험 한도
           incomingCallConnected = true;
+          acRecBegin('in', mode, session.case_id || currentCaseId);   // 🔴 2026-10-09 녹음 · 카메라 단추
           document.getElementById('inCallStatus').textContent = T('inCallConnected');
           if (answerResendInterval) { clearInterval(answerResendInterval); answerResendInterval = null; } // 2026-08-19
         }
@@ -1539,6 +1542,7 @@ async function answerCall(session){
     })
     // ⚠ 2026-08-19: 채팅은 이제 별도 chatChannel(chat-{token})로 완전히 분리됨 — 여기서는 처리 안 함
     .on('broadcast', { event: 'hangup' }, () => hangup(true))
+    .on('broadcast', { event: 'rec' }, ({ payload }) => { if (window.ACRec) ACRec.signal(payload); })   // 🔴 2026-10-09 녹음 협의
     .subscribe();
 }
 
@@ -1548,6 +1552,7 @@ function hangup(silent){
   acNative('callEnded');   // 🔴 통화 중 알림줄 끄기 — 이미 끝내는 중이어도 한 번 더(남지 않게)
   if (callEnding) return;
   callEnding = true;
+  if (window.ACRec) ACRec.end();   // 🔴 2026-10-09 담는 중이면 멈추고 저장 (끊기 전에)
   acTrialStop();   // 🔴 체험 타이머
   activeCallDirection = null; // 2026-08-20 (3단계)
   if (answerResendInterval) { clearInterval(answerResendInterval); answerResendInterval = null; } // 2026-08-19
@@ -1661,6 +1666,7 @@ async function startOwnerCall(mode){
       try { await ownerPc.addIceCandidate(payload.candidate); } catch (e) { console.error('[webrtc] ICE 추가 오류', e); }
     })
     .on('broadcast', { event: 'hangup' }, () => endOwnerCall(true))
+    .on('broadcast', { event: 'rec' }, ({ payload }) => { if (window.ACRec) ACRec.signal(payload); })   // 🔴 2026-10-09 녹음 협의
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') await createOwnerOffer(mode);
     });
@@ -1686,6 +1692,7 @@ async function createOwnerOffer(mode){
       if (!ownerCallWasConnected) acTrialLimit(mode, currentCaseRegistrationId, () => endOwnerCall(false));   // 🔴 체험 한도
       if (!ownerCallWasConnected) acNative('callOngoing', ((typeof LANG !== 'undefined' && LANG === 'en') ? 'Aliascall call' : '에일리어스콜 통화'), mode === 'video');   // 🔴 버전 15 — 통화 모드 · 알림줄
       ownerCallWasConnected = true;
+      acRecBegin('out', mode, currentCaseId);   // 🔴 2026-10-09 녹음 · 카메라 단추
     }
     if (['disconnected', 'failed', 'closed'].includes(ownerPc.connectionState)) {
       endOwnerCall(true);
@@ -1717,6 +1724,7 @@ async function createOwnerOffer(mode){
 }
 
 function endOwnerCall(silent){
+  if (window.ACRec) ACRec.end();   // 🔴 2026-10-09 담는 중이면 멈추고 저장 (끊기 전에)
   acNative('callEnded');   // 🔴 통화 중 알림줄 끄기
   acTrialStop();   // 🔴 체험 타이머
   if (ownerOfferResendInterval) { clearInterval(ownerOfferResendInterval); ownerOfferResendInterval = null; }
@@ -2139,6 +2147,32 @@ async function markCaseAsRead(){
       body: JSON.stringify({ caseId: currentCaseId }),
     });
   } catch (e) { /* 읽음표시 실패는 조용히 무시 */ }
+}
+
+/* 🔴🔴 2026-10-09 — 통화 녹음 · 녹화는 상대가 허락해야만 (aliascall_rec.js)
+   통화가 이어지면 🔴 · 📷 단추가 통화 단추 줄에 생깁니다. 끊을 때는 ACRec.end() 가 먼저 불립니다. */
+function acRecLang(){ return (typeof currentLang !== 'undefined') ? currentLang : ((typeof LANG !== 'undefined') ? LANG : 'ko'); }
+async function acRecToken(){ const { data: { session } } = await sb.auth.getSession(); return session ? session.access_token : null; }
+function acRecBegin(which, mode, caseId){
+  if (!window.ACRec) return;
+  const out = (which === 'out');
+  ACRec.begin({
+    channel: out ? ownerRtChannel : rtChannel,
+    pcs: () => [out ? ownerPc : pc],
+    local: () => (out ? ownerLocalStream : localStream),
+    video: mode === 'video',
+    myName: () => (acRecLang() === 'en' ? 'The owner' : '주인'),
+    peerName: () => (acRecLang() === 'en' ? 'The finder' : '발견한 분'),
+    controls: document.getElementById('callControls'),
+    scope: () => ({ scope: 'case', scopeId: caseId || currentCaseId }),
+    token: acRecToken,
+  });
+}
+if (window.ACRec) {
+  ACRec.init({ sb: sb, url: SUPABASE_URL, lang: acRecLang });
+  ACRec.listButton(document.querySelector('#chatOnlyHeader > div'),
+                   { scope: () => ({ scope: 'case', scopeId: currentCaseId }), token: acRecToken },
+                   document.getElementById('acReportBtn'));
 }
 
 /* 🔴 2026-10-08 — 내가 보낸 글 · 사진을 꾹 눌러 지웁니다 (aliascall_msg_delete.js) */

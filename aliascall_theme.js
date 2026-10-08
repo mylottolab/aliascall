@@ -467,7 +467,7 @@
   try {
     if (!document.querySelector('script[src*="aliascall_en.js"]')) {
       var se = document.createElement('script');
-      se.src = 'aliascall_en.js?v=20261008';
+      se.src = 'aliascall_en.js?v=20261009';
       (document.head || document.documentElement).appendChild(se);
     }
   } catch (e) {}

@@ -13,6 +13,7 @@
 <script src="aliascall_camera_capture.js"></script>
 <script src="aliascall_push.js"></script>
 <script src="aliascall_msg_delete.js"></script>
+<script src="aliascall_rec.js?v=20261009"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -399,6 +400,8 @@ h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; font-weight:600; }
     <button type="button" class="more-menu-item" id="openFavoritesBtn" data-i18n="menuFavorites">⭐ 즐겨찾기 보기</button>
     <button type="button" class="more-menu-item" id="openKeepBtn" data-i18n="menuKeep">📌 내 메모함</button>
     <button type="button" class="more-menu-item" id="openSearchBtn" data-i18n="menuSearch">🔍 대화 검색</button>
+    <!-- 🔴 2026-10-09 — 허락받고 남긴 통화 녹음 · 녹화 -->
+    <button type="button" class="more-menu-item" id="openRecBtn">🔴 통화 녹음함</button>
     <!-- 2026-08-24 신설: 신고 -->
     <button type="button" class="more-menu-item" id="openAwayBtn" data-i18n="menuAway" style="display:none;">🟡 자리비움 설정</button>
     <button type="button" class="more-menu-item" id="openBoardBtn" data-i18n="menuBoard" style="display:none;">📋 안내판 편집</button>
@@ -3237,9 +3240,11 @@ async function startCall(mode){
       if (payload.to !== mySenderAnonId) return;
       handleSignal(payload);
     })
+    .on('broadcast', { event: 'rec' }, ({ payload }) => { if (window.ACRec) ACRec.signal(payload); })   // 🔴 2026-10-09 녹음 협의
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         await callChannel.track({ nickname: myNickname, mode });
+        acRecBegin(mode);   // 🔴 2026-10-09 녹음 · 카메라 단추
         document.getElementById('callStatus').textContent = T('callStatusInCall');
       }
     });
@@ -3366,8 +3371,41 @@ async function measureRelayBytes(pc){
   } catch (e) { return 0; }
 }
 
+/* 🔴🔴 2026-10-09 — 통화 녹음 · 녹화는 통화 중인 **모든 분**이 허락해야만 (aliascall_rec.js)
+   암호화 회선이면 녹음 파일도 이 방 열쇠로 잠가서 올립니다(저희도 못 엽니다). */
+function acRecCtx(){
+  return {
+    scope: () => ({ scope: 'hotline', scopeId: hotlineId, memberAnonId: accessToken ? undefined : hotlineAnonId }),
+    token: async () => accessToken,
+    decrypt: roomIsSecure ? (async (buf) => await e2eeDecryptBytes(roomKey, new Uint8Array(buf))) : null,
+  };
+}
+function acRecBegin(mode){
+  if (!window.ACRec || !callChannel) return;
+  const ctx = acRecCtx();
+  ACRec.begin(Object.assign(ctx, {
+    channel: callChannel,
+    group: true,
+    myId: mySenderAnonId,
+    peerIds: () => { try { return Object.keys(callChannel ? callChannel.presenceState() : {}); } catch (e) { return Object.keys(peers); } },
+    pcs: () => Object.values(peers).map((p) => p.pc),
+    local: () => localStream,
+    video: mode === 'video',
+    myName: () => myNickname,
+    peerName: (id) => memberNicknames[id] || '',
+    controls: document.querySelector('#stateCall .call-controls'),
+    encrypt: roomIsSecure ? (async (buf) => await e2eeEncryptBytes(roomKey, buf)) : null,
+  }));
+}
+if (window.ACRec) ACRec.init({ sb: sb, url: SUPABASE_URL, lang: () => LANG });
+on('openRecBtn', 'click', () => {
+  document.getElementById('moreMenuOverlay').classList.remove('show');
+  if (window.ACRec) ACRec.openList(acRecCtx());
+});
+
 async function endCall(){
   if (!activeCall) return;
+  if (window.ACRec) ACRec.end();   // 🔴 2026-10-09 담는 중이면 멈추고 저장 (끊기 전에)
   const mode = activeCall;
 
   let totalBytes = 0;

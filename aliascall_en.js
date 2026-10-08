@@ -33,6 +33,7 @@
     '위브앱솔루션 · 대표 이미화 · 사업자등록번호 206-08-71754 · 경기도 수원시 권선구 수성로47 10동 501호 · 010-9237-9042 · 통신판매업신고 2022-수원권선-1701':
       'Weave App Solution · CEO Mihwa Lee · Business Reg. No. 206-08-71754 · 501, Bldg. 10, 47 Suseong-ro, Gwonseon-gu, Suwon-si, Gyeonggi-do, Korea · +82-10-9237-9042 · Mail-order Business Reg. 2022-Suwon Gwonseon-1701',
     /* 단추 이름(화면 읽어주기) */
+    '🔴 통화 녹음함': '🔴 Call recordings', '🔴 녹음함': '🔴 Recordings',
     '뒤로': 'Back', '뒤로가기': 'Back', '닫기': 'Close', '크게 보기': 'Enlarge', '명함 인쇄': 'Print card',
     '암호화': 'Encryption', '초대 링크': 'Invite link', '최근 대화 한 줄 보기': 'Show latest message line',
     '음성으로 검색': 'Search by voice', '첫 화면으로': 'Go to home', '보내기': 'Send',
