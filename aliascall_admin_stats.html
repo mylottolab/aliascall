@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Aliascall 일일 통계</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{ --bg:#F4F6F8; --card:#FFFFFF; --ink:#16212E; --soft:#5A6878; --line:#DDE3EA; --acc:#1F6F6B; --acc-tint:#E4EFEE; --bad:#B4412F; }
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif; }
+header{ background:var(--acc); color:#fff; padding:16px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+header h1{ margin:0; font-size:19px; }
+header .who{ margin-left:auto; font-size:12.5px; opacity:.85; }
+header button{ background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:8px; padding:7px 12px; font-size:12.5px; cursor:pointer; }
+main{ max-width:1100px; margin:0 auto; padding:18px 16px 60px; }
+.bar{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:16px; }
+.bar button.r{ border:1px solid var(--line); background:var(--card); border-radius:999px; padding:8px 14px; font-size:13.5px; font-weight:600; cursor:pointer; color:var(--ink); }
+.bar button.r.on{ background:var(--acc); color:#fff; border-color:var(--acc); }
+.bar label{ font-size:13px; color:var(--soft); display:flex; align-items:center; gap:6px; }
+.bar input[type=date]{ border:1px solid var(--line); border-radius:8px; padding:6px 8px; font:inherit; font-size:13px; }
+.bar .go{ background:var(--ink); color:#fff; border:none; border-radius:8px; padding:8px 14px; font-weight:700; font-size:13px; cursor:pointer; }
+.bar .csv{ margin-left:auto; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-weight:600; font-size:13px; cursor:pointer; color:var(--ink); }
+.cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; margin-bottom:18px; }
+.card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+.card .k{ font-size:12.5px; color:var(--soft); font-weight:600; }
+.card .v{ font-size:24px; font-weight:800; margin-top:6px; }
+.card .s{ font-size:12px; color:var(--soft); margin-top:4px; }
+section{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:16px; }
+section h2{ margin:0 0 12px; font-size:16px; }
+.tw{ overflow-x:auto; }
+table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+th, td{ padding:9px 10px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+th{ background:var(--acc-tint); font-weight:700; position:sticky; top:0; }
+th:first-child, td:first-child{ text-align:left; }
+td.l{ text-align:left; white-space:normal; }
+tr.zero td{ color:#9AA6B3; }
+tr.sum td{ font-weight:800; border-top:2px solid var(--ink); }
+.bad{ color:var(--bad); }
+.mini{ display:inline-block; height:8px; background:var(--acc); border-radius:4px; vertical-align:middle; margin-left:6px; opacity:.75; }
+.msg{ padding:30px; text-align:center; color:var(--soft); }
+.err{ background:#FDECEA; color:var(--bad); border-radius:10px; padding:12px 14px; margin-bottom:14px; display:none; font-size:13.5px; }
+#login{ position:fixed; inset:0; background:var(--bg); display:none; align-items:center; justify-content:center; padding:20px; }
+#login .box{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:24px; width:100%; max-width:360px; display:flex; flex-direction:column; gap:10px; }
+#login input{ border:1px solid var(--line); border-radius:10px; padding:11px 12px; font:inherit; }
+#login button{ background:var(--acc); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; cursor:pointer; }
+</style>
+</head>
+<body>
+<div id="login"><div class="box">
+  <b style="font-size:17px">Aliascall 일일 통계</b>
+  <div style="font-size:13px;color:var(--soft)">관리자 계정으로 로그인하세요. (관리자 화면과 같은 계정)</div>
+  <input type="email" id="lEmail" placeholder="이메일" autocomplete="username"><input type="password" id="lPw" placeholder="비밀번호" autocomplete="current-password"><button type="button" id="lGo">로그인</button>
+  <div class="err" id="loginErr"></div>
+</div></div>
+
+<header>
+  <h1>📊 Aliascall 일일 통계</h1>
+  <span class="who" id="who"></span>
+  <button type="button" id="logout">로그아웃</button>
+</header>
+
+<main>
+  <div class="err" id="err"></div>
+  <div class="bar">
+    <button type="button" class="r" data-days="7">최근 7일</button>
+    <button type="button" class="r on" data-days="30">최근 30일</button>
+    <button type="button" class="r" data-days="90">최근 90일</button>
+    <label>시작 <input type="date" id="from"></label>
+    <label>끝 <input type="date" id="to"></label>
+    <button type="button" class="go" id="go">보기</button>
+    <button type="button" class="csv" id="csv">⬇ 엑셀(CSV) 받기</button>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <section>
+    <h2>일일 현황</h2>
+    <div class="tw"><table id="daily"><thead><tr><th>날짜</th><th>신규 가입</th><th>결제 건수</th><th>매출</th><th>환불</th><th>환불 금액</th></tr></thead><tbody><tr><td colspan="6" class="msg">불러오는 중…</td></tr></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>상품별 매출 (기간 합계)</h2>
+    <div class="tw"><table id="prodSum"><thead><tr><th>상품</th><th>건수</th><th>매출</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>날짜별 · 상품별 매출</h2>
+    <div class="tw"><table id="prodDay"><thead><tr><th>날짜</th><th>상품</th><th>결제 방법</th><th>건수</th><th>매출</th></tr></thead><tbody></tbody></table></div>
+  </section>
+  <p style="font-size:12px;color:var(--soft)">한국 시간 기준 · 매출은 결제 완료 건만 · 환불된 건은 결제한 날에 환불로 잡힙니다 · 이 화면은 관리자만 볼 수 있습니다.</p>
+</main>
+
+<script>
+const el = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+function money(obj){
+  if (!obj) return '0';
+  const ks = Object.keys(obj); if (!ks.length) return '0';
+  return ks.map((c) => fmtAmt(obj[c], c)).join(' · ');
+}
+function fmtAmt(n, cur){
+  cur = (cur || 'KRW').trim();
+  if (cur === 'KRW') return Number(n).toLocaleString('ko-KR') + '원';
+  return (Number(n) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' ' + cur;
+}
+function ymd(d){ const z = new Date(d.getTime() + 9 * 3600e3); return z.toISOString().slice(0, 10); }
+function showErr(t){ el('err').textContent = t; el('err').style.display = t ? 'block' : 'none'; }
+
+let last = null;
+async function load(){
+  showErr('');
+  const from = el('from').value || null, to = el('to').value || null;
+  el('daily').querySelector('tbody').innerHTML = '<tr><td colspan="6" class="msg">불러오는 중…</td></tr>';
+  const { data, error } = await SB().rpc('admin_daily_stats', { p_from: from, p_to: to });
+  if (error) {
+    if (/not_admin/.test(error.message || '')) { showErr('관리자 권한이 없는 계정입니다.'); }
+    else showErr('불러오지 못했습니다: ' + (error.message || error));
+    el('daily').querySelector('tbody').innerHTML = '';
+    return;
+  }
+  last = data; paint(data);
+}
+
+function paint(data){
+  const days = data.days || [], prods = data.products || [];
+  const sum = (f) => days.reduce((a, d) => a + (f(d) || 0), 0);
+  const addMap = (key) => { const m = {}; days.forEach((d) => Object.entries(d[key] || {}).forEach(([c, v]) => { m[c] = (m[c] || 0) + Number(v); })); return m; };
+  const rev = addMap('revenue'), ref = addMap('refund_amount');
+  const signups = sum((d) => d.signups), orders = sum((d) => d.orders), refunds = sum((d) => d.refunds);
+  const today = days[0] || {};
+  el('cards').innerHTML = [
+    ['오늘 신규 가입', (today.signups || 0) + '명', today.day || ''],
+    ['기간 신규 가입', signups.toLocaleString() + '명', (data.totals.from) + ' ~ ' + (data.totals.to)],
+    ['기간 매출', money(rev), '결제 ' + orders.toLocaleString() + '건'],
+    ['기간 환불', refunds + '건', money(ref)],
+    ['전체 회원', (data.totals.members_total || 0).toLocaleString() + '명', '지금까지'],
+  ].map((c) => '<div class="card"><div class="k">' + esc(c[0]) + '</div><div class="v">' + esc(c[1]) + '</div><div class="s">' + esc(c[2]) + '</div></div>').join('');
+
+  const maxS = Math.max(1, ...days.map((d) => d.signups || 0));
+  el('daily').querySelector('tbody').innerHTML = days.map((d) => {
+    const z = !(d.signups || d.orders || d.refunds);
+    return '<tr' + (z ? ' class="zero"' : '') + '><td>' + esc(d.day) + '</td>' +
+      '<td>' + (d.signups || 0) + '<span class="mini" style="width:' + Math.round((d.signups || 0) / maxS * 50) + 'px"></span></td>' +
+      '<td>' + (d.orders || 0) + '</td><td>' + esc(money(d.revenue)) + '</td>' +
+      '<td' + (d.refunds ? ' class="bad"' : '') + '>' + (d.refunds || 0) + '</td><td' + (d.refunds ? ' class="bad"' : '') + '>' + esc(money(d.refund_amount)) + '</td></tr>';
+  }).join('') + '<tr class="sum"><td>합계</td><td>' + signups + '</td><td>' + orders + '</td><td>' + esc(money(rev)) + '</td><td>' + refunds + '</td><td>' + esc(money(ref)) + '</td></tr>';
+
+  const agg = {};
+  prods.forEach((p) => { const k = p.product + '|' + p.currency; agg[k] = agg[k] || { product: p.product, currency: p.currency, orders: 0, amount: 0 }; agg[k].orders += p.orders; agg[k].amount += Number(p.amount); });
+  const list = Object.values(agg).sort((a, b) => b.amount - a.amount);
+  el('prodSum').querySelector('tbody').innerHTML = list.length
+    ? list.map((p) => '<tr><td class="l">' + esc(NAME(p.product)) + '</td><td>' + p.orders + '</td><td>' + esc(fmtAmt(p.amount, p.currency)) + '</td></tr>').join('')
+    : '<tr><td colspan="3" class="msg">이 기간에는 결제가 없습니다.</td></tr>';
+  el('prodDay').querySelector('tbody').innerHTML = prods.length
+    ? prods.map((p) => '<tr><td>' + esc(p.day) + '</td><td class="l">' + esc(NAME(p.product)) + '</td><td>' + esc(METHOD[p.method] || p.method) + '</td><td>' + p.orders + '</td><td>' + esc(fmtAmt(p.amount, p.currency)) + '</td></tr>').join('')
+    : '<tr><td colspan="5" class="msg">이 기간에는 결제가 없습니다.</td></tr>';
+}
+
+const METHOD = { google_play: 'Google Play', app_store: 'App Store', kg_inicis: '웹 결제', web: '웹 결제', toss: '웹 결제' };
+
+el('csv').addEventListener('click', () => {
+  if (!last) return;
+  const rows = [['날짜', '신규 가입', '결제 건수', '매출', '환불 건수', '환불 금액']];
+  (last.days || []).slice().reverse().forEach((d) => rows.push([d.day, d.signups, d.orders, money(d.revenue), d.refunds, money(d.refund_amount)]));
+  rows.push([]); rows.push(['날짜', '상품', '결제 방법', '건수', '매출']);
+  (last.products || []).forEach((p) => rows.push([p.day, NAME(p.product), METHOD[p.method] || p.method, p.orders, fmtAmt(p.amount, p.currency)]));
+  const csv = '﻿' + rows.map((r) => r.map((v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'aliascall_stats_' + (last.totals.from) + '_' + (last.totals.to) + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+});
+
+document.querySelectorAll('.bar .r').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('.bar .r').forEach((x) => x.classList.remove('on')); b.classList.add('on');
+  const n = +b.dataset.days, t = new Date();
+  el('to').value = ymd(t); el('from').value = ymd(new Date(t.getTime() - (n - 1) * 864e5));
+  load();
+}));
+el('go').addEventListener('click', () => { document.querySelectorAll('.bar .r').forEach((x) => x.classList.remove('on')); load(); });
+(function(){ const t = new Date(); el('to').value = ymd(t); el('from').value = ymd(new Date(t.getTime() - 29 * 864e5)); })();
+
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+// ⚠ 관리자 화면(aliascall_admin_dashboard.html)과 같은 로그인 칸을 씁니다. 일반 회원 로그인과 섞이지 않습니다.
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { storageKey: 'aliascall-admin-auth' } });
+const SB = () => sb;
+const TIER = { hotline_1to1: '일반(2인)', hotline_everybody: '에브리바디(2인)', economy_4: '이코노미(4인)', premium_4: '프리미엄(4인)' };
+function NAME(p){
+  let s = String(p || '');
+  s = s.replace(/^subscription/, '긴급 이용권').replace(/^hotline/, '보안회선');
+  s = s.replace(/(hotline_1to1|hotline_everybody|economy_4|premium_4)(_secure)?/, (m, a, b) => TIER[a] + (b ? ' Secure' : ''));
+  return s;
+}
+async function START(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { el('login').style.display = 'flex'; return; }
+  const { data: ok, error } = await sb.rpc('is_global_admin');
+  if (error || ok !== true) {
+    await sb.auth.signOut();
+    el('login').style.display = 'flex';
+    el('loginErr').textContent = '관리자 권한이 없는 계정입니다.'; el('loginErr').style.display = 'block';
+    return;
+  }
+  el('login').style.display = 'none';
+  el('who').textContent = session.user.email || '';
+  load();
+}
+el('lGo').addEventListener('click', async () => {
+  el('loginErr').style.display = 'none';
+  const { error } = await sb.auth.signInWithPassword({ email: el('lEmail').value.trim(), password: el('lPw').value });
+  if (error) { el('loginErr').textContent = '로그인 실패: ' + error.message; el('loginErr').style.display = 'block'; return; }
+  START();
+});
+el('lPw').addEventListener('keydown', (e) => { if (e.key === 'Enter') el('lGo').click(); });
+el('logout').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+
+START();
+</script>
+</body>
+</html>
