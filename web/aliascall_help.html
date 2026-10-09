@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>에일리어스콜 사용설명서 · Aliascall Guide</title>
+<meta name="theme-color" content="#1F6F6B">
+<style>
+:root{ --paper:#B8D3BE; --card:#fff; --ink:#12302E; --soft:#3E5654; --line:#DCE3DE; --teal:#1F6F6B; --deep:#123F3D; --tint:#E4EFEE; --coral:#E8734A; --warn:#FDEAE1; }
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:Inter,system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; line-height:1.75; word-break:keep-all; }
+.wrap{ max-width:720px; margin:0 auto; padding:18px 16px 60px; }
+.top{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.top a{ color:var(--deep); text-decoration:none; font-weight:700; font-size:14px; }
+.lang{ border:1px solid var(--line); background:var(--tint); color:var(--deep); border-radius:999px; padding:7px 14px; font-weight:700; font-size:13px; cursor:pointer; }
+h1{ font-size:24px; margin:12px 0 4px; }
+.lede{ color:var(--soft); font-size:14.5px; margin:0 0 16px; }
+.toc{ background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:12px 16px; margin-bottom:18px; }
+.toc b{ display:block; margin-bottom:6px; font-size:14px; }
+.toc a{ display:inline-block; margin:3px 10px 3px 0; color:var(--teal); text-decoration:none; font-size:13.5px; font-weight:700; }
+section{ background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:18px 18px 10px; margin-bottom:14px; scroll-margin-top:12px; }
+h2{ font-size:18px; margin:0 0 10px; color:var(--deep); }
+h3{ font-size:15px; margin:14px 0 4px; }
+p{ margin:0 0 10px; font-size:14.5px; }
+ol,ul{ margin:0 0 10px; padding-left:22px; font-size:14.5px; }
+li{ margin-bottom:5px; }
+.tip{ background:var(--tint); border-radius:12px; padding:10px 13px; font-size:13.5px; margin:8px 0 12px; }
+.warn{ background:var(--warn); color:#8a3a1f; border-radius:12px; padding:10px 13px; font-size:13.5px; margin:8px 0 12px; font-weight:600; }
+.k{ display:inline-block; background:var(--tint); border-radius:6px; padding:0 6px; font-weight:700; font-size:13.5px; }
+.more{ display:inline-block; margin-top:2px; color:var(--teal); font-weight:700; font-size:13.5px; text-decoration:none; }
+.foot{ text-align:center; color:var(--soft); font-size:12.5px; margin-top:20px; }
+[data-l]{ display:none; }
+html[lang="ko"] [data-l="ko"], html[lang="en"] [data-l="en"]{ display:block; }
+html[lang="ko"] span[data-l="ko"], html[lang="en"] span[data-l="en"]{ display:inline; }
+</style>
+<!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
+<script src="aliascall_theme.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <a href="index.html"><span data-l="ko">‹ 에일리어스콜로</span><span data-l="en">‹ Back to Aliascall</span></a>
+    <button class="lang" id="langBtn" type="button"></button>
+  </div>
+
+<!-- ═══════════════════════════ 한국어 ═══════════════════════════ -->
+<div data-l="ko">
+  <h1>📘 에일리어스콜 사용설명서</h1>
+  <p class="lede">에일리어스콜은 <b>전화번호를 알려주지 않고</b> 연결되는 안심 연락 앱입니다. 이 설명서는 <b>설치부터 탈퇴까지</b> 순서대로 안내합니다.</p>
+
+  <div class="toc"><b>차례</b>
+    <a href="#k0">0. 설치</a><a href="#k1">1. 가입 · 로그인</a><a href="#k2">2. 처음 허락하기</a><a href="#k3">3. 화면 둘러보기</a>
+    <a href="#k4">4. QR 긴급연락 등록</a><a href="#k5">5. QR 인쇄 · 붙이기</a><a href="#k6">6. 발견한 분은</a><a href="#k7">7. 전화 받기</a>
+    <a href="#k8">8. 소통함 · 대화</a><a href="#k9">9. 이어폰 · 차</a><a href="#k10">10. 임시연락처</a><a href="#k11">11. 보안회선</a>
+    <a href="#k12">12. 프로 · 게재</a><a href="#k13">13. 부름으로 이어가기</a><a href="#k14">14. 이용권 · 결제</a><a href="#k15">15. 설정</a>
+    <a href="#k16">16. 문제 해결</a><a href="#k17">17. 로그아웃 · 탈퇴</a>
+  </div>
+
+  <section id="k0"><h2>0. 설치</h2>
+    <ol>
+      <li>Play 스토어에서 <b>"에일리어스콜"</b> 또는 <b>"Aliascall"</b>을 찾아 <b>설치</b>합니다.</li>
+      <li>앱 없이 <b>aliascall.com</b> 웹으로도 쓸 수 있지만, <b>잠금화면 전화 · 이어폰 단추</b>는 앱에서만 됩니다.</li>
+    </ol>
+  </section>
+
+  <section id="k1"><h2>1. 가입 · 로그인</h2>
+    <ol>
+      <li>앱을 열고 <b>가입하기</b> → <b>닉네임</b>과 <b>비밀번호</b>를 정합니다.</li>
+      <li>가입하면 <b>30일 무료 체험</b>이 시작됩니다. 카드 등록이 필요 없고, 저절로 결제되지 않습니다.</li>
+      <li>다른 폰에서도 같은 닉네임 · 비밀번호로 로그인할 수 있어요.</li>
+    </ol>
+  </section>
+
+  <section id="k2"><h2>2. 처음 허락하기 (중요)</h2>
+    <p>처음 쓸 때 폰이 묻는 것은 <b>모두 "허용"</b>해 주세요.</p>
+    <ul>
+      <li><b>알림</b> — 발견한 분이 연락하면 알려 드립니다.</li>
+      <li><b>마이크 · 카메라</b> — 음성 · 영상 통화, 사진.</li>
+      <li><b>전체 화면 알림</b> — 잠긴 폰에서 전화가 일반 전화처럼 크게 뜹니다. 꺼져 있으면 앱이 <b>[켜기]</b>로 안내합니다.</li>
+    </ul>
+    <p>그리고 <b>마이페이지 → 🚨 긴급 알림</b>이 켜져 있는지 확인하세요.</p>
+  </section>
+
+  <section id="k3"><h2>3. 화면 둘러보기</h2>
+    <ul>
+      <li><b>홈</b> — 네 칸으로 나뉩니다.
+        <ul>
+          <li><b>① 긴급등록 · 찾기 · 연락</b> — 차량 · 분실 · 실종 · 도난 · 부재 <b>등록하기</b>, 번호나 QR로 <b>찾아서 연락하기</b>, 찾습니다 게시판, 내 계정, 이용권.</li>
+          <li><b>② 긴급연락받기 설정</b> — 걸려오는 연락을 받는 <b>수신 대기</b>, 연락처 · 통화기록, <b>소통 내역</b>, <b>알림 설정</b>.</li>
+          <li><b>③ 1회용 임시연락처</b> · <b>④ 보안회선</b>.</li>
+        </ul></li>
+      <li><b>마이페이지</b> — 내 등록물(수정 · 인쇄) · 이용권 · 알림 설정 · 소통함 · 탈퇴.</li>
+      <li><b>수신 대기 / 소통함</b> — 발견한 분과 주고받은 문자 · 사진 · 통화 기록이 모입니다.</li>
+      <li>머리글의 <span class="k">❓ 사용법</span> · <span class="k">KR / EN</span>.</li>
+    </ul>
+  </section>
+
+  <section id="k4"><h2>4. QR 긴급연락 등록하기</h2>
+    <ol>
+      <li><b>홈 → ① 긴급등록 · 찾기 · 연락 → 등록하기</b></li>
+      <li>종류를 고릅니다.
+        <ul>
+          <li><b>🚗 차량</b> — 주차 · 접촉 사고 · 차 이동 요청</li>
+          <li><b>🎒 물건</b> — 가방 · 지갑 · 노트북 · 우산을 잃어버렸을 때</li>
+          <li><b>🧑‍🦳 아이 · 어르신</b> — 길을 잃었을 때 (치매 · 장애 포함)</li>
+          <li><b>🐾 반려동물</b> — 목줄 · 인식표에</li>
+          <li><b>기타</b></li>
+        </ul></li>
+      <li>이름(예: "내 차")과 발견한 분께 보일 <b>안내 문구</b>를 적고 저장합니다.</li>
+    </ol>
+    <div class="tip">💡 아이 · 어르신(치매) · 장애가 있는 분 · 반려동물 등록은 이용권과 상관없이 <b>늘 무료로 연결</b>됩니다.</div>
+  </section>
+
+  <section id="k5"><h2>5. QR 인쇄 · 붙이기 (무료)</h2>
+    <ol>
+      <li>등록 직후 또는 <b>마이페이지 → 내 등록물 → 🖨️ 인쇄</b></li>
+      <li>크기를 고릅니다: <b>3×3 · 4.5×4.5 · 5.5×5.5 · 6×6 cm</b></li>
+      <li><b>"이 사이즈로 가득 채우기"</b> — A4 한 장에 같은 크기로 가득 (3×3이면 54개)<br><b>"4개 사이즈 견본"</b> — 네 크기를 조금씩 찍어 맞는 크기를 먼저 확인</li>
+      <li><b>인쇄하기</b> → 인쇄 창에서 프린터를 고릅니다.</li>
+      <li>잘라서 차 앞유리 안쪽 · 가방 · 목걸이 · 목줄 등에 붙입니다.</li>
+    </ol>
+    <div class="tip">🖨️ Wi-Fi 프린터는 폰에서 바로 인쇄됩니다. 연결이 안 되면 인쇄 창에서 <b>"PDF로 저장"</b> 후 PC에서 인쇄하세요. 인쇄물은 <b>흰 바탕 · 검은 QR</b>로 나와 잘 읽힙니다.</div>
+  </section>
+
+  <section id="k6"><h2>6. 발견한 분은 이렇게 연락합니다</h2>
+    <ol>
+      <li>폰 카메라로 QR을 찍습니다. <b>앱이 없어도</b> 됩니다.</li>
+      <li>등록물 안내가 보이고, <b>💬 채팅 · 🎧 음성 · 🎥 영상 · ✉️ 문자 · 📷 사진</b> 중에서 고릅니다.</li>
+      <li>"어떻게 불러드릴까요?"에 호칭(예: 주차장 관리인)을 적으면 주인 폰에 그 이름이 뜹니다(선택).</li>
+      <li>주인이 받지 못하면 <b>메시지를 남길 수</b> 있어요.</li>
+    </ol>
+    <p>양쪽 모두 <b>전화번호가 보이지 않습니다.</b></p>
+  </section>
+
+  <section id="k7"><h2>7. 전화 받기 (주인)</h2>
+    <ul>
+      <li><b>잠긴 폰</b>: 화면이 켜지며 <b>화면 가득</b> 받는 화면 — 거는 분 호칭 · 등록물 이름이 보입니다. 큰 <b>[받기]</b> / <b>[거절]</b>.</li>
+      <li><b>에일리어스콜을 보고 있을 때</b>: 곧바로 큰 받는 화면.</li>
+      <li><b>다른 앱을 쓰는 중</b>: 위쪽 알림 → <b>어디를 눌러도</b> 큰 받는 화면.</li>
+      <li>받을 때까지 <b>폰 벨소리</b>로 계속 울리고, 발견한 분이 끊으면 바로 멈춥니다.</li>
+      <li><b>직접 [받기]를 눌러야만</b> 연결됩니다(저절로 연결되지 않음).</li>
+      <li>통화 중: 소리는 <b>수화기</b>(영상은 스피커) · <span class="k">🔈</span> 스피커 · <span class="k">🎤</span> 음소거 · <span class="k">📵</span> 끊기.</li>
+      <li><span class="k">📷</span> 영상통화 중 <b>내 카메라만 끌 수 있어요.</b> 통화는 이어지고 목소리만 갑니다. 상대 화면에 "카메라를 껐습니다"가 뜹니다.</li>
+      <li><span class="k">🔴</span> <b>녹음 · 녹화는 상대가 허락해야만</b> 됩니다. 🔴 → 보관 기간(15 · 30 · 90일) → 신청. 상대가 허락 · 더 짧게 허락 · 거절 중에서 고릅니다(여럿이면 모두 허락해야). 녹음 중에는 모두의 화면에 "🔴 녹음 중"이 보이고 누구든 [멈추기]를 누를 수 있어요. 대화창의 <b>🔴 녹음함</b>(보안회선은 ⋯ 메뉴)에서 듣고 저장하고 지울 수 있어요. <b>지우면 내 녹음함에서만</b> 빠지고, 상대 녹음함의 것은 정한 날이 지나면 저절로 지워집니다.</li>
+      <li>앱을 나가도 통화는 이어지고, 알림줄에 <b>"에일리어스콜 통화 중"</b>이 보입니다.</li>
+    </ul>
+  </section>
+
+  <section id="k8"><h2>8. 소통함 · 대화</h2>
+    <ul>
+      <li>발견한 분과의 문자 · 사진 · 통화 기록은 <b>소통함</b>에 사건별로 모입니다. 새 소식은 반짝이며 알려 드립니다.</li>
+      <li><b>파일 보내기</b>: <span class="k">➕</span> → <b>🗂 파일 · 동영상 보내기</b>로 동영상 · 음성 · PDF · 문서 · 압축파일 등 무엇이든 보낼 수 있어요(한 파일 50MB까지).</li>
+      <li><b>꾹 누르면 메뉴</b>: 내가 보낸 것은 <b>⬇ 저장 · 📋 복사 · 🗑 삭제</b>(상대 화면에서도 사라짐), 받은 것은 <b>⬇ 저장 · 📋 복사 · 🙈 내 화면에서 지우기</b>(보낸 사람 화면은 그대로). 사진 묶음은 그 한 장만, 또는 묶음 전체를 고를 수 있어요.</li>
+      <li>사진을 여러 장 한꺼번에 고르면 <b>한 덩어리(타일)</b>로 보입니다. 누르면 크게 보고 한 장씩 넘겨볼 수 있어요.</li>
+      <li>대화창에서 <b>글 · 이모지 · 사진(➕ 첨부 · 촬영)</b>을 보냅니다. 보낸 글은 상대가 읽으면 <b>"읽음"</b>이 붙습니다.</li>
+      <li>아래 바의 <span class="k">🎧 음성</span> · <span class="k">🎥 영상</span>으로 발견한 분께 <b>다시 걸 수</b> 있어요.</li>
+      <li>일이 끝나면 <b>[채팅 종료]</b>. 필요하면 <b>[다시 열기]</b>.</li>
+      <li>부적절한 메시지 · 사진은 위쪽 <span class="k">🚩</span>로 <b>신고</b>하세요.</li>
+    </ul>
+  </section>
+
+  <section id="k9"><h2>9. 블루투스 이어폰 · 차</h2>
+    <ul>
+      <li><b>받기</b> — 단추 <b>한 번</b>, 몇 초 기다리기.</li>
+      <li><b>끊기</b> — 통화 중 단추(보통 <b>두 번</b>). 양쪽 모두 끊깁니다.</li>
+      <li><b>거절</b> — 울리는 동안 <b>길게(2초)</b>.</li>
+      <li><b>통화 중 일반 전화</b> — <b>[대기 후 받기]</b> → 끝나면 에일리어스콜 통화로 돌아옵니다.</li>
+    </ul>
+    <div class="tip">💡 이어폰 · 차 단추는 <b>에일리어스콜 앱</b>으로 통화할 때 됩니다(브라우저로 연 화면은 안 됨).</div>
+  </section>
+
+  <section id="k10"><h2>10. 1회용 임시연락처</h2>
+    <p>중고거래 · 소개팅 · 매물 문의처럼 <b>잠깐만 쓸 연락처</b>.</p>
+    <ol>
+      <li><b>홈 → 🎫 임시연락처 → 만들기</b></li>
+      <li>이름 · 기간 · 한 사람만 / 여러 사람을 정합니다.</li>
+      <li><b>링크 · QR · 명함 인쇄</b>로 건넵니다. 받는 분은 앱이 없어도 됩니다.</li>
+      <li>정한 날 <b>저절로 끊기고</b>, 언제든 <b>[지금 끊기]</b>.</li>
+    </ol>
+    <div class="tip">🔒 <b>번호가 드러나지 않게 전하는 방법</b><br>
+      · <b>문자</b>로 링크를 보내면 내 전화번호가 찍히고, <b>카톡</b>은 친구가 아닌 분에게 내 프로필이 보입니다.<br>
+      · 더 안전한 길: <b>당근 · 번개장터 같은 거래 채팅</b>이나 게시글에 링크 붙이기, 마주 보고 <b>QR 보여주기</b>, <b>명함 인쇄해서 건네기</b>.</div>
+  </section>
+
+  <section id="k11"><h2>11. 보안회선</h2>
+    <p><b>2명</b>(일반) 또는 <b>4명</b>(프리미엄)만의 전용 회선. 가족 · 연인 · 작은 팀에 좋습니다.</p>
+    <ul>
+      <li>글 · 사진 · 동영상 · 음성메시지 · 음성 · 영상 통화 · 음악 함께 듣기.</li>
+      <li><b>암호화(Secure)</b>를 켜면 회사도 내용을 볼 수 없습니다(추가 요금 없음).</li>
+      <li>마이페이지 → <b>회선 관리</b>에서 이어가기 · 사람 초대 · 사용량을 봅니다.</li>
+    </ul>
+    <a class="more" href="/aliascall_secure_guide.html">보안회선 자세한 설명서 ›</a>
+  </section>
+
+  <section id="k12"><h2>12. 프로 비즈니스 · 공개 업체 게재</h2>
+    <ul>
+      <li><b>프로</b>: 가게 · 사무실 · 상담 창구용. 구독 하나로 <b>손님마다 따로 방</b>을 열어 번호 없이 문의를 받습니다. 모든 방의 사용량이 한 막대로 보입니다.</li>
+      <li><b>공개 업체 게재</b>: 처음 오는 손님도 검색으로 찾을 수 있게. <b>사업자 · 인허가 서류 확인 후</b> 게재됩니다.</li>
+    </ul>
+  </section>
+
+  <section id="k13"><h2>13. 부름으로 이어가기</h2>
+    <ol>
+      <li>대화창의 <b>[💬 부름으로 이어가기]</b> → <b>[연결 카드 보내기]</b></li>
+      <li>두 분이 각자 카드의 <b>[부름에서 잇기]</b>를 누르고 부름에 로그인(처음이면 가입)합니다.</li>
+      <li><b>같은 부름 대화창</b>이 열립니다. 번호는 계속 보이지 않습니다.</li>
+    </ol>
+    <p><b>상대의 부름 닉네임을 이미 알면</b>: 같은 창 아래의 닉네임 칸에 적고 <b>[📨 부름에서 연결 요청 보내기]</b>. 부름에 로그인하면 바로 요청이 갑니다.</p>
+  </section>
+
+  <section id="k14"><h2>14. 이용권 · 결제 · 환불</h2>
+    <ul>
+      <li>처음 <b>30일 무료</b>. 끝나기 <b>7일 전 · 1일 전</b>에 알려 드립니다.</li>
+      <li><b>마이페이지 → 이용권 보기</b>: 긴급 이용권 · 보안회선(일반 · 프리미엄) · 프로 · 게재 · 추가 사용량.</li>
+      <li>앱에서는 <b>구글 결제</b>, 웹에서는 <b>국내카드 · PayPal</b>. <b>자동 결제는 없습니다.</b></li>
+      <li>남은 기간은 이어서 더해집니다.</li>
+    </ul>
+    <a class="more" href="/aliascall_refund.html">취소 · 환불 규정 ›</a>
+  </section>
+
+  <section id="k15"><h2>15. 설정</h2>
+    <ul>
+      <li><b>알림음</b>(통화 · 문자) 켜고 끄기, <b>🚨 긴급 알림</b> 켜기 — 홈 · 마이페이지 · 수신 대기 화면</li>
+      <li><b>언어</b>: 머리글의 KR / EN</li>
+      <li><b>주간 · 야간</b>: 머리글의 <span class="k">🌙</span>(야간으로) / <span class="k">☀️</span>(주간으로)를 누르면 바로 바뀝니다.</li>
+      <li><b>색깔 · 글자 크기 · 굵기 · 글씨체</b>: 첫 화면 왼쪽 위 <span class="k">Aa</span>, 또는 마이페이지 <span class="k">🎨 화면 설정</span>. 고르는 즉시 바뀌고, 이 폰에만 적용됩니다.</li>
+      <li><b>벨소리</b>: 폰의 벨소리를 그대로 씁니다. 에일리어스콜만 바꾸려면 폰 설정 → 애플리케이션 → 에일리어스콜 → 알림 → <b>"전화"</b> → 소리.</li>
+    </ul>
+  </section>
+
+  <section id="k16"><h2>16. 문제 해결</h2>
+    <h3>전화가 와도 아무 알림이 없어요</h3>
+    <p>① 폰 설정 → 앱 → 에일리어스콜 → <b>알림 허용</b>("전화" 포함) ② <b>전체 화면 알림</b> 켜기 ③ <b>마이페이지 → 🚨 긴급 알림 켜기</b> ④ 배터리 <b>절전 예외</b> ⑤ 앱을 다시 깔았거나 "데이터 삭제"를 했다면 앱을 한 번 열어 로그인.</p>
+    <h3>잠긴 폰에서 화면이 크게 안 떠요</h3>
+    <p><b>전체 화면 알림</b>을 켜 주세요(설정에서 "전체 화면" 검색).</p>
+    <h3>QR을 찍어도 연결이 안 돼요</h3>
+    <p>QR이 젖거나 긁혔을 수 있어요. <b>무료로 다시 인쇄</b>해 붙여 주세요. 등록물이 삭제되지 않았는지도 확인하세요.</p>
+    <h3>QR이 잘 안 읽혀요 · QR이 없는 차를 찾고 싶어요</h3>
+    <p>찾기 화면의 <b>QR 다시 스캔하기</b>는 15~30cm 거리에서 네모 안에 맞추면 빨리 읽힙니다. 어두우면 <b>🔦</b>, 작으면 <b>🔍 확대</b>, 찍어 둔 사진이 있으면 <b>🖼 사진에서</b>를 누르세요.</p>
+    <p>차량은 <b>🚗 번호판 찍어서 찾기</b>로 번호판을 찍으면 글자를 읽어 등록 차량을 찾습니다(블랙박스 사진도 됩니다). 잘못 읽힌 글자는 고칠 수 있고, 똑같은 번호가 없으면 뒤 4자리가 같은 차량을 "비슷한 번호"로 보여 줍니다. 차량이 아니어도 <b>이름표 · 물품 스티커 · 반려동물 목걸이</b>의 글자를 찍으면 그 글자로 찾습니다. 하루 5번까지이며, <b>Pro 긴급 이용권</b>(5,500원 / 12개월)은 무제한입니다. 찍은 사진은 저장하지 않습니다.</p>
+    <h3>통화 소리가 울려요</h3>
+    <p>두 폰이 가까이 있으면 생깁니다. 수화기로 듣거나 이어폰을 쓰세요.</p>
+  </section>
+
+  <section id="k17"><h2>17. 로그아웃 · 탈퇴</h2>
+    <ul>
+      <li><b>로그아웃</b>하면 이 폰으로 <b>연락을 받을 수 없습니다.</b> 다시 로그인하면 그대로 받습니다.</li>
+      <li><b>탈퇴</b>: 마이페이지 맨 아래 <b>회원 탈퇴</b>. 계정과 함께 모든 QR 등록물 · 정보가 지워지며 되돌릴 수 없습니다. 붙여 둔 QR도 더 이상 연결되지 않습니다.</li>
+    </ul>
+    <p style="margin-top:12px">더 궁금한 점은 <b>weapps.kr@gmail.com</b> 으로 알려 주세요. 🙏</p>
+  </section>
+</div>
+
+<!-- ═══════════════════════════ English ═══════════════════════════ -->
+<div data-l="en">
+  <h1>📘 Aliascall Guide</h1>
+  <p class="lede">Aliascall lets people reach you <b>without ever seeing your phone number</b>. This guide walks you through everything, <b>from installing to closing your account</b>.</p>
+
+  <div class="toc"><b>Contents</b>
+    <a href="#e0">0. Install</a><a href="#e1">1. Sign up · Log in</a><a href="#e2">2. First permissions</a><a href="#e3">3. A quick tour</a>
+    <a href="#e4">4. Register a QR tag</a><a href="#e5">5. Print · attach</a><a href="#e6">6. For finders</a><a href="#e7">7. Answering calls</a>
+    <a href="#e8">8. Inbox · chat</a><a href="#e9">9. Earphones · car</a><a href="#e10">10. One-time cards</a><a href="#e11">11. Secure lines</a>
+    <a href="#e12">12. Pro · listing</a><a href="#e13">13. Continue on Burum</a><a href="#e14">14. Plans · payment</a><a href="#e15">15. Settings</a>
+    <a href="#e16">16. Troubleshooting</a><a href="#e17">17. Log out · Delete account</a>
+  </div>
+
+  <section id="e0"><h2>0. Install</h2>
+    <ol>
+      <li>Search <b>"Aliascall"</b> on the Play Store and <b>install</b> it.</li>
+      <li>You can also use <b>aliascall.com</b> on the web, but <b>lock-screen calls and earphone buttons</b> work only in the app.</li>
+    </ol>
+  </section>
+
+  <section id="e1"><h2>1. Sign up · Log in</h2>
+    <ol>
+      <li>Open the app, tap <b>Sign up</b>, and choose a <b>nickname</b> and <b>password</b>.</li>
+      <li>Your <b>30-day free trial</b> starts right away. No card needed, nothing renews automatically.</li>
+      <li>Log in on another phone with the same nickname and password.</li>
+    </ol>
+  </section>
+
+  <section id="e2"><h2>2. First permissions (important)</h2>
+    <p>Please <b>allow</b> everything your phone asks the first time.</p>
+    <ul>
+      <li><b>Notifications</b> — so you know when a finder contacts you.</li>
+      <li><b>Microphone · camera</b> — voice and video calls, photos.</li>
+      <li><b>Full-screen notifications</b> — calls ring full screen on a locked phone. If off, the app offers <b>[Turn on]</b>.</li>
+    </ul>
+    <p>Also check that <b>My Page → 🚨 Urgent alerts</b> is on.</p>
+  </section>
+
+  <section id="e3"><h2>3. A quick tour</h2>
+    <ul>
+      <li><b>Home</b> — four tiles:
+        <ul>
+          <li><b>① Register · Find · Contact</b> — <b>register</b> cars, lost items, missing people, theft and away notices; <b>find & contact</b> by number or QR; the "Looking for" board, your account, plans.</li>
+          <li><b>② Receive emergency contacts</b> — the <b>Waiting</b> screen for incoming contacts, contacts & call log, <b>conversations</b>, <b>alert settings</b>.</li>
+          <li><b>③ One-time contact card</b> · <b>④ Secure lines</b>.</li>
+        </ul></li>
+      <li><b>My Page</b> — your tags (edit · print), plans, alert settings, inbox, delete account.</li>
+      <li><b>Waiting / Inbox</b> — texts, photos and call logs with finders.</li>
+      <li><span class="k">❓ Guide</span> and <span class="k">KR / EN</span> in the header.</li>
+    </ul>
+  </section>
+
+  <section id="e4"><h2>4. Register a QR emergency tag</h2>
+    <ol>
+      <li><b>Home → ① Register · Find · Contact → Register</b></li>
+      <li>Choose a type:
+        <ul>
+          <li><b>🚗 Vehicle</b> — parking, minor collisions, move-your-car requests</li>
+          <li><b>🎒 Item</b> — bag, wallet, laptop, umbrella</li>
+          <li><b>🧑‍🦳 Child · senior</b> — if they get lost (including dementia and disabilities)</li>
+          <li><b>🐾 Pet</b> — on a collar or tag</li>
+          <li><b>Other</b></li>
+        </ul></li>
+      <li>Enter a name (e.g. "My car") and a <b>message for finders</b>, then save.</li>
+    </ol>
+    <div class="tip">💡 Tags for children, seniors with dementia, people with disabilities and pets <b>always connect for free</b>, with or without a plan.</div>
+  </section>
+
+  <section id="e5"><h2>5. Print · attach (free)</h2>
+    <ol>
+      <li>Right after registering, or <b>My Page → My tags → 🖨️ Print</b>.</li>
+      <li>Pick a size: <b>3×3 · 4.5×4.5 · 5.5×5.5 · 6×6 cm</b>.</li>
+      <li><b>"Fill a sheet"</b> — one A4 page of the same size (54 tags at 3×3)<br><b>"4-size sample"</b> — a few of each size to find the right one</li>
+      <li><b>Print</b> and choose your printer.</li>
+      <li>Cut and attach inside the windshield, on a bag, lanyard or collar.</li>
+    </ol>
+    <div class="tip">🖨️ Wi-Fi printers print straight from your phone. Otherwise choose <b>"Save as PDF"</b> and print from a PC. Tags print as <b>black QR on white</b> for easy scanning.</div>
+  </section>
+
+  <section id="e6"><h2>6. How finders reach you</h2>
+    <ol>
+      <li>They scan the QR with their phone camera — <b>no app needed</b>.</li>
+      <li>They see your message and choose <b>💬 Chat · 🎧 Voice · 🎥 Video · ✉️ Text · 📷 Photo</b>.</li>
+      <li>They can enter a name (e.g. "Parking attendant") that shows on your phone (optional).</li>
+      <li>If you can't answer, they can <b>leave a message</b>.</li>
+    </ol>
+    <p>Neither side ever sees a <b>phone number</b>.</p>
+  </section>
+
+  <section id="e7"><h2>7. Answering calls (owners)</h2>
+    <ul>
+      <li><b>Locked phone</b>: a <b>full-screen call screen</b> with the caller's name and your tag. Tap <b>[Answer]</b> / <b>[Decline]</b>.</li>
+      <li><b>Using Aliascall</b>: the full-screen call screen opens right away.</li>
+      <li><b>Using another app</b>: a banner appears — <b>tap anywhere on it</b>.</li>
+      <li>It rings with <b>your ringtone</b> until you answer and stops when the finder hangs up.</li>
+      <li>Calls connect <b>only when you tap [Answer]</b>.</li>
+      <li>During a call: <b>earpiece</b> (video: speaker) · <span class="k">🔈</span> speaker · <span class="k">🎤</span> mute · <span class="k">📵</span> hang up.</li>
+      <li><span class="k">📷</span> In a video call you can <b>turn off just your camera.</b> The call goes on with voice only, and the other side sees "camera off".</li>
+      <li><span class="k">🔴</span> <b>Recording needs the other person's consent.</b> 🔴 → keep for 15 · 30 · 90 days → ask. They allow, allow for shorter, or refuse (in a group, everyone must allow). While recording, everyone sees "🔴 Recording" and anyone can stop it. Play, save or delete it from <b>🔴 Recordings</b> in the chat (Secure Line: ⋯ menu). It is deleted automatically on its date.</li>
+      <li>Leave the app and the call continues — <b>"Aliascall call in progress"</b> stays in the notification bar.</li>
+    </ul>
+  </section>
+
+  <section id="e8"><h2>8. Inbox · chat</h2>
+    <ul>
+      <li>Texts, photos and call logs with each finder are grouped in your <b>Inbox</b>. New activity glows.</li>
+      <li>Send <b>text, emoji and photos (➕ attach · camera)</b>. You'll see <b>"Read"</b> when they've read it.</li>
+      <li>Call the finder back with <span class="k">🎧 Voice</span> · <span class="k">🎥 Video</span> at the bottom.</li>
+      <li><b>[End chat]</b> when you're done; <b>[Reopen]</b> if needed.</li>
+      <li><b>Report</b> inappropriate content with <span class="k">🚩</span>.</li>
+      <li><b>Sending files</b>: <span class="k">➕</span> → <b>🗂 Send file · video</b> for videos, audio, PDFs, documents, zip files and more (up to 50MB each).</li>
+  <li><b>Press and hold for a menu</b>: on what you sent — <b>⬇ Save · 📋 Copy · 🗑 Delete</b> (removed for both); on what you received — <b>⬇ Save · 📋 Copy · 🙈 Remove for me</b> (the sender still sees it). In a photo set, pick one photo or the whole set.</li>
+    </ul>
+  </section>
+
+  <section id="e9"><h2>9. Bluetooth earphones · car</h2>
+    <ul>
+      <li><b>Answer</b> — press <b>once</b> and wait a few seconds.</li>
+      <li><b>Hang up</b> — press during the call (usually <b>twice</b>). Both sides end.</li>
+      <li><b>Decline</b> — <b>press and hold (2 s)</b> while ringing.</li>
+      <li><b>Regular call during a call</b> — <b>[Hold and answer]</b>; you return to Aliascall afterwards.</li>
+    </ul>
+    <div class="tip">💡 Earphone and car buttons work in the <b>Aliascall app</b> (not in a browser page).</div>
+  </section>
+
+  <section id="e10"><h2>10. One-time contact cards</h2>
+    <p>For <b>short-term contact</b> — a sale, a first meeting, a listing.</p>
+    <ol>
+      <li><b>Home → 🎫 One-time cards → Create</b>.</li>
+      <li>Set a name, a period, and one person or many.</li>
+      <li>Share by <b>link, QR or printed card</b> — no app needed.</li>
+      <li>It <b>cuts off automatically</b> on the date, or any time with <b>[End now]</b>.</li>
+    </ol>
+    <div class="tip">🔒 <b>Share without revealing your number</b><br>
+      · <b>Text messages</b> show your phone number, and <b>KakaoTalk</b> shows your profile to people who aren't friends yet.<br>
+      · Safer: paste the link into a <b>marketplace chat</b> or listing, <b>show the QR</b> in person, or <b>print a card</b>.</div>
+  </section>
+
+  <section id="e11"><h2>11. Secure lines</h2>
+    <p>A private line for <b>2 people</b> (Basic) or <b>4 people</b> (Premium) — family, partners, small teams.</p>
+    <ul>
+      <li>Text, photos, video, voice messages, voice and video calls, and music together.</li>
+      <li>Turn on <b>encryption (Secure)</b> and not even we can read it (no extra charge).</li>
+      <li>Manage lines, invite people and check usage in <b>My Page → Manage lines</b>.</li>
+    </ul>
+    <a class="more" href="/aliascall_secure_guide.html?lang=en">Secure line guide ›</a>
+  </section>
+
+  <section id="e12"><h2>12. Pro Business · public listing</h2>
+    <ul>
+      <li><b>Pro</b>: for shops, offices and help desks. One subscription opens <b>a separate room for each customer</b> — no number shared. Usage across all rooms shows in one bar.</li>
+      <li><b>Public listing</b>: lets new customers find you. Listed <b>after we verify your registration and licences</b>.</li>
+    </ul>
+  </section>
+
+  <section id="e13"><h2>13. Continue on Burum</h2>
+    <ol>
+      <li>In a chat, tap <b>[💬 Continue on Burum]</b> → <b>[Send connection card]</b>.</li>
+      <li>You each tap <b>[Connect on Burum]</b> on the card and sign in to Burum (or sign up).</li>
+      <li><b>The same Burum chat</b> opens. Numbers stay hidden.</li>
+    </ol>
+    <p><b>Already know their Burum nickname?</b> Type it in the box at the bottom of the same window and tap <b>[📨 Send request on Burum]</b>. Sign in to Burum and the request goes straight out.</p>
+  </section>
+
+  <section id="e14"><h2>14. Plans · payment · refunds</h2>
+    <ul>
+      <li><b>30 days free</b>. We remind you <b>7 days and 1 day</b> before it ends.</li>
+      <li><b>My Page → View plans</b>: Emergency, Secure line (Basic · Premium), Pro, listing, extra data.</li>
+      <li>Pay with <b>Google Play</b> in the app, or <b>card · PayPal</b> on the web. <b>No automatic renewal.</b></li>
+      <li>Remaining time carries over.</li>
+    </ul>
+    <a class="more" href="/aliascall_refund_en.html">Cancellation & refund policy ›</a>
+  </section>
+
+  <section id="e15"><h2>15. Settings</h2>
+    <ul>
+      <li><b>Alert sounds</b> (calls · texts) on/off and <b>🚨 Urgent alerts</b> — on Home, My Page and Waiting screens.</li>
+      <li><b>Language</b>: KR / EN in the header.</li>
+      <li><b>Day · Night</b>: tap <span class="k">🌙</span> / <span class="k">☀️</span> in the header.</li>
+      <li><b>Color · text size · weight · font</b>: <span class="k">Aa</span> at the top left of Home, or <span class="k">🎨 Display</span> on My Page. Changes apply right away, on this phone only.</li>
+      <li><b>Ringtone</b>: uses your phone's ringtone. To change it just for Aliascall: Settings → Apps → Aliascall → Notifications → <b>"Calls"</b> → Sound.</li>
+    </ul>
+  </section>
+
+  <section id="e16"><h2>16. Troubleshooting</h2>
+    <h3>No alert when someone calls</h3>
+    <p>① Settings → Apps → Aliascall → <b>allow notifications</b> (including "Calls") ② turn on <b>full-screen notifications</b> ③ <b>My Page → 🚨 Urgent alerts</b> ④ exclude from <b>battery restrictions</b> ⑤ if you reinstalled or cleared data, open the app once and log in.</p>
+    <h3>The call screen isn't full screen when locked</h3>
+    <p>Turn on <b>full-screen notifications</b> (search "full screen" in Settings).</p>
+    <h3>Scanning the QR doesn't connect</h3>
+    <p>The tag may be wet or scratched — <b>reprint it for free</b>. Also check the tag hasn't been deleted.</p>
+    <h3>The QR won't scan · finding a car without a QR</h3>
+    <p>In Find, <b>Scan QR</b> works fastest 15–30 cm away inside the square. Use <b>🔦</b> in the dark, <b>🔍 zoom</b> for small codes, or <b>🖼 From photo</b> for a saved picture.</p>
+    <p>For cars, <b>🚗 Find by license plate photo</b> reads the plate and finds the registered car (dashcam photos work too). You can fix misread characters; if there is no exact match, cars with the same last 4 digits appear as "similar". Name tags, item labels and pet tags work too — the text read is used as the search word. 5 times a day, unlimited with <b>Emergency Pro</b> (KRW 5,500 / 12 months). Photos are not stored.</p>
+    <h3>Echo or feedback</h3>
+    <p>This happens when the phones are close together. Use the earpiece or earphones.</p>
+  </section>
+
+  <section id="e17"><h2>17. Log out · Delete account</h2>
+    <ul>
+      <li><b>Logging out</b> means this phone <b>can't receive contacts</b>. Log back in to receive them again.</li>
+      <li><b>Delete account</b>: at the bottom of My Page. Your account, all QR tags and data are deleted permanently. Tags you've attached will no longer connect.</li>
+    </ul>
+    <p style="margin-top:12px">More questions? Email <b>weapps.kr@gmail.com</b>. 🙏</p>
+  </section>
+</div>
+
+  <p class="foot">위브앱솔루션 · Weaveapp Solution · <a href="/aliascall_terms.html" style="color:inherit">이용약관 · Terms</a> · <a href="/aliascall_privacy.html" style="color:inherit">개인정보처리방침 · Privacy</a></p>
+</div>
+
+<script>
+/* 언어: ?lang= → 에일리어스콜에서 고른 언어(aliascall_lang) → 폰 언어 */
+(function(){
+  function pick(){
+    try { var q = new URLSearchParams(location.search).get('lang'); if (q) return q.indexOf('en') === 0 ? 'en' : 'ko'; } catch (e) {}
+    try { var p = localStorage.getItem('aliascall_lang'); if (p) return p.indexOf('en') === 0 ? 'en' : 'ko'; } catch (e) {}
+    return (navigator.language || 'ko').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en';
+  }
+  var lang = pick();
+  function apply(){
+    document.documentElement.lang = lang;
+    document.title = lang === 'en' ? 'Aliascall Guide' : '에일리어스콜 사용설명서';
+    document.getElementById('langBtn').textContent = lang === 'en' ? '한국어' : 'EN';
+  }
+  document.getElementById('langBtn').addEventListener('click', function(){ lang = (lang === 'en') ? 'ko' : 'en'; apply(); window.scrollTo(0, 0); });
+  apply();
+})();
+</script>
+</body>
+</html>
