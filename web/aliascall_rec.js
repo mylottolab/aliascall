@@ -97,7 +97,7 @@
     playV:    ['▶ 보기', '▶ Play'],
     save:     ['⬇ 저장', '⬇ Save'],
     del:      ['🗑 지우기', '🗑 Delete'],
-    delAsk:   ['이 녹음을 내 녹음함에서 지울까요?\n상대방 녹음함에는 남아 있다가 정한 날에 저절로 지워집니다.\n지우면 되돌릴 수 없습니다.', 'Delete this recording from your list?\nThe other side keeps it until its date, then it is deleted automatically.\nThis cannot be undone.'],
+    delAsk:   ['이 녹음을 지울까요?\n내 녹음함에서 사라지고 되돌릴 수 없습니다.', 'Delete this recording?\nIt disappears from your list and cannot be undone.'],
     close:    ['닫기', 'Close'],
     camOff:   ['📷 카메라 끄기', '📷 Camera off'],
     camOn:    ['📷 카메라 켜기', '📷 Camera on'],
