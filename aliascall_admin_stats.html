@@ -188,7 +188,12 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { storageKey: 'aliascall-admin-auth' } });
 const SB = () => sb;
 const TIER = { hotline_1to1: '일반(2인)', hotline_everybody: '에브리바디(2인)', economy_4: '이코노미(4인)', premium_4: '프리미엄(4인)' };
+const SKU_NAME = { ac_plan_emergency_12m: '긴급 이용권 12개월', ac_plan_emergency_pro_12m: 'Pro 긴급 이용권 12개월',
+  ac_plan_basic_3m: '일반 3개월', ac_plan_basic_6m: '일반 6개월', ac_plan_basic_12m: '일반 12개월',
+  ac_plan_premium_3m: '프리미엄 3개월', ac_plan_premium_6m: '프리미엄 6개월', ac_plan_premium_12m: '프리미엄 12개월',
+  ac_usage_1gb_3m: '추가 사용량 1GB' };
 function NAME(p){
+  if (SKU_NAME[p]) return SKU_NAME[p];
   let s = String(p || '');
   s = s.replace(/^subscription/, '긴급 이용권').replace(/^hotline/, '보안회선');
   s = s.replace(/(hotline_1to1|hotline_everybody|economy_4|premium_4)(_secure)?/, (m, a, b) => TIER[a] + (b ? ' Secure' : ''));

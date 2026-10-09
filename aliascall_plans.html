@@ -170,6 +170,12 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
       <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span></div>
       <div class="ds" data-i18n="dEmg">차량 · 소지품 QR과 1회용 임시연락처를 쓰시는 분께.</div>
     </button>
+    <!-- 🔴 2026-10-09 — Pro 긴급: 긴급 이용권 + 번호판 글자 인식 무제한 -->
+    <button type="button" class="plan" data-plan="emergency_pro">
+      <div class="row"><span class="nm" data-i18n="pEmgPro">Pro 긴급 이용권</span><span class="pr">5,500<small data-i18n="won">원</small> <small data-i18n="per12">/ 12개월</small></span></div>
+      <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="iOcr">📷 번호판 인식 무제한</span></div>
+      <div class="ds" data-i18n="dEmgPro">긴급 이용권에 번호판 찍어서 찾기를 횟수 제한 없이. 주차 · 운전이 잦은 분께.</div>
+    </button>
     <button type="button" class="plan" data-plan="basic">
       <div class="row"><span class="nm" data-i18n="pBasic">일반 이용권</span><span class="pr"><small data-i18n="fromPre"></small>9,900<small data-i18n="won">원</small><small data-i18n="fromPost">부터</small></span></div>
       <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="i4b">④ 2인 회선 · 5GB</span></div>
@@ -321,7 +327,7 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
 const I18N = {
   ko: {
     title:'이용권', sub:'번호를 드러내지 않고 연락하는 모든 기능이 이용권 하나에 들어 있습니다. 자동으로 다시 결제되지 않습니다.',
-    pEmg:'긴급 이용권', pBasic:'일반 이용권', pPrem:'프리미엄 이용권', won:'원', per12:'/ 12개월', fromPre:'', fromPost:'부터',
+    pEmg:'긴급 이용권', pEmgPro:'Pro 긴급 이용권', iOcr:'📷 번호판 인식 무제한', dEmgPro:'긴급 이용권에 번호판 찍어서 찾기를 횟수 제한 없이. 주차 · 운전이 잦은 분께.', pBasic:'일반 이용권', pPrem:'프리미엄 이용권', won:'원', per12:'/ 12개월', fromPre:'', fromPost:'부터',
     i1:'① 긴급등록', i2:'② 긴급연락', i3:'③ 임시연락처', i4b:'④ 2인 회선 · 5GB', i4p:'④ 4인 회선 · 20GB',
     dEmg:'차량 · 소지품 QR과 1회용 임시연락처를 쓰시는 분께.',
     dBasic:'둘이서 쓰는 보안통신. 상대를 바꿀 수 있고, 암호화도 고를 수 있습니다.',
@@ -390,7 +396,7 @@ const I18N = {
   },
   en: {
     title:'Plans', sub:'Every number-free feature comes with one plan. It never renews automatically.',
-    pEmg:'Emergency plan', pBasic:'Standard plan', pPrem:'Premium plan', won:' KRW', per12:'/ 12 months', fromPre:'from ', fromPost:'',
+    pEmg:'Emergency plan', pEmgPro:'Emergency Pro', iOcr:'📷 Unlimited plate reading', dEmgPro:'The Emergency plan plus unlimited licence-plate photo search. For people who park and drive a lot.', pBasic:'Standard plan', pPrem:'Premium plan', won:' KRW', per12:'/ 12 months', fromPre:'from ', fromPost:'',
     i1:'① Register', i2:'② Contact', i3:'③ One-time card', i4b:'④ 2-person line · 5GB', i4p:'④ 4-person line · 20GB',
     dEmg:'For item QR codes and one-time contact cards.',
     dBasic:'Secure line for two. Change your partner anytime, encryption optional.',
@@ -466,6 +472,7 @@ const el = (id) => document.getElementById(id);
 /* 🔴 서버(aliascall-google-verify) · Play Console 과 같아야 합니다 */
 const CATALOG = {
   emergency: { name:'pEmg', durs: [ { m:12, real:12, p:2200, sku:'ac_plan_emergency_12m' } ] },   // 2026-09-28 1,800 → 2,200
+  emergency_pro: { name:'pEmgPro', durs: [ { m:12, real:12, p:5500, sku:'ac_plan_emergency_pro_12m' } ] },   // 🔴 2026-10-09 번호판 인식 무제한
   basic:     { name:'pBasic', line:true, durs: [
     { m:3,  real:4,  p:9900,  sku:'ac_plan_basic_3m' },
     { m:6,  real:7,  p:17000, sku:'ac_plan_basic_6m' },

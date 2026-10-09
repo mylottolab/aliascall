@@ -1984,9 +1984,9 @@ function phEsc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, (c) => 
    상품 번호(google_product_id — 웹 결제도 같은 칸)가 있으면 그것으로 이름을 정하고,
    "(실제 …)" 는 덤이 있는 일반 · 프리미엄에만 붙입니다. */
 const PH_SKU = {
-  ko: { ac_plan_emergency_12m:'긴급 이용권 12개월', ac_listing_1m:'공개 업체 목록 게재 1개월', ac_listing_6m:'공개 업체 목록 게재 6개월',
+  ko: { ac_plan_emergency_12m:'긴급 이용권 12개월', ac_plan_emergency_pro_12m:'Pro 긴급 이용권 12개월', ac_listing_1m:'공개 업체 목록 게재 1개월', ac_listing_6m:'공개 업체 목록 게재 6개월',
         ac_listing_12m:'공개 업체 목록 게재 12개월', ac_usage_1gb_3m:'추가 사용량 1GB · 3개월' },
-  en: { ac_plan_emergency_12m:'Emergency plan 12 months', ac_listing_1m:'Public listing 1 month', ac_listing_6m:'Public listing 6 months',
+  en: { ac_plan_emergency_12m:'Emergency plan 12 months', ac_plan_emergency_pro_12m:'Emergency Pro 12 months', ac_listing_1m:'Public listing 1 month', ac_listing_6m:'Public listing 6 months',
         ac_listing_12m:'Public listing 12 months', ac_usage_1gb_3m:'Extra usage 1GB · 3 months' },
 };
 const PH_PRO = { ko: { pro_starter:'프로 스타터', pro_business:'프로 비즈니스', pro_enterprise:'프로 엔터프라이즈' },
@@ -2058,6 +2058,22 @@ async function loadPurchaseHistory(userId){
   }).join('');
 }
 
+/* 🔴 2026-10-09 — Pro 긴급 이용권이면 "📷 번호판 인식 무제한 · ○○까지" 한 줄 */
+async function paintOcrPro(meta){
+  try {
+    const { data } = await sb.rpc('my_ocr_pro');
+    let line = document.getElementById('ocrProLine');
+    if (!data) { if (line) line.remove(); return; }
+    if (!line) {
+      line = document.createElement('div'); line.id = 'ocrProLine';
+      line.style.cssText = 'margin-top:6px;font-size:12.5px;font-weight:700;color:#B4502C;';
+      meta.parentNode.insertBefore(line, meta.nextSibling);
+    }
+    const d = new Date(data).toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US');
+    line.textContent = currentLang === 'ko' ? ('📷 Pro · 번호판 인식 무제한 · ' + d + '까지') : ('📷 Pro · unlimited plate reading until ' + d);
+  } catch (e) { /* 함수가 아직 없으면 조용히 */ }
+}
+
 // ── 계정단위 구독 상태 (등록물 개수와 무관, 계정 하나당 하나) ──
 async function loadSubscriptionStatus(userId){
   const { data: profile } = await sb.from('profiles').select('subscription_expires_at').eq('id', userId).maybeSingle();
@@ -2068,6 +2084,7 @@ async function loadSubscriptionStatus(userId){
   const GRACE_DAYS = 30;
 
   urgentEl.style.display = 'none';
+  paintOcrPro(meta);   // 🔴 2026-10-09 Pro 긴급 — 번호판 인식 무제한 기간
 
   const expiresAt = profile?.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
   if (!expiresAt) {

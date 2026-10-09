@@ -6,6 +6,7 @@
 <title>Aliascall — 찾기</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="aliascall_scan.js?v=20261009"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -80,6 +81,9 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
 }
 .qr-scan-btn:hover{ border-color:var(--teal); color:var(--teal-deep); }
 .qr-scan-btn svg{ width:18px; height:18px; }
+.plate-scan-btn{ margin-top:8px; border-color:var(--coral); color:#B4502C; }
+.near-tag{ font-size:11px; font-weight:700; color:#B4502C; background:var(--coral-tint); border-radius:8px; padding:2px 6px; margin-left:4px; font-family:Inter,sans-serif; }
+.plate-note{ font-size:12px; color:var(--ink-soft); text-align:center; margin:6px 0 4px; }
 
 .divider{ display:flex; align-items:center; gap:10px; margin:20px 0; color:var(--ink-soft); font-size:11.5px; }
 .divider::before, .divider::after{ content:''; flex:1; height:1px; background:var(--line); }
@@ -174,6 +178,12 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
     <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><path d="M14 14h3v3h-3zM19 14h2M14 19h2M19 19h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     <span data-i18n="qrScanBtn">QR 다시 스캔하기</span>
   </button>
+  <!-- 🔴 2026-10-09 — 번호판을 찍으면 글자를 읽어 등록 차량을 찾습니다 (aliascall_scan.js) -->
+  <button class="qr-scan-btn plate-scan-btn" id="plateScanBtn">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2.5" y="7" width="19" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M6 12h2M10 12h1.5M13.5 12h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <span data-i18n="plateScanBtn">번호판 찍어서 찾기</span>
+  </button>
+  <div class="plate-note" data-i18n="plateNote">QR이 훼손됐거나 없는 차량도 번호판으로 찾습니다 · 하루 5번</div>
 
   <div class="divider" data-i18n="filterDivider">카테고리로 좁혀보기</div>
   <div class="filter-row" id="filterRow">
@@ -210,6 +220,7 @@ const I18N = {
     guideLink: '📖 사용설명서', pageTitle: '무엇을 찾으시나요?',
     pageDesc: 'QR이 오염되었거나 스캔이 안 되면, 문자나 음성으로 직접 검색해보세요.',
     searchInputPlaceholder: '예: 151노8409', qrScanBtn: 'QR 다시 스캔하기',
+    plateScanBtn: '번호판 찍어서 찾기', plateNote: 'QR이 훼손됐거나 없는 차량도 번호판으로 찾습니다 · 하루 5번',
     filterDivider: '카테고리로 좁혀보기',
     catAll: '전체', catVehicle: '🚗 차량', catLostItem: '🎒 분실물', catVulnerable: '🧑‍🦳 아동·노인',
     catPet: '🐾 반려동물', catCallback: '📮 부재중연락', catMisc: '❓ 기타',
@@ -230,6 +241,7 @@ const I18N = {
     guideLink: '📖 User Guide', pageTitle: 'What are you looking for?',
     pageDesc: "If the QR is damaged or won't scan, search by text or voice instead.",
     searchInputPlaceholder: 'e.g. 151NO8409', qrScanBtn: 'Scan QR Again',
+    plateScanBtn: 'Find by license plate photo', plateNote: 'Finds cars even when the QR is damaged or missing · 5 times a day',
     filterDivider: 'Narrow by category',
     catAll: 'All', catVehicle: '🚗 Vehicle', catLostItem: '🎒 Lost item', catVulnerable: '🧑‍🦳 Child · Elderly',
     catPet: '🐾 Pet', catCallback: '📮 Callback', catMisc: '❓ Other',
@@ -298,6 +310,19 @@ async function fetchResults(query){
     } catch (e) { /* 코드가 아니면 보통 검색으로 */ }
   }
 
+  /* 🔴 2026-10-09 — 번호판 모양(12가3456 · 서울12가3456 · 뒤 4자리)이면 번호판 찾기를 먼저.
+     등록 때 띄어쓰기 · 줄표를 넣었어도 찾고, 똑같은 것이 없으면 뒤 4자리가 같은 차량을 후보로 보입니다. */
+  const pk = String(query || '').replace(/[\s\-·.]/g, '');
+  const plateLike = /^([가-힣]{2})?\d{2,3}[가-힣]\d{4}$/.test(pk) || /^\d{4}$/.test(pk);
+  let plateRows = [];
+  if (plateLike && (currentFilter === 'all' || currentFilter === 'vehicle')) {
+    try {
+      const pr = await sb.rpc('search_plate', { p_plate: pk, p_limit: 10 });
+      if (!pr.error && Array.isArray(pr.data)) plateRows = pr.data;
+    } catch (e) { console.warn('[search] 번호판 찾기 실패', e); }
+    if (plateRows.length && currentFilter === 'vehicle') return { data: plateRows, error: null };
+  }
+
   let q = sb.from('registrations')
     .select('id, category, search_key, title, description, qr_code_token')
     .eq('status', 'active')
@@ -310,7 +335,12 @@ async function fetchResults(query){
   const { data, error } = await q;
   if (error) {
     console.error('[search] registrations 조회 오류', error);
+    if (plateRows.length) return { data: plateRows, error: null };
     return { data: null, error };
+  }
+  if (plateRows.length) {
+    const seen = new Set(plateRows.map((r) => r.id));
+    return { data: plateRows.concat((data || []).filter((r) => !seen.has(r.id))), error: null };
   }
   return { data, error: null };
 }
@@ -340,7 +370,7 @@ async function renderResults(query){
     <div class="result-card" data-token="${d.qr_code_token || ''}">
       <span class="result-emoji">${CATEGORY_EMOJI[d.category] || '❓'}</span>
       <span class="result-titles">
-        <div class="result-key">${d.search_key || d.title || '(제목 없음)'}</div>
+        <div class="result-key">${d.search_key || d.title || '(제목 없음)'}${d.exact === false ? ' <span class="near-tag">' + (currentLang === 'en' ? 'similar' : '비슷한 번호') + '</span>' : ''}</div>
         <div class="result-desc">${d.description || ''}</div>
       </span>
       <span class="result-arrow">›</span>
@@ -377,24 +407,25 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
 let qrStream = null;
 let qrScanning = false;
 
+/* 🔴 2026-10-09 — QR 읽기를 바꿨습니다 (aliascall_scan.js)
+   앱이면 구글 코드 스캐너, 웹이면 고화질 · 계속 초점 · 폰 판독기 → jsQR · 손전등 · 확대 · 사진에서 읽기 */
 document.getElementById('qrScanBtn').addEventListener('click', async () => {
-  const overlay = document.getElementById('qrCamOverlay');
-  const video = document.getElementById('qrVideo');
-  const statusEl = document.getElementById('qrCamStatus');
-  overlay.classList.add('show');
-  statusEl.textContent = I18N[currentLang].qrCamStatusDefault;
-
-  try {
-    qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    video.srcObject = qrStream;
-    await video.play();
-    qrScanning = true;
-    requestAnimationFrame(scanQrFrame);
-  } catch (e) {
-    console.error('[qr-scan] 카메라 접근 오류', e);
-    statusEl.textContent = I18N[currentLang].cameraError;
-  }
+  if (!window.ACScan) { alert(I18N[currentLang].cameraError); return; }
+  const raw = await ACScan.qr();
+  if (raw) handleQrResult(raw);
 });
+
+/* 🔴 2026-10-09 — 번호판 찍어서 찾기 */
+document.getElementById('plateScanBtn').addEventListener('click', async () => {
+  if (!window.ACScan) return;
+  const plate = await ACScan.plate();
+  if (!plate) return;
+  document.getElementById('searchInput').value = plate;
+  document.querySelectorAll('.filter-chip').forEach((c) => c.classList.toggle('active', c.dataset.cat === 'vehicle'));
+  currentFilter = 'vehicle';
+  renderResults(plate);
+});
+if (window.ACScan) ACScan.init({ sb, url: SUPABASE_URL, lang: () => currentLang });
 
 function stopQrScan(){
   qrScanning = false;
