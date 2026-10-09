@@ -264,7 +264,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 </style>
 <script src="aliascall_burum_link.js"></script>
 <script src="aliascall_msg_delete.js"></script>
-<script src="aliascall_rec.js?v=20261009"></script>
+<script src="aliascall_rec.js?v=20261009c"></script>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
 <script src="aliascall_theme.js"></script>
 </head>
@@ -1078,6 +1078,7 @@ async function answerIncomingCall(session){
   const mode = session.call_type;
   acNativeC('callStarted', session.session_token, acCallTitle());   // 🔴 앱 버전 18 — 폰에도 알림
   finderRtChannel = sb.channel('webrtc-' + session.session_token, { config: { broadcast: { self: false } } });
+  acRecBegin('in', mode, session.case_id || currentCaseId);   // 🔴 2026-10-09 미리 걸어 둠
   let pendingIceCandidates = [];
   let offerLock = false;   // 🔴 2026-09-30 첫 offer 를 처리 중인가
 
@@ -1646,6 +1647,7 @@ async function startCall(mode){
 
   // 2) 시그널링 채널 구독
   rtChannel = sb.channel('webrtc-' + currentSessionToken, { config: { broadcast: { self: false } } });
+  acRecBegin('out', mode, currentCaseId);   // 🔴 2026-10-09 미리 걸어 둠 — 연결되면 🔴 · 📷 단추
   // ⚠ 상대방이 보낸 ICE 후보(네트워크 경로 정보)가, 우리가 setRemoteDescription을 끝내기도
   // 전에 먼저 도착할 수 있음. 이때 addIceCandidate를 바로 호출하면 에러가 나서 조용히
   // 버려졌었는데(연결이 계속 "연결 확인 중"에 멈춰있던 유력한 원인) — 그런 후보는 일단
@@ -2521,7 +2523,7 @@ function acRecScope(caseId){ return { scope: 'case', scopeId: caseId || currentC
 function acRecBegin(which, mode, caseId){
   if (!window.ACRec) return;
   const out = (which === 'out');
-  ACRec.begin({
+  ACRec.arm({
     channel: out ? rtChannel : finderRtChannel,
     pcs: () => [out ? pc : finderPc],
     local: () => (out ? localStream : finderLocalStream),

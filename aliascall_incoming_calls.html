@@ -242,7 +242,7 @@ main{ max-width:480px; margin:0 auto; padding:26px 20px 60px; }
 </style>
 <script src="aliascall_burum_link.js"></script>
 <script src="aliascall_msg_delete.js"></script>
-<script src="aliascall_rec.js?v=20261009"></script>
+<script src="aliascall_rec.js?v=20261009c"></script>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
 <script src="aliascall_theme.js"></script>
 </head>
@@ -1447,6 +1447,7 @@ async function answerCall(session){
   await sb.from('webrtc_sessions').update({ owner_joined_at: new Date().toISOString(), owner_read_at: new Date().toISOString() }).eq('id', session.id);
 
   rtChannel = sb.channel('webrtc-' + session.session_token, { config: { broadcast: { self: false } } });
+  acRecBegin('in', mode, session.case_id || currentCaseId);   // 🔴 2026-10-09 미리 걸어 둠 — 연결되면 🔴 · 📷 단추
   // ⚠ 상대방 ICE 후보가 setRemoteDescription 끝나기 전에 먼저 도착하면 조용히 유실되던 문제 —
   // 일단 큐에 담아뒀다가 준비되면 한꺼번에 적용함
   let pendingIceCandidates = [];
@@ -1663,6 +1664,7 @@ async function startOwnerCall(mode){
 
   // 4) 시그널링 채널 구독 + 발신자로서 offer 생성 (connect.html의 createOfferAsCaller와 동일 구조)
   ownerRtChannel = sb.channel('webrtc-' + ownerCallSessionToken, { config: { broadcast: { self: false } } });
+  acRecBegin('out', mode, currentCaseId);   // 🔴 2026-10-09 미리 걸어 둠
   let pendingIceCandidates = [];
   ownerRtChannel
     .on('broadcast', { event: 'answer' }, async ({ payload }) => {
@@ -2171,7 +2173,7 @@ async function acRecToken(){ const { data: { session } } = await sb.auth.getSess
 function acRecBegin(which, mode, caseId){
   if (!window.ACRec) return;
   const out = (which === 'out');
-  ACRec.begin({
+  ACRec.arm({
     channel: out ? ownerRtChannel : rtChannel,
     pcs: () => [out ? ownerPc : pc],
     local: () => (out ? ownerLocalStream : localStream),

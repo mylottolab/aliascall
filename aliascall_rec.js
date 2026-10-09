@@ -35,7 +35,7 @@
   var C = { sb: null, url: '', lang: null };
   var S = null;          // 지금 통화 { o, rid, asking, askDays, yes:{}, recorder… }
   var R = null;          // 지금 담는 중 { mr, ctx, chunks, mime, video, startedAt, days, rid, consent }
-  var watchTimer = null;
+  var watchTimer = null, armTimer = null;
 
   /* ── 말 ─────────────────────────────────────────────────────── */
   var T = {
@@ -665,15 +665,31 @@
     begin: function(o){
       if (S && (S.o === o || (o.channel && S.o.channel === o.channel))) return;   // 같은 통화에서 두 번 불려도 한 번만
       if (R) { /* 앞 통화 것이 남아 있으면 먼저 저장합니다 */ finish('newcall'); }
+      console.log('[rec] 통화 연결됨 — 🔴 · 📷 단추를 붙입니다', !!o.controls);
       S = { o: o, rid: null, asking: false, yes: {}, btn: null };
       S.btn = mountBtn(o.controls);
       S.camOff = false;
       S.camBtn = o.video ? mountCam(o.controls) : null;
       paintBtn();
     },
+    /* 🔴 2026-10-09 — 통화를 시작할 때 미리 걸어 둡니다. 연결되면(1초마다 확인) 스스로 begin 합니다.
+       폰 · 브라우저마다 "연결됨" 신호가 오는 방식이 달라, 신호만 믿으면 🔴 단추가 안 생기는 일이 있었습니다. */
+    arm: function(o){
+      clearInterval(armTimer);
+      var until = Date.now() + 180000;
+      var tryIt = function(){
+        if (Date.now() > until) { clearInterval(armTimer); return; }
+        var ok = false;
+        try { ok = (o.pcs() || []).some(function(pc){ return pc && (pc.connectionState === 'connected' || pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed'); }); } catch (e) {}
+        if (ok) { clearInterval(armTimer); window.ACRec.begin(o); }
+      };
+      armTimer = setInterval(tryIt, 1000);
+      tryIt();
+    },
     signal: function(p){ try { ACRec_signal(p); } catch (e) { console.warn('[rec] 신호 처리 실패', e); } },
     /* 통화를 끊을 때 — 담는 중이면 멈추고 저장합니다 */
     end: function(){
+      clearInterval(armTimer);
       var p = null;
       if (R) p = finish('hangup');
       else if (S && S.theirOn) barOff();
