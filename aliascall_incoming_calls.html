@@ -1341,8 +1341,22 @@ document.getElementById('unmuteBtn').addEventListener('click', () => {
    거절 · 끝  벨을 끄고 알림줄을 끕니다
    ⚠ 옛 앱(버전 6 이하) · 브라우저에는 이 창구가 없습니다 — 있는지 보고 부릅니다. */
 function acNative(fn, a, b){
+  /* 🔴 2026-10-09 — 폰에 "통화 중" 을 알렸는지 기억합니다(아래 청소부가 씀) */
+  if (fn === 'callStarted' || fn === 'callOngoing') _acNativeOpen = true;
+  if (fn === 'callEnded') _acNativeOpen = false;
   try { if (window.AliasNative && typeof AliasNative[fn] === 'function') AliasNative[fn](a, b); } catch (e) {}
 }
+/* 🔴 2026-10-09 — 청소부: 이 화면에 통화가 없는데 폰에는 "에일리어스콜 통화 중 ○○:○○" 이 남아 있으면 끕니다.
+   (통화를 마친 뒤 알림줄이 계속 남고, 그 때문에 다음 전화의 벨이 안 울리던 문제)
+   ⚠ 이 화면이 "통화 중" 을 알린 경우에만 끕니다 — 이어폰으로 받아 앱이 연 통화는 건드리지 않습니다. */
+let _acNativeOpen = false, _acIdleTicks = 0;
+setInterval(() => {
+  let active = true;
+  try { active = !!(pc || ownerPc || rtChannel || ownerRtChannel); } catch (e) { active = true; }
+  if (_acNativeOpen && !active) {
+    if (++_acIdleTicks >= 2) { console.warn('[call] 남은 통화 알림을 치웁니다'); acNative('callEnded'); _acIdleTicks = 0; }
+  } else _acIdleTicks = 0;
+}, 3000);
 /* 🔴 2026-10-04 — 남은 "통화 중" 알림줄 치우기
    ③ 이 화면이 열릴 때 — 바로 받기(autoaccept)로 온 게 아니면 진행 중인 통화가 없으므로 끕니다
    ④ 이 화면을 떠날 때(닫기 · 다른 화면) — 통화도 함께 끝나므로 끕니다 */
@@ -1568,7 +1582,7 @@ function hangup(silent){
   acNative('callEnded');   // 🔴 통화 중 알림줄 끄기 — 이미 끝내는 중이어도 한 번 더(남지 않게)
   if (callEnding) return;
   callEnding = true;
-  if (window.ACRec) ACRec.end();   // 🔴 2026-10-09 담는 중이면 멈추고 저장 (끊기 전에)
+  try { if (window.ACRec) ACRec.end(); } catch (e) { console.warn('[rec] 끝내기 실패', e); }   // 🔴 2026-10-09 담는 중이면 멈추고 저장 (끊기 전에)
   acTrialStop();   // 🔴 체험 타이머
   activeCallDirection = null; // 2026-08-20 (3단계)
   if (answerResendInterval) { clearInterval(answerResendInterval); answerResendInterval = null; } // 2026-08-19
@@ -1741,7 +1755,7 @@ async function createOwnerOffer(mode){
 }
 
 function endOwnerCall(silent){
-  if (window.ACRec) ACRec.end();   // 🔴 2026-10-09 담는 중이면 멈추고 저장 (끊기 전에)
+  try { if (window.ACRec) ACRec.end(); } catch (e) { console.warn('[rec] 끝내기 실패', e); }   // 🔴 2026-10-09 담는 중이면 멈추고 저장 (끊기 전에)
   acNative('callEnded');   // 🔴 통화 중 알림줄 끄기
   acTrialStop();   // 🔴 체험 타이머
   if (ownerOfferResendInterval) { clearInterval(ownerOfferResendInterval); ownerOfferResendInterval = null; }
