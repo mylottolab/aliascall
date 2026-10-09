@@ -1848,7 +1848,8 @@ function endCall(silent){
   // 최소한의 기록이라도 남도록 함. 실패해도 화면 정리는 계속 진행(연결 종료가 더 중요하므로).
   if (currentSessionToken) {
     sb.from('webrtc_sessions').update({
-      ended_reason: silent ? 'disconnected' : 'caller_ended',
+      // 🔴 2026-10-09 — DB 가 받는 낱말로 (answered_and_ended · timeout_no_answer · declined · finder_left). 예전 낱말은 거절돼 끝남이 안 적혔습니다
+      ended_reason: callWasConnected ? 'answered_and_ended' : 'finder_left',
       ended_at: new Date().toISOString(),
     }).eq('session_token', currentSessionToken).then(({ error }) => {
       if (error) console.error('[webrtc] 종료기록 저장 실패', error);
@@ -2717,7 +2718,7 @@ document.getElementById('textMsgSendBtn').addEventListener('click', async () => 
 window.addEventListener('pagehide', () => {
   if (currentSessionToken && (pc || rtChannel)) {
     try {
-      sb.from('webrtc_sessions').update({ ended_reason: 'page_closed', ended_at: new Date().toISOString() }).eq('session_token', currentSessionToken);
+      sb.from('webrtc_sessions').update({ ended_reason: 'finder_left', ended_at: new Date().toISOString() }).eq('session_token', currentSessionToken);
     } catch (e) { /* 페이지 종료 중이라 실패해도 무시 */ }
   }
 });
