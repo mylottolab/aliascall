@@ -1406,7 +1406,15 @@ function acNativeC(fn, a, b){
   /* 🔴 2026-10-09 — 폰에 "통화 중" 을 알렸는지 기억합니다(아래 청소부가 씀) */
   if (fn === 'callStarted' || fn === 'callOngoing') _acNativeOpen = true;
   if (fn === 'callEnded') _acNativeOpen = false;
-  try { if (window.AliasNative && typeof AliasNative[fn] === 'function') AliasNative[fn](a, b); } catch (e) {}
+  /* 🔴 2026-10-09 — 폰 창구는 "이름 + 칸 수" 가 정확히 맞아야 불립니다.
+     callEnded() 는 0칸, cancelCall(id) 는 1칸인데 예전엔 늘 2칸(a, b)을 보내 조용히 실패했습니다.
+     → 통화가 끝나도 "에일리어스콜 통화 중 ○○:○○" 알림이 남고, 다음 전화의 큰 벨이 안 울렸습니다. */
+  var args = [];
+  if (a !== undefined) args.push(a);
+  if (b !== undefined) args.push(b);
+  try {
+    if (window.AliasNative && typeof AliasNative[fn] === 'function') AliasNative[fn].apply(AliasNative, args);
+  } catch (e) { console.warn('[call] 폰 창구 실패', fn, e); }
 }
 /* 🔴 2026-10-09 — 청소부: 이 화면에 통화가 없는데 폰에는 "에일리어스콜 통화 중 ○○:○○" 이 남아 있으면 끕니다.
    (통화를 마친 뒤 알림줄이 계속 남고, 그 때문에 다음 전화의 벨이 안 울리던 문제)
