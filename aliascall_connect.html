@@ -1102,6 +1102,10 @@ async function answerIncomingCall(session){
         const playPromise = audioEl.play();
         if (playPromise && playPromise.catch) playPromise.catch(() => document.getElementById('unmuteBtn').classList.add('show'));
       };
+      finderPc.oniceconnectionstatechange = () => {   // 🔴 2026-10-09 connectionState 를 안 알려 주는 브라우저용
+        if (finderPc && (finderPc.iceConnectionState === 'connected' || finderPc.iceConnectionState === 'completed'))
+          acRecBegin('in', mode, session.case_id || currentCaseId);
+      };
       finderPc.onconnectionstatechange = () => {
         if (!finderPc) return;
         if (finderPc.connectionState === 'connected') {
@@ -1792,6 +1796,7 @@ async function createOfferAsCaller(mode){
   pc.oniceconnectionstatechange = () => {
     if (!pc) return;
     console.log('[webrtc] iceConnectionState:', pc.iceConnectionState);
+    if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') acRecBegin('out', currentMode, currentCaseId);   // 🔴 2026-10-09 connectionState 를 안 알려 주는 브라우저(삼성 인터넷 등)도 🔴 · 📷 단추
     if ((pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') && document.getElementById('callingStatus').textContent !== I18N[currentLang].connected) {
       document.getElementById('callingStatus').textContent = I18N[currentLang].connected;
       document.getElementById('callingSub').textContent = '';
