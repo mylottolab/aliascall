@@ -517,8 +517,81 @@ function getAliascallAudioCtx(){
 function aliascallIsSoundEnabled(){
   // 기본값: 아직 한 번도 설정 안 했으면 '켜짐'으로 간주하지 않음(브라우저가 자동재생을 막고
   // 있을 가능성이 높으므로) — 사용자가 최초 1회는 명시적으로 켜야 함
-  return localStorage.getItem(ALIASCALL_SOUND_KEY) === '1';
+  // 🔴 2026-10-09 — 단, **앱에서는 기본이 켜짐**입니다. 앱은 자동재생 제한이 없고,
+  //   앱을 새로 깔거나 업데이트 뒤 스위치가 꺼진 채로 남아 "화면은 뜨는데 벨이 안 울리던" 원인이었습니다.
+  //   손님이 직접 끈 경우('0')만 끕니다.
+  const v = localStorage.getItem(ALIASCALL_SOUND_KEY);
+  if (v === '1') return true;
+  if (v === '0') return false;
+  try { return aliascallIsNativeApp(); } catch (e) { return false; }
 }
+
+/* 🔴 2026-10-09 — 벨소리 예비 길
+   화면을 한 번도 누르지 않은 채 전화가 오면, 소리 엔진(AudioContext)이 "잠든" 상태라
+   소리가 안 날 수 있습니다. 그럴 때는 미리 만들어 둔 벨소리 파일(<audio>)로 울리고 진동도 줍니다.
+   각 화면의 ringOnce() 가 맨 앞에서 aliascallRingFallback() 을 불러 봅니다(true 면 예비 길로 울림). */
+let _acRingAudio = null;
+function _acRingWavUrl(){
+  const rate = 8000, secs = 1.8, n = Math.floor(rate * secs);
+  const buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, 'data'); v.setUint32(40, n * 2, true);
+  const beeps = [[0, 0.35], [0.40, 0.75], [1.00, 1.35], [1.40, 1.75]];
+  for (let i = 0; i < n; i++) {
+    const tt = i / rate;
+    let s = 0;
+    for (const [a, b] of beeps) if (tt >= a && tt < b) {
+      const env = Math.min(1, (tt - a) / 0.02, (b - tt) / 0.05);
+      s = Math.sin(2 * Math.PI * 740 * tt) * 0.55 * env;
+    }
+    v.setInt16(44 + i * 2, Math.round(s * 32767), true);
+  }
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+function aliascallRingFallback(){
+  try {
+    const ctx = getAliascallAudioCtx();
+    if (ctx && ctx.state === 'running') return false;      // 엔진이 깨어 있으면 원래 길로
+  } catch (e) {}
+  try {
+    if (!_acRingAudio) { _acRingAudio = new Audio(_acRingWavUrl()); _acRingAudio.volume = 1; }
+    _acRingAudio.currentTime = 0;
+    const p = _acRingAudio.play();
+    if (p && p.catch) p.catch(() => {});
+  } catch (e) {}
+  try { if (navigator.vibrate) navigator.vibrate([400, 200, 400]); } catch (e) {}
+  return true;
+}
+/* 🔴 2026-10-09 — 거는 쪽이 끊으면 받는 쪽 벨 · "연결 요청이 왔어요" 표시도 바로 내립니다.
+   예전에는 폰의 큰 벨(알림)은 꺼졌지만, 화면 안의 작은 벨(띵띵)과 표시는 60초 동안 남았습니다.
+   3초마다 그 통화 줄(webrtc_sessions)에 ended_at 이 적혔는지 봅니다. 끝났으면 onEnd() 를 부릅니다.
+   돌려받은 함수를 부르면 지켜보기를 멈춥니다(받기 · 거절을 누를 때). */
+function aliascallWatchCallEnd(sb, row, onEnd){
+  let done = false, timer = null;
+  const stop = () => { done = true; if (timer) { clearInterval(timer); timer = null; } };
+  if (!sb || !row || !row.session_token) return stop;
+  const check = async () => {
+    if (done) return;
+    try {
+      const { data, error } = await sb.from('webrtc_sessions').select('ended_at')
+        .eq('session_token', row.session_token).maybeSingle();
+      if (done || error) return;
+      if (data && data.ended_at) { stop(); try { onEnd('ended'); } catch (e) {} }
+    } catch (e) { /* 다음 번에 다시 */ }
+  };
+  timer = setInterval(check, 3000);
+  setTimeout(() => { if (!done) stop(); }, 120000);   // 2분 뒤에는 그만 봅니다
+  return stop;
+}
+
+/* 화면을 처음 만질 때 소리 엔진을 깨워 둡니다(그다음부터는 원래 길로 울림) */
+(function(){
+  const wake = () => { try { getAliascallAudioCtx(); } catch (e) {} };
+  ['pointerdown', 'touchstart', 'keydown'].forEach((ev) => document.addEventListener(ev, wake, { passive: true }));
+})();
 async function aliascallEnableSound(){
   try {
     const ctx = getAliascallAudioCtx();
