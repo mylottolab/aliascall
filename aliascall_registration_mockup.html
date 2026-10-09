@@ -481,6 +481,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
         </button>
       </div>
       <div class="mic-status" id="micStatus"></div>
+      <!-- 🔴 2026-10-09 — 이름표 · 물품 글자를 찍어서 찾을 때 이 칸의 앞부분과 맞춰 봅니다 -->
+      <div class="hint" id="descTagHint" style="display:none;color:#B4502C;font-weight:600;"></div>
       <div class="hint" id="descSensitiveHint" style="display:none;" data-i18n="descSensitiveHint">의료정보처럼 민감한 내용을 적으시면, 다음 단계에서 별도 동의를 한 번 더 받습니다.</div>
     </div>
 
@@ -953,6 +955,17 @@ function renderStep(){
     document.getElementById('descOptionalBadge').style.display = dcfg.optional ? 'inline-block' : 'none';
     document.getElementById('descriptionText').placeholder = dcfg.placeholder;
     document.getElementById('descSensitiveHint').style.display = dcfg.sensitive ? 'block' : 'none';
+    /* 🔴 2026-10-09 — 찾는 사람이 이름표 · 스티커 글자를 찍어서 찾을 수 있게 (차량은 번호판으로 찾으므로 빼고) */
+    const tagHint = document.getElementById('descTagHint');
+    if (tagHint) {
+      const enL = currentLang === 'en';
+      tagHint.textContent = selectedCategory === 'pet'
+        ? (enL ? '📷 Tip: type the name exactly as written on the collar tag — finders can photograph the tag to find your pet.'
+               : '📷 팁: 이름은 목걸이 · 이름표에 적힌 그대로 적어 주세요. 찾는 분이 이름표를 찍어서 찾을 수 있습니다.')
+        : (enL ? '📷 Tip: start with the name or text written on the item (e.g. "Kim Minjun bag", a sticker label). Finders can photograph it to find your registration.'
+               : '📷 팁: 물건에 적힌 이름 · 글자를 맨 앞에 그대로 적어 주세요(예: "김민준 가방", 스티커 글자). 찾는 분이 그 글자를 찍어서 찾을 수 있습니다.');
+      tagHint.style.display = (selectedCategory === 'vehicle' || selectedCategory === 'callback_contact') ? 'none' : 'block';
+    }
   }
   if (currentStep === 3) {
     document.getElementById('reassurance-block').style.display =
