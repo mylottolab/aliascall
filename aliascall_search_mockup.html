@@ -181,9 +181,9 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
   <!-- 🔴 2026-10-09 — 번호판을 찍으면 글자를 읽어 등록 차량을 찾습니다 (aliascall_scan.js) -->
   <button class="qr-scan-btn plate-scan-btn" id="plateScanBtn">
     <svg viewBox="0 0 24 24" fill="none"><rect x="2.5" y="7" width="19" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M6 12h2M10 12h1.5M13.5 12h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-    <span data-i18n="plateScanBtn">번호판 찍어서 찾기</span>
+    <span data-i18n="plateScanBtn">번호판 · 이름표 찍어서 찾기</span>
   </button>
-  <div class="plate-note" data-i18n="plateNote">QR이 훼손됐거나 없는 차량도 번호판으로 찾습니다 · 하루 5번</div>
+  <div class="plate-note" data-i18n="plateNote">QR이 훼손됐거나 없어도 번호판 · 이름표 · 물품 글자로 찾습니다 · 하루 5번</div>
 
   <div class="divider" data-i18n="filterDivider">카테고리로 좁혀보기</div>
   <div class="filter-row" id="filterRow">
@@ -220,7 +220,7 @@ const I18N = {
     guideLink: '📖 사용설명서', pageTitle: '무엇을 찾으시나요?',
     pageDesc: 'QR이 오염되었거나 스캔이 안 되면, 문자나 음성으로 직접 검색해보세요.',
     searchInputPlaceholder: '예: 151노8409', qrScanBtn: 'QR 다시 스캔하기',
-    plateScanBtn: '번호판 찍어서 찾기', plateNote: 'QR이 훼손됐거나 없는 차량도 번호판으로 찾습니다 · 하루 5번',
+    plateScanBtn: '번호판 · 이름표 찍어서 찾기', plateNote: 'QR이 훼손됐거나 없어도 번호판 · 이름표 · 물품 글자로 찾습니다 · 하루 5번',
     filterDivider: '카테고리로 좁혀보기',
     catAll: '전체', catVehicle: '🚗 차량', catLostItem: '🎒 분실물', catVulnerable: '🧑‍🦳 아동·노인',
     catPet: '🐾 반려동물', catCallback: '📮 부재중연락', catMisc: '❓ 기타',
@@ -241,7 +241,7 @@ const I18N = {
     guideLink: '📖 User Guide', pageTitle: 'What are you looking for?',
     pageDesc: "If the QR is damaged or won't scan, search by text or voice instead.",
     searchInputPlaceholder: 'e.g. 151NO8409', qrScanBtn: 'Scan QR Again',
-    plateScanBtn: 'Find by license plate photo', plateNote: 'Finds cars even when the QR is damaged or missing · 5 times a day',
+    plateScanBtn: 'Find by plate or name-tag photo', plateNote: 'Works even when the QR is damaged or missing — plates, name tags, item labels · 5 times a day',
     filterDivider: 'Narrow by category',
     catAll: 'All', catVehicle: '🚗 Vehicle', catLostItem: '🎒 Lost item', catVulnerable: '🧑‍🦳 Child · Elderly',
     catPet: '🐾 Pet', catCallback: '📮 Callback', catMisc: '❓ Other',
@@ -330,9 +330,32 @@ async function fetchResults(query){
     .limit(20);
 
   if (currentFilter !== 'all') q = q.eq('category', currentFilter);
-  if (query && query.trim()) q = q.ilike('search_key', '%' + normalize(query) + '%');
+  /* 🔴 2026-10-09 — 띄어쓰기가 달라도 찾고, 설명 전체에서도 찾습니다.
+     예전에는 "김민준 가방" → "김민준가방" 으로 붙여서 찾아, 띄어 써서 등록한 물품을 못 찾았습니다.
+     이름표 · 물품 글자를 찍어서 찾을 때(사진 속 글자는 줄 · 띄어쓰기가 제멋대로) 특히 중요합니다. */
+  if (query && query.trim()) {
+    const toks = String(query).replace(/[^0-9A-Za-z가-힣\s]/g, ' ').split(/\s+/).filter((w) => w.length >= 1).slice(0, 4);
+    if (toks.length) {
+      const pat = '%' + toks.join('%') + '%';          // 순서대로 들어 있으면 (사이에 무엇이 있어도)
+      const glued = '%' + toks.join('') + '%';         // 붙여서 등록한 경우
+      q = q.or(['search_key.ilike.' + pat, 'search_key.ilike.' + glued, 'description.ilike.' + pat, 'title.ilike.' + pat].join(','));
+    }
+  }
 
-  const { data, error } = await q;
+  let { data, error } = await q;
+  /* 🔴 2026-10-09 — 모두 들어 있는 것이 없으면, 낱말 하나라도 맞는 것을 후보로 (2글자 이상) */
+  if (!error && (!data || !data.length) && query) {
+    const words = String(query).replace(/[^0-9A-Za-z가-힣\s]/g, ' ').split(/\s+/).filter((w) => w.length >= 2).slice(0, 4);
+    if (words.length > 1) {
+      let q2 = sb.from('registrations')
+        .select('id, category, search_key, title, description, qr_code_token')
+        .eq('status', 'active').neq('category', 'temp_contact').limit(20);
+      if (currentFilter !== 'all') q2 = q2.eq('category', currentFilter);
+      q2 = q2.or(words.map((w) => 'search_key.ilike.%' + w + '%,description.ilike.%' + w + '%').join(','));
+      const r2 = await q2;
+      if (!r2.error && r2.data && r2.data.length) data = r2.data.map((d) => Object.assign({ exact: false }, d));
+    }
+  }
   if (error) {
     console.error('[search] registrations 조회 오류', error);
     if (plateRows.length) return { data: plateRows, error: null };
@@ -421,8 +444,11 @@ document.getElementById('plateScanBtn').addEventListener('click', async () => {
   const plate = await ACScan.plate();
   if (!plate) return;
   document.getElementById('searchInput').value = plate;
-  document.querySelectorAll('.filter-chip').forEach((c) => c.classList.toggle('active', c.dataset.cat === 'vehicle'));
-  currentFilter = 'vehicle';
+  /* 번호판이면 차량에서, 이름표 · 물품 글자면 모든 종류에서 찾습니다 */
+  const isPlate = /^([가-힣]{2})?\d{2,3}[가-힣]\d{4}$/.test(plate.replace(/[\s\-]/g, '')) || /^\d{4}$/.test(plate.trim());
+  const cat = isPlate ? 'vehicle' : 'all';
+  document.querySelectorAll('.filter-chip').forEach((c) => c.classList.toggle('active', c.dataset.cat === cat));
+  currentFilter = cat;
   renderResults(plate);
 });
 if (window.ACScan) ACScan.init({ sb, url: SUPABASE_URL, lang: () => currentLang });
