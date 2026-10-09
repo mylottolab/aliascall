@@ -33,19 +33,21 @@
     torch:     ['🔦 손전등', '🔦 Light'],
     zoom:      ['🔍 확대', '🔍 Zoom'],
     noQr:      ['이 사진에서 QR을 찾지 못했습니다.', 'No QR code found in this photo.'],
-    plTtl:     ['번호판으로 찾기', 'Find by plate'],
-    plHint:    ['번호판을 가로 칸에 맞추고 📷 를 누르세요', 'Fit the plate in the box and tap 📷'],
+    plTtl:     ['번호판 · 이름표 찍어서 찾기', 'Find by plate or name tag'],
+    plHint:    ['번호판이나 이름표 글자를 칸에 맞추고 📷 를 누르세요', 'Fit the plate or name tag text in the box and tap 📷'],
     shoot:     ['📷 찍기', '📷 Shoot'],
     reading:   ['글자를 읽는 중…', 'Reading…'],
     found:     ['읽은 번호 — 틀리면 고쳐 주세요', 'Plate read — fix it if needed'],
-    notFound:  ['번호판 글자를 찾지 못했습니다. 더 가까이, 똑바로 찍어 주세요. 직접 입력해도 됩니다.', 'Could not find a plate. Shoot closer and straight, or type it in.'],
-    search:    ['이 번호로 찾기', 'Search this plate'],
+    foundW:    ['읽은 글자 — 찾을 말을 고르거나 고쳐 주세요', 'Text read — pick or fix the words to search'],
+    notFound:  ['글자를 찾지 못했습니다. 더 가까이, 똑바로 찍어 주세요. 직접 입력해도 됩니다.', 'Could not find a plate. Shoot closer and straight, or type it in.'],
+    search:    ['이것으로 찾기', 'Search this'],
     again:     ['다시 찍기', 'Retake'],
     left:      ['오늘 남은 횟수 {n} / {m}', '{n} of {m} left today'],
     limit:     ['오늘은 글자 인식을 다 쓰셨습니다(하루 {m}번). 번호를 직접 입력해 찾아 주세요.', 'You have used today’s {m} plate reads. Please type the plate instead.'],
     ocrErr:    ['글자를 읽지 못했습니다', 'Could not read the text'],
     typeIt:    ['예: 12가3456', 'e.g. 12가3456'],
     close:     ['닫기', 'Close'],
+    rawText:   ['읽은 글자 전체:', 'All text read:'],
     proOn:     ['📷 Pro · 번호판 인식 무제한', '📷 Pro · unlimited plate reading'],
     getPro:    ['Pro 긴급 이용권으로 무제한 (5,500원 / 12개월)', 'Unlimited with Emergency Pro (KRW 5,500 / 12 months)'],
   };
@@ -305,8 +307,20 @@
       var re2 = /([0-9OoDQIl|iZzSsBGbTg]{2,3})([가-힣])([0-9OoDQIl|iZzSsBGbTg]{4})/g;
       while ((m = re2.exec(s))) { var a = digits(m[1]), d = digits(m[3]); if (/^\d+$/.test(a) && /^\d{4}$/.test(d)) add(a + m[2] + d); }
     });
-    if (!found.length) { var m2, re3 = /(\d{4})/g, s2 = String(text || '').replace(/\s+/g, ''); while ((m2 = re3.exec(s2))) add(m2[1]); }
     return found.slice(0, 5);
+  }
+  /* 🔴 번호판이 아니면 — 이름표 · 물품 스티커 · 반려동물 목걸이 등에 적힌 말을 검색어 후보로 */
+  var STOP = ['주의','경고','사용','제품','www','http','com','kr','the','and'];
+  function words(text){
+    var out = [];
+    String(text || '').split(/\n+/).forEach(function(line){
+      var l = line.replace(/[^0-9A-Za-z가-힣\s\-]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (l.length >= 2 && l.length <= 20 && out.indexOf(l) < 0) out.push(l);           // 한 줄 통째로 (예: 김민준 가방)
+      l.split(' ').forEach(function(w){
+        if (w.length >= 2 && !/^\d{1,3}$/.test(w) && STOP.indexOf(w.toLowerCase()) < 0 && out.indexOf(w) < 0) out.push(w);
+      });
+    });
+    return out.slice(0, 8);
   }
 
   function anonId(){
@@ -330,7 +344,8 @@
     if (native('ocrImage')) {
       var b64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
       var r = await callNative('ocrImage', [b64]);
-      if (r.ok) {
+      /* 폰이 읽어 낸 것이 있을 때만 셉니다. 아무것도 못 찾았으면 서버(구글 Vision)로 한 번 더 */
+      if (r.ok && (plates(r.val).length || words(r.val).length)) {
         var cnt = await fnCall({ action: 'count' });
         if (cnt._status === 429) return { limit: true };
         return { text: r.val, plates: plates(r.val), left: cnt.left, limit_n: cnt.limit, pro: !!cnt.pro };
@@ -340,7 +355,7 @@
     var img = canvas.toDataURL('image/jpeg', 0.88).split(',')[1];
     var d = await fnCall({ action: 'ocr', image: img });
     if (d._status === 429) return { limit: true };
-    if (d.error) return { error: d.error, left: d.left };
+    if (d.error) return { error: d.error, left: d.left, limit_n: d.limit, pro: !!d.pro };
     return { text: d.text || '', plates: d.plates || [], left: d.left, limit_n: d.limit, pro: !!d.pro };
   }
 
@@ -361,10 +376,13 @@
             '<div class="alt" style="justify-content:center;margin-top:10px"><button type="button" class="pro">' + esc(t('getPro')) + '</button></div>';
         } else {
           var ps = r.plates || [];
-          u.res.innerHTML = '<div class="h">' + esc(r.error ? (t('ocrErr') + ' — ' + r.error) : (ps.length ? t('found') : t('notFound'))) + '</div>' +
+          var isW = false;
+          if (!ps.length && !r.error) { ps = words(r.text); isW = ps.length > 0; }
+          u.res.innerHTML = '<div class="h">' + esc(r.error ? (t('ocrErr') + ' — ' + r.error) : (isW ? t('foundW') : (ps.length ? t('found') : t('notFound')))) + '</div>' +
             '<input type="text" inputmode="text" value="' + esc(ps[0] || '') + '" placeholder="' + esc(t('typeIt')) + '">' +
             (ps.length > 1 ? '<div class="alt">' + ps.slice(1).map(function(p){ return '<button type="button" data-p="' + esc(p) + '">' + esc(p) + '</button>'; }).join('') + '</div>' : '') +
             '<div class="b"><button type="button" class="re">' + esc(t('again')) + '</button><button type="button" class="go">' + esc(t('search')) + '</button></div>' +
+            (r.text ? '<div class="lf" style="opacity:.6">' + esc(t('rawText')) + ' ' + esc(String(r.text).replace(/\s+/g, ' ').slice(0, 60)) + '</div>' : '') +
             (r.pro ? '<div class="lf">' + esc(t('proOn')) + '</div>'
                    : (typeof r.left === 'number' ? '<div class="lf">' + esc(t('left', { n: r.left, m: lim })) + '</div>' : ''));
         }
@@ -387,7 +405,8 @@
       sb2.onclick = function(){
         if (!cam || !u.video.videoWidth) return;
         // 칸보다 넉넉히(위아래 60%) 잘라 보냅니다 — 번호판이 칸을 조금 벗어나도 읽게
-        var rc = boxInVideo(u.video, u.box, 0.6);
+        // 🔴 2026-10-09 — 이름표 · 물품 글자는 칸 밖으로 나가기 쉬워 넉넉히(칸의 3배) 보냅니다
+        var rc = boxInVideo(u.video, u.box, 1.0);
         run(grab(u.video, rc, 1280));
       };
       var pb = document.createElement('button'); pb.type = 'button'; pb.textContent = t('photo');
@@ -408,6 +427,7 @@
     qr: qr,
     plate: plate,
     plates: plates,
+    words: words,
     left: function(){ return fnCall({ action: 'left' }); },
     hasNative: function(){ return { qr: native('scanQr'), ocr: native('ocrImage') }; },
   };
