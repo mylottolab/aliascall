@@ -1446,7 +1446,7 @@ let acRang = false;
   } catch (e) {}
 })();
 function acCallerName(){ try { return ((document.getElementById('callerNameInput') || {}).value || '').trim().slice(0, 20); } catch (e) { return ''; } }
-function acRing(cancel){
+function acRing(cancel, ended){
   try {
     /* 🔴 2026-10-01 고침 — registrationId 는 startCall() 안에서만 만들어지는 이름이라 여기서는
        보이지 않았습니다(없는 이름 → 오류 → try 가 삼켜 조용히 아무 일도 안 함 → 벨이 안 울림).
@@ -1460,7 +1460,7 @@ function acRing(cancel){
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ registrationId, mode: currentMode, sessionToken: currentSessionToken,
         registrationTitle: document.getElementById('foundTitle').textContent, caseId: currentCaseId,
-        ring: !cancel, cancel: !!cancel, callerName: cancel ? '' : acCallerName() }),
+        ring: !cancel, cancel: !!cancel, ended: !!ended, callerName: cancel ? '' : acCallerName() }),
     }).catch((e) => console.warn('[push] 전화 신호 실패(통화 자체엔 영향 없음)', e));
     if (cancel) acRang = false;
   } catch (e) { console.error('[ring] 전화 신호를 보내지 못했습니다', e); }   // ⚠ 삼키지 말고 남깁니다
@@ -1842,7 +1842,7 @@ function endCall(silent){
   if (window.ACRec) ACRec.end();   // 🔴 2026-10-09 담는 중이면 멈추고 저장 (끊기 전에)
   if (offerResendInterval) { clearInterval(offerResendInterval); offerResendInterval = null; }
   if (wakeupPushTimer) { clearTimeout(wakeupPushTimer); wakeupPushTimer = null; } // 2026-08-19
-  acRing(true);   // 🔴 발견자가 끊음 — 주인 폰의 벨을 즉시 멈춤
+  acRing(true, !callWasConnected);   // 🔴 발견자가 끊음 — 주인 폰의 벨을 즉시 멈춤 · 🔴 2026-10-09 받기 전이면 서버가 '끝남' 으로 적음(받는 쪽 화면 표시도 내려가게)
 
   // ⚠ 통화가 어떻게 끝났는지(정상 종료/응답없음/연결끊김) DB에 남겨서, 소유자의 "부재중" 목록에
   // 최소한의 기록이라도 남도록 함. 실패해도 화면 정리는 계속 진행(연결 종료가 더 중요하므로).
