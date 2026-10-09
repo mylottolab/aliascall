@@ -1260,6 +1260,7 @@ function playDoorbell(){
 let ringtoneInterval = null;
 function ringOnce(){
   if (!aliascallIsSoundEnabled()) return;
+  if (typeof aliascallRingFallback === 'function' && aliascallRingFallback()) return;   // 🔴 2026-10-09 소리 엔진이 잠들어 있으면 예비 벨
   try {
     const ctx = getAudioCtx();
     const ring = (freq, startTime, duration) => {
@@ -1293,6 +1294,14 @@ function showIncomingCall(row){
   document.getElementById('ringSub').textContent = row.call_type === 'video' ? T().ringSubVideo : T().ringSubVoice;
   document.getElementById('ringBanner').classList.add('show');
   startRingtone();
+  /* 🔴 2026-10-09 — 거는 쪽이 끊으면 벨 · 표시를 바로 내립니다 */
+  if (window._acRingWatch) window._acRingWatch();
+  if (typeof aliascallWatchCallEnd === 'function') window._acRingWatch = aliascallWatchCallEnd(sb, row, () => {
+    if (pendingSession !== row) return;
+    stopRingtone();
+    document.getElementById('ringBanner').classList.remove('show');
+    pendingSession = null;
+  });
   sb.from('registrations').select('category').eq('id', row.registration_id).maybeSingle().then(({ data: reg }) => {
     document.getElementById('ringAvatar').textContent = CALL_CATEGORY_EMOJI[reg?.category] || '📞';
   }).catch(() => { document.getElementById('ringAvatar').textContent = '📞'; });
@@ -1300,6 +1309,7 @@ function showIncomingCall(row){
 
 document.getElementById('declineBtn').addEventListener('click', () => {
   stopRingtone();
+  if (window._acRingWatch) { window._acRingWatch(); window._acRingWatch = null; }
   document.getElementById('ringBanner').classList.remove('show');
   if (pendingSession) {
     const declineChannel = sb.channel('webrtc-' + pendingSession.session_token, { config: { broadcast: { self: false } } });
@@ -1315,6 +1325,7 @@ document.getElementById('declineBtn').addEventListener('click', () => {
 
 document.getElementById('acceptBtn').addEventListener('click', () => {
   stopRingtone();
+  if (window._acRingWatch) { window._acRingWatch(); window._acRingWatch = null; }
   if (!pendingSession) { console.error('[webrtc] pendingSession이 비어있어 수락 처리를 진행할 수 없음'); return; }
   window.location.href = 'aliascall_incoming_calls.html?autoaccept=' + encodeURIComponent(pendingSession.session_token) + '&answered=1';   // 🔴 사람이 직접 받기를 누름
 });

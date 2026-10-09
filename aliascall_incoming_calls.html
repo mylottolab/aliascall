@@ -935,6 +935,7 @@ let ringtoneInterval = null;
 
 function ringOnce(){
   if (!aliascallIsSoundEnabled()) return;
+  if (typeof aliascallRingFallback === 'function' && aliascallRingFallback()) return;   // 🔴 2026-10-09 소리 엔진이 잠들어 있으면 예비 벨
   try {
     const ctx = getAudioCtx();
     const ring = (freq, startTime, duration) => {
@@ -1163,6 +1164,18 @@ async function showIncomingCall(row){
   document.getElementById('ringState').style.display = 'block';
   document.getElementById('incallState').style.display = 'none';
   startRingtone();
+  /* 🔴 2026-10-09 — 거는 쪽이 끊으면 벨 · 받는 화면을 바로 내립니다(거절과 같게 정리하되 거절 신호는 안 보냄) */
+  if (window._acRingWatch) window._acRingWatch();
+  if (typeof aliascallWatchCallEnd === 'function') window._acRingWatch = aliascallWatchCallEnd(sb, row, () => {
+    if (pendingSession !== row) return;
+    if (document.getElementById('ringState').style.display === 'none') return;   // 이미 받았으면 그대로
+    stopRingtone();
+    document.getElementById('sessionView').classList.remove('show');
+    unsubscribeCaseRealtime();
+    document.getElementById('chatMessages').innerHTML = '';
+    acNative('cancelCall', row.session_token);
+    pendingSession = null;
+  });
 
   // webrtc_sessions엔 카테고리 정보가 없어서, 알림에 표시할 아이콘은 registrations를 별도 조회
   try {
@@ -1278,6 +1291,7 @@ async function refreshCaseMessages(caseId, accessToken, silent){
 
 document.getElementById('declineBtn').addEventListener('click', async () => {
   stopRingtone();
+  if (window._acRingWatch) { window._acRingWatch(); window._acRingWatch = null; }
   document.getElementById('sessionView').classList.remove('show');
   unsubscribeCaseRealtime();
   document.getElementById('chatMessages').innerHTML = '';
@@ -1297,6 +1311,7 @@ document.getElementById('declineBtn').addEventListener('click', async () => {
 
 document.getElementById('acceptBtn').addEventListener('click', async () => {
   stopRingtone();
+  if (window._acRingWatch) { window._acRingWatch(); window._acRingWatch = null; }
   document.getElementById('ringState').style.display = 'none';
   document.getElementById('incallState').style.display = 'block';
   if (!pendingSession) { console.error('[webrtc] pendingSession이 비어있어 수락 처리를 진행할 수 없음'); return; }
