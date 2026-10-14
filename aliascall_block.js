@@ -42,6 +42,17 @@
 
   /* ── 주인 화면: 받은 연락 ─────────────────────────────────────────── */
   function setupOwner(reportBtn) {
+    // 🔴 2026-10-14 — 단추가 하나 늘어 아이폰(좁은 화면)에서 머리줄이 화면보다 넓어지고
+    //   대화 전체가 오른쪽으로 잘렸습니다. 머리줄을 두 줄로 접히게 하고 단추를 조금 줄입니다.
+    var st = document.createElement('style');
+    st.textContent =
+      '.chat-only-header{flex-wrap:wrap;gap:8px;padding:10px 12px !important;max-width:100vw;box-sizing:border-box}' +
+      '.chat-only-header > b{flex:1 1 140px;min-width:0}' +
+      '.chat-only-header > div{flex:0 1 auto;flex-wrap:wrap;justify-content:flex-end;gap:6px !important;min-width:0;max-width:100%}' +
+      '.chat-only-header button{padding:6px 10px !important;font-size:12px !important;white-space:nowrap}' +
+      '.session-chat,.chat-messages{min-width:0;max-width:100vw;box-sizing:border-box}';
+    document.head.appendChild(st);
+
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.id = 'acBlockBtn';
