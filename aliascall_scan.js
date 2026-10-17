@@ -63,13 +63,13 @@
     try { f(!!ok, val == null ? '' : String(val)); } catch (e) {}
   };
   function native(name){ try { return !!(window.AliasNative && typeof AliasNative[name] === 'function'); } catch (e) { return false; } }
-  function callNative(name, args){
+  function callNative(name, args, waitMs){
     return new Promise(function(done){
       var id = 'n' + (++seq) + '_' + Date.now();
       cbs[id] = function(ok, val){ done({ ok: ok, val: val }); };
       try { AliasNative[name].apply(AliasNative, (args || []).concat([id])); }
       catch (e) { delete cbs[id]; done({ ok: false, val: String(e && e.message || e) }); }
-      setTimeout(function(){ if (cbs[id]) { delete cbs[id]; done({ ok: false, val: 'timeout' }); } }, 90000);
+      setTimeout(function(){ if (cbs[id]) { delete cbs[id]; done({ ok: false, val: 'timeout' }); } }, waitMs || 90000);
     });
   }
 
@@ -359,7 +359,33 @@
     return { text: d.text || '', plates: d.plates || [], left: d.left, limit_n: d.limit, pro: !!d.pro };
   }
 
+  /* 🔴 2026-10-18 — 실시간 글자 스캐너 (앱 버전에 AliasNative.scanText 가 있을 때)
+     복권 QR 처럼 카메라를 대고만 있으면 번호판(12가3456)이 잡히는 순간 바로 찾습니다.
+     · 번호판이 잡히면 → 확인 없이 곧장 그 번호로 검색
+     · 이름표 · 물품 글자를 눌러 고르면 → 예전처럼 확인 칸(고쳐서 찾기)
+     · 하루 횟수는 "실제로 찾을 때" 한 번만 셉니다(화면이 계속 읽는 것은 세지 않음)
+     · 앱이 '사진으로' 를 누르거나 이 기능이 없는 폰이면 → 예전 사진 찍기 화면 */
   async function plate(){
+    if (native('scanText')) {
+      try {
+        var lf = await fnCall({ action: 'left' });
+        if (!lf.pro && lf.left === 0) return platePhoto({ limit: true, limit_n: lf.limit });
+        var r = await callNative('scanText', [en() ? 'en' : 'ko'], 15 * 60 * 1000);
+        if (r.ok) {
+          var text = r.val || '', ps = plates(text);
+          var cnt = await fnCall({ action: 'count' });
+          if (cnt._status === 429) return platePhoto({ limit: true, limit_n: cnt.limit });
+          if (ps.length) return ps[0];
+          return platePhoto({ text: text, plates: [], left: cnt.left, limit_n: cnt.limit, pro: !!cnt.pro });
+        }
+        if (r.val === 'cancel') return null;
+        /* 'manual'(사진으로) · 'unsupported'(오래된 폰) · 그 밖의 실패 → 아래 사진 방식 */
+      } catch (e) { console.warn('[scan] 실시간 스캐너 실패, 사진 방식으로', e); }
+    }
+    return platePhoto(null);
+  }
+
+  async function platePhoto(initial){
     return new Promise(async function(done){
       var u = overlay('pl', t('plTtl'));
       var cam = null, live = true;
@@ -417,8 +443,9 @@
         finally { setTimeout(function(){ URL.revokeObjectURL(url); }, 5000); }
       };
       u.row.appendChild(sb2); u.row.appendChild(pb);
+      if (initial) { showResult(initial); u.st.textContent = ''; }
       try { cam = await openCam(u.video); camTools(cam, u.row); }
-      catch (e) { u.st.textContent = t('camErr') + ' ' + t('photo'); sb2.style.display = 'none'; }
+      catch (e) { if (!initial) u.st.textContent = t('camErr') + ' ' + t('photo'); sb2.style.display = 'none'; }
     });
   }
 
@@ -429,6 +456,6 @@
     plates: plates,
     words: words,
     left: function(){ return fnCall({ action: 'left' }); },
-    hasNative: function(){ return { qr: native('scanQr'), ocr: native('ocrImage') }; },
+    hasNative: function(){ return { qr: native('scanQr'), ocr: native('ocrImage'), live: native('scanText') }; },
   };
 })();

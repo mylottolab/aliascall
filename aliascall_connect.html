@@ -889,6 +889,7 @@ async function init(){
     }
 
     renderFoundRegistration(data);
+    if (typeof acApplyConnectMode === 'function') acApplyConnectMode(data.id);   // 🔴 2026-10-18 기간이 끝난 차량은 메시지 · 채팅 · 사진만
 
     await loadCategoryDetail(data.id, data.category);
     await loadMedia(data.id);
@@ -1627,6 +1628,14 @@ async function startCall(mode){
   }
 
   if (error) {
+    /* 🔴 2026-10-18 — 기간이 끝난 차량은 DB 가 통화를 거절합니다. 메시지로 이어 갑니다. */
+    if (/plan_message_only|plan_blocked/.test(String(error.message || '')) && typeof acSetMessageOnly === 'function') {
+      overlay.classList.remove('show');
+      acSetMessageOnly(true);
+      alert(acModeText().callOff);
+      switchMode('message');
+      return;
+    }
     alert(I18N[currentLang].callFailed);
     overlay.classList.remove('show');
     return;
@@ -2757,5 +2766,43 @@ applyLang(currentLang);
 </script>
 </div><!-- /app-shell -->
 <script src="aliascall_block.js"></script>
+<script>
+/* =====================================================================
+   🔴 2026-10-18 — 연결 방식 (회사 결정 2026-10-17)
+   · 차량은 주인의 이용 기간(+유예 30일)이 끝나도 메시지 · 채팅 · 사진으로 계속 연결
+   · 음성 · 영상 통화는 이용권이 있을 때만 — DB(connect_mode_guard)가 최종으로 지킵니다
+   · 서버는 'full' | 'message_only' | 'blocked' 낱말 하나만 돌려줍니다(개인정보 없음)
+   ===================================================================== */
+function acModeText(){
+  return (typeof currentLang !== 'undefined' && currentLang === 'en') ? {
+    note: '✉️ You can reach this vehicle\'s owner by message, chat or photo. The owner gets a notification right away.',
+    callOff: 'Calls are not available for this vehicle right now. Please leave a message — the owner is notified right away.',
+  } : {
+    note: '✉️ 이 차량은 메시지 · 채팅 · 사진으로 연락할 수 있어요. 남기시면 차주에게 바로 알림이 갑니다.',
+    callOff: '지금 이 차량은 통화 대신 메시지로 연락할 수 있어요. 메시지를 남기시면 차주에게 바로 알림이 갑니다.',
+  };
+}
+function acSetMessageOnly(on){
+  ['navVoice', 'navVideo'].forEach(function(id){
+    var b = document.getElementById(id); if (b) b.style.display = on ? 'none' : '';
+  });
+  var note = document.getElementById('acModeNote');
+  if (on && !note) {
+    note = document.createElement('div');
+    note.id = 'acModeNote';
+    note.style.cssText = 'margin:12px 0;padding:12px 14px;border-radius:12px;background:#FFF4EC;color:#7A3A1C;font-size:14px;line-height:1.55;word-break:keep-all';
+    var host = document.querySelector('#stateFound .found-card') || document.getElementById('stateFound');
+    if (host) host.appendChild(note);
+  }
+  if (note) { note.textContent = acModeText().note; note.style.display = on ? '' : 'none'; }
+}
+async function acApplyConnectMode(regId){
+  try {
+    if (!regId) return;
+    var r = await sb.rpc('registration_connect_mode', { p_registration_id: regId });
+    acSetMessageOnly(!r.error && r.data === 'message_only');
+  } catch (e) { /* 함수가 아직 없으면(옛 DB) 예전처럼 둡니다 */ }
+}
+</script>
 </body>
 </html>

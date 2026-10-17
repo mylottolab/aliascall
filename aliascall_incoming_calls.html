@@ -752,6 +752,12 @@ async function acTrialLimit(mode, regId, endFn){
   }
   tick(); _acTrialT = setInterval(tick, 1000);
 }
+/* 🔴 2026-10-18 — 이용 기간이 끝나면 차량 연락은 메시지 · 채팅으로만 이어집니다 */
+function acPlanCallMsg(){
+  const en = (typeof LANG !== 'undefined' && LANG === 'en');
+  return en ? 'Your plan has ended, so calls are off. Messages and chat still work — get a plan to call again.'
+            : '이용 기간이 끝나 통화는 쉬고 있어요. 메시지 · 채팅은 그대로 되고, 이용권이 있으면 다시 통화할 수 있어요.';
+}
 function acTrialVideoLimitMsg(){
   const en = (typeof LANG !== 'undefined' && LANG === 'en');
   return en ? 'You have used all 30 minutes of trial video calls. Voice calls still work — or get a plan to keep using video.'
@@ -1662,7 +1668,10 @@ async function startOwnerCall(mode){
   });
   if (insertErr) {
     console.error('[webrtc] 콜백 세션 생성 실패', insertErr);
-    alert(String(insertErr.message || '').indexOf('trial_video_limit') >= 0 ? acTrialVideoLimitMsg() : T('alertConnectFail'));
+    const em = String(insertErr.message || '');
+    alert(em.indexOf('trial_video_limit') >= 0 ? acTrialVideoLimitMsg()
+        : /plan_message_only|plan_blocked/.test(em) ? acPlanCallMsg()   // 🔴 2026-10-18
+        : T('alertConnectFail'));
     endOwnerCall(true);
     return;
   }
