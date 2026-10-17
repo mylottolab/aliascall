@@ -938,6 +938,7 @@ async function initCaseResumeFlow(caseId, loadingEl, errorEl){
     if (regErr || !reg) { errorEl.style.display = 'block'; return; }
 
     renderFoundRegistration(reg);
+    if (typeof acApplyConnectMode === 'function') acApplyConnectMode(reg.id);   // 🔴 2026-10-18
     await loadCategoryDetail(reg.id, reg.category);
     await loadMedia(reg.id);
 
@@ -1012,6 +1013,7 @@ async function initIncomingCallFlow(sessionToken, loadingEl, errorEl){
     if (regErr || !reg) { errorEl.style.display = 'block'; return; }
 
     renderFoundRegistration(reg);
+    if (typeof acApplyConnectMode === 'function') acApplyConnectMode(reg.id);   // 🔴 2026-10-18
     await loadCategoryDetail(reg.id, reg.category);
     await loadMedia(reg.id);
 
@@ -1554,6 +1556,12 @@ function makeSessionToken(){
 }
 
 async function startCall(mode){
+  /* 🔴 2026-10-18 — 기간이 끝난 차량: 통화를 시작하지 않고(주인에게 "통화 시도" 기록도 남기지 않고) 메시지로 */
+  if (window.acConnectModeVal === 'message_only' && typeof acSetMessageOnly === 'function') {
+    alert(acModeText().callOff);
+    switchMode('message');
+    return;
+  }
   currentMode = mode;
   activeCallRole = 'outgoing'; // 2026-08-20 (3단계)
   const overlay = document.getElementById('callingOverlay');
@@ -1629,11 +1637,19 @@ async function startCall(mode){
 
   if (error) {
     /* 🔴 2026-10-18 — 기간이 끝난 차량은 DB 가 통화를 거절합니다. 메시지로 이어 갑니다. */
-    if (/plan_message_only|plan_blocked/.test(String(error.message || '')) && typeof acSetMessageOnly === 'function') {
+    if (/plan_message_only/.test(String(error.message || '')) && typeof acSetMessageOnly === 'function') {
       overlay.classList.remove('show');
+      window.acConnectModeVal = 'message_only';
       acSetMessageOnly(true);
       alert(acModeText().callOff);
       switchMode('message');
+      return;
+    }
+    if (/plan_blocked/.test(String(error.message || ''))) {   // 이 등록은 지금 연결이 쉬고 있음
+      overlay.classList.remove('show');
+      document.getElementById('stateFound').style.display = 'none';
+      var bn = document.getElementById('bottomNav'); if (bn) bn.style.display = 'none';
+      document.getElementById('stateExpired').style.display = 'block';
       return;
     }
     alert(I18N[currentLang].callFailed);
@@ -2782,6 +2798,12 @@ function acModeText(){
     callOff: '지금 이 차량은 통화 대신 메시지로 연락할 수 있어요. 메시지를 남기시면 차주에게 바로 알림이 갑니다.',
   };
 }
+/* 언어를 바꾸면 안내 문구도 다시 씁니다 */
+document.addEventListener('click', function(e){
+  if (e.target && e.target.closest && e.target.closest('.lang-btn,[data-lang]')) {
+    setTimeout(function(){ var n = document.getElementById('acModeNote'); if (n && n.style.display !== 'none') n.textContent = acModeText().note; }, 50);
+  }
+});
 function acSetMessageOnly(on){
   ['navVoice', 'navVideo'].forEach(function(id){
     var b = document.getElementById(id); if (b) b.style.display = on ? 'none' : '';
@@ -2800,7 +2822,8 @@ async function acApplyConnectMode(regId){
   try {
     if (!regId) return;
     var r = await sb.rpc('registration_connect_mode', { p_registration_id: regId });
-    acSetMessageOnly(!r.error && r.data === 'message_only');
+    window.acConnectModeVal = r.error ? '' : r.data;
+    acSetMessageOnly(window.acConnectModeVal === 'message_only');
   } catch (e) { /* 함수가 아직 없으면(옛 DB) 예전처럼 둡니다 */ }
 }
 </script>

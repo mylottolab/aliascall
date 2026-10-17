@@ -1321,6 +1321,17 @@ async function signUpOrLoginGuestAccount(){
       is_guest: true,
     });
     if (profileError) console.error('[signup] profiles insert 오류', profileError);
+    /* 🔴 2026-10-18 — 여기서 가입한 분도 30일 무료 체험이 저절로 시작됩니다(마이페이지 환영 화면과 같은 규칙) */
+    try {
+      let dev = localStorage.getItem('aliascall_device_id');
+      if (!dev || dev.length < 16) {
+        dev = 'dev-' + Array.from(crypto.getRandomValues(new Uint8Array(16))).map((b) => b.toString(16).padStart(2, '0')).join('');
+        localStorage.setItem('aliascall_device_id', dev);
+      }
+      let dev2 = null;
+      try { dev2 = (window.AliasNative && typeof AliasNative.deviceId === 'function') ? (AliasNative.deviceId() || null) : null; } catch (e) {}
+      await sb.rpc('claim_trial', { p_device_token: dev, p_device_token2: dev2 });
+    } catch (e) { console.warn('[signup] 체험 시작 실패(등록은 계속)', e); }
     return true;
   }
 
@@ -1519,9 +1530,9 @@ btnNext.addEventListener('click', async () => {
     if (!FREE_CATEGORIES.includes(selectedCategory) && !isUrgentEntry) {
       const { data: { session } } = await sb.auth.getSession();
       const { data: profile } = await sb.from('profiles').select('subscription_expires_at').eq('id', session.user.id).maybeSingle();
-      const neverSubscribed = !profile?.subscription_expires_at;
+      // 🔴 2026-10-18 — "기록이 비어 있으면 통과" 를 없앴습니다(DB 도 더는 그 경우를 연결해 주지 않음)
       const hasActiveSub = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) > new Date();
-      if (!neverSubscribed && !hasActiveSub) {
+      if (!hasActiveSub) {
         alert(I18N[currentLang].needSubscriptionAtSubmit);
         return; // 여기서 멈춤 — 입력한 내용은 그대로 남아있음. 다른 탭에서 구독 후 다시 "완료" 눌러주면 됨
       }

@@ -2948,7 +2948,7 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
     catch (e) { return null; }
   }
 
-  async function claim(btn, msgEl){
+  async function claim(btn, msgEl, auto){
     btn.disabled = true;
     try {
       const r = await sb.rpc('claim_trial', { p_device_token: devToken(), p_device_token2: nativeDeviceId() });
@@ -2956,6 +2956,7 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
       const d = r.data || {};
       if (d.ok) {
         if (msgEl) { msgEl.textContent = TX().ok; msgEl.className = 'trial-msg show ok'; }
+        if (auto) { btn.style.display = 'none'; try { if (window.acPaintTrial) acPaintTrial(); } catch (e) {} return; }   // 🔴 2026-10-18 저절로 시작 — 화면은 그대로
         setTimeout(() => location.replace('index.html'), 1200);
         return;
       }
@@ -2983,7 +2984,7 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
       const gate = document.getElementById('newSubscriberGate');
       if (autoTried || !gate || gate.style.display === 'none') return;
       autoTried = true;
-      claim(b, document.getElementById('trialMsg'));
+      claim(b, document.getElementById('trialMsg'), true);
     };
     const gateEl = document.getElementById('newSubscriberGate');
     if (gateEl) new MutationObserver(tryAuto).observe(gateEl, { attributes: true, attributeFilter: ['style'] });

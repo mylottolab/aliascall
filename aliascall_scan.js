@@ -372,8 +372,12 @@
         if (!lf.pro && lf.left === 0) return platePhoto({ limit: true, limit_n: lf.limit });
         var r = await callNative('scanText', [en() ? 'en' : 'ko'], 15 * 60 * 1000);
         if (r.ok) {
-          var text = r.val || '', ps = plates(text);
-          var cnt = await fnCall({ action: 'count' });
+          var text = r.val || '';
+          /* 앱은 "보인 글자 전체 + 마지막 줄에 두 번 확인된 번호판" 을 돌려줍니다 — 마지막 줄을 먼저 믿습니다 */
+          var lastLine = String(text).trim().split('\n').pop() || '';
+          var ps = plates(lastLine); if (!ps.length) ps = plates(text);
+          var cnt = {};
+          try { cnt = await fnCall({ action: 'count' }); } catch (e) { cnt = {}; }   // 세기 실패해도 읽은 번호판은 살립니다
           if (cnt._status === 429) return platePhoto({ limit: true, limit_n: cnt.limit });
           if (ps.length) return ps[0];
           return platePhoto({ text: text, plates: [], left: cnt.left, limit_n: cnt.limit, pro: !!cnt.pro });
