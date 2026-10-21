@@ -146,6 +146,30 @@ main{ max-width:430px; margin:0 auto; padding:10px 20px 60px; }
 .btn2.p{ background:var(--teal); color:#fff; }
 .btn2.s{ background:var(--teal-tint); color:var(--teal-deep); }
 button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
+/* 🔴 2026-10-21 "무엇을 하고 싶으세요?" — 목적부터 고르면 그 상품만 보입니다 */
+.goals{ display:flex; flex-direction:column; gap:9px; }
+.goal{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:var(--card); border:2px solid transparent; border-radius:16px;
+  padding:15px 14px; cursor:pointer; font-family:inherit; color:inherit; }
+.goal .gi{ font-size:28px; flex:0 0 auto; }
+.goal .gt{ flex:1; min-width:0; }
+.goal .gt b{ display:block; font-size:15.5px; line-height:1.35; }
+.goal .gt span{ display:block; font-size:12px; color:var(--ink-soft); margin-top:3px; line-height:1.5; }
+.goal .gp{ flex:0 0 auto; font-size:12px; font-weight:800; color:var(--teal-deep); text-align:right; }
+.goal-all{ display:block; width:100%; margin-top:10px; background:none; border:1.5px dashed rgba(18,63,61,.35); border-radius:14px; padding:12px;
+  font-family:inherit; font-size:13.5px; font-weight:700; color:var(--teal-deep); cursor:pointer; }
+.goal-back{ background:none; border:none; padding:6px 0; margin:0 0 6px; font-family:inherit; font-size:13.5px; font-weight:700; color:var(--teal-deep); cursor:pointer; }
+.goal-note{ background:#FFF7E3; border:1.5px solid #E9C979; color:#5E4410; border-radius:14px; padding:12px 13px; font-size:13px; line-height:1.65; margin:0 0 12px; }
+.goal-note b{ color:#3F2D08; }
+.gh{ display:none !important; }
+.step{ display:inline-block; min-width:22px; height:22px; line-height:22px; text-align:center; border-radius:50%; background:var(--teal); color:#fff;
+  font-size:12px; font-weight:800; margin-right:6px; }
+.secseg{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+.secseg button{ background:var(--card); border:2px solid transparent; border-radius:14px; padding:12px; text-align:left; font-family:inherit; color:inherit; cursor:pointer; }
+.secseg button.on{ border-color:var(--teal); background:#F4FAF9; }
+.secseg b{ display:block; font-size:14px; margin-bottom:3px; }
+.secseg span{ font-size:11.5px; color:var(--ink-soft); line-height:1.45; }
+.sumbox{ background:var(--card); border-radius:14px; padding:12px 14px; margin:18px 0 8px; font-size:13px; line-height:1.7; }
+.sumbox b{ color:var(--teal-deep); }
 </style>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
 <script src="aliascall_theme.js"></script>
@@ -165,45 +189,62 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
     <div id="trialBonus" style="display:none;background:#FDF3E4;border:1.5px solid #E9C979;border-radius:14px;padding:11px 13px;margin:4px 0 14px;font-size:13px;line-height:1.6;color:#5E4410;"></div>
     <p class="sub" data-i18n="sub">번호를 드러내지 않고 연락하는 모든 기능이 이용권 하나에 들어 있습니다. 자동으로 다시 결제되지 않습니다.</p>
 
-    <button type="button" class="plan" data-plan="emergency">
+    <!-- 🔴 2026-10-21 목적부터 고르기 -->
+    <div id="goalBox">
+      <div class="sect" style="font-size:16px;margin-top:4px;" data-i18n="gQ">무엇을 하고 싶으세요?</div>
+      <div class="goals">
+        <button type="button" class="goal" data-goal="car"><span class="gi">🚗</span><span class="gt"><b data-i18n="gCar">차 · 소지품에 QR을 붙여 연락받기</b><span data-i18n="gCarD">주차 · 분실물 연락을 번호 없이. 임시연락처도 함께</span></span><span class="gp" data-i18n="gCarP">연 2,200원~</span></button>
+        <button type="button" class="goal" data-goal="people"><span class="gi">💚</span><span class="gt"><b data-i18n="gPeople">정해진 사람과 번호 없이 대화 · 통화</b><span data-i18n="gPeopleD">연인 · 가족 · 친구 · 비서 · 거래처. 긴급 기능도 함께 들어 있어요</span></span><span class="gp" data-i18n="gPeopleP">3개월 9,900원~</span></button>
+        <button type="button" class="goal" data-goal="biz"><span class="gi">💼</span><span class="gt"><b data-i18n="gBiz">손님 문의를 번호 없이 받기</b><span data-i18n="gBizD">가게 · 사무소 · 병원 · 상담 창구. 손님마다 방을 따로</span></span><span class="gp" data-i18n="gBizP">월 9,900원~</span></button>
+        <button type="button" class="goal" data-goal="more"><span class="gi">➕</span><span class="gt"><b data-i18n="gMore">쓰던 것 늘리기</b><span data-i18n="gMoreD">기간 연장 · 4인으로 올리기 · 사용량 더하기</span></span><span class="gp"></span></button>
+      </div>
+      <button type="button" class="goal-all" id="goalAll" data-i18n="gAll">📋 전체 상품 한꺼번에 보기</button>
+    </div>
+
+    <div id="shopBody">
+    <button type="button" class="goal-back" id="goalBack" data-i18n="gBack">← 처음으로 (다른 것 고르기)</button>
+    <div class="goal-note" id="goalNote" style="display:none;"></div>
+    <div class="sect gh" id="peopleQ" style="font-size:15px;"><span class="step">1</span><span data-i18n="sPeople">몇 명이서 쓰세요?</span></div>
+
+    <button type="button" class="plan" data-plan="emergency" data-goal="car more">
       <div class="row"><span class="nm" data-i18n="pEmg">긴급 이용권</span><span class="pr">2,200<small data-i18n="won">원</small> <small data-i18n="per12">/ 12개월</small></span></div>
       <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span></div>
       <div class="ds" data-i18n="dEmg">차량 · 소지품 QR과 1회용 임시연락처를 쓰시는 분께.</div>
     </button>
     <!-- 🔴 2026-10-09 — Pro 긴급: 긴급 이용권 + 번호판 글자 인식 무제한 -->
-    <button type="button" class="plan" data-plan="emergency_pro">
+    <button type="button" class="plan" data-plan="emergency_pro" data-goal="car more">
       <div class="row"><span class="nm" data-i18n="pEmgPro">Pro 긴급 이용권</span><span class="pr">5,500<small data-i18n="won">원</small> <small data-i18n="per12">/ 12개월</small></span></div>
       <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="iOcr">📷 번호판 인식 무제한</span></div>
       <div class="ds" data-i18n="dEmgPro">긴급 이용권에 번호판 찍어서 찾기를 횟수 제한 없이. 주차 · 운전이 잦은 분께.</div>
     </button>
-    <button type="button" class="plan" data-plan="basic">
+    <button type="button" class="plan" data-plan="basic" data-goal="people more">
       <div class="row"><span class="nm" data-i18n="pBasic">일반 이용권</span><span class="pr"><small data-i18n="fromPre"></small>9,900<small data-i18n="won">원</small><small data-i18n="fromPost">부터</small></span></div>
       <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="i4b">④ 2인 회선 · 5GB</span></div>
       <div class="ds" data-i18n="dBasic">둘이서 쓰는 보안통신. 상대를 바꿀 수 있고, 암호화도 고를 수 있습니다.</div>
     </button>
-    <button type="button" class="plan" data-plan="premium">
+    <button type="button" class="plan" data-plan="premium" data-goal="people more">
       <div class="row"><span class="nm" data-i18n="pPrem">프리미엄 이용권</span><span class="pr"><small data-i18n="fromPre"></small>16,000<small data-i18n="won">원</small><small data-i18n="fromPost">부터</small></span></div>
       <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="i4p">④ 4인 회선 · 20GB</span></div>
       <div class="ds" data-i18n="dPrem">가족 · 친한 친구 · 작은 팀까지 네 명이 함께 쓰는 보안통신.</div>
     </button>
 
     <!-- 🔴 2026-10-01 — 업무용 프로 (웹과 같은 값 · 같은 기간 · 덤 없음) -->
-    <div class="sect" data-i18n="sPro" style="margin-top:18px;">업무용 · 프로</div>
-    <p class="sub" data-i18n="proSub" style="margin-top:-4px;">가게 · 사무소 · 상담 창구처럼 손님 문의를 번호 없이 받는 곳. 방을 여러 개 열어 손님마다 따로 대화합니다.</p>
-    <button type="button" class="plan" data-plan="pro_starter">
+    <div class="sect" data-i18n="sPro" data-goal="biz" style="margin-top:18px;">업무용 · 프로</div>
+    <p class="sub" data-i18n="proSub" data-goal="biz" style="margin-top:-4px;">가게 · 사무소 · 상담 창구처럼 손님 문의를 번호 없이 받는 곳. 방을 여러 개 열어 손님마다 따로 대화합니다.</p>
+    <button type="button" class="plan" data-plan="pro_starter" data-goal="biz more">
       <div class="row"><span class="nm" data-i18n="pStarter">프로 스타터</span><span class="pr"><small data-i18n="fromPre"></small>9,900<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
       <div class="inc"><span data-i18n="r50">방 50개</span><span data-i18n="g50">50GB</span></div>
     </button>
-    <button type="button" class="plan" data-plan="pro_business">
+    <button type="button" class="plan" data-plan="pro_business" data-goal="biz more">
       <div class="row"><span class="nm" data-i18n="pBusiness">프로 비즈니스</span><span class="pr"><small data-i18n="fromPre"></small>19,900<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
       <div class="inc"><span data-i18n="r100">방 100개</span><span data-i18n="g150">150GB</span></div>
     </button>
-    <button type="button" class="plan" data-plan="pro_enterprise">
+    <button type="button" class="plan" data-plan="pro_enterprise" data-goal="biz more">
       <div class="row"><span class="nm" data-i18n="pEnterprise">프로 엔터프라이즈</span><span class="pr"><small data-i18n="fromPre"></small>39,900<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
       <div class="inc"><span data-i18n="r150">방 150개</span><span data-i18n="g400">400GB</span></div>
     </button>
     <!-- 🔴 2026-10-01 광고형 덧상품 — 늘 보입니다(프로가 없으면 고를 수는 있고 결제는 잠김) -->
-    <button type="button" class="plan" data-plan="listing" id="listingCard">
+    <button type="button" class="plan" data-plan="listing" data-goal="biz" id="listingCard">
       <div class="row"><span class="nm" data-i18n="pListing">공개 업체 목록 게재</span><span class="pr" style="font-size:12px;" data-i18n="adTag">광고형</span></div>
       <div class="lp-prices">
         <span><b data-i18n="m1">1개월</b> 5,500<small data-i18n="won">원</small></span>
@@ -223,8 +264,8 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
     </div>
 
     <!-- 🔴 2026-10-01 추가 사용량 — 내가 연 회선이나 프로 구독이 있을 때만 보입니다 -->
-    <div class="sect" data-i18n="sUsage" id="usageSect" style="margin-top:18px;display:none;">사용량이 모자랄 때</div>
-    <button type="button" class="plan" data-plan="usage" id="usageCard" style="display:none;">
+    <div class="sect" data-i18n="sUsage" data-goal="more" id="usageSect" style="margin-top:18px;display:none;">사용량이 모자랄 때</div>
+    <button type="button" class="plan" data-plan="usage" data-goal="more" id="usageCard" style="display:none;">
       <div class="row"><span class="nm" data-i18n="pUsage">추가 사용량 1GB</span><span class="pr">2,000<small data-i18n="won">원</small> <small data-i18n="per3">/ 3개월</small></span></div>
       <div class="ds" data-i18n="dUsage">모든 상품 공통. 회선의 사용량을 다 쓰면 새 통화가 멈춥니다(문자는 계속). 붙일 회선을 골라 1GB씩 더하세요.</div>
     </button>
@@ -248,7 +289,7 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
          · 새 회선: 이름을 꼭 붙이고, 암호화 · 용도를 고름
          ⚠ 암호화 여부는 이어가기로 바꿀 수 없습니다(열쇠가 회선마다 따로). -->
     <div id="lineOpts" style="display:none;">
-      <div class="sect" data-i18n="sHow">어떻게 쓰실 건가요?</div>
+      <div class="sect"><span class="step">2</span><span data-i18n="sHow">어떻게 쓰실 건가요?</span></div>
       <div class="modes">
         <button type="button" class="mode" id="mCont"><b data-i18n="mCont">지금 대화 이어가기</b><span data-i18n="mContD">쓰던 회선의 기간을 늘립니다</span></button>
         <button type="button" class="mode" id="mNew"><b data-i18n="mNew">새 대화 창구 열기</b><span data-i18n="mNewD">다른 상대와 쓸 회선을 새로 엽니다</span></button>
@@ -261,11 +302,16 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
 
       <div id="newBox" style="display:none;">
         <div class="namebox">
-          <label for="lineName" data-i18n="nameL">누구와 쓰실 회선인가요?</label>
+          <label for="lineName"><span class="step">3</span><span data-i18n="nameL">누구와 쓰실 회선인가요?</span></label>
           <input id="lineName" maxlength="30" autocomplete="off" data-i18n-ph="nameP" placeholder="예) 아내와 · 김 과장 · 우리 가족">
         </div>
+        <div class="sect"><span class="step">4</span><span data-i18n="sSec">보안은 어느 정도로?</span></div>
+        <div class="secseg" id="secSeg">
+          <button type="button" data-s="0"><b data-i18n="secN">🛡️ 보통 (추천)</b><span data-i18n="secND">서버에 안전하게 보관. 폰을 바꿔도 대화가 이어집니다</span></button>
+          <button type="button" data-s="1"><b data-i18n="secS">🔒 최강 (종단 암호화)</b><span data-i18n="secSD">저희도 못 봅니다. 열쇠 링크를 잃으면 복구가 안 됩니다</span></button>
+        </div>
         <div class="opts" style="margin-top:8px;">
-          <div class="opt">
+          <div class="opt" style="display:none;">
             <div class="tx"><div class="t1" data-i18n="oSec">🔒 암호화 (Secure)</div>
               <div class="t2" id="secHint" data-i18n="oSecOff">서버에 안전하게 보관되며 기기를 바꿔도 이어집니다</div></div>
             <button type="button" class="sw" id="secSw" aria-label="암호화"></button>
@@ -279,8 +325,9 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
         <div class="hint" data-i18n="invited">상대가 이미 회선을 열어 초대했다면 따로 사지 않아도 됩니다. 회선은 여는 사람만 결제하고, 초대받은 분은 무료로 대화합니다.</div>
       </div>
 
-      <div class="sect" data-i18n="sDur">기간</div>
+      <div class="sect"><span class="step">5</span><span data-i18n="sDur">기간</span></div>
       <div class="durs" id="durs"></div>
+      <div class="sumbox" id="lineSum" style="display:none;"></div>
     </div>
 
     <div class="sum"><span class="l" id="sumL"></span><span class="v" id="sumV"></span></div>
@@ -304,6 +351,7 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
     <button type="button" class="buy" id="buyBtn" disabled></button>
     <div class="msg" id="msg"></div>
 
+    </div><!-- /shopBody -->
     <p class="note" data-i18n="note">· 기간이 끝나도 받기 · 읽기 · 끊기는 그대로 됩니다.
 · 남은 기간이 있으면 이어서 더해집니다.
 · 결제와 환불은 Google Play가 처리합니다. 카드 정보는 저희에게 오지 않습니다.</p>
@@ -393,6 +441,20 @@ const I18N = {
     hUp:'이 2인 회선을 <b>4인으로 올립니다.</b> 남은 기간은 그대로 두고 그 뒤에 기간을 이어 붙입니다. 대화 · 초대 링크 · 열쇠는 그대로입니다.',
     h4basic:'4인 회선은 프리미엄 이용권으로 연장해 주세요.', pickLine:'이어갈 회선을 골라주세요',
     secNo:'암호화 여부는 쓰던 회선을 이어가며 바꿀 수 없습니다. 암호화가 필요하면 새 대화 창구를 열어 같은 상대를 초대하세요.',
+    gQ:'무엇을 하고 싶으세요?', gAll:'📋 전체 상품 한꺼번에 보기', gBack:'← 처음으로 (다른 것 고르기)',
+    gCar:'차 · 소지품에 QR을 붙여 연락받기', gCarD:'주차 · 분실물 연락을 번호 없이. 임시연락처도 함께', gCarP:'연 2,200원~',
+    gPeople:'정해진 사람과 번호 없이 대화 · 통화', gPeopleD:'연인 · 가족 · 친구 · 비서 · 거래처. 긴급 기능도 함께 들어 있어요', gPeopleP:'3개월 9,900원~',
+    gBiz:'손님 문의를 번호 없이 받기', gBizD:'가게 · 사무소 · 병원 · 상담 창구. 손님마다 방을 따로', gBizP:'월 9,900원~',
+    gMore:'쓰던 것 늘리기', gMoreD:'기간 연장 · 4인으로 올리기 · 사용량 더하기',
+    nCar:'🚗 <b>긴급 이용권</b> 하나면 차 · 가방 · 소지품 QR과 1회용 임시연락처를 1년 동안 씁니다.<br>번호판을 찍어 차주를 자주 찾으시면 <b>Pro 긴급</b>(찾기 횟수 무제한)을 고르세요.<br>💡 이미 회선 이용권(일반 · 프리미엄)이 있으면 긴급 기능이 들어 있어 따로 사지 않으셔도 됩니다.',
+    nPeople:'💚 <b>회선 이용권에는 긴급 기능(QR 긴급등록 · 긴급연락 · 임시연락처)이 모두 들어 있어요.</b> 긴급 이용권은 따로 사지 않으셔도 됩니다.<br>💡 상대가 이미 회선을 열어 초대했다면 사지 않아도 됩니다. 회선은 여는 사람만 결제합니다.',
+    nBiz:'💼 손님마다 방을 따로 열어 번호 없이 대화합니다. <b>방이 몇 개 필요한지</b>로 고르세요 — 50 · 100 · 150개.<br>📣 공개 업체 목록에 올리고 싶으면 프로를 먼저 산 뒤 <b>공개 업체 목록 게재</b>를 더하세요.',
+    nMore:'➕ <b>회선 연장:</b> 쓰던 회선 인원에 맞는 이용권을 고르고 [지금 대화 이어가기]를 누르세요. 2인 회선에서 프리미엄을 고르면 4인으로 올라갑니다.<br><b>프로 · 긴급 연장:</b> 같은 상품을 다시 사면 남은 기간 뒤에 이어 붙습니다.<br><b>사용량이 모자라면:</b> 추가 사용량 1GB.',
+    sPeople:'몇 명이서 쓰세요? — 둘이서면 일반, 넷까지면 프리미엄',
+    sSec:'보안은 어느 정도로?', secN:'🛡️ 보통 (추천)', secND:'서버에 안전하게 보관. 폰을 바꿔도 대화가 이어집니다',
+    secS:'🔒 최강 (종단 암호화)', secSD:'저희도 못 봅니다. 열쇠 링크를 잃으면 복구가 안 됩니다',
+    lsNew:'새 회선', lsCont:'이어가기', lsUp:'4인으로 올리기', lsPeople2:'둘이서', lsPeople4:'넷까지', lsSecN:'보통 보안', lsSecS:'최강 보안', lsWork:'업무용', lsPers:'우리끼리',
+    lsTitle:'고르신 내용',
   },
   en: {
     title:'Plans', sub:'Every number-free feature comes with one plan. It never renews automatically.',
@@ -462,6 +524,20 @@ const I18N = {
     hUp:'This 2-person line becomes <b>4-person</b>. Remaining time is kept and the new period is added after it. Messages, link and key stay.',
     h4basic:'Please extend 4-person lines with the Premium plan.', pickLine:'Choose a line to continue',
     secNo:'Encryption cannot be changed on an existing line. To use encryption, open a new line and invite the same person.',
+    gQ:'What would you like to do?', gAll:'📋 See every plan at once', gBack:'← Start over (choose something else)',
+    gCar:'Get contacted through a QR on your car or belongings', gCarD:'Parking and lost-item contact without your number, plus one-time cards', gCarP:'from 2,200 KRW / yr',
+    gPeople:'Talk and call certain people without numbers', gPeopleD:'Partner · family · friends · assistant · client. Emergency features included', gPeopleP:'from 9,900 KRW / 3 mo',
+    gBiz:'Take customer inquiries without a number', gBizD:'Shops · offices · clinics · help desks. One room per customer', gBizP:'from 9,900 KRW / mo',
+    gMore:'Extend what you have', gMoreD:'Extend · upgrade to 4 people · add usage',
+    nCar:'🚗 The <b>Emergency plan</b> covers QR codes for your car and belongings plus one-time contact cards for a year.<br>If you often look up car owners by plate, choose <b>Emergency Pro</b> (unlimited searches).<br>💡 Line plans (Standard · Premium) already include emergency features — no need to buy this separately.',
+    nPeople:'💚 <b>Line plans include every emergency feature (QR register · emergency contact · one-time cards).</b> You do not need a separate Emergency plan.<br>💡 If someone already invited you to their line, you do not need to buy one — only the person who opens it pays.',
+    nBiz:'💼 Open a separate room for each customer. <b>Choose by how many rooms you need</b> — 50 · 100 · 150.<br>📣 To appear in the public directory, buy a Pro plan first, then add <b>Public business listing</b>.',
+    nMore:'➕ <b>Extend a line:</b> pick the plan that matches its size and tap [Continue a conversation]. Choosing Premium on a 2-person line upgrades it to 4.<br><b>Pro · Emergency:</b> buying the same plan again adds time after what is left.<br><b>Out of data?</b> Add 1GB of extra usage.',
+    sPeople:'How many people? — two: Standard, up to four: Premium',
+    sSec:'How much security?', secN:'🛡️ Normal (recommended)', secND:'Stored safely on our server. Continues when you change phones',
+    secS:'🔒 Maximum (end-to-end)', secSD:'Even we cannot read it. Lose the key link and it cannot be recovered',
+    lsNew:'New line', lsCont:'Continue', lsUp:'Upgrade to 4', lsPeople2:'Two people', lsPeople4:'Up to four', lsSecN:'Normal security', lsSecS:'Maximum security', lsWork:'Work', lsPers:'Personal',
+    lsTitle:'Your choice',
   },
 };
 let LANG = (localStorage.getItem('aliascall_lang') || 'ko').indexOf('en') === 0 ? 'en' : 'ko';
@@ -519,6 +595,38 @@ function paintText(){
   if (MODE === 'web') { el('webPay').style.display = ''; el('usageQtyRow').style.display = ''; }
 }
 
+/* 🔴 2026-10-21 목적 고르기 — null: 고르는 화면 · 'all': 전부 · car / people / biz / more */
+let goal = null;
+function paintGoal(){
+  el('goalBox').style.display = goal ? 'none' : '';
+  el('shopBody').style.display = goal ? '' : 'none';
+  document.querySelectorAll('#shopBody [data-goal]').forEach((n) => {
+    const show = goal === 'all' || (n.dataset.goal || '').split(' ').indexOf(goal) >= 0;
+    n.classList.toggle('gh', !show);
+  });
+  /* 쓰던 것 늘리기: 쓰던 것과 관계있는 카드만 */
+  if (goal === 'more') {
+    const has2 = myLines.some((l) => l.persons === 2), hasAny = myLines.length > 0;
+    const hide = (pl, on) => { const n = document.querySelector('.plan[data-plan="' + pl + '"]'); if (n && !on) n.classList.add('gh'); };
+    hide('basic', has2); hide('premium', hasAny);
+    ['pro_starter', 'pro_business', 'pro_enterprise'].forEach((pl) => hide(pl, myPro && myPro.tier && myPro.tier.indexOf(pl.replace('pro_', '')) >= 0));
+  }
+  el('peopleQ').classList.toggle('gh', goal !== 'people');
+  const nk = { car: 'nCar', people: 'nPeople', biz: 'nBiz', more: 'nMore' }[goal];
+  el('goalNote').style.display = nk ? '' : 'none';
+  if (nk) el('goalNote').innerHTML = T(nk);
+  el('goalBack').style.display = goal ? '' : 'none';
+}
+function goalOf(p){ return /^emergency/.test(p) ? 'car' : (p === 'basic' || p === 'premium') ? 'people' : (/^pro_|listing/.test(p) ? 'biz' : (p === 'usage' ? 'more' : 'all')); }
+document.querySelectorAll('.goal').forEach((b) => b.addEventListener('click', () => {
+  goal = b.dataset.goal; plan = null; dur = null; hush();
+  if (goal === 'more' && myLines.length) mode = 'cont';
+  paintGoal(); paint(); window.scrollTo(0, 0);
+}));
+el('goalAll').addEventListener('click', () => { goal = 'all'; paintGoal(); paint(); });
+el('goalBack').addEventListener('click', () => { goal = null; plan = null; dur = null; hush(); paintGoal(); paint(); window.scrollTo(0, 0); });
+el('secSeg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; secure = b.dataset.s === '1'; paint(); });
+
 function paint(){
   document.querySelectorAll('.plan').forEach((b) => b.classList.toggle('on', b.dataset.plan === plan));
   const c = plan ? CATALOG[plan] : null;
@@ -567,6 +675,22 @@ function paint(){
     el('proHint').style.whiteSpace = 'pre-line';
   }
   el('secSw').classList.toggle('on', secure);
+  document.querySelectorAll('#secSeg button').forEach((b) => b.classList.toggle('on', (b.dataset.s === '1') === secure));
+  /* 회선 — 고른 내용을 한 장으로 */
+  const ls = el('lineSum');
+  if (c && c.line && dur && !lineNeed()) {
+    const up = mode === 'cont' && pick && pick.persons === 2 && plan === 'premium';
+    const bits = [
+      mode === 'cont' ? (up ? T('lsUp') : T('lsCont')) : T('lsNew'),
+      plan === 'premium' ? T('lsPeople4') : T('lsPeople2'),
+      mode === 'cont' && pick ? '“' + pick.name + '”' : '“' + el('lineName').value.trim() + '”',
+      mode === 'new' ? (secure ? T('lsSecS') : T('lsSecN')) : null,
+      mode === 'new' ? (purpose === 'work' ? T('lsWork') : T('lsPers')) : null,
+      T('m', { n: dur.real }), fmt(dur.p) + T('won'),
+    ].filter(Boolean);
+    ls.innerHTML = '<b>' + esc(T('lsTitle')) + '</b><br>' + bits.map(esc).join(' · ');
+    ls.style.display = '';
+  } else ls.style.display = 'none';
   el('lineName').placeholder = T('nameP');
   el('secHint').textContent = T(secure ? 'oSecOn' : 'oSecOff');
   el('secHint').classList.toggle('warn', secure);
@@ -855,7 +979,9 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
   }
   const qs = new URLSearchParams(location.search);
   const want = qs.get('plan');
-  if (want && CATALOG[want]) { plan = want; const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0]; }
+  if (want && CATALOG[want]) { plan = want; const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0]; goal = goalOf(want); }
+  if (qs.get('goal') && ['car', 'people', 'biz', 'more', 'all'].indexOf(qs.get('goal')) >= 0) goal = qs.get('goal');
+  if (plan === 'usage' || qs.get('usage') || qs.get('usagePro')) goal = goal || 'more';
   /* 🔴 2026-10-21 — 첫 화면 "일상 업무용 회선" 에서 오면 용도를 업무용으로 */
   if (qs.get('purpose') === 'work') purpose = 'work';
 
@@ -890,10 +1016,11 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
   const extId = qs.get('extend');
   const hit = extId ? myLines.find((l) => l.id === extId) : null;
   if (hit) {
-    mode = 'cont'; pick = hit;
+    mode = 'cont'; pick = hit; goal = 'more';
     plan = hit.persons === 4 ? 'premium' : 'basic';
     const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0];
   }
+  paintGoal();
   paint();
 })();
 </script>
