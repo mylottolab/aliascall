@@ -856,6 +856,8 @@ document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('cli
   const qs = new URLSearchParams(location.search);
   const want = qs.get('plan');
   if (want && CATALOG[want]) { plan = want; const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0]; }
+  /* 🔴 2026-10-21 — 첫 화면 "일상 업무용 회선" 에서 오면 용도를 업무용으로 */
+  if (qs.get('purpose') === 'work') purpose = 'work';
 
   /* 내가 연 회선 — 이어가기 목록 */
   if (session) {

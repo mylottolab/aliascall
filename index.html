@@ -396,6 +396,19 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 .prod .p-btns a{ padding:11px 6px; border-radius:10px; font-size:12px; font-weight:700; text-align:center; text-decoration:none; }
 .p-wiz{ background:var(--teal-deep); color:#fff; }
 .p-all{ background:var(--teal-tint); color:var(--teal-deep); }
+/* 🔴 2026-10-21 — 갈래마다 해당 상품을 바로 보여 줍니다(누르면 그 상품이 골라진 채 이용권 화면) */
+.p-rows{ display:flex; flex-direction:column; gap:7px; margin-top:12px; }
+.p-row{ display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:11px; text-decoration:none;
+  background:var(--teal-tint); color:var(--teal-deep); }
+.p-row .r-n{ flex:1; min-width:0; font-size:13px; font-weight:800; line-height:1.35; }
+.p-row .r-n small{ display:block; font-size:11px; font-weight:500; opacity:.8; margin-top:2px; }
+.p-row .r-p{ flex:0 0 auto; font-size:12.5px; font-weight:800; text-align:right; line-height:1.35; }
+.p-row .r-p small{ display:block; font-size:10.5px; font-weight:500; opacity:.8; }
+.p-row .r-go{ flex:0 0 auto; font-size:16px; font-weight:800; opacity:.7; }
+.p-note{ font-size:11px; color:var(--ink-soft); margin-top:8px; line-height:1.6; }
+.all-plans{ display:block; margin:6px 0 14px; padding:16px; border-radius:14px; text-align:center; text-decoration:none;
+  font-size:15.5px; font-weight:800; background:var(--coral, #E9785A); color:#fff; box-shadow:0 4px 14px rgba(0,0,0,.18); }
+.all-plans small{ display:block; font-size:11.5px; font-weight:500; opacity:.85; margin-top:3px; }
 .prod.biz{ border-left:5px solid var(--brass); }
 .prod.ad{ border-left:5px solid var(--coral); }
 
@@ -588,10 +601,10 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <div class="p-t"><span data-i18n="pLove">우리끼리 회선</span><small data-i18n="pLoveSub">정말 친한 연인 · 친구 · 가족만 남 모르게 쓰는 보안회선</small></div>
     <div class="p-d" data-i18n="pLoveDesc">누구나 아는 메신저 말고, 둘 또는 몇 명만 아는 회선을 엽니다.</div>
     <div class="p-who" data-i18n="pLoveWho">연인 · 가족 · 친구 · 소모임</div>
-    <div class="p-p" data-i18n="priceFrom1">3개월 3,900원부터</div>
-    <div class="p-btns">
-      <a class="p-wiz" href="aliascall_hotline_purchase.html?cat=love&amp;guide=1" data-i18n="btnWizard">내게 맞는 상품은?</a>
-      <a class="p-all" href="aliascall_hotline_purchase.html?cat=love" data-i18n="btnAll">관련 전체 상품보기</a>
+    <div class="p-p" data-i18n="priceFrom1">3개월 9,900원부터</div>
+    <div class="p-rows">
+      <a class="p-row" href="aliascall_plans.html?plan=basic&amp;purpose=personal"><span class="r-n"><span data-i18n="rBasic">일반 이용권 · 2인 회선</span><small data-i18n="rBasicS">둘이서 · 5GB · 암호화 선택</small></span><span class="r-p"><span data-i18n="rBasicP">9,900원</span><small data-i18n="r3m">3개월 (+1개월 덤)</small></span><span class="r-go">›</span></a>
+      <a class="p-row" href="aliascall_plans.html?plan=premium&amp;purpose=personal"><span class="r-n"><span data-i18n="rPrem">프리미엄 이용권 · 4인 회선</span><small data-i18n="rPremS">가족 · 친구 넷이서 · 20GB</small></span><span class="r-p"><span data-i18n="rPremP">16,000원</span><small data-i18n="r3m">3개월 (+1개월 덤)</small></span><span class="r-go">›</span></a>
     </div>
   </div>
 
@@ -600,11 +613,12 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <div class="p-t"><span data-i18n="pWork">일상 업무용 회선</span><small data-i18n="pWorkSub">보안 유지 · 비서 업무 · 그 밖의 업무 수행</small></div>
     <div class="p-d" data-i18n="pWorkDesc">강화된 보안부터 최강 보안(E2EE)까지. 기존 통신망의 제약에서 벗어난 효율적인 업무망입니다.</div>
     <div class="p-who" data-i18n="pWorkWho">임원 · 중역 · 간부 · 비서 · 중요업무 종사자 · 사생활 보호를 원하는 분</div>
-    <div class="p-p" data-i18n="priceFrom1">3개월 3,900원부터</div>
-    <div class="p-btns">
-      <a class="p-wiz" href="aliascall_hotline_purchase.html?cat=work&amp;guide=1" data-i18n="btnWizard">내게 맞는 상품은?</a>
-      <a class="p-all" href="aliascall_hotline_purchase.html?cat=work" data-i18n="btnAll">관련 전체 상품보기</a>
+    <div class="p-p" data-i18n="priceFrom1">3개월 9,900원부터</div>
+    <div class="p-rows">
+      <a class="p-row" href="aliascall_plans.html?plan=basic&amp;purpose=work"><span class="r-n"><span data-i18n="rBasicW">일반 이용권 · 2인 업무 회선</span><small data-i18n="rBasicWS">비서 · 거래처와 둘이서 · 5GB</small></span><span class="r-p"><span data-i18n="rBasicP">9,900원</span><small data-i18n="r3m">3개월 (+1개월 덤)</small></span><span class="r-go">›</span></a>
+      <a class="p-row" href="aliascall_plans.html?plan=premium&amp;purpose=work"><span class="r-n"><span data-i18n="rPremW">프리미엄 이용권 · 4인 업무 회선</span><small data-i18n="rPremWS">작은 팀 넷이서 · 20GB</small></span><span class="r-p"><span data-i18n="rPremP">16,000원</span><small data-i18n="r3m">3개월 (+1개월 덤)</small></span><span class="r-go">›</span></a>
     </div>
+    <div class="p-note" data-i18n="rWorkNote">🔒 최강 보안(종단 암호화 E2EE)은 결제 화면에서 켜고 끌 수 있습니다.</div>
   </div>
 
   <div class="prod biz">
@@ -613,9 +627,10 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <div class="p-d" data-i18n="pProDesc">고객마다 방을 따로 열어, 번호를 주고받지 않고 계속 이어갑니다.</div>
     <div class="p-who" data-i18n="pProWho">변호사 · 세무사 · 회계사 · 병원 · 상점 · 식당 · 부동산 등</div>
     <div class="p-p" data-i18n="priceFrom2">월 9,900원부터</div>
-    <div class="p-btns">
-      <a class="p-wiz" href="aliascall_hotline_purchase.html?cat=pro&amp;guide=1" data-i18n="btnWizard">내게 맞는 상품은?</a>
-      <a class="p-all" href="aliascall_hotline_purchase.html?cat=pro" data-i18n="btnAll">관련 전체 상품보기</a>
+    <div class="p-rows">
+      <a class="p-row" href="aliascall_plans.html?plan=pro_starter"><span class="r-n"><span data-i18n="rStarter">프로 스타터</span><small data-i18n="rStarterS">방 50개 · 50GB</small></span><span class="r-p"><span data-i18n="rStarterP">9,900원</span><small data-i18n="rMo">/ 월</small></span><span class="r-go">›</span></a>
+      <a class="p-row" href="aliascall_plans.html?plan=pro_business"><span class="r-n"><span data-i18n="rBusiness">프로 비즈니스</span><small data-i18n="rBusinessS">방 100개 · 150GB</small></span><span class="r-p"><span data-i18n="rBusinessP">19,900원</span><small data-i18n="rMo">/ 월</small></span><span class="r-go">›</span></a>
+      <a class="p-row" href="aliascall_plans.html?plan=pro_enterprise"><span class="r-n"><span data-i18n="rEnter">프로 엔터프라이즈</span><small data-i18n="rEnterS">방 150개 · 400GB</small></span><span class="r-p"><span data-i18n="rEnterP">39,900원</span><small data-i18n="rMo">/ 월</small></span><span class="r-go">›</span></a>
     </div>
   </div>
 
@@ -625,11 +640,15 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <div class="p-d" data-i18n="pAdDesc">위 프로 비즈니스에 공개 목록 게재를 더한 상품입니다.</div>
     <div class="p-who" data-i18n="pAdWho">신규 고객이 필요한 전문가 · 상점 등</div>
     <div class="p-p" data-i18n="priceFrom3">월 9,900원 + 게재료 5,500원부터</div>
-    <div class="p-btns">
-      <a class="p-wiz" href="aliascall_hotline_purchase.html?cat=ad&amp;guide=1" data-i18n="btnWizard">내게 맞는 상품은?</a>
-      <a class="p-all" href="aliascall_hotline_purchase.html?cat=ad" data-i18n="btnAll">관련 전체 상품보기</a>
+    <div class="p-rows">
+      <a class="p-row" href="aliascall_plans.html?plan=listing"><span class="r-n"><span data-i18n="rListing">공개 업체 목록 게재</span><small data-i18n="rListingS">상호를 공개 목록에 올립니다</small></span><span class="r-p"><span data-i18n="rListingP">5,500원</span><small data-i18n="rMo">/ 월</small></span><span class="r-go">›</span></a>
+      <a class="p-row" href="aliascall_plans.html?plan=pro_starter"><span class="r-n"><span data-i18n="rStarterAd">① 먼저 프로 스타터부터</span><small data-i18n="rStarterAdS">게재는 프로 상품 위에 더합니다</small></span><span class="r-p"><span data-i18n="rStarterP">9,900원</span><small data-i18n="rMo">/ 월</small></span><span class="r-go">›</span></a>
     </div>
+    <div class="p-note" data-i18n="rAdNote">⚠ 게재는 사업자등록증 · 자격증 확인을 통과한 뒤 시작됩니다. 6개월 29,700원 · 12개월 54,800원도 있습니다.</div>
   </div>
+
+  <!-- 🔴 2026-10-21 — 전체 상품은 맨 밑에 하나로 크게 -->
+  <a class="all-plans" href="aliascall_plans.html"><span data-i18n="allPlans">📋 전체 상품 보기</span><small data-i18n="allPlansS">긴급 이용권 · 회선 · 프로 · 게재 · 추가 사용량까지 한눈에</small></a>
 </div><!-- /viewMsg -->
 
 <!-- ⚠ 기존 8개 상품 카드는 Messenger 화면의 네 갈래로 대체되었습니다.
@@ -1691,7 +1710,19 @@ const I18N = {
     pAd: '광고형 프로 비즈니스', pAdSub: '상호를 공개 목록에 올려 새 고객을 받습니다',
     pAdDesc: '위 프로 비즈니스에 공개 목록 게재를 더한 상품입니다.',
     pAdWho: '신규 고객이 필요한 전문가 · 상점 등',
-    priceFrom1: '3개월 3,900원부터', priceFrom2: '월 9,900원부터',
+    priceFrom1: '3개월 9,900원부터', priceFrom2: '월 9,900원부터',
+    rBasic: '일반 이용권 · 2인 회선', rBasicS: '둘이서 · 5GB · 암호화 선택', rBasicP: '9,900원', r3m: '3개월 (+1개월 덤)',
+    rPrem: '프리미엄 이용권 · 4인 회선', rPremS: '가족 · 친구 넷이서 · 20GB', rPremP: '16,000원',
+    rBasicW: '일반 이용권 · 2인 업무 회선', rBasicWS: '비서 · 거래처와 둘이서 · 5GB',
+    rPremW: '프리미엄 이용권 · 4인 업무 회선', rPremWS: '작은 팀 넷이서 · 20GB',
+    rWorkNote: '🔒 최강 보안(종단 암호화 E2EE)은 결제 화면에서 켜고 끌 수 있습니다.',
+    rStarter: '프로 스타터', rStarterS: '방 50개 · 50GB', rStarterP: '9,900원', rMo: '/ 월',
+    rBusiness: '프로 비즈니스', rBusinessS: '방 100개 · 150GB', rBusinessP: '19,900원',
+    rEnter: '프로 엔터프라이즈', rEnterS: '방 150개 · 400GB', rEnterP: '39,900원',
+    rListing: '공개 업체 목록 게재', rListingS: '상호를 공개 목록에 올립니다', rListingP: '5,500원',
+    rStarterAd: '① 먼저 프로 스타터부터', rStarterAdS: '게재는 프로 상품 위에 더합니다',
+    rAdNote: '⚠ 게재는 사업자등록증 · 자격증 확인을 통과한 뒤 시작됩니다. 6개월 29,700원 · 12개월 54,800원도 있습니다.',
+    allPlans: '📋 전체 상품 보기', allPlansS: '긴급 이용권 · 회선 · 프로 · 게재 · 추가 사용량까지 한눈에',
     priceFrom3: '월 9,900원 + 게재료 5,500원부터',
     btnWizard: '내게 맞는 상품은?', btnAll: '관련 전체 상품보기',
     secEmergencySub: '양방향 모두 번호노출 없는 비상연락 안심수단',
@@ -1810,7 +1841,19 @@ const I18N = {
     pAd: 'Pro Business with listing', pAdSub: 'List your business publicly and receive new customers',
     pAdDesc: 'Pro Business plus a public directory listing.',
     pAdWho: 'Professionals and shops seeking new customers',
-    priceFrom1: 'From 3,900 KRW / 3 months', priceFrom2: 'From 9,900 KRW / month',
+    priceFrom1: 'From 9,900 KRW / 3 months', priceFrom2: 'From 9,900 KRW / month',
+    rBasic: 'Basic · 2-person line', rBasicS: 'Two people · 5GB · encryption optional', rBasicP: '9,900 KRW', r3m: '3 months (+1 free)',
+    rPrem: 'Premium · 4-person line', rPremS: 'Family · friends, up to four · 20GB', rPremP: '16,000 KRW',
+    rBasicW: 'Basic · 2-person work line', rBasicWS: 'With an assistant or client · 5GB',
+    rPremW: 'Premium · 4-person work line', rPremWS: 'A small team of four · 20GB',
+    rWorkNote: '🔒 End-to-end encryption (E2EE) can be turned on at checkout.',
+    rStarter: 'Pro Starter', rStarterS: '50 rooms · 50GB', rStarterP: '9,900 KRW', rMo: '/ month',
+    rBusiness: 'Pro Business', rBusinessS: '100 rooms · 150GB', rBusinessP: '19,900 KRW',
+    rEnter: 'Pro Enterprise', rEnterS: '150 rooms · 400GB', rEnterP: '39,900 KRW',
+    rListing: 'Public directory listing', rListingS: 'Put your business on the public list', rListingP: '5,500 KRW',
+    rStarterAd: '① Start with Pro Starter', rStarterAdS: 'Listing is added on top of a Pro plan',
+    rAdNote: '⚠ Listing starts after your business registration and licence are verified. Also 6 months 29,700 · 12 months 54,800 KRW.',
+    allPlans: '📋 See all plans', allPlansS: 'Emergency · lines · Pro · listing · extra usage, all in one place',
     priceFrom3: 'From 9,900 + 5,500 KRW / month',
     btnWizard: 'Which plan fits me?', btnAll: 'See all plans',
     secEmergencySub: 'Emergency contact that keeps both sides\u2019 numbers private',
