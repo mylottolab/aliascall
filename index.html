@@ -217,7 +217,7 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .case-inbox-empty{ font-size:11.5px; color:rgba(255,255,255,.5); padding:10px 2px; text-align:center; }
 .case-inbox-alert-title{ font-style:italic; font-size:11.5px; color:rgba(255,255,255,.7); padding:2px 2px 8px; }
 
-footer{ text-align:center; padding:26px 24px 40px; font-size:11px; color:rgba(255,255,255,.4); line-height:1.7; }
+footer{ text-align:center; padding:14px 20px 30px; font-size:11px; color:rgba(255,255,255,.4); line-height:1.6; }   /* 🔴 2026-10-23 줄임 */
 footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 /* 2026-08-23 신설: 통신판매업자 기본 표시사항 */
 .biz-info{ margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,.1); font-size:10px; color:rgba(255,255,255,.35); line-height:1.8; }
@@ -334,7 +334,21 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 
 
 /* 2026-08-28 신설: 순환 배너 */
-.banner-box{ margin:18px 0 6px; }
+.banner-box{ margin:8px 0 2px; }
+/* 🔴 2026-10-23 광고 막대 + 펼치는 네모 칸 */
+.ad-bar{ display:flex; align-items:center; gap:9px; width:100%; padding:10px 14px; border-radius:12px; cursor:pointer; font-family:inherit;
+  background:rgba(232,169,138,.14); border:1px solid rgba(232,169,138,.55); color:#fff; text-align:left; }
+.ad-bar .ab-i{ font-size:16px; }
+.ad-bar .ab-t{ flex:1; font-size:13px; font-weight:800; color:#F3C2A8; }
+.ad-bar .ab-n{ font-size:11px; font-weight:800; background:#E8734A; color:#fff; border-radius:20px; padding:2px 8px; }
+.ad-bar .ab-n:empty{ display:none; }
+.ad-bar .ab-a{ font-size:16px; transition:transform .2s; color:#F3C2A8; }
+.ad-bar[aria-expanded="true"] .ab-a{ transform:rotate(90deg); }
+.ad-panel{ display:none; margin-top:7px; }
+.ad-panel.open{ display:block; }
+.ad-panel .banner-strip{ display:grid; grid-template-columns:repeat(2,1fr); gap:7px; overflow:visible; }
+.ad-panel .bn{ width:auto; min-height:76px; }
+.ad-all{ display:block; text-align:right; font-size:11.5px; color:#9FBDB9; text-decoration:none; padding:7px 2px 0; }
 .banner-head{ display:flex; align-items:center; margin:0 2px 9px; }
 .banner-head .bh-t{ flex:1; font-size:12px; font-weight:700; color:#E8A98A; }
 .banner-head a{ font-size:10.5px; color:#9FBDB9; text-decoration:none; }
@@ -497,12 +511,16 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
        별도로 팔면 상품이 둘이 되고, 돈 낸 사람보다 배너가 더 잘 보이는
        모순이 생깁니다.
        ⚠ 등록 업체가 없으면 아예 나타나지 않습니다. -->
-  <div class="banner-box" id="bannerBox" style="display:none;">
-    <div class="banner-head">
-      <span class="bh-t" data-i18n="bannerTitle">📣 이런 곳도 있어요</span>
-      <a href="aliascall_directory.html" data-i18n="bannerAll">전체 보기 ›</a>
+  <!-- 🔴 2026-10-23 — 단축 다이얼이 들어오며 배너는 한 줄 막대로 접었습니다. 누르면 업체 네모 칸들이 펼쳐집니다. -->
+  <div class="banner-box" id="bannerBox">
+    <button type="button" class="ad-bar" id="adBar" aria-expanded="false">
+      <span class="ab-i">📣</span><span class="ab-t" data-i18n="adBarTitle">각종 전문업체 문의처</span>
+      <span class="ab-n" id="adBarN"></span><span class="ab-a" id="adBarA">›</span>
+    </button>
+    <div class="ad-panel" id="adPanel">
+      <div class="banner-strip" id="bannerStrip"></div>
+      <a class="ad-all" href="aliascall_directory.html" data-i18n="bannerAll">전체 보기 ›</a>
     </div>
-    <div class="banner-strip" id="bannerStrip"></div>
   </div>
 </div>
 
@@ -720,8 +738,8 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 </div><!-- /viewEmg2 -->
 
 <footer>
-  <a href="aliascall_guide.html" data-i18n="guideEmergency">ℹ️ 안심비상연락 사용설명서</a><br>
-  <a href="aliascall_secure_guide.html" data-i18n="guideSecure">ℹ️ 안심보안회선 사용설명서</a><br><br>
+  <a href="aliascall_guide.html" data-i18n="guideEmergency">ℹ️ 안심비상연락 사용설명서</a> ·
+  <a href="aliascall_secure_guide.html" data-i18n="guideSecure">ℹ️ 안심보안회선 사용설명서</a><br>
   <span data-i18n="footerNote1">Aliascall은 실제 번호를 노출하지 않는 안전한 연결 서비스입니다.</span><br>
   <span data-i18n="footerNote2">실시간 위치추적 기능은 없습니다.</span>
 
@@ -1157,13 +1175,21 @@ async function renderBanner(){
 
   let rows = [];
   try {
-    const { data, error } = await sb.rpc('list_banner_businesses', { p_limit: 8 });
+    const { data, error } = await sb.rpc('list_banner_businesses', { p_limit: 12 });
     if (error) throw error;
     rows = data || [];
   } catch (e) {
     console.warn('[banner] 불러오기 실패', e);
-    return;   // 조용히 넘어갑니다. 배너가 없다고 홈이 망가지면 안 됩니다.
+    rows = [];   // 조용히 넘어갑니다. 막대는 남겨 두고 누르면 전체 목록으로 갑니다.
   }
+  /* 🔴 2026-10-23 — 막대를 누르면 펼치기 / 업체가 없으면 전체 목록 화면으로 */
+  const bar = document.getElementById('adBar'), panel = document.getElementById('adPanel');
+  document.getElementById('adBarN').textContent = rows.length ? String(rows.length) : '';
+  bar.onclick = () => {
+    if (!rows.length) { location.href = 'aliascall_directory.html'; return; }
+    const open = !panel.classList.contains('open');
+    panel.classList.toggle('open', open); bar.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
   if (rows.length === 0) return;
 
   strip.innerHTML = '';
@@ -1597,7 +1623,7 @@ const I18N = {
     unreadStrip: '읽지 않은 메시지가 있습니다',
     unreadStripOne: '님과의 대화에 새 메시지가 있습니다',
     lineNoTalk: '아직 대화가 없습니다',
-    bannerTitle: '📣 이런 곳도 있어요',
+    bannerTitle: '📣 이런 곳도 있어요', adBarTitle: '각종 전문업체 문의처',
     bannerAll: '전체 보기 ›',
     mySubs: '📁 내 구독 관리',
     // 2026-09-01 신설: 구독이 있는 분의 화면에서 상품 목록 앞에 붙습니다
@@ -1734,7 +1760,7 @@ const I18N = {
     unreadStrip: 'You have unread messages',
     unreadStripOne: ' sent you a new message',
     lineNoTalk: 'No conversation yet',
-    bannerTitle: '📣 Places you can reach',
+    bannerTitle: '📣 Places you can reach', adBarTitle: 'Professional services directory',
     bannerAll: 'See all ›',
     mySubs: '📁 My subscriptions',
     // 2026-09-01 신설
