@@ -1215,7 +1215,7 @@ async function renderBanner(){
     a.href += '&ask=1';
     const k = document.createElement('div');
     k.className = 'bn-ask';
-    k.innerHTML = '<span>' + (currentLang === 'en' ? '💬 Ask · 📞 Call' : '💬 상담 요청 · 📞 통화') + '</span>';
+    k.innerHTML = '<span>' + (currentLang === 'en' ? '💬 Ask' : '💬 상담 요청') + '</span>';
     a.appendChild(k);
     strip.appendChild(a);
   });
