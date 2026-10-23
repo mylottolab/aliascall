@@ -1,5 +1,5 @@
 /* =====================================================================
-   Aliascall — 단축 다이얼 (2026-10-23)
+   Aliascall — 단축회선 (2026-10-23, 처음 이름: 단축 다이얼 — 전화가 아니라 방을 열어서 이름을 바꿈)
    · 1~9 칸에 자주 쓰는 회선(대화방)을 미리 넣어 두고, 누르면 그 방이 바로 열립니다
      (방 안에서 바로 음성 · 영상 통화와 메시지).
    · 빈 칸을 누르거나 [편집]을 누른 뒤 칸을 누르면 회선 목록에서 고릅니다.
@@ -50,16 +50,16 @@
 
   function en(){ try { return (localStorage.getItem('aliascall_lang') || '').indexOf('en') === 0; } catch (e) { return false; } }
   var TX = {
-    ko: { title:'⚡ 단축 다이얼', edit:'편집', done:'완료', empty:'비어 있음', add:'＋ 넣기', gone:'끝난 회선',
+    ko: { title:'⚡ 단축회선', edit:'편집', done:'완료', empty:'비어 있음', add:'＋ 넣기', gone:'끝난 회선',
           all:'회선 전체', emg:'긴급 연락', tmp:'임시 연락', mng:'회선 관리',
-          pick:'번에 넣을 회선을 고르세요', pickSub:'누르면 그 회선 대화방이 바로 열려 통화 · 메시지를 할 수 있습니다. 이 폰에만 저장됩니다.',
+          pick:'번 단축회선에 넣을 회선을 고르세요', pickSub:'누르면 그 회선 대화방이 바로 열려 통화 · 메시지를 할 수 있습니다. 이 폰에만 저장됩니다.',
           inSlot:'번에 있음', clear:'이 칸 비우기', cancel:'닫기', loading:'회선을 읽는 중…', noLines:'아직 회선이 없습니다. 회선을 먼저 만들거나 초대를 받아 들어가 주세요.',
-          login:'로그인하면 회선을 단축 다이얼에 넣을 수 있습니다.', goneAsk:'이 회선은 끝났거나 이 폰에서 찾을 수 없습니다. 다른 회선으로 바꿀까요?' },
-    en: { title:'⚡ Speed dial', edit:'Edit', done:'Done', empty:'Empty', add:'＋ Add', gone:'Ended',
+          login:'로그인하면 회선을 단축회선에 넣을 수 있습니다.', goneAsk:'이 회선은 끝났거나 이 폰에서 찾을 수 없습니다. 다른 회선으로 바꿀까요?' },
+    en: { title:'⚡ Quick Lines', edit:'Edit', done:'Done', empty:'Empty', add:'＋ Add', gone:'Ended',
           all:'All lines', emg:'Emergency', tmp:'Temporary', mng:'Manage lines',
           pick:': choose a line', pickSub:'Tap it later to open that line’s chat right away for calls and messages. Saved on this phone only.',
           inSlot:' in use', clear:'Clear this slot', cancel:'Close', loading:'Loading your lines…', noLines:'You have no lines yet. Open a line or join one by invitation first.',
-          login:'Log in to add lines to speed dial.', goneAsk:'This line has ended or cannot be found on this phone. Choose another line?' }
+          login:'Log in to add lines to Quick Lines.', goneAsk:'This line has ended or cannot be found on this phone. Choose another line?' }
   };
   function T(){ return en() ? TX.en : TX.ko; }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }

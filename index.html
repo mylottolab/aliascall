@@ -246,7 +246,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
    ⚠ 여전히 한 파일 안에서 화면만 바꿉니다. 연결요청 수신이 이 파일에 있습니다. */
 #viewHome{ padding:10px 16px 0; max-width:420px; margin:0 auto; }
 .home-grid{ position:relative; display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin:4px 0 8px; }
-.tile{ background:#fff; color:var(--ink); border:none; border-radius:18px; min-height:118px;   /* 🔴 2026-10-23 단축 다이얼 자리를 내려고 낮췄습니다(예전: 정사각형) */
+.tile{ background:#fff; color:var(--ink); border:none; border-radius:18px; min-height:118px;   /* 🔴 2026-10-23 단축회선 자리를 내려고 낮췄습니다(예전: 정사각형) */
        padding:10px 6px; cursor:pointer; font-family:inherit; text-align:center;
        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
        border-top:6px solid var(--teal); box-shadow:0 6px 18px -8px rgba(0,0,0,.45); transition:transform .12s ease; }
@@ -504,7 +504,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <span>›</span>
   </a>
 
-  <!-- 🔴 2026-10-23 단축 다이얼 (1~9 회선 + 회선 전체 · 긴급 · 임시 · 회선 관리) — aliascall_speeddial.js -->
+  <!-- 🔴 2026-10-23 단축회선 (1~9 회선 + 회선 전체 · 긴급 · 임시 · 회선 관리) — aliascall_speeddial.js -->
   <div class="sd-box" data-sd id="sdHome"></div>
 
   <!-- 2026-09-28 (2차): 첫 화면의 "내 회선"은 없앴습니다. ④ 안에 전체 목록이 그대로 있습니다. -->
@@ -514,7 +514,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
        별도로 팔면 상품이 둘이 되고, 돈 낸 사람보다 배너가 더 잘 보이는
        모순이 생깁니다.
        ⚠ 등록 업체가 없으면 아예 나타나지 않습니다. -->
-  <!-- 🔴 2026-10-23 — 단축 다이얼이 들어오며 배너는 한 줄 막대로 접었습니다. 누르면 업체 네모 칸들이 펼쳐집니다. -->
+  <!-- 🔴 2026-10-23 — 단축회선이 들어오며 배너는 한 줄 막대로 접었습니다. 누르면 업체 네모 칸들이 펼쳐집니다. -->
   <div class="banner-box" id="bannerBox">
     <button type="button" class="ad-bar" id="adBar" aria-expanded="false">
       <span class="ab-i">📣</span><span class="ab-t" data-i18n="adBarTitle">각종 전문업체 문의처</span>
@@ -606,7 +606,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <!-- 2026-09-29: 폰에서 회선 관리(초대 · 이름 바꾸기)로 가는 입구가 잘 안 보였습니다 -->
     <a class="contacts-link" href="aliascall_hotline_manage.html"><span>👥</span><span data-i18n="manageLink">회선 관리</span></a>
   </div>
-  <!-- 🔴 2026-10-23 단축 다이얼 -->
+  <!-- 🔴 2026-10-23 단축회선 -->
   <div class="sd-box" data-sd id="sdMsg" style="max-width:360px;margin-bottom:16px;"></div>
 
   <div class="mine-head">
@@ -803,7 +803,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-window.sb = sb;   // 🔴 2026-10-23 단축 다이얼(aliascall_speeddial.js)이 같이 씁니다
+window.sb = sb;   // 🔴 2026-10-23 단축회선(aliascall_speeddial.js)이 같이 씁니다
 
 // ── 실시간 수신 감지 + 가벼운 알림 배너 ──
 // 2026-08-19 (3차 — 중복코드 통합): 예전엔 이 화면도 전화 응답(WebRTC)을 통째로 직접 처리했는데,
@@ -2013,7 +2013,7 @@ function renderLoginStatus(){
   renderMyLines('myLinesHome', 3);
   renderMyLines('myLinesFull');
   applyLang(currentLang);
-  try { if (window.AliasSD) AliasSD.mountAll(); } catch (e) { console.warn('[home] 단축 다이얼 실패', e); }
+  try { if (window.AliasSD) AliasSD.mountAll(); } catch (e) { console.warn('[home] 단축회선 실패', e); }
   // ⚠ 2026-08-29(v69): 반드시 맨 마지막에, try로 감쌉니다.
   //   중간에 두었더니 여기서 오류가 났을 때 "내 회선"까지 통째로 안 그려졌습니다.
   //   새로 붙이는 기능이 기존 화면을 죽이면 안 됩니다.
