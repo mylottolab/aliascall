@@ -25,6 +25,7 @@ ACStore.onDone = function(r){
 };
 </script>
 <script src="aliascall_push.js"></script>
+<script src="aliascall_speeddial.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -244,19 +245,20 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 /* ═══ 2026-09-28 신설: 첫 화면 네 칸 (33차 3-4) ═══
    ⚠ 여전히 한 파일 안에서 화면만 바꿉니다. 연결요청 수신이 이 파일에 있습니다. */
 #viewHome{ padding:10px 16px 0; max-width:420px; margin:0 auto; }
-.home-grid{ position:relative; display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin:8px 0 18px; }
-.tile{ background:#fff; color:var(--ink); border:none; border-radius:18px; aspect-ratio:1/1; min-height:160px;
-       padding:14px 6px; cursor:pointer; font-family:inherit; text-align:center;
+.home-grid{ position:relative; display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin:4px 0 8px; }
+.tile{ background:#fff; color:var(--ink); border:none; border-radius:18px; min-height:118px;   /* 🔴 2026-10-23 단축 다이얼 자리를 내려고 낮췄습니다(예전: 정사각형) */
+       padding:10px 6px; cursor:pointer; font-family:inherit; text-align:center;
        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
        border-top:6px solid var(--teal); box-shadow:0 6px 18px -8px rgba(0,0,0,.45); transition:transform .12s ease; }
 .tile:active{ transform:scale(.97); }
-.tile .t-name{ font-family:'Inter',sans-serif; font-size:19px; font-weight:800; line-height:1.35; letter-spacing:-.01em; }
+.tile .t-name{ font-family:'Inter',sans-serif; font-size:17px; font-weight:800; line-height:1.35; letter-spacing:-.01em; }
 .tile .t-sub{ font-size:10.5px; letter-spacing:-.02em; color:var(--ink-soft); line-height:1.5; }
 .tile.t-reg, .tile.t-alert{ border-top-color:var(--coral); }
 .tile.t-temp{ border-top-color:var(--brass); }
 /* 윗줄 칸은 글씨를 조금 위로, 아랫줄 칸은 조금 아래로 — 가운데 띠에 가리지 않게 */
-.tile.t-reg, .tile.t-alert{ justify-content:center; padding-bottom:30px; }
-.tile.t-temp, .tile.t-msg{ padding-top:30px; }
+.tile.t-reg, .tile.t-alert{ justify-content:center; padding-bottom:22px; }
+.tile.t-temp, .tile.t-msg{ padding-top:22px; }
+.tile{ gap:6px; }
 .no-num{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); pointer-events:none;
          background:linear-gradient(180deg,#E36A5C,#B9342A); color:#fff; font-weight:800; font-size:14px;
          padding:9px 18px; border-radius:10px; white-space:nowrap; border:2px solid #fff;
@@ -315,14 +317,14 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 .cat.emg .entry .pt{ background:var(--coral-tint); color:#B4552E; }
 
 /* 알림 띠 */
-.alerts-strip{ display:none; align-items:center; gap:10px; background:var(--coral); border-radius:12px; padding:12px 14px; margin-top:10px; text-decoration:none; color:#fff; }
+.alerts-strip{ display:none; align-items:center; gap:10px; background:var(--coral); border-radius:12px; padding:9px 14px; margin-top:6px; text-decoration:none; color:#fff; }
 .alerts-strip.show{ display:flex; }
 .alerts-strip .n{ background:#fff; color:var(--coral); font-size:12px; font-weight:700; border-radius:20px; padding:2px 9px; }
 .alerts-strip .t{ flex:1; font-size:12.5px; font-weight:700; }
 /* 2026-08-29 신설(v69): 승인 대기 문의 — 보안회선 쪽.
    ⚠ 위 alerts-strip은 안심콜(등록물) 알림이라 색과 이동 위치가 다릅니다. */
 .wait-strip{ display:none; align-items:center; gap:10px; background:var(--teal-deep, #123F3D);
-  border-radius:12px; padding:12px 14px; margin-top:10px; text-decoration:none; color:#fff; }
+  border-radius:12px; padding:9px 14px; margin-top:6px; text-decoration:none; color:#fff; }
 .wait-strip.show{ display:flex; }
 .wait-strip .n{ background:#fff; color:var(--teal-deep, #123F3D); font-size:12px; font-weight:700; border-radius:20px; padding:2px 9px; }
 .wait-strip .t{ flex:1; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -485,6 +487,9 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <span>›</span>
   </a>
 
+  <!-- 🔴 2026-10-23 단축 다이얼 (1~9 회선 + 회선 전체 · 긴급 · 임시 · 회선 관리) — aliascall_speeddial.js -->
+  <div class="sd-box" data-sd id="sdHome"></div>
+
   <!-- 2026-09-28 (2차): 첫 화면의 "내 회선"은 없앴습니다. ④ 안에 전체 목록이 그대로 있습니다. -->
 
   <!-- ⚠ 2026-08-28 신설: 순환 배너.
@@ -568,18 +573,20 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 <div class="view" id="viewMsg">
 
   <!-- ⚠ 2026-08-28 신설: Emergency 쪽에는 제목이 있는데 여기엔 없었습니다. -->
-  <div class="section-header secure">
+  <div class="section-header secure" style="margin-top:8px;">
     <div class="section-header-title" data-i18n="secMsgTitle">💬 Alias The Next-Gen Messenger</div>
     <div class="section-header-sub" data-i18n="secMsgSub">번호 없이, 우리끼리만 아는 회선</div>
   </div>
 
   <!-- 2026-09-28 (② 연락처): 연락처 입구. 회선 갈래가 먼저 열립니다. -->
-  <div class="contacts-row" style="margin-bottom:14px;">
+  <div class="contacts-row" style="margin-top:8px;margin-bottom:4px;">
     <a class="contacts-link" href="aliascall_contacts.html?tab=line&amp;from=msg"><span>📇</span><span data-i18n="contactsLink">연락처</span></a>
     <a class="contacts-link" href="aliascall_calls.html?tab=line&amp;from=msg"><span>📞</span><span data-i18n="callsLink">통화기록</span></a>
     <!-- 2026-09-29: 폰에서 회선 관리(초대 · 이름 바꾸기)로 가는 입구가 잘 안 보였습니다 -->
     <a class="contacts-link" href="aliascall_hotline_manage.html"><span>👥</span><span data-i18n="manageLink">회선 관리</span></a>
   </div>
+  <!-- 🔴 2026-10-23 단축 다이얼 -->
+  <div class="sd-box" data-sd id="sdMsg" style="max-width:360px;margin-bottom:16px;"></div>
 
   <div class="mine-head">
     <span class="t" data-i18n="myLines">내 회선</span>
@@ -775,6 +782,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.sb = sb;   // 🔴 2026-10-23 단축 다이얼(aliascall_speeddial.js)이 같이 씁니다
 
 // ── 실시간 수신 감지 + 가벼운 알림 배너 ──
 // 2026-08-19 (3차 — 중복코드 통합): 예전엔 이 화면도 전화 응답(WebRTC)을 통째로 직접 처리했는데,
@@ -1108,9 +1116,9 @@ function relDay(iso){
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
   if (d <= 0) return T().relToday;
   if (d === 1) return T().relYesterday;
-  if (d < 30) return (LANG === 'en') ? (d + ' days ago') : (d + '일 전');
+  if (d < 30) return (currentLang === 'en') ? (d + ' days ago') : (d + '일 전');
   const m = Math.floor(d / 30);
-  return (LANG === 'en') ? (m + ' months ago') : (m + '개월 전');
+  return (currentLang === 'en') ? (m + ' months ago') : (m + '개월 전');
 }
 
 
@@ -1856,6 +1864,7 @@ let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
 
 function applyLang(lang){
   currentLang = lang;
+  try { if (window.AliasSD) setTimeout(function(){ AliasSD.repaint(); }, 0); } catch (e) {}
   localStorage.setItem('aliascall_lang', lang);
   document.documentElement.lang = lang;
 
@@ -1969,6 +1978,7 @@ function renderLoginStatus(){
   renderMyLines('myLinesHome', 3);
   renderMyLines('myLinesFull');
   applyLang(currentLang);
+  try { if (window.AliasSD) AliasSD.mountAll(); } catch (e) { console.warn('[home] 단축 다이얼 실패', e); }
   // ⚠ 2026-08-29(v69): 반드시 맨 마지막에, try로 감쌉니다.
   //   중간에 두었더니 여기서 오류가 났을 때 "내 회선"까지 통째로 안 그려졌습니다.
   //   새로 붙이는 기능이 기존 화면을 죽이면 안 됩니다.
