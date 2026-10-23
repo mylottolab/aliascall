@@ -41,6 +41,7 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .ask p{ font-size:12.5px; line-height:1.75; color:#CFE0DD; margin:0 0 14px; }
 .ask input{ width:100%; box-sizing:border-box; border:none; border-radius:11px; padding:13px 14px; font-size:14px; font-family:inherit; margin-bottom:9px; }
 .ask button{ width:100%; border:none; border-radius:11px; padding:14px; background:var(--coral); color:#fff; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; }
+.ask .again{ display:block; text-align:center; margin:0 0 12px; padding:13px; border-radius:11px; background:var(--teal,#1F6F6B); color:#fff; font-weight:700; text-decoration:none; font-size:14.5px; }
 .ask button:disabled{ opacity:.5; cursor:default; }
 .ask .note{ font-size:11px; color:#9FBDB9; line-height:1.7; margin-top:11px; }
 .ask .err{ font-size:12px; color:#FFC9BC; margin-top:10px; display:none; }
@@ -188,14 +189,23 @@ async function init(){
   //   여기가 하는 일은 "대화창을 열어주는 것"까지입니다.
   //   그 선을 넘으면 전자상거래법상 '통신판매중개'가 되어
   //   신고 의무와 소비자 분쟁 책임이 생깁니다.
+  /* 🔴 2026-10-23 — 이 업체에 전에 연 상담방이 이 폰에 있으면 바로 가는 길 */
+  let prevRoom = '';
+  try {
+    const mine = JSON.parse(localStorage.getItem('aliascall_my_lines') || '[]');
+    const hit = (Array.isArray(mine) ? mine : []).find((x) => x && x.token && !x.isOwner && (x.bizSlug === slug || x.title === biz.business_name));
+    if (hit) prevRoom = 'aliascall_hotline_room.html?t=' + encodeURIComponent(hit.token);
+  } catch (e) {}
   const ask = document.createElement('div');
   ask.className = 'ask';
+  ask.id = 'askBox';
   ask.innerHTML =
-    '<h2>💬 문의하기</h2>' +
-    '<p>전화번호를 주고받지 않습니다. 별명만 남기시면 바로 대화가 시작됩니다.</p>' +
+    '<h2>💬 상담 요청 · 📞 통화</h2>' +
+    (prevRoom ? '<a class="again" href="' + prevRoom + '">💬 지난 상담방으로 바로 가기 ›</a>' : '') +
+    '<p>전화번호를 주고받지 않습니다. 별명만 남기시면 바로 대화가 시작되고, 그 방에서 음성 · 영상 통화도 하실 수 있습니다.</p>' +
     '<input type="text" id="nickInput" maxlength="20" placeholder="사용하실 별명" ' +
     'autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">' +
-    '<button type="button" id="askBtn">문의 시작하기</button>' +
+    '<button type="button" id="askBtn">상담 요청하기</button>' +
     '<div class="err" id="askErr"></div>' +
     '<div class="note">별명 외 개인정보는 필요 없습니다. ' +
     (biz.auto_approve ? '바로 대화가 열립니다.' : '업체가 확인하면 대화가 열립니다.') +
@@ -207,13 +217,22 @@ async function init(){
     '<a href="index.html">Aliascall이 궁금하신가요? ›</a>';
   wrap.appendChild(footer);
 
-  document.getElementById('askBtn').addEventListener('click', () => sendInquiry(biz));
+  /* 🔴 2026-10-23 — 지난번 별명을 미리 채우고, ?ask=1 로 오면 상담 요청 칸으로 바로 */
+  try { const ln = localStorage.getItem('aliascall_inquiry_nick'); if (ln) document.getElementById('nickInput').value = ln; } catch (e) {}
+  if (new URLSearchParams(location.search).get('ask') === '1') {
+    setTimeout(() => {
+      ask.scrollIntoView({ behavior:'smooth', block:'center' });
+      const ni = document.getElementById('nickInput');
+      if (!ni.value) ni.focus(); else document.getElementById('askBtn').focus();
+    }, 150);
+  }
+  document.getElementById('askBtn').addEventListener('click', () => sendInquiry(biz, slug));
   document.getElementById('nickInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') sendInquiry(biz);
   });
 }
 
-async function sendInquiry(biz){
+async function sendInquiry(biz, slug){
   const btn = document.getElementById('askBtn');
   const err = document.getElementById('askErr');
   const nick = document.getElementById('nickInput').value.trim();
@@ -221,6 +240,7 @@ async function sendInquiry(biz){
 
   if (!nick) { err.textContent = '별명을 입력해주세요.'; err.classList.add('show'); return; }
 
+  try { localStorage.setItem('aliascall_inquiry_nick', nick); } catch (e) {}
   btn.disabled = true;
   btn.textContent = '연결 중…';
   try {
@@ -245,7 +265,7 @@ async function sendInquiry(biz){
       err.textContent = msg;
       err.classList.add('show');
       btn.disabled = false;
-      btn.textContent = '문의 시작하기';
+      btn.textContent = '상담 요청하기';
       return;
     }
 
@@ -258,7 +278,7 @@ async function sendInquiry(biz){
       if (!Array.isArray(list)) list = [];
       list = list.filter((x) => x && x.hotlineId !== data.hotlineId);
       list.unshift({
-        hotlineId: data.hotlineId, title: biz.business_name, isOwner: false,
+        hotlineId: data.hotlineId, title: biz.business_name, isOwner: false, bizSlug: slug || '',
         token: data.inviteToken, lastVisitedAt: new Date().toISOString(),
       });
       localStorage.setItem('aliascall_my_lines', JSON.stringify(list.slice(0, 30)));
@@ -283,7 +303,7 @@ async function sendInquiry(biz){
     err.textContent = '연결에 실패했습니다. 잠시 후 다시 시도해주세요.';
     err.classList.add('show');
     btn.disabled = false;
-    btn.textContent = '문의 시작하기';
+    btn.textContent = '상담 요청하기';
   }
 }
 

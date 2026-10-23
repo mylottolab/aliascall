@@ -347,7 +347,10 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 .ad-panel{ display:none; margin-top:7px; }
 .ad-panel.open{ display:block; }
 .ad-panel .banner-strip{ display:grid; grid-template-columns:repeat(2,1fr); gap:7px; overflow:visible; }
-.ad-panel .bn{ width:auto; min-height:76px; }
+.ad-panel .bn{ width:auto; min-height:76px; display:flex; flex-direction:column; }
+.ad-panel .bn .bn-ask{ margin-top:auto; padding-top:8px; }
+.ad-panel .bn .bn-c{ align-self:flex-start; }
+.ad-panel .bn .bn-ask span{ display:block; text-align:center; padding:7px 4px; border-radius:9px; background:var(--coral); color:#fff; font-size:11.5px; font-weight:800; }
 .ad-all{ display:block; text-align:right; font-size:11.5px; color:#9FBDB9; text-decoration:none; padding:7px 2px 0; }
 .banner-head{ display:flex; align-items:center; margin:0 2px 9px; }
 .banner-head .bh-t{ flex:1; font-size:12px; font-weight:700; color:#E8A98A; }
@@ -1208,6 +1211,12 @@ async function renderBanner(){
       rg.className = 'bn-r'; rg.textContent = '📍 ' + r.region;
       a.appendChild(rg);
     }
+    /* 🔴 2026-10-23 — 누르면 업체 화면의 상담 요청 칸으로 바로(대화가 열리면 그 방에서 통화) */
+    a.href += '&ask=1';
+    const k = document.createElement('div');
+    k.className = 'bn-ask';
+    k.innerHTML = '<span>' + (currentLang === 'en' ? '💬 Ask · 📞 Call' : '💬 상담 요청 · 📞 통화') + '</span>';
+    a.appendChild(k);
     strip.appendChild(a);
   });
   box.style.display = 'block';
