@@ -418,6 +418,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 </style>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
 <script src="aliascall_theme.js?v=20261028"></script>
+<script src="aliascall_temp_names.js?v=20261029"></script>
 </head>
 <body>
 
@@ -782,7 +783,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // 남아있는 사고가 났음(2026-08-19 오늘 answer 재전송 버그 등). 이제 이 화면은 "요청이 왔다"는
 // 걸 가벼운 배너로만 알리고, 실제 연결(마이크 권한, SDP 협상, ICE 등)은 항상 incoming_calls.html
 // 단 한 곳에서만 처리하도록 통합함 — 수락을 누르면 그 화면으로 넘어가서 자동으로 이어받음.
-const CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
+const CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓', temp_contact:'🎫' };
 
 let myRegistrationIds = [];
 let pendingSession = null;
@@ -954,6 +955,7 @@ document.getElementById('chatOpenBtn').addEventListener('click', () => {
 });
 
 // ── 2026-08-20 (3차) 신설: 사건함 — 마이페이지와 동일 로직, 메인화면에서도 바로 확인 가능하게 ──
+function esc2(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 let showingClosedCases = false;
 let caseInboxSnapshot = {}; // 2026-08-21 신설: 이전 목록과 비교해서 새 활동이 있으면 반짝임 표시하기 위함
 async function loadCaseInbox(){
@@ -984,8 +986,9 @@ async function loadCaseInbox(){
 
     const alertTitleHtml = !showingClosedCases ? '<div class="case-inbox-alert-title">' + T().caseAlertTitle + '</div>' : '';
     const isFirstLoad = Object.keys(caseInboxSnapshot).length === 0; // 2026-08-21: 첫 로딩 때는 전부 반짝이면 안 되니 구분
+    const tempNames = window.acTempNames ? await acTempNames(sb, data.cases) : {};   // 🔴 2026-10-29 임시연락처 이름
     listEl.innerHTML = alertTitleHtml + data.cases.map((c) => {
-      const emoji = CATEGORY_EMOJI[c.category] || '❓';
+      const emoji = tempNames[c.caseId] ? '🎫' : (CATEGORY_EMOJI[c.category] || '❓');
       const preview = c.lastMessage
         ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? T().caseMePrefix : '') + c.lastMessage.preview)
         : T().caseNoMessage;
@@ -1007,7 +1010,7 @@ async function loadCaseInbox(){
         <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}${isNewActivity ? ' new-highlight' : ''}" data-case-id="${c.caseId}">
           <span class="ci-emoji">${emoji}</span>
           <span class="ci-body">
-            <span class="ci-title">${c.registrationTitle || T().caseFallbackTitle} ${closedBadge}</span>
+            <span class="ci-title">${esc2(tempNames[c.caseId] || c.registrationTitle || T().caseFallbackTitle)} ${closedBadge}</span>
             <span class="ci-preview">${preview}</span>
           </span>
           <span class="ci-time">${time}</span>

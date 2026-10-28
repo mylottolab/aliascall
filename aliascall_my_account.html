@@ -392,6 +392,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 </style>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
 <script src="aliascall_theme.js?v=20261028"></script>
+<script src="aliascall_temp_names.js?v=20261029"></script>
 <script>document.addEventListener('DOMContentLoaded',function(){try{if((localStorage.getItem('aliascall_lang')||'').indexOf('en')===0){var b=document.getElementById('acThemeOpen');if(b)b.textContent='🎨 Display';}}catch(e){}});</script>
 </head>
 <body>
@@ -1700,7 +1701,8 @@ async function showMyPage(session){
 }
 
 // ── 2026-08-20 신설: 사건함 — 발견자와의 대화 목록, 클릭하면 대화 이어보기/답장 화면으로 이동 ──
-const CASE_CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓' };
+const CASE_CATEGORY_EMOJI = { vehicle:'🚗', lost_item:'🎒', vulnerable_person:'🧑‍🦳', pet:'🐾', callback_contact:'📮', misc_incident:'❓', temp_contact:'🎫' };
+function esc2(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 let showingClosedCases = false;
 let caseInboxSnapshot = {}; // 2026-08-21 신설: 이전 목록과 비교해서 새 활동이 있으면 반짝임 표시하기 위함
 
@@ -1724,8 +1726,9 @@ async function loadCaseInbox(){
 
     const alertTitleHtml = !showingClosedCases ? '<div class="case-inbox-alert-title">' + T().caseAlertTitle + '</div>' : '';
     const isFirstLoad = Object.keys(caseInboxSnapshot).length === 0;
+    const tempNames = window.acTempNames ? await acTempNames(sb, data.cases) : {};   // 🔴 2026-10-29 임시연락처 이름
     listEl.innerHTML = alertTitleHtml + data.cases.map((c) => {
-      const emoji = CASE_CATEGORY_EMOJI[c.category] || '❓';
+      const emoji = tempNames[c.caseId] ? '🎫' : (CASE_CATEGORY_EMOJI[c.category] || '❓');
       const preview = c.lastMessage
         ? (c.lastMessage.type === 'call_log' ? c.lastMessage.preview : (c.lastMessage.sender === 'owner' ? T().caseMePrefix : '') + c.lastMessage.preview)
         : T().caseNoMessage;
@@ -1746,7 +1749,7 @@ async function loadCaseInbox(){
         <button type="button" class="case-item${c.status === 'closed' ? ' closed' : ''}${isNewActivity ? ' new-highlight' : ''}" data-case-id="${c.caseId}">
           <span class="ci-emoji">${emoji}</span>
           <span class="ci-body">
-            <span class="ci-title">${c.registrationTitle || T().fallbackItem} ${closedBadge}</span>
+            <span class="ci-title">${esc2(tempNames[c.caseId] || c.registrationTitle || T().fallbackItem)} ${closedBadge}</span>
             <span class="ci-preview">${preview}</span>
           </span>
           <span class="ci-time">${time}</span>
