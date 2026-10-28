@@ -112,6 +112,11 @@
     s += '.ac-th-btn{border:1px solid var(--line,#DCE3DE);background:var(--card,#fff);color:var(--ink,#12302E);' +
       'border-radius:14px;min-width:28px;height:28px;padding:0 5px;font-size:12px;font-weight:800;cursor:pointer;' +
       'display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;font-family:inherit;}' +
+      '.ac-gear:not(.ac-gear-float){margin-left:auto;}' +
+      'html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}' +
+      '.ac-gear{min-width:34px;height:34px;border-radius:17px;font-size:17px;font-weight:400;padding:0;}' +
+      '.ac-gear-float{background:rgba(255,255,255,.15) !important;color:#fff !important;border:1px solid rgba(255,255,255,.25) !important;}' +
+      '.ac-lang-hidden,html.ac-compact #acHelpLink{display:none !important;}' +
       '.ac-th-wrap{display:inline-flex;gap:3px;align-items:center;margin-left:4px;flex-shrink:0;}' +
       '.ac-th-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;}' +
       '.ac-th-sheet{position:fixed;left:0;right:0;bottom:0;z-index:99999;max-height:86vh;overflow:auto;' +
@@ -341,59 +346,56 @@
     write(t); apply(t);
   }
 
+  /* 🔴 2026-10-28 — 머리글 정리 (애플 심사 4 "화면이 복잡함" 대응)
+     예전: [KR][EN] [🌙] [Aa] [❓ 사용법] 이 머리글에 따로따로 → 좁은 폰·iPad 에서 겹치고 빽빽함
+     지금: [⚙] 단추 하나. 누르면 아래에서 창이 올라와 언어 · 사용법 · 주간/야간 · 색깔 · 글자를 한곳에서 고릅니다.
+     ⚠ 원래 언어 단추는 지우지 않고 숨겨만 둡니다. 창에서 언어를 고르면 그 단추를 대신 눌러 줍니다(화면마다 번역 코드가 그 단추에 붙어 있음).
+     ⚠ 통화방(핫라인 방)처럼 언어 단추가 "더보기" 메뉴 안에 있는 화면은 건드리지 않습니다. */
+  var LANG_SEL = '.lang-toggle, #langToggle, #langToggleBtn, .lang';
+  function findLangAnchor(){
+    var list = document.querySelectorAll(LANG_SEL);
+    for (var i = 0; i < list.length; i++) {
+      var el = list[i];
+      if (el.closest && el.closest('.more-menu, [role="menu"], .ac-th-sheet')) continue;
+      if (el.closest && el.closest('.lang-toggle, .lang') && el.closest('.lang-toggle, .lang') !== el) continue;
+      return el;
+    }
+    return null;
+  }
+  function setLang(want){            // want: 'ko' | 'en'
+    var a = findLangAnchor() || document.querySelector(LANG_SEL);
+    if (!a) return;
+    var b = a.querySelector && a.querySelector('[data-lang="' + want + '"]');
+    if (b) { b.click(); }
+    else if ((en() ? 'en' : 'ko') !== want) { a.click(); }      // 한 단추로 바꾸는 화면
+    try { localStorage.setItem('aliascall_lang', want); } catch (e) {}
+    var h = document.getElementById('acHelpLink');
+    if (h) { h.href = 'aliascall_help.html?lang=' + want; h.textContent = want === 'en' ? '❓ Guide' : '❓ 사용법'; }
+    paintGear();
+  }
+  function paintGear(){
+    document.querySelectorAll('.ac-gear').forEach(function(g){
+      g.title = en() ? 'Settings · Language · Guide' : '설정 · 언어 · 사용법';
+      g.setAttribute('aria-label', g.title);
+    });
+  }
   function addButtons(){
-    if (document.querySelector('.ac-th-wrap')) return;
-    var anchor = document.querySelector('.lang-toggle, #langToggle, #langToggleBtn, .lang');
+    if (document.querySelector('.ac-gear')) return;
+    var anchor = findLangAnchor();
     if (!anchor) return;
-    // 머리띠 안 다른 것들의 폭을 적어둡니다. 단추를 붙인 뒤 찌그러지면 뺍니다.
-    var sibs = Array.prototype.slice.call(anchor.parentNode.querySelectorAll('*'));
-    var w0 = sibs.map(function(el){ return el.getBoundingClientRect().width; });
-    var wrap = document.createElement('span');
-    wrap.className = 'ac-th-wrap';
-    var m = document.createElement('button');
-    m.type = 'button'; m.className = 'ac-th-btn ac-th-mode';
-    m.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); toggleMode(); });
-    var a = document.createElement('button');
-    a.type = 'button'; a.className = 'ac-th-btn';
-    a.textContent = 'Aa';
-    a.title = en() ? 'Display settings' : '화면 설정';
-    a.setAttribute('aria-label', a.title);
-    a.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); openSheet(); });
-    wrap.appendChild(m); wrap.appendChild(a);
-    // 언어 단추 바로 뒤에 붙입니다. (위치가 absolute 인 표지 화면은 단추 묶음 안쪽 앞에)
-    var pos = window.getComputedStyle(anchor).position;
-    if (pos === 'absolute' || pos === 'fixed') {
-      // 첫 화면: 언어 단추가 오른쪽 위에 떠 있습니다. 왼쪽 위 빈자리에 따로 띄웁니다.
-      var cs = window.getComputedStyle(anchor);
-      wrap.style.cssText = 'position:' + pos + ';top:' + cs.top + ';left:16px;margin:0;z-index:5;';
-      anchor.parentNode.insertBefore(wrap, anchor);
-      wrap.querySelectorAll('.ac-th-btn').forEach(function(b){
-        b.style.background = 'rgba(255,255,255,.15)'; b.style.color = '#fff'; b.style.border = '1px solid rgba(255,255,255,.2)';
-      });
-      paintButtons();
-      return;
-    } else {
-      anchor.parentNode.insertBefore(wrap, anchor.nextSibling);
+    root.classList.add('ac-compact');
+    var g = document.createElement('button');
+    g.type = 'button'; g.className = 'ac-th-btn ac-gear';
+    g.textContent = '⚙︎';
+    g.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); openSheet(); });
+    var cs = window.getComputedStyle(anchor);
+    if (cs.position === 'absolute' || cs.position === 'fixed') {
+      g.style.cssText = 'position:' + cs.position + ';top:' + cs.top + ';right:' + cs.right + ';z-index:5;';
+      g.classList.add('ac-gear-float');
     }
-    paintButtons();
-    /* 머리띠가 좁아 넘치면 [Aa] 는 빼고 [🌙] 만 둡니다.
-       Aa(색깔·글자)는 마이페이지 · 첫 화면에서 열 수 있습니다. */
-    var bar = wrap.parentNode;
-    function over(){
-      for (var el = wrap; el && el !== document.body; el = el.parentNode) {
-        if (el.scrollWidth > el.clientWidth + 1) return true;
-      }
-      var r = wrap.getBoundingClientRect();
-      return r.right > (window.innerWidth || document.documentElement.clientWidth) - 2;
-    }
-    function squeezed(){
-      for (var i = 0; i < sibs.length; i++) {
-        if (w0[i] > 4 && sibs[i].getBoundingClientRect().width < w0[i] - 2) return true;
-      }
-      return false;
-    }
-    if (over() || squeezed()) { a.remove(); }
-    if (over() || squeezed()) { wrap.remove(); }
+    anchor.parentNode.insertBefore(g, anchor);
+    anchor.classList.add('ac-lang-hidden');
+    paintGear();
   }
 
   /* ── 설정 창 ───────────────────────────────────────────────────── */
@@ -419,8 +421,27 @@
     ];
 
     function draw(){
-      sh.innerHTML = '<div class="grip"></div><h3>' + L('🎨 화면 설정','🎨 Display settings') + '</h3>' +
+      sh.innerHTML = '<div class="grip"></div><h3>' + (root.classList.contains('ac-compact') ? L('⚙︎ 설정','⚙︎ Settings') : L('🎨 화면 설정','🎨 Display settings')) + '</h3>' +
         '<p class="note">' + L('고르는 즉시 바뀝니다. 이 폰에만 적용됩니다.', 'Changes apply right away, on this phone only.') + '</p>';
+      if (root.classList.contains('ac-compact')) {
+        var ll = document.createElement('p'); ll.className = 'lab'; ll.textContent = L('언어','Language'); sh.appendChild(ll);
+        var lr = document.createElement('div'); lr.className = 'row';
+        [['ko','한국어'],['en','English']].forEach(function(o){
+          var b = document.createElement('button'); b.type = 'button';
+          b.className = 'opt' + ((E ? 'en' : 'ko') === o[0] ? ' on' : '');
+          b.textContent = o[1];
+          b.addEventListener('click', function(){ close(); setLang(o[0]); });
+          lr.appendChild(b);
+        });
+        sh.appendChild(lr);
+        var hl = document.createElement('p'); hl.className = 'lab'; hl.textContent = L('도움말','Help'); sh.appendChild(hl);
+        var hr = document.createElement('div'); hr.className = 'row';
+        var ha = document.createElement('a'); ha.className = 'opt';
+        ha.href = 'aliascall_help.html?lang=' + (E ? 'en' : 'ko');
+        ha.style.textDecoration = 'none';
+        ha.textContent = L('❓ 사용법 보기','❓ How to use');
+        hr.appendChild(ha); sh.appendChild(hr);
+      }
       GROUPS.forEach(function(g){
         var lab = document.createElement('p'); lab.className = 'lab'; lab.textContent = g[1]; sh.appendChild(lab);
         var row = document.createElement('div'); row.className = 'row';
