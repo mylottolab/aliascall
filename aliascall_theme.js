@@ -502,3 +502,29 @@
     (document.head || document.documentElement).appendChild(s);
   } catch (e) {}
 })();
+
+/* 🔴 2026-10-29 — 서버 함수(Edge Function)가 401(로그인 확인 실패)을 주면, 로그인 정보를 한 번 새로 받아 다시 보냅니다.
+   증상: 화면에는 "로그인됨"인데 긴급 알림 켜기 · 소통함 불러오기만 실패(오래 켜 둔 앱에서 로그인 표가 낡음).
+   ⚠ 화면마다 따로 고치지 않으려고 여기서 fetch 를 한 번 감쌉니다. 함수 주소(/functions/v1/)에만 적용합니다. */
+(function(){
+  if (window.__acFnRetry) return; window.__acFnRetry = true;
+  var orig = window.fetch && window.fetch.bind(window);
+  if (!orig) return;
+  function client(){ try { return (typeof sb !== 'undefined' && sb && sb.auth) ? sb : null; } catch (e) { return null; } }
+  window.fetch = async function(input, init){
+    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    var res = await orig(input, init);
+    if (res.status !== 401 || url.indexOf('/functions/v1/') < 0 || !init || !init.headers) return res;
+    var c = client(); if (!c) return res;
+    try {
+      var h = init.headers instanceof Headers ? Object.fromEntries(init.headers.entries()) : Object.assign({}, init.headers);
+      var authKey = Object.keys(h).find(function(k){ return k.toLowerCase() === 'authorization'; });
+      if (!authKey) return res;
+      var r = await c.auth.refreshSession();
+      var s = r && r.data && r.data.session;
+      if (!s) { console.warn('[auth] 로그인 정보를 새로 받지 못했습니다 — 다시 로그인이 필요합니다'); return res; }
+      h[authKey] = 'Bearer ' + s.access_token;
+      return await orig(input, Object.assign({}, init, { headers: h }));
+    } catch (e) { return res; }
+  };
+})();
