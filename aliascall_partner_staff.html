@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>매장 직원 안내 — 부름 · 에일리어스콜</title>
+<meta name="robots" content="noindex">
+<!--
+  2026-10-29 신설: 유치대리점 매장 직원용 한 장 안내 (화면 · A4 인쇄)
+  aliascall_partner_staff.html?code=123456&store=○○폰  → 코드 · 매장 이름이 들어갑니다.
+-->
+<style>
+@page{ size:A4; margin:12mm; }
+:root{ --ink:#12302E; --soft:#3E5654; --teal:#1F6F6B; --deep:#123F3D; --tint:#E4EFEE; --coral:#E8734A; --ctint:#FDEAE1; --line:#DCE3DE; }
+*{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body{ margin:0; background:#EEF3F0; color:var(--ink); font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif; word-break:keep-all; }
+.bar{ max-width:800px; margin:0 auto; padding:14px 16px; display:flex; gap:8px; justify-content:space-between; align-items:center; }
+.bar a{ color:var(--teal); font-weight:700; text-decoration:none; font-size:14px; }
+.bar button{ border:none; background:var(--coral); color:#fff; border-radius:12px; padding:11px 16px; font-weight:800; font-size:15px; font-family:inherit; cursor:pointer; }
+.sheet{ max-width:800px; margin:0 auto 40px; background:#fff; border-radius:16px; padding:26px 28px; }
+h1{ font-size:24px; margin:0 0 4px; }
+.meta{ font-size:13px; color:var(--soft); margin-bottom:14px; }
+.code{ display:inline-block; background:var(--ctint); border-radius:10px; padding:4px 12px; font-weight:900; font-size:20px; letter-spacing:.12em; color:var(--deep); }
+h2{ font-size:16.5px; margin:18px 0 8px; padding-left:10px; border-left:5px solid var(--teal); }
+.say{ background:var(--tint); border-radius:12px; padding:12px 16px; font-size:15px; line-height:1.75; }
+.say b{ color:var(--deep); }
+ol, ul{ margin:4px 0; padding-left:22px; }
+li{ font-size:14.5px; line-height:1.75; margin-bottom:2px; }
+.two{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.box{ border:1.5px solid var(--line); border-radius:12px; padding:10px 14px; }
+.box b.t{ display:block; font-size:15px; margin-bottom:4px; }
+.box p{ margin:0; font-size:13.5px; line-height:1.65; color:var(--soft); }
+.no{ background:#FFF6F3; border:1.5px solid #F2C2B0; border-radius:12px; padding:10px 14px; }
+.no li{ font-size:14px; }
+table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+td{ border-bottom:1px solid var(--line); padding:7px 4px; vertical-align:top; line-height:1.6; }
+td:first-child{ width:34%; font-weight:800; }
+.foot{ font-size:12px; color:var(--soft); margin-top:14px; text-align:center; }
+@media (max-width:600px){ .two{ grid-template-columns:1fr; } .sheet{ padding:20px 16px; border-radius:0; } }
+@media print{ body{ background:#fff; } .bar{ display:none; } .sheet{ max-width:none; margin:0; padding:0; border-radius:0; } h1{ font-size:21px; } h2{ margin:10px 0 6px; font-size:15px; } li, td{ line-height:1.5; font-size:12.5px; } .say{ font-size:13px; line-height:1.6; padding:9px 12px; } .box p{ font-size:12px; } .foot{ margin-top:8px; } }
+</style>
+</head>
+<body>
+<div class="bar"><a href="aliascall_partner.html">← 대리점 화면</a><button onclick="window.print()">🖨 인쇄하기</button></div>
+<div class="sheet">
+  <h1>매장 직원 30초 안내</h1>
+  <div class="meta">부름 · 에일리어스콜 <span id="storeLine"></span> · 우리 매장 추천 코드 <span class="code" id="code">——————</span></div>
+
+  <h2>① 이렇게 말해 보세요 (30초)</h2>
+  <div class="say">
+    "혹시 중고거래나 주차할 때 <b>전화번호 알려 주기 꺼려지신 적</b> 있으세요?<br>
+    <b>부름</b>은 내 전화번호 대신 부름번호로 전화 · 메신저를 하는 앱이고,
+    <b>에일리어스콜</b>은 차나 물건, 반려동물에 QR을 붙여 두면 번호를 몰라도 연락이 오게 해 주는 앱이에요.<br>
+    여기 QR 찍으시면 바로 써 보실 수 있어요."
+  </div>
+
+  <div class="two" style="margin-top:10px">
+    <div class="box"><b class="t">📞 부름 — 이런 손님께</b>
+      <p>중고거래 · 소개팅 · 모임 · 장사하시는 분, 번호를 주기 싫은데 연락은 해야 하는 분</p></div>
+    <div class="box"><b class="t">🚗 에일리어스콜 — 이런 손님께</b>
+      <p>차 주차 연락, 잃어버린 물건 · 반려동물 · 어르신 · 아이 연락처 QR, 1회용 임시연락처가 필요한 분</p></div>
+  </div>
+
+  <h2>② 순서</h2>
+  <ol>
+    <li>손님이 <b>매장에 붙은 QR을 휴대폰 카메라로 찍습니다.</b> (우리 매장 손님으로 자동 연결)</li>
+    <li>열린 화면에서 <b>손님이 직접</b> 가입하고 약관에 동의합니다.</li>
+    <li>앱 스토어(플레이 스토어)에서 앱을 설치한 손님은 가입 후 <b>"마이페이지(부름은 '나') → 추천 대리점"</b>에
+      우리 코드 <span class="code" id="code2" style="font-size:15px;padding:2px 8px">——————</span>를 넣으면 됩니다. <b>가입 후 30일 안에 한 번만</b> 넣을 수 있습니다.</li>
+    <li>다 됐습니다. 손님이 나중에 이용권을 사거나 연장할 때마다 매장 실적으로 잡힙니다.</li>
+  </ol>
+
+  <h2>③ 꼭 지켜 주세요</h2>
+  <div class="no"><ul>
+    <li><b>가입 · 동의 · 결제는 손님이 직접</b> 합니다. 직원이 손님 정보로 대신 가입하거나 대신 결제하지 마세요.</li>
+    <li><b>"가입해야 개통해 드려요"처럼 조건을 걸지 마세요.</b> 권해 드리기만 합니다.</li>
+    <li>없는 기능을 말하거나 과장하지 마세요. 모르는 것은 "앱 안 사용법을 보시면 돼요"라고 안내해 주세요.</li>
+    <li>직원 본인이나 지인 명의로 가짜 가입을 만들면 수수료가 취소되고 대리점이 정지됩니다.</li>
+    <li>손님 휴대폰을 만질 때는 꼭 먼저 허락을 받으세요.</li>
+  </ul></div>
+
+  <h2>④ 손님이 자주 묻는 것</h2>
+  <table>
+    <tr><td>돈 내야 해요?</td><td>가입과 설치는 무료입니다. 계속 쓰시려면 앱 안에서 이용권을 사는 방식이고, 가격은 앱 안 "이용권" 화면에 나와 있습니다.</td></tr>
+    <tr><td>상대방도 앱을 깔아야 해요?</td><td>에일리어스콜 QR은 상대가 앱 없이 카메라로 찍기만 하면 연락할 수 있습니다. 부름은 서로 부름번호로 연락합니다.</td></tr>
+    <tr><td>내 번호가 보여요?</td><td>아니요. 상대방에게 내 전화번호가 보이지 않는 것이 두 앱의 핵심입니다.</td></tr>
+    <tr><td>아이폰도 돼요?</td><td>웹(QR로 열리는 화면)에서는 아이폰 · 안드로이드 모두 됩니다. 앱은 스토어에서 이름으로 찾아 보세요.</td></tr>
+    <tr><td>코드를 잘못 넣었어요</td><td>코드는 한 번 넣으면 바꿀 수 없습니다. 넣기 전에 숫자 6자리를 꼭 같이 확인해 주세요.</td></tr>
+  </table>
+
+  <div class="foot">문의: 위브앱솔루션 · weapps.kr@gmail.com · 010-9237-9042 · 대리점 화면 aliascall.com/aliascall_partner.html</div>
+</div>
+<script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  var code = (q.get('code') || '').replace(/\D/g, '').slice(0, 6);
+  var store = (q.get('store') || '').slice(0, 40);
+  if (code) { document.getElementById('code').textContent = code; document.getElementById('code2').textContent = code; }
+  if (store) document.getElementById('storeLine').textContent = '· ' + store;
+})();
+</script>
+</body>
+</html>

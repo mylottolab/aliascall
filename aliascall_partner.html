@@ -110,6 +110,10 @@ th{ font-size:12px; color:var(--ink-soft); font-weight:700; }
 .notice .nd{ font-size:12px; color:var(--ink-soft); margin-bottom:8px; }
 .notice .nb{ font-size:14px; line-height:1.7; white-space:pre-wrap; color:var(--ink); }
 .notice .ack{ margin-top:12px; }
+.pgrid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.pbtn{ border:1.5px solid var(--line); background:#fff; border-radius:14px; padding:13px 10px; text-align:left; cursor:pointer; font-family:inherit; color:var(--ink); }
+.pbtn b{ display:block; font-size:14.5px; margin-bottom:3px; } .pbtn span{ font-size:12px; color:var(--ink-soft); }
+.pbtn:active{ background:var(--teal-tint); }
 .toast{ position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:var(--teal-deep); color:#fff;
         padding:12px 18px; border-radius:14px; font-size:14px; font-weight:700; z-index:50; display:none; max-width:90vw; text-align:center; }
 .toast.show{ display:block; }
@@ -117,6 +121,7 @@ details summary{ cursor:pointer; font-weight:800; font-size:14.5px; padding:6px 
 details p{ margin:4px 0 10px; }
 </style>
 <script src="aliascall_theme.js?v=20261029"></script>
+<script src="aliascall_partner_print.js?v=20261029"></script>
 </head>
 <body>
 <header>
@@ -250,6 +255,19 @@ details p{ margin:4px 0 10px; }
       <p class="muted" style="margin:6px 0 0">QR은 에일리어스콜 링크입니다. 손님이 링크로 들어와 가입하면 자동으로 내 손님이 됩니다.<br>
         앱 스토어에서 바로 설치한 손님은 가입 후 <b id="linkDays">30</b>일 안에 <b>마이페이지(부름은 "나" 화면) → 추천 대리점</b>에 코드를 넣으면 됩니다.</p>
       <button class="btn t" id="shareBtn" style="margin-top:12px">카카오톡 · 문자로 보내기</button>
+    </div>
+
+    <!-- 🔴 2026-10-29 매장용 인쇄물 · 직원 안내 -->
+    <div class="card">
+      <h2>🖨 매장용 인쇄물</h2>
+      <p class="muted" style="margin:0 0 10px">내 QR과 코드가 들어간 인쇄물을 바로 만듭니다. 인쇄 창에서 "PDF로 저장"도 됩니다. 컴퓨터에서 인쇄하시면 가장 깔끔합니다.</p>
+      <div class="fld"><label for="pStore">인쇄물에 넣을 매장 이름 (선택)</label><input type="text" id="pStore" maxlength="30" placeholder="예) 행복폰 수원점"></div>
+      <div class="pgrid">
+        <button type="button" class="pbtn" data-print="poster"><b>📄 A4 포스터</b><span>벽 · 유리문에 붙이기</span></button>
+        <button type="button" class="pbtn" data-print="tent"><b>🔺 계산대 세움 POP</b><span>A4를 반으로 접어 세우기</span></button>
+        <button type="button" class="pbtn" data-print="cards"><b>🪪 명함 크기 10장</b><span>손님께 건네기 · 잘라 쓰기</span></button>
+        <button type="button" class="pbtn" data-print="staff"><b>👩‍💼 직원용 설명서</b><span>30초 안내 · 지킬 것</span></button>
+      </div>
     </div>
 
     <div class="card">
@@ -396,6 +414,14 @@ function dash(d){
     try { await navigator.clipboard.writeText(t); toast('링크를 복사했습니다.'); } catch (e) { prompt('아래 링크를 복사하세요', t); }
   });
   el('qrBox').innerHTML = ''; try { new QRCode(el('qrBox'), { text: ac, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M }); } catch (e) {}
+  try { el('pStore').value = localStorage.getItem('partner_store_name') || ''; } catch (e) {}
+  el('pStore').oninput = () => { try { localStorage.setItem('partner_store_name', el('pStore').value); } catch (e) {} };
+  document.querySelectorAll('[data-print]').forEach(b => b.onclick = () => {
+    const store = el('pStore').value.trim();
+    if (b.dataset.print === 'staff') { window.open('aliascall_partner_staff.html?code=' + p.code + (store ? '&store=' + encodeURIComponent(store) : ''), '_blank'); return; }
+    if (!window.PartnerPrint) { toast('잠시 뒤 다시 눌러 주세요.'); return; }
+    PartnerPrint.open(b.dataset.print, { code: p.code, store });
+  });
   el('shareBtn').onclick = async () => {
     const text = '번호 노출 없는 안전한 통화 · 메신저\n부름: ' + bu + '\n에일리어스콜: ' + ac + '\n가입할 때 대리점 코드 ' + p.code + ' 를 넣어 주세요.';
     if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { return; } }
