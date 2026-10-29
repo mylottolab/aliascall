@@ -493,3 +493,12 @@
     }
   } catch (e) {}
 })();
+
+/* 🔴 2026-10-29 유치대리점: 어느 화면에서든 ?ref= 링크를 기억하고, 로그인되어 있으면 조용히 연결합니다(aliascall_partner_ref.js). */
+(function(){
+  try {
+    if (document.querySelector('script[src*="aliascall_partner_ref.js"]')) return;
+    var s = document.createElement('script'); s.src = 'aliascall_partner_ref.js?v=20261029'; s.defer = true;
+    (document.head || document.documentElement).appendChild(s);
+  } catch (e) {}
+})();

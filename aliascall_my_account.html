@@ -391,7 +391,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .mline-renew-btn{ flex:1; min-width:64px; padding:9px 4px; border-radius:9px; background:var(--teal-deep); color:#fff; font-size:12px; font-weight:700; text-align:center; text-decoration:none; }
 </style>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
-<script src="aliascall_theme.js?v=20261028"></script>
+<script src="aliascall_theme.js?v=20261029"></script>
 <script src="aliascall_temp_names.js?v=20261029"></script>
 <script>document.addEventListener('DOMContentLoaded',function(){try{if((localStorage.getItem('aliascall_lang')||'').indexOf('en')===0){var b=document.getElementById('acThemeOpen');if(b)b.textContent='🎨 Display';}}catch(e){}});</script>
 </head>
@@ -564,6 +564,9 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
       <div id="phSummary" style="margin:6px 0 12px;"></div>
       <div id="phList"></div>
     </div>
+
+    <!-- 🔴 2026-10-29 신설 — 유치대리점: 추천 코드 넣기 · 모집 안내 (aliascall_partner_ref.js 가 채움) -->
+    <div class="card" id="partnerRefCard" style="display:none"><div id="partnerRefBox"></div></div>
     <style>
       .ph-sum{ display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; }
       .ph-sum:last-child{ border-bottom:none; }
@@ -1680,6 +1683,9 @@ async function showMyPage(session){
   watchWaitStrip();               // 2026-08-29(v69): 승인을 기다리는 문의
   hideAllGates();
   document.getElementById('accountContent').style.display = 'block';
+  // 🔴 2026-10-29 유치대리점 칸
+  setTimeout(function(){ try { if (window.PartnerRef) PartnerRef.mount(document.getElementById('partnerRefBox')).then(function(){
+    document.getElementById('partnerRefCard').style.display = document.getElementById('partnerRefBox').innerHTML.trim() ? 'block' : 'none'; }); } catch (e) {} }, 600);
 
   const { data: profile } = await sb.from('profiles').select('nickname, points_balance, created_at').eq('id', session.user.id).maybeSingle();
   document.getElementById('nicknameVal').textContent = profile?.nickname || '-';

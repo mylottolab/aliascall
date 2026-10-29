@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>유치대리점 — 부름 · 에일리어스콜</title>
+<meta name="description" content="부름 · 에일리어스콜을 소개하고 손님이 산 금액의 10%를 받으세요. 개인 · 사업자 모두 신청할 수 있습니다.">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  ═══════════════════════════════════════════════════════════════
+  2026-10-29 신설: 유치대리점(파트너) — 소개 · 신청 · 내 실적 · 공지
+    DB: partner_aliascall (2_partner_aliascall.sql) · 함수: partner-hub
+    · 로그인 안 함 → 소개 + [신청하기](로그인으로)
+    · 신청 전 → 소개 + 신청서 / 심사 중 / 반려(사유 + 다시 신청) / 정지
+    · 승인 → 공지 · 내 코드 · 링크 · QR · 손님 수 · 월별 수수료 · 지급 내역
+  ⚠ 서류는 비공개 보관함(partner-docs)에, 주민등록번호는 partner_private 표에만 둡니다. 화면 어디에도 다시 보여주지 않습니다.
+  ═══════════════════════════════════════════════════════════════
+-->
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1; --brass:#C9A24B; --brass-tint:#F4E6C6;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F;
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; min-height:100vh; word-break:keep-all;
+      padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+h1,h2,h3{ font-family:'Space Grotesk','Inter',sans-serif; margin:0; font-weight:700; }
+header{ padding:18px 20px 4px; display:flex; align-items:center; gap:9px; max-width:520px; margin:0 auto; }
+.back{ background:none; border:none; font-size:20px; color:var(--ink); cursor:pointer; padding:8px 8px 8px 0; min-width:44px; min-height:44px; text-decoration:none; display:flex; align-items:center; }
+.brand{ width:28px; height:28px; border-radius:8px; background:var(--teal); color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.bname{ font-size:16px; font-weight:600; flex:1; }
+.bname em{ font-style:normal; color:var(--coral); }
+main{ max-width:520px; margin:0 auto; padding:6px 20px 70px; }
+.view{ display:none; } .view.show{ display:block; }
+.hero{ background:var(--teal-deep); color:#fff; border-radius:22px; padding:24px 20px 22px; margin:6px 0 14px; }
+.hero .kick{ font-size:12.5px; font-weight:700; color:var(--brass); letter-spacing:.02em; }
+.hero h1{ font-size:26px; line-height:1.3; margin:8px 0 10px; }
+.hero p{ margin:0; font-size:14px; line-height:1.7; color:#CFE3DF; }
+.big3{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:0 0 14px; }
+.big3 div{ background:var(--card); border-radius:16px; padding:14px 8px; text-align:center; }
+.big3 b{ display:block; font-family:'Space Grotesk',sans-serif; font-size:24px; color:var(--coral); }
+.big3 span{ font-size:12px; color:var(--ink-soft); line-height:1.45; display:block; margin-top:4px; }
+.card{ background:var(--card); border-radius:18px; padding:18px; margin-bottom:12px; }
+.card h2{ font-size:17px; margin-bottom:10px; }
+.card p, .card li{ font-size:14px; line-height:1.7; color:var(--ink-soft); }
+.card ol, .card ul{ margin:0; padding-left:20px; }
+.card li{ margin-bottom:6px; }
+.card li b{ color:var(--ink); }
+.ex{ background:var(--teal-tint); border-radius:12px; padding:12px 14px; font-size:13.5px; line-height:1.7; margin-top:10px; }
+.btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; border:none; border-radius:16px; padding:16px; min-height:54px;
+      font-family:inherit; font-size:16px; font-weight:800; cursor:pointer; text-decoration:none; }
+.btn.p{ background:var(--coral); color:#fff; } .btn.t{ background:var(--teal); color:#fff; }
+.btn.s{ background:#fff; color:var(--teal-deep); border:2px solid var(--teal); }
+.btn.sm{ min-height:42px; padding:10px 14px; font-size:14px; border-radius:12px; width:auto; }
+.btn:disabled{ opacity:.5; cursor:default; }
+.fld{ margin-bottom:14px; }
+.fld label, .fld .lb{ display:block; font-size:14px; font-weight:700; margin-bottom:6px; color:var(--ink); }
+.fld .hint{ font-size:12px; color:var(--ink-soft); margin-top:5px; line-height:1.55; }
+.fld input[type=text], .fld input[type=tel], .fld input[type=email], .fld textarea{ width:100%; border:1.5px solid var(--line); border-radius:12px; padding:13px 14px;
+      font-size:16px; font-family:inherit; background:#fff; color:var(--ink); }
+.fld input:focus, .fld textarea:focus{ outline:none; border-color:var(--teal); }
+.seg{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.seg label{ border:2px solid var(--line); border-radius:14px; padding:13px 10px; text-align:center; font-weight:800; cursor:pointer; font-size:15px; margin:0; background:#fff; }
+.seg input{ display:none; }
+.seg input:checked + span{ color:var(--teal-deep); }
+.seg label.on{ border-color:var(--teal); background:var(--teal-tint); }
+.up, .fld label.up{ display:flex; margin-bottom:0; align-items:center; gap:10px; border:1.5px dashed var(--teal); border-radius:12px; padding:12px 14px; background:#fff; cursor:pointer; }
+.up .ic{ font-size:22px; } .up .tx{ flex:1; min-width:0; font-size:14px; font-weight:700; } .up .sub{ display:block; font-size:12px; font-weight:500; color:var(--ink-soft); margin-top:2px; }
+.up > .st{ white-space:nowrap; font-size:12.5px; font-weight:800; color:var(--teal-deep); background:var(--teal-tint); padding:7px 10px; border-radius:10px; }
+.up.done{ border-style:solid; background:var(--teal-tint); }
+.up input{ display:none; }
+.agree{ display:flex; gap:10px; align-items:flex-start; font-size:14px; line-height:1.6; margin-bottom:10px; cursor:pointer; }
+.agree input{ width:22px; height:22px; margin-top:1px; flex-shrink:0; accent-color:var(--teal); }
+.agree a{ color:var(--teal-deep); font-weight:700; }
+.consent{ background:#F6F8F6; border:1px solid var(--line); border-radius:12px; padding:12px 14px; font-size:12.5px; line-height:1.7; color:var(--ink-soft); margin-bottom:10px; }
+.err{ color:var(--danger); font-size:14px; font-weight:700; margin:10px 0; min-height:1px; }
+.state{ text-align:center; padding:28px 18px; }
+.state .ic{ font-size:44px; }
+.state h2{ font-size:20px; margin:10px 0 8px; }
+.state p{ font-size:14px; line-height:1.7; color:var(--ink-soft); margin:0 0 6px; }
+.reason{ background:var(--coral-tint); border-radius:12px; padding:12px 14px; font-size:14px; line-height:1.6; text-align:left; margin:12px 0; }
+.code-box{ text-align:center; }
+.code-box .lb{ font-size:13px; color:var(--ink-soft); font-weight:700; }
+.code-box .code{ font-family:'Space Grotesk',monospace; font-size:42px; font-weight:700; letter-spacing:.12em; color:var(--teal-deep); margin:4px 0 10px; }
+.links{ display:grid; gap:8px; grid-template-columns:minmax(0,1fr); }
+.lk{ display:flex; align-items:center; gap:10px; background:var(--teal-tint); border-radius:12px; padding:10px 12px; }
+.lk .nm{ font-weight:800; font-size:14px; min-width:74px; }
+.lk .u{ flex:1; min-width:0; font-size:12.5px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lk button{ border:none; background:var(--teal); color:#fff; border-radius:10px; padding:9px 12px; font-weight:800; font-family:inherit; font-size:13px; cursor:pointer; }
+.qr{ display:flex; justify-content:center; padding:12px 0 2px; } .qr img, .qr canvas{ width:150px !important; height:150px !important; }
+.stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.stats div{ background:var(--teal-tint); border-radius:14px; padding:12px 6px; text-align:center; }
+.stats b{ display:block; font-family:'Space Grotesk',sans-serif; font-size:22px; color:var(--teal-deep); }
+.stats span{ font-size:12px; color:var(--ink-soft); }
+table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+th, td{ padding:9px 6px; border-bottom:1px solid var(--line); text-align:right; }
+th:first-child, td:first-child{ text-align:left; }
+th{ font-size:12px; color:var(--ink-soft); font-weight:700; }
+.muted{ font-size:13px; color:var(--ink-soft); line-height:1.6; }
+.pill{ display:inline-block; font-size:11.5px; font-weight:800; border-radius:20px; padding:2px 9px; }
+.pill.ready{ background:var(--brass-tint); color:#7A5A12; } .pill.paid{ background:#DDF1E4; color:var(--found); } .pill.held{ background:var(--coral-tint); color:var(--danger); }
+.notice{ border-left:5px solid var(--teal); }
+.notice.imp{ border-left-color:var(--danger); background:#FFF6F3; }
+.notice .nt{ font-weight:800; font-size:15px; margin-bottom:6px; color:var(--ink); }
+.notice .nd{ font-size:12px; color:var(--ink-soft); margin-bottom:8px; }
+.notice .nb{ font-size:14px; line-height:1.7; white-space:pre-wrap; color:var(--ink); }
+.notice .ack{ margin-top:12px; }
+.toast{ position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:var(--teal-deep); color:#fff;
+        padding:12px 18px; border-radius:14px; font-size:14px; font-weight:700; z-index:50; display:none; max-width:90vw; text-align:center; }
+.toast.show{ display:block; }
+details summary{ cursor:pointer; font-weight:800; font-size:14.5px; padding:6px 0; color:var(--ink); }
+details p{ margin:4px 0 10px; }
+</style>
+<script src="aliascall_theme.js?v=20261029"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="index.html" aria-label="첫 화면으로">←</a>
+  <div class="brand">A</div>
+  <div class="bname">Alias<em>call</em> · 부름 유치대리점</div>
+</header>
+
+<main>
+  <!-- ── 소개 (로그인 안 함 · 신청 전) ── -->
+  <section class="view" id="vIntro">
+    <div class="hero">
+      <div class="kick">부름 · 에일리어스콜 유치대리점 모집</div>
+      <h1>소개만 하세요.<br>손님이 살 때마다 10%</h1>
+      <p>내 코드로 가입한 손님이 상품을 사거나 연장할 때마다, 부가세를 뺀 금액의 10%를 드립니다. 기간 제한 없이 계속 드립니다.</p>
+    </div>
+    <div class="big3">
+      <div><b>10%</b><span>부가세 뺀 금액의 10%</span></div>
+      <div><b>평생</b><span>손님이 사는 동안 계속</span></div>
+      <div><b>15일</b><span>매달 15일 통장으로</span></div>
+    </div>
+
+    <div class="card">
+      <h2>이렇게 진행됩니다</h2>
+      <ol>
+        <li><b>신청</b> — 이 화면에서 정보와 서류(신분증 · 통장 사본, 사업자는 사업자등록증)를 올립니다.</li>
+        <li><b>승인</b> — 회사가 확인하면 <b>6자리 대리점 코드</b>와 홍보 링크 · QR이 생깁니다.</li>
+        <li><b>소개</b> — 손님이 내 링크로 들어오거나, 가입 후 <b>30일 안</b>에 내 코드를 넣으면 내 손님이 됩니다.</li>
+        <li><b>정산</b> — 전달 1일~말일에 내 손님이 산 금액(환불 건 제외)을 모아 <b>다음 달 15일</b>에 보내 드립니다.</li>
+      </ol>
+      <div class="ex">예) 손님이 11,000원짜리 상품을 사면 → 부가세를 뺀 10,000원의 10% = <b>1,000원</b><br>
+        10월에 생긴 수수료는 <b>11월 15일</b>에 지급됩니다.</div>
+    </div>
+
+    <div class="card">
+      <h2>알아 두세요</h2>
+      <details><summary>세금은 어떻게 되나요?</summary>
+        <p class="muted">개인은 소득세법에 따라 <b>3.3%를 떼고</b>(원천징수) 보내 드리며, 회사가 대신 신고합니다. 이 신고 때문에 주민등록번호가 필요합니다.
+        사업자는 세금계산서를 발행해 주시면 전액을 보내 드립니다.</p></details>
+      <details><summary>얼마부터 받나요?</summary>
+        <p class="muted">한 달 수수료가 1만 원이 안 되면 다음 달로 넘겨 합쳐서 보내 드립니다.</p></details>
+      <details><summary>대리점이 다른 대리점을 데려오면요?</summary>
+        <p class="muted">수수료는 <b>내 코드로 가입한 손님의 구매</b>에만 드립니다. 다른 대리점을 데려와도 그 대리점의 실적에서 수수료가 나오지는 않습니다(다단계 아님).</p></details>
+      <details><summary>수수료율이 바뀔 수 있나요?</summary>
+        <p class="muted">사정이 바뀌어 수수료율을 바꾸거나 지급을 멈출 때는 <b>30일 전에 대리점 공지</b>로 먼저 알려 드립니다. 이미 생긴 수수료는 그때 비율 그대로 드립니다.
+        다만 허위 · 부정 유치가 확인되면 바로 멈출 수 있습니다.</p></details>
+      <details><summary>내 가족 · 내 계정 구매도 되나요?</summary>
+        <p class="muted">대리점 본인 계정의 구매는 수수료가 없습니다. 가짜 계정을 만들어 사는 등 부정 유치가 확인되면 수수료를 드리지 않고 대리점을 정지합니다.</p></details>
+    </div>
+
+    <button class="btn p" id="goApply">대리점 신청하기</button>
+    <p class="muted" style="text-align:center;margin-top:10px">신청하려면 에일리어스콜 로그인이 필요합니다. 부름만 쓰셔도 신청할 수 있습니다.</p>
+  </section>
+
+  <!-- ── 신청서 ── -->
+  <section class="view" id="vApply">
+    <h2 style="font-size:22px;margin:8px 0 4px">대리점 신청서</h2>
+    <p class="muted" style="margin:0 0 14px">회사가 확인한 뒤 승인 여부를 이 화면에서 알려 드립니다. 보통 1~3일 걸립니다.</p>
+    <div class="card">
+      <div class="fld"><span class="lb">신청 구분</span>
+        <div class="seg" id="kindSeg">
+          <label class="on"><input type="radio" name="kind" value="person" checked><span>👤 개인</span></label>
+          <label><input type="radio" name="kind" value="business"><span>🏢 사업자</span></label>
+        </div></div>
+      <div class="fld"><label for="fName" id="lName">이름</label><input type="text" id="fName" maxlength="30" autocomplete="name"></div>
+      <div class="fld"><label for="fPhone">휴대폰 번호</label><input type="tel" id="fPhone" maxlength="20" autocomplete="tel" placeholder="010-0000-0000"></div>
+      <div class="fld"><label for="fEmail">이메일 (선택)</label><input type="email" id="fEmail" maxlength="80" autocomplete="email"></div>
+      <div id="bizBox" style="display:none">
+        <div class="fld"><label for="fBizName">상호(회사 이름)</label><input type="text" id="fBizName" maxlength="60"></div>
+        <div class="fld"><label for="fBizNo">사업자등록번호</label><input type="text" id="fBizNo" maxlength="12" inputmode="numeric" placeholder="000-00-00000"></div>
+      </div>
+      <div class="fld" id="rrnBox"><label for="fRrn">주민등록번호</label><input type="text" id="fRrn" maxlength="14" inputmode="numeric" autocomplete="off" placeholder="000000-0000000">
+        <div class="hint">수수료에서 3.3%를 떼어 세금 신고(원천징수)할 때만 씁니다. 일반 화면에서는 읽을 수 없는 별도 저장소에 따로 보관하고, 화면에 다시 보여 주지 않습니다.</div></div>
+    </div>
+
+    <div class="card">
+      <h2>받을 통장</h2>
+      <div class="fld"><label for="fBank">은행</label><input type="text" id="fBank" maxlength="20" placeholder="예) 국민은행"></div>
+      <div class="fld"><label for="fAcct">계좌번호</label><input type="text" id="fAcct" maxlength="30" inputmode="numeric"></div>
+      <div class="fld"><label for="fHolder">예금주</label><input type="text" id="fHolder" maxlength="30">
+        <div class="hint" id="holderHint">개인은 본인 명의 통장, 사업자는 사업자 명의(또는 대표자) 통장이어야 합니다.</div></div>
+      <div class="fld"><label for="fChannel">어디서 홍보하실 건가요? (선택)</label><input type="text" id="fChannel" maxlength="100" placeholder="예) 동네 가게, 블로그, 지인 소개"></div>
+    </div>
+
+    <div class="card">
+      <h2>서류 올리기</h2>
+      <p class="muted" style="margin:0 0 10px">사진이나 PDF 모두 됩니다(10MB까지). 회사 담당자만 볼 수 있는 비공개 보관함에 저장됩니다.</p>
+      <div class="fld"><label class="up" id="upId"><span class="ic">🪪</span><span class="tx">신분증 사본<span class="sub">주민등록번호 뒷자리는 가리셔도 됩니다</span></span><span class="st" id="stId">고르기</span>
+        <input type="file" accept="image/*,application/pdf" data-k="id"></label></div>
+      <div class="fld" id="upBizWrap" style="display:none"><label class="up" id="upBiz"><span class="ic">📄</span><span class="tx">사업자등록증 사본</span><span class="st" id="stBiz">고르기</span>
+        <input type="file" accept="image/*,application/pdf" data-k="biz"></label></div>
+      <div class="fld"><label class="up" id="upBank"><span class="ic">🏦</span><span class="tx">통장 사본<span class="sub">계좌번호 · 예금주가 보이게</span></span><span class="st" id="stBank">고르기</span>
+        <input type="file" accept="image/*,application/pdf" data-k="bank"></label></div>
+    </div>
+
+    <div class="card">
+      <h2>동의</h2>
+      <div class="consent">
+        <b>개인정보 수집 · 이용 동의 (필수)</b><br>
+        · 수집 항목: 이름, 휴대폰 번호, 이메일(선택), 은행 · 계좌번호 · 예금주, 신분증 사본, 통장 사본 / 개인: 주민등록번호 / 사업자: 상호 · 사업자등록번호 · 사업자등록증 사본<br>
+        · 이용 목적: 대리점 본인 확인, 수수료 계산 · 지급, 세금 신고(원천징수 · 지급명세서 제출)<br>
+        · 주민등록번호는 소득세법(원천징수 · 지급명세서 제출 의무)에 따라 수집합니다.<br>
+        · 보관 기간: 대리점 계약이 끝난 뒤 5년(국세기본법 장부 보관 기간). 신분증 · 통장 사본은 확인이 끝나고 계약이 끝나면 지웁니다.<br>
+        · 동의하지 않으실 수 있으나, 그 경우 대리점 등록과 수수료 지급이 불가능합니다.
+      </div>
+      <label class="agree"><input type="checkbox" id="agPriv"><span>위 개인정보 수집 · 이용에 동의합니다. (필수)</span></label>
+      <label class="agree"><input type="checkbox" id="agTerms"><span><a href="aliascall_partner_terms.html" target="_blank">유치대리점 약관</a>을 읽었고 동의합니다. (필수)</span></label>
+    </div>
+
+    <div class="err" id="applyErr"></div>
+    <button class="btn p" id="submitBtn">신청서 보내기</button>
+    <button class="btn s" id="cancelApply" style="margin-top:10px">취소</button>
+  </section>
+
+  <!-- ── 상태 (심사 중 · 반려 · 정지) ── -->
+  <section class="view" id="vState">
+    <div class="card state" id="stateBox"></div>
+  </section>
+
+  <!-- ── 승인된 대리점 ── -->
+  <section class="view" id="vDash">
+    <div id="noticeBox"></div>
+    <div class="card code-box">
+      <div class="lb">내 대리점 코드</div>
+      <div class="code" id="myCode">——————</div>
+      <div class="links">
+        <div class="lk"><span class="nm">에일리어스콜</span><span class="u" id="uAc"></span><button type="button" data-copy="ac">복사</button></div>
+        <div class="lk"><span class="nm">부름</span><span class="u" id="uBu"></span><button type="button" data-copy="bu">복사</button></div>
+      </div>
+      <div class="qr" id="qrBox"></div>
+      <p class="muted" style="margin:6px 0 0">QR은 에일리어스콜 링크입니다. 손님이 링크로 들어와 가입하면 자동으로 내 손님이 됩니다.<br>
+        앱 스토어에서 바로 설치한 손님은 가입 후 <b id="linkDays">30</b>일 안에 <b>마이페이지(부름은 "나" 화면) → 추천 대리점</b>에 코드를 넣으면 됩니다.</p>
+      <button class="btn t" id="shareBtn" style="margin-top:12px">카카오톡 · 문자로 보내기</button>
+    </div>
+
+    <div class="card">
+      <h2>내 손님 · 수수료</h2>
+      <div class="stats">
+        <div><b id="sAc">0</b><span>에일리어스콜 손님</span></div>
+        <div><b id="sBu">0</b><span>부름 손님</span></div>
+        <div><b id="sPend">0</b><span>다음 지급에 넣을 돈(원)</span></div>
+      </div>
+      <p class="muted" id="buUpd" style="margin:8px 0 0"></p>
+      <p class="muted" style="margin:6px 0 0">수수료는 매달 정산할 때(전달 1일~말일 구매분) 한꺼번에 계산되어 아래에 나타납니다.</p>
+    </div>
+
+    <div class="card">
+      <h2>월별 수수료</h2>
+      <div id="monthsBox"></div>
+    </div>
+    <div class="card">
+      <h2>지급 내역</h2>
+      <div id="payoutsBox"></div>
+      <p class="muted" style="margin:8px 0 0" id="bankLine"></p>
+      <p class="muted" style="margin:4px 0 0">통장을 바꾸시려면 고객센터로 연락 주세요(새 통장 사본이 필요합니다).</p>
+    </div>
+    <div id="oldNotices"></div>
+    <p class="muted" style="text-align:center"><a href="aliascall_partner_terms.html" style="color:var(--teal-deep);font-weight:700">유치대리점 약관 보기</a></p>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const el = (id) => document.getElementById(id);
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const won = (n) => (Number(n) || 0).toLocaleString('ko-KR');
+let session = null, me = null;
+const files = { id:null, biz:null, bank:null };
+
+function show(id){ document.querySelectorAll('.view').forEach(v => v.classList.toggle('show', v.id === id)); window.scrollTo(0, 0); }
+function toast(t){ const x = el('toast'); x.textContent = t; x.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => x.classList.remove('show'), 2600); }
+function kind(){ return (document.querySelector('input[name=kind]:checked') || {}).value || 'person'; }
+
+function paintKind(){
+  const k = kind();
+  document.querySelectorAll('#kindSeg label').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
+  el('bizBox').style.display = k === 'business' ? 'block' : 'none';
+  el('upBizWrap').style.display = k === 'business' ? 'block' : 'none';
+  el('rrnBox').style.display = k === 'person' ? 'block' : 'none';
+  el('lName').textContent = k === 'business' ? '대표자 이름' : '이름';
+}
+document.querySelectorAll('input[name=kind]').forEach(r => r.addEventListener('change', paintKind));
+el('fRrn').addEventListener('input', (e) => {
+  let d = e.target.value.replace(/\D/g, '').slice(0, 13);
+  e.target.value = d.length > 6 ? d.slice(0, 6) + '-' + d.slice(6) : d;
+});
+el('fBizNo').addEventListener('input', (e) => {
+  let d = e.target.value.replace(/\D/g, '').slice(0, 10);
+  e.target.value = d.length > 5 ? d.slice(0,3) + '-' + d.slice(3,5) + '-' + d.slice(5) : d.length > 3 ? d.slice(0,3) + '-' + d.slice(3) : d;
+});
+document.querySelectorAll('.up input[type=file]').forEach(inp => inp.addEventListener('change', () => {
+  const f = inp.files && inp.files[0]; const k = inp.dataset.k;
+  const st = el({ id:'stId', biz:'stBiz', bank:'stBank' }[k]);
+  if (!f) return;
+  if (f.size > 10 * 1024 * 1024) { st.textContent = '10MB 넘음'; inp.value = ''; files[k] = null; return; }
+  files[k] = f; st.textContent = '✓ ' + (f.name.length > 14 ? f.name.slice(0, 12) + '…' : f.name);
+  inp.closest('.up').classList.add('done');
+}));
+
+async function upload(k){
+  const f = files[k]; if (!f) return null;
+  const ext = ((f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg').slice(0, 5);
+  const path = session.user.id + '/' + k + '_' + Date.now() + '.' + ext;
+  const { error } = await sb.storage.from('partner-docs').upload(path, f, { upsert:false, contentType: f.type || undefined });
+  if (error) throw error;
+  return path;
+}
+
+const ERR = {
+  login:'로그인이 풀렸습니다. 다시 로그인해 주세요.', kind:'신청 구분을 골라 주세요.', agree:'두 가지 동의에 모두 체크해 주세요.',
+  fields:'이름 · 휴대폰 · 은행 · 계좌번호 · 예금주를 확인해 주세요.', docs:'신분증 사본과 통장 사본을 올려 주세요.',
+  biz:'상호 · 사업자등록번호(10자리) · 사업자등록증 사본을 확인해 주세요.', rrn:'주민등록번호 13자리를 확인해 주세요.',
+  already:'이미 대리점으로 등록되어 있습니다.', pending:'이미 신청하셔서 심사 중입니다.'
+};
+el('submitBtn').addEventListener('click', async () => {
+  const k = kind(); const er = el('applyErr'); er.textContent = '';
+  if (!el('agPriv').checked || !el('agTerms').checked) { er.textContent = ERR.agree; return; }
+  if (!files.id || !files.bank || (k === 'business' && !files.biz)) { er.textContent = k === 'business' ? ERR.biz + ' / ' + ERR.docs : ERR.docs; return; }
+  const btn = el('submitBtn'); btn.disabled = true; btn.textContent = '보내는 중…';
+  try {
+    const [idp, bizp, bankp] = await Promise.all([upload('id'), k === 'business' ? upload('biz') : null, upload('bank')]);
+    const { data, error } = await sb.rpc('partner_apply', { p: {
+      kind:k, name:el('fName').value, phone:el('fPhone').value, email:el('fEmail').value,
+      biz_name:el('fBizName').value, biz_no:el('fBizNo').value, rrn: k === 'person' ? el('fRrn').value : null,
+      bank_name:el('fBank').value, bank_account:el('fAcct').value, bank_holder:el('fHolder').value, channel:el('fChannel').value,
+      id_doc_path:idp, biz_doc_path:bizp, bank_doc_path:bankp, agree_terms:true, agree_privacy:true } });
+    if (error) throw error;
+    if (!data || !data.ok) { er.textContent = ERR[data && data.error] || '보내지 못했습니다. 내용을 확인해 주세요.'; return; }
+    el('fRrn').value = '';
+    toast('신청서를 보냈습니다.');
+    await load();
+  } catch (e) {
+    console.warn('[partner] apply', e);
+    er.textContent = '보내지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.';
+  } finally { btn.disabled = false; btn.textContent = '신청서 보내기'; }
+});
+el('cancelApply').addEventListener('click', () => show('vIntro'));
+el('goApply').addEventListener('click', () => {
+  if (!session) { try { sessionStorage.setItem('aliascall_after_login', 'aliascall_partner.html?apply=1'); } catch (e) {}
+    location.href = 'aliascall_my_account.html?next=' + encodeURIComponent('aliascall_partner.html?apply=1'); return; }
+  show('vApply');
+});
+
+function stateView(p){
+  const b = el('stateBox');
+  if (p.status === 'pending') {
+    b.innerHTML = '<div class="ic">⏳</div><h2>심사 중입니다</h2><p>' + esc(new Date(p.applied_at).toLocaleDateString('ko-KR')) +
+      '에 신청하셨습니다.</p><p>회사가 서류를 확인하고 있습니다. 보통 1~3일 걸립니다. 승인되면 이 화면에 대리점 코드가 나타납니다.</p>';
+  } else if (p.status === 'rejected') {
+    b.innerHTML = '<div class="ic">📝</div><h2>보완이 필요합니다</h2><div class="reason"><b>회사 안내</b><br>' + esc(p.reject_reason || '') +
+      '</div><p>안내를 확인하시고 다시 신청해 주세요.</p><button class="btn p" id="reApply" style="margin-top:12px">다시 신청하기</button>';
+    el('reApply').onclick = () => show('vApply');
+  } else {
+    b.innerHTML = '<div class="ic">⏸</div><h2>대리점 활동이 멈춰 있습니다</h2>' + (p.reject_reason ? '<div class="reason">' + esc(p.reject_reason) + '</div>' : '') +
+      '<p>자세한 내용은 고객센터로 문의해 주세요.</p>';
+  }
+  show('vState');
+}
+
+function noticeHtml(n, withAck){
+  return '<div class="card notice' + (n.important ? ' imp' : '') + '"><div class="nt">' + (n.important ? '📢 ' : '') + esc(n.title) + '</div>' +
+    '<div class="nd">' + esc(new Date(n.created_at).toLocaleDateString('ko-KR')) + (n.effective_on ? ' · 시행일 ' + esc(n.effective_on) : '') + '</div>' +
+    '<div class="nb">' + esc(n.body) + '</div>' +
+    (withAck ? '<button class="btn t sm ack" data-ack="' + n.id + '">확인했습니다</button>' : '') + '</div>';
+}
+
+function dash(d){
+  const p = d.partner;
+  const ac = 'https://aliascall.com/?ref=' + p.code, bu = 'https://burum.kr/?ref=' + p.code;
+  el('myCode').textContent = p.code; el('uAc').textContent = ac; el('uBu').textContent = bu;
+  el('linkDays').textContent = d.link_days || 30;
+  document.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
+    const t = b.dataset.copy === 'ac' ? ac : bu;
+    try { await navigator.clipboard.writeText(t); toast('링크를 복사했습니다.'); } catch (e) { prompt('아래 링크를 복사하세요', t); }
+  });
+  el('qrBox').innerHTML = ''; try { new QRCode(el('qrBox'), { text: ac, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M }); } catch (e) {}
+  el('shareBtn').onclick = async () => {
+    const text = '번호 노출 없는 안전한 통화 · 메신저\n부름: ' + bu + '\n에일리어스콜: ' + ac + '\n가입할 때 대리점 코드 ' + p.code + ' 를 넣어 주세요.';
+    if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { return; } }
+    try { await navigator.clipboard.writeText(text); toast('문구를 복사했습니다. 카카오톡이나 문자에 붙여 넣으세요.'); } catch (e) { prompt('복사해서 보내세요', text); }
+  };
+  el('sAc').textContent = won(d.customers.aliascall); el('sBu').textContent = won(d.customers.burum); el('sPend').textContent = won(d.pending_krw);
+  el('buUpd').textContent = d.customers.burum_updated ? '부름 손님 수 ' + new Date(d.customers.burum_updated).toLocaleString('ko-KR') + ' 기준' : '';
+  el('bankLine').textContent = '받는 통장: ' + p.bank;
+
+  const months = d.months || [];
+  el('monthsBox').innerHTML = months.length ? '<table><tr><th>달</th><th>에일리어스콜</th><th>부름</th><th>합계</th></tr>' +
+    months.map(m => '<tr><td>' + esc(m.month) + '</td><td>' + won(m.aliascall) + '</td><td>' + won(m.burum) + '</td><td><b>' + won(m.total) + '</b></td></tr>').join('') + '</table>'
+    : '<p class="muted">아직 정산된 수수료가 없습니다. 매달 15일 전에 지난달 실적이 정산되어 여기에 나타납니다.</p>';
+  const pays = d.payouts || [];
+  const ST = { ready:'<span class="pill ready">지급 예정</span>', paid:'<span class="pill paid">지급 완료</span>', held:'<span class="pill held">보류</span>' };
+  el('payoutsBox').innerHTML = pays.length ? '<table><tr><th>달</th><th>수수료</th><th>세금</th><th>받는 돈</th><th></th></tr>' +
+    pays.map(x => '<tr><td>' + esc(x.month) + '<br><span class="muted">' + esc(x.status === 'paid' && x.paid_at ? new Date(x.paid_at).toLocaleDateString('ko-KR') : x.pay_due) +
+      '</span></td><td>' + won(x.gross) + '</td><td>' + won(x.tax) + '</td><td><b>' + won(x.net) + '</b></td><td>' + (ST[x.status] || '') + '</td></tr>').join('') + '</table>'
+    : '<p class="muted">아직 지급 내역이 없습니다. 한 달 수수료가 1만 원이 안 되면 다음 달로 넘겨 합쳐 드립니다.</p>';
+
+  const notices = d.notices || [];
+  const unread = notices.filter(n => !n.read && n.important);
+  const recent = notices.filter(n => !(n.important && !n.read)).slice(0, 3);
+  el('noticeBox').innerHTML = unread.map(n => noticeHtml(n, true)).join('');
+  el('oldNotices').innerHTML = recent.length ? '<div class="card"><h2>대리점 공지</h2>' + recent.map(n => noticeHtml(n, false).replace('class="card notice', 'class="notice')).join('<hr style="border:none;border-top:1px solid var(--line);margin:12px 0">') + '</div>' : '';
+  document.querySelectorAll('[data-ack]').forEach(b => b.onclick = async () => {
+    b.disabled = true; await sb.rpc('partner_notice_read', { p_id: Number(b.dataset.ack) }); load();
+  });
+  show('vDash');
+  refreshBurum(p);
+}
+
+let burumAsked = false;
+async function refreshBurum(p){
+  if (burumAsked) return; burumAsked = true;
+  try {
+    const r = await fetch(SUPABASE_URL + '/functions/v1/partner-hub', { method:'POST',
+      headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + session.access_token, apikey: SUPABASE_ANON_KEY },
+      body: JSON.stringify({ action:'burum_me' }) });
+    const j = await r.json();
+    if (j && j.ok) { el('sBu').textContent = won(j.burum); el('buUpd').textContent = '부름 손님 수 방금 기준'; }
+  } catch (e) {}
+}
+
+async function load(){
+  try { session = (await sb.auth.getSession()).data.session; } catch (e) { session = null; }
+  if (!session) { show('vIntro'); return; }
+  const { data, error } = await sb.rpc('my_partner');
+  if (error || !data || !data.ok) { show('vIntro'); return; }
+  me = data;
+  if (!data.partner) {
+    if (new URLSearchParams(location.search).get('apply') === '1') show('vApply'); else show('vIntro');
+    return;
+  }
+  if (data.partner.status === 'approved') dash(data); else stateView(data.partner);
+}
+paintKind();
+load();
+</script>
+</body>
+</html>
