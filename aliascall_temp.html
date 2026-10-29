@@ -165,7 +165,7 @@ main{ max-width:430px; margin:0 auto; padding:10px 20px 60px; }
 button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
 </style>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
-<script src="aliascall_theme.js?v=20261029b"></script>
+<script src="aliascall_theme.js?v=20261029c"></script>
 </head>
 <body>
 <header>
@@ -515,6 +515,7 @@ function printCards(n){
   sheet.innerHTML = one.repeat(n) + '<div class="pnote">' + esc(T('pCut', { n })) + '</div>';
   /* 앱 안에서는 window.print 가 아무 일도 하지 않습니다(부름 함정 98) — 자바 창구로 */
   setTimeout(() => {
+    try { window.ACTheme && ACTheme.printLight && ACTheme.printLight(); } catch (e) {}
     if (window.AliasNative && typeof AliasNative.printPage === 'function') AliasNative.printPage('Aliascall ' + cur.code);
     else window.print();
   }, 300);

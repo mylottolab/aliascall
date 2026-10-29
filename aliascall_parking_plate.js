@@ -100,6 +100,7 @@
     // 앱 인쇄는 afterprint 가 안 올 수 있어, 다음에 화면을 누를 때 원래대로 돌립니다(다른 QR 인쇄가 이 판으로 찍히지 않게)
     setTimeout(function(){ document.addEventListener('pointerdown', done, { once: true }); }, 1500);
     setTimeout(function(){
+      try { window.ACTheme && ACTheme.printLight && ACTheme.printLight(); } catch (e) {}
       if (window.AliasNative && typeof AliasNative.printPage === 'function') AliasNative.printPage('Aliascall parking plate');
       else window.print();
     }, 200);

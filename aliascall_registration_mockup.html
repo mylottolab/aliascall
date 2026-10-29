@@ -303,8 +303,8 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 .push-optin-note{ font-size:12.5px; color:var(--ink-soft); padding:8px 4px; }
 </style>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
-<script src="aliascall_theme.js?v=20261029b"></script>
-<script src="aliascall_parking_plate.js?v=20261029"></script>
+<script src="aliascall_theme.js?v=20261029c"></script>
+<script src="aliascall_parking_plate.js?v=20261029c"></script>
 </head>
 <body>
 
@@ -1745,6 +1745,7 @@ document.getElementById('printNowBtn').addEventListener('click', () => {
 
   /* 🔴 2026-09-29 — 앱 안에서는 window.print 가 아무 일도 하지 않습니다(부름 함정 98).
      버전 5 의 자바 창구로 인쇄합니다. 인쇄 창에서 "PDF로 저장" 도 됩니다. */
+  try { window.ACTheme && ACTheme.printLight && ACTheme.printLight(); } catch (e) {}
   if (window.AliasNative && typeof AliasNative.printPage === 'function') AliasNative.printPage('Aliascall QR');
   else window.print();
 });

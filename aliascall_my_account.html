@@ -392,8 +392,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .mline-renew-btn{ flex:1; min-width:64px; padding:9px 4px; border-radius:9px; background:var(--teal-deep); color:#fff; font-size:12px; font-weight:700; text-align:center; text-decoration:none; }
 </style>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
-<script src="aliascall_theme.js?v=20261029b"></script>
-<script src="aliascall_parking_plate.js?v=20261029"></script>
+<script src="aliascall_theme.js?v=20261029c"></script>
+<script src="aliascall_parking_plate.js?v=20261029c"></script>
 <script src="aliascall_temp_names.js?v=20261029"></script>
 <script>document.addEventListener('DOMContentLoaded',function(){try{if((localStorage.getItem('aliascall_lang')||'').indexOf('en')===0){var b=document.getElementById('acThemeOpen');if(b)b.textContent='🎨 Display';}}catch(e){}});</script>
 </head>
@@ -2441,6 +2441,7 @@ function renderPrintSheetAndPrint(token){
   /* 🔴 2026-10-04 — 앱(웹뷰)에서는 window.print() 가 아무 일도 안 합니다(부름 함정 98).
        앱이면 안드로이드 인쇄 창(PDF 로 저장 포함)을, 브라우저면 그대로 window.print() 를 씁니다. */
   setTimeout(function(){
+    try { window.ACTheme && ACTheme.printLight && ACTheme.printLight(); } catch (e) {}
     if (window.AliasNative && typeof AliasNative.printPage === 'function') AliasNative.printPage('Aliascall QR');
     else window.print();
   }, 300);

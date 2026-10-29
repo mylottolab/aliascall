@@ -479,7 +479,35 @@
     draw();
   }
 
-  window.ACTheme = { open: openSheet, toggle: toggleMode, get: function(){ return Object.assign({}, cur); }, apply: function(t){ write(t); apply(t); } };
+  /* 🔴 2026-10-29 — 인쇄할 때는 늘 주간(흰 바탕)으로. QR 은 흰 바탕 · 검정이어야만 읽힙니다.
+     야간은 화면의 색을 직접 바꿔 두기 때문에, 인쇄 직전에 잠깐 주간으로 돌렸다가 끝나면 되돌립니다.
+     ⚠ 앱(안드로이드) 인쇄는 끝났다는 신호가 없어서, 다음에 화면을 누를 때 되돌립니다. */
+  var printingLight = false;
+  function printLight(){
+    if (printingLight || root.getAttribute('data-ac-mode') !== 'dark') return;
+    printingLight = true;
+    stopDark();
+    root.setAttribute('data-ac-mode', 'light');
+    window.addEventListener('afterprint', printRestore, { once: true });
+    setTimeout(function(){ document.addEventListener('pointerdown', printRestore, { once: true }); }, 1500);
+  }
+  function printRestore(){
+    if (!printingLight) return;
+    printingLight = false;
+    root.setAttribute('data-ac-mode', 'light');
+    apply(cur);
+  }
+  window.addEventListener('beforeprint', printLight);
+  (function(){
+    var op = window.print;
+    if (op && !op.__acLight) {
+      var wrapped = function(){ printLight(); return op.apply(window, arguments); };
+      wrapped.__acLight = true;
+      window.print = wrapped;
+    }
+  })();
+
+  window.ACTheme = { printLight: printLight, open: openSheet, toggle: toggleMode, get: function(){ return Object.assign({}, cur); }, apply: function(t){ write(t); apply(t); } };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addButtons);
   else addButtons();
