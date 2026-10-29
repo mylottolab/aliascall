@@ -346,6 +346,9 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 
       </div>
       <a href="aliascall_search_mockup.html" class="guide-link-bottom" data-i18n="findOther">다른 등록물 찾기</a>
+      <!-- 🔴 2026-10-29 "나도 만들기" — 앱 없이 연락하는 분(로그인 안 한 분)에게만 보입니다 -->
+      <a href="index.html?from=connect" id="mineLink" style="display:none;margin:14px auto 0;max-width:360px;padding:13px 14px;border-radius:14px;text-align:center;text-decoration:none;font-size:14px;font-weight:700;line-height:1.5;color:var(--teal-deep,#123F3D);background:var(--teal-tint,#E4EFEE);border:1px solid var(--line,#DCE3DE)">
+        🔒 <span id="mineT1">이 연락은 번호 없이 보호되고 있어요</span><br><span id="mineT2" style="color:var(--coral,#E8734A)">내 차 · 물건 · 반려동물에도 무료로 만들기 ›</span></a>
     </div>
 
   </div>
@@ -2757,5 +2760,20 @@ applyLang(currentLang);
 </script>
 </div><!-- /app-shell -->
 <script src="aliascall_block.js"></script>
+<script>
+/* 🔴 2026-10-29 "나도 만들기" 한 줄: 로그인 안 한 방문자(QR을 찍고 연락하는 분)에게만 */
+(function(){
+  setTimeout(async function(){
+    try {
+      var a = document.getElementById('mineLink'); if (!a || typeof sb === 'undefined') return;
+      var s = (await sb.auth.getSession()).data.session;
+      if (s) return;
+      var en = false; try { en = (localStorage.getItem('aliascall_lang') || '').indexOf('en') === 0; } catch (e) {}
+      if (en) { document.getElementById('mineT1').textContent = 'This contact keeps your number hidden'; document.getElementById('mineT2').textContent = 'Make one free for your car, things or pet ›'; }
+      a.style.display = 'block';
+    } catch (e) {}
+  }, 1200);
+})();
+</script>
 </body>
 </html>

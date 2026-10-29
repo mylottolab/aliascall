@@ -103,6 +103,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 .reg-qr-download{ font-size:10px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border:none; border-radius:12px; padding:4px 9px; cursor:pointer; white-space:nowrap; }
 
 /* 2026-08-23 신설: 마이페이지 바로 인쇄(100P 차감) */
+.reg-plate-print{ font-size:10px; font-weight:800; color:#fff; background:var(--coral,#E8734A); border:none; border-radius:12px; padding:5px 9px; cursor:pointer; white-space:nowrap; margin-top:5px; display:block; }
 .reg-qr-print{ font-size:10px; font-weight:700; color:#8a6416; background:rgba(201,162,75,.15); border:none; border-radius:12px; padding:4px 9px; cursor:pointer; white-space:nowrap; margin-top:5px; }
 
 /* 2026-08-23 신설: 인쇄 모달(사이즈 선택 + 가득채우기/견본섞기) */
@@ -392,6 +393,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 </style>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
 <script src="aliascall_theme.js?v=20261029"></script>
+<script src="aliascall_parking_plate.js?v=20261029"></script>
 <script src="aliascall_temp_names.js?v=20261029"></script>
 <script>document.addEventListener('DOMContentLoaded',function(){try{if((localStorage.getItem('aliascall_lang')||'').indexOf('en')===0){var b=document.getElementById('acThemeOpen');if(b)b.textContent='🎨 Display';}}catch(e){}});</script>
 </head>
@@ -2170,6 +2172,7 @@ async function loadMyRegistrations(userId){
             <div class="reg-qr-token" title="${r.qr_code_token || ''}">${I18N[currentLang].tokenLabel} ${(r.qr_code_token || '').slice(0, 8)}…</div>
             <button type="button" class="reg-qr-download" data-id="${r.id}" data-name="${label}" data-token="${r.qr_code_token || ''}">${I18N[currentLang].qrDownloadBtn}</button>
             <button type="button" class="reg-qr-print" data-id="${r.id}" data-name="${label}" data-token="${r.qr_code_token || ''}">${I18N[currentLang].qrPrintBtn}</button>
+            ${r.category === 'vehicle' && r.qr_code_token ? '<button type="button" class="reg-plate-print" data-token="' + r.qr_code_token + '">' + (currentLang === 'en' ? '🚗 Parking sign' : '🚗 주차 알림판') + '</button>' : ''}
           </div>
           <div class="reg-media-thumbs" id="media-${r.id}"></div>
         </div>
@@ -2189,6 +2192,10 @@ async function loadMyRegistrations(userId){
   });
   container.querySelectorAll('.reg-qr-download').forEach((btn) => {
     btn.addEventListener('click', () => downloadQr(btn.dataset.name, btn.dataset.token));
+  });
+  // 🔴 2026-10-29 주차 알림판 인쇄(차량만)
+  container.querySelectorAll('.reg-plate-print').forEach((btn) => {
+    btn.addEventListener('click', () => { if (window.ParkingPlate) ParkingPlate.print({ token: btn.dataset.token }); });
   });
   container.querySelectorAll('.reg-qr-print').forEach((btn) => {
     btn.addEventListener('click', () => openPrintModal(btn.dataset.id, btn.dataset.name, btn.dataset.token));
