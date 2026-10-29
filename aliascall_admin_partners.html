@@ -278,7 +278,7 @@ async function viewMonth(){
   el('sumBox').innerHTML = '<div><b>' + won(s.commission) + '</b><span>' + esc(data.month) + ' 수수료 합계</span></div>' +
     '<div><b>' + won(s.aliascall) + '</b><span>에일리어스콜</span></div><div><b>' + won(s.burum) + '</b><span>부름</span></div>' +
     '<div><b>' + won(s.carry) + '</b><span>1만 원 미만 → 다음 달</span></div>' +
-    '<div><b>' + won(net) + '</b><span>보낼 돈(보류 제외)</span></div><div><b>' + won(tax) + '</b><span>원천징수(개인 3.3%)</span></div>';
+    '<div><b>' + won(net) + '</b><span>보낼 돈(보류 제외)</span></div><div><b>' + won(tax) + '</b><span>원천징수(개인 3.3% · 소득세 1천 원 미만은 0원)</span></div>';
   el('payTbl').innerHTML = '<tr><th>상태</th><th>코드</th><th>받는 분</th><th>은행 · 계좌 · 예금주</th><th class="r">수수료</th><th class="r">세금</th><th class="r">보낼 돈</th><th>예정일</th><th></th></tr>' +
     (payRows.length ? payRows.map(x => '<tr><td><span class="pill ' + x.status + '">' + ST[x.status] + '</span>' + (x.paid_at ? '<br><span class="muted">' + dt(x.paid_at) + '</span>' : '') + '</td>' +
       '<td>' + esc(x.code) + '</td><td>' + esc(x.name) + (x.kind === 'business' ? '<br><span class="muted">' + esc(x.biz_name) + ' · 세금계산서 확인</span>' : '') + '</td>' +
