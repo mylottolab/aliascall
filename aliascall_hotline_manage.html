@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<script src="aliascall_hold.js?v=20261101"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Aliascall — 핫라인 관리</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -1173,6 +1174,22 @@ function focusHotlineFromUrl(){
   setTimeout(() => { card.style.boxShadow = ''; }, 2200);
 }
 
+/* 🔴 2026-11-01 — 회선번호 (aliascall_numbers.html). 한 번만 읽어 둡니다 */
+let _acNumP = null;
+function acNumMap(){
+  if (!_acNumP) _acNumP = sb.rpc('ac_num_mine').then((r) => { const m = {}; ((r && r.data) || []).forEach((x) => { if (x.hotline) m[x.hotline] = x.number; }); return m; }).catch(() => ({}));
+  return _acNumP;
+}
+function acNumFmt(n){ n = String(n || ''); return n.length === 7 ? n.slice(0, 3) + ' ' + n.slice(3) : n.length === 8 ? n.slice(0, 4) + ' ' + n.slice(4) : n; }
+async function acNumRow(h){
+  if ((window.acHeld && acHeld()) || (h.expires_at && new Date(h.expires_at) < new Date())) return '';   // 아이폰 앱 심사 중 · 끝난 회선은 그대로
+  const n = (await acNumMap())[h.id];
+  const en = LANG === 'en';
+  return `<a class="usage-add" href="aliascall_numbers.html?hotline=${h.id}">${n
+    ? (en ? '📞 Line number ' : '📞 회선번호 ') + '<b>' + acNumFmt(n) + '</b>' + (en ? ' · change' : ' · 바꾸기 · 알려 주기')
+    : (en ? '📞 Get a line number (8 digits free)' : '📞 회선번호 받기 (8자리 무료 · 짧은 번호도 있어요)')}</a>`;
+}
+
 async function renderHotlineItem(h){
   const [{ data: members }, { data: requests }] = await Promise.all([
     sb.from('hotline_members').select('*').eq('hotline_id', h.id).eq('status', 'approved'),
@@ -1287,6 +1304,7 @@ async function renderHotlineItem(h){
       ${expiryWarningHtml}
 
       ${linkSectionHtml}
+      ${await acNumRow(h)}
 
       <div class="usage-bar-track"><div class="usage-bar-fill" style="width:${usagePercent}%;"></div></div>
       <div class="usage-label">${LANG === 'en' ? 'Usage' : '사용량'} ${h.usage_used_gb.toFixed(1)}GB / ${h.usage_cap_gb}GB (${usagePercent}%)</div>
