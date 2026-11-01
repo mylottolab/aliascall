@@ -6,7 +6,7 @@
 <title>Aliascall — 찾기</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<script src="aliascall_scan.js?v=20261101"></script>
+<script src="aliascall_scan.js?v=20261102"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -183,7 +183,7 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 60px; }
     <svg viewBox="0 0 24 24" fill="none"><rect x="2.5" y="7" width="19" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M6 12h2M10 12h1.5M13.5 12h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     <span data-i18n="plateScanBtn">번호판 · 이름표 찍어서 찾기</span>
   </button>
-  <div class="plate-note" data-i18n="plateNote">QR이 훼손됐거나 없어도 번호판 · 이름표 · 물품 글자로 찾습니다 · 하루 5번</div>
+  <div class="plate-note" data-i18n="plateNote">QR이 훼손됐거나 없어도 번호판 · 이름표 · 물품 글자로 찾습니다 · 하루 10번</div>
 
   <div class="divider" data-i18n="filterDivider">카테고리로 좁혀보기</div>
   <div class="filter-row" id="filterRow">
@@ -220,7 +220,7 @@ const I18N = {
     guideLink: '📖 사용설명서', pageTitle: '무엇을 찾으시나요?',
     pageDesc: 'QR이 오염되었거나 스캔이 안 되면, 문자나 음성으로 직접 검색해보세요.',
     searchInputPlaceholder: '예: 151노8409', qrScanBtn: 'QR 다시 스캔하기',
-    plateScanBtn: '번호판 · 이름표 찍어서 찾기', plateNote: 'QR이 훼손됐거나 없어도 번호판 · 이름표 · 물품 글자로 찾습니다 · 하루 5번',
+    plateScanBtn: '번호판 · 이름표 찍어서 찾기', plateNote: 'QR이 훼손됐거나 없어도 번호판 · 이름표 · 물품 글자로 찾습니다 · 하루 10번',
     filterDivider: '카테고리로 좁혀보기',
     catAll: '전체', catVehicle: '🚗 차량', catLostItem: '🎒 분실물', catVulnerable: '🧑‍🦳 아동·노인',
     catPet: '🐾 반려동물', catCallback: '📮 부재중연락', catMisc: '❓ 기타',
@@ -241,7 +241,7 @@ const I18N = {
     guideLink: '📖 User Guide', pageTitle: 'What are you looking for?',
     pageDesc: "If the QR is damaged or won't scan, search by text or voice instead.",
     searchInputPlaceholder: 'e.g. 151NO8409', qrScanBtn: 'Scan QR Again',
-    plateScanBtn: 'Find by plate or name-tag photo', plateNote: 'Works even when the QR is damaged or missing — plates, name tags, item labels · 5 times a day',
+    plateScanBtn: 'Find by plate or name-tag photo', plateNote: 'Works even when the QR is damaged or missing — plates, name tags, item labels · 10 times a day',
     filterDivider: 'Narrow by category',
     catAll: 'All', catVehicle: '🚗 Vehicle', catLostItem: '🎒 Lost item', catVulnerable: '🧑‍🦳 Child · Elderly',
     catPet: '🐾 Pet', catCallback: '📮 Callback', catMisc: '❓ Other',

@@ -12,7 +12,7 @@
      📷 찍거나 🖼 사진(블랙박스 캡처 등)을 고르면 →
        앱(ML Kit, 폰 안에서 · 무료) 또는 서버(구글 Vision) 가 글자를 읽고 →
        "12가3456" 모양을 골라 → 고칠 수 있게 보여 준 뒤 → 그 번호로 찾습니다.
-     하루 5번(서버가 셉니다 · ML Kit 로 읽어도 셉니다).
+     하루 10번(2026-11-02 5→10, 서버가 셉니다 · ML Kit 로 읽어도 셉니다).
 
    화면이 할 일
      ACScan.init({ sb, url, lang: () => 'ko'|'en' })
@@ -398,7 +398,7 @@
       u.st.textContent = t('plHint');
 
       function showResult(r){
-        var lim = r.limit_n || 5;
+        var lim = r.limit_n || 10;
         if (r.limit) {
           u.res.innerHTML = '<div class="h">' + esc(t('limit', { m: lim })) + '</div>' +
             '<input type="text" inputmode="text" placeholder="' + esc(t('typeIt')) + '">' +
