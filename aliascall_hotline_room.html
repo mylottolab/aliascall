@@ -1467,6 +1467,10 @@ async function init(){
     });
   }
   if (session) accessToken = session.access_token;
+  /* 🔴 2026-11-01 — 초대 열쇠(?t=)로 들어온 분은 "참가자"입니다. 로그인해 있어도 로그인 표를 보내지 않습니다.
+     보내면 서버가 방 주인으로 보고 "이 핫라인의 개설자가 아닙니다" 로 막습니다(로그인한 손님이 번호 · 초대로 들어올 때).
+     방 주인은 늘 ?hotline= 으로 들어옵니다(초대 링크를 눌러도 참가 화면이 주인 주소로 바꿔 줌). */
+  if (inviteToken && !directHotlineId) accessToken = null;
 
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/aliascall_hotline_messages`, {
