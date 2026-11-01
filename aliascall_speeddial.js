@@ -57,6 +57,17 @@
     '.sd-row0 .call{background:#2E9E6B;border-color:#2E9E6B;font-size:15px}' +
     '.sd-row0 .call:disabled{opacity:.45}' +
     '.sd-k{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}' +
+    /* 🔴 2026-11-01 — 💎 좋은번호 */
+    '.sd-head{flex-wrap:wrap;gap:6px}' +
+    '.sd-head .sd-good{background:linear-gradient(135deg,#F6C453,#E8734A);border:none;color:#3a1d06;font-weight:800;white-space:nowrap}' +
+    '#sdSheet .gtabs{display:flex;gap:6px;margin:4px 0 10px}' +
+    '#sdSheet .gtabs button{flex:1;padding:9px 0;border-radius:10px;border:1px solid #cdd8d7;background:#f3f6f6;font-family:inherit;font-weight:800;font-size:13.5px;color:#16302E;cursor:pointer}' +
+    '#sdSheet .gtabs button.on{background:#16302E;border-color:#16302E;color:#fff}' +
+    '#sdSheet .gchips{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}' +
+    '#sdSheet .gchip{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 6px;border-radius:12px;border:1.5px solid #F2C46B;background:#fff8ea;font-family:inherit;cursor:pointer;color:#16302E}' +
+    '#sdSheet .gchip b{font-family:"Space Grotesk",sans-serif;font-size:22px;letter-spacing:.06em}' +
+    '#sdSheet .gchip small{font-size:12px;font-weight:800;color:#B4410C}' +
+    '#sdSheet .gfoot{font-size:11.5px;color:#5b6f6d;line-height:1.6;margin-top:10px}' +
     /* 🔴 2026-11-01 — 첫 화면 작은 번호판을 누르면 큰 번호판이 튀어나옴 */
     '.sd-box[data-sd-pop] .sd-num,.sd-box[data-sd-pop] .sd-pad,.sd-box[data-sd-pop] .sd-row0{cursor:zoom-in}' +
     '#sdBig{position:fixed;inset:0;z-index:8000;display:none;align-items:flex-end;justify-content:center;background:rgba(4,22,20,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}' +
@@ -95,7 +106,7 @@
           ph:'번호를 누르고 [연결] · 숫자를 길게 누르면 단축회선', del:'지움', call:'📞 연결', short:'회선번호는 4~8자리예요.', noZero:'회선번호는 0으로 시작하지 않아요.',
           none:'없는 회선번호예요. 번호를 다시 확인해 주세요.', resting:'지금 쉬고 있는 회선번호예요(회선 기간이 끝남).',
           secure:'🔒 암호화 회선이라 번호만으로는 대화를 열 수 없어요. 회선 주인에게 초대 링크를 받아 주세요.', fail:'연결하지 못했어요. 잠시 뒤 다시 해 주세요.',
-          off:'번호로 연락을 받지 않는 번호예요.', myNum:'📞 내 번호', self:'내 번호예요.', busy:'지금은 연결 요청이 많아요. 잠시 뒤 다시 해 주세요.' },
+          off:'번호로 연락을 받지 않는 번호예요.', myNum:'📞 내 번호', good:'💎 좋은번호', self:'내 번호예요.', busy:'지금은 연결 요청이 많아요. 잠시 뒤 다시 해 주세요.' },
     en: { title:'⚡ Quick Lines', edit:'Edit', done:'Done', empty:'Empty', add:'＋ Add', gone:'Ended',
           all:'All lines', emg:'Emergency', tmp:'Temporary', mng:'Manage lines',
           pick:': choose a line', pickSub:'Tap it later to open that line’s chat right away for calls and messages. Saved on this phone only.',
@@ -104,7 +115,7 @@
           ph:'Dial a number, then [Connect] · hold a digit for Quick Lines', del:'Del', call:'📞 Connect', short:'Line numbers have 4–8 digits.', noZero:'Line numbers never start with 0.',
           none:'No such line number. Please check it.', resting:'This line number is resting (the line has ended).',
           secure:'🔒 This is an encrypted line — a number alone cannot open its chat. Ask the owner for an invitation link.', fail:'Could not connect. Please try again.',
-          off:'This number does not take contacts.', myNum:'📞 My number', self:'That is your own number.', busy:'Too many requests right now. Please try again later.' }
+          off:'This number does not take contacts.', myNum:'📞 My number', good:'💎 Special', self:'That is your own number.', busy:'Too many requests right now. Please try again later.' }
   };
   function T(){ return en() ? TX.en : TX.ko; }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
@@ -173,7 +184,8 @@
   function paint(box){
     var t = T(), s = readSlots(), h = '';
     h += '<div class="sd-head"><span class="sd-t">' + esc(t.title) + '</span><span style="display:flex;gap:6px">' +
-         (window.acHeld && acHeld() ? '' : '<a href="aliascall_numbers.html" style="background:none;border:1px solid rgba(255,255,255,.3);color:#cfe7e4;font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 11px;text-decoration:none">' + esc(t.myNum) + '</a>') +
+         (window.acHeld && acHeld() ? '' : '<button type="button" data-sd-good class="sd-good">' + esc(t.good) + '</button>' +
+           '<a href="aliascall_numbers.html" style="background:none;border:1px solid rgba(255,255,255,.3);color:#cfe7e4;font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 11px;text-decoration:none;white-space:nowrap">' + esc(t.myNum) + '</a>') +
          '<button type="button" data-sd-edit class="' + (editing ? 'on' : '') + '">' + esc(editing ? t.done : t.edit) + '</button></span></div>';
     h += '<div class="sd-num"><span class="v' + (dial ? '' : ' ph') + '" data-sd-v>' + esc(dial ? fmtNum(dial) : t.ph) + '</span>' +
          (dial ? '<button type="button" data-sd-del aria-label="' + esc(t.del) + '">⌫</button>' : '') + '</div>';
@@ -196,6 +208,7 @@
     box.innerHTML = h;
     box.classList.toggle('edit', editing);
     box.querySelector('[data-sd-edit]').onclick = function(){ editing = !editing; paintAll(); };
+    var gb = box.querySelector('[data-sd-good]'); if (gb) gb.onclick = function(e){ e.stopPropagation(); openGood(); };
     box.querySelectorAll('[data-sd-k]').forEach(function(b){ wireKey(b, +b.dataset.sdK); });
     box.querySelector('[data-sd-zero]').onclick = function(){ press(0); };
     box.querySelector('[data-sd-del2]').onclick = function(){ dial = dial.slice(0, -1); paintAll(); };
@@ -384,6 +397,44 @@
     e.sh.querySelector('[data-close]').onclick = closeSheet;
   }
 
+
+  /* ── 🔴 2026-11-01 💎 좋은번호 — 번호판에서 바로 골라 사기(부름의 "좋은 번호"처럼) ── */
+  var goodLen = 4;
+  function won(n){ return (n || 0).toLocaleString('ko-KR') + (en() ? ' KRW' : '원'); }
+  async function openGood(){
+    var e = sheetEls(), en2 = en();
+    var ttl = en2 ? '💎 Special numbers' : '💎 좋은번호';
+    var sub = en2 ? 'Easy-to-remember numbers nobody owns yet. Tap one to buy it — use it for 1:1 chats or a line.'
+                  : '외우기 쉬운 번호 중 아직 주인 없는 것들이에요. 누르면 바로 살 수 있어요. 산 번호는 나에게(1:1) 또는 회선에 붙여 씁니다.';
+    function frame(body){
+      var tabs = '<div class="gtabs">' + [4, 5, 6, 7, 8].map(function(n){ return '<button type="button" data-gl="' + n + '" class="' + (n === goodLen ? 'on' : '') + '">' + n + (en2 ? '-digit' : '자리') + '</button>'; }).join('') + '</div>';
+      e.sh.innerHTML = '<h3>' + esc(ttl) + '</h3><div class="sub">' + esc(sub) + '</div>' + tabs + body +
+        '<div class="gfoot">' + esc(en2 ? 'Regular / special: 4-digit 110,000 / 220,000 · 5-digit 55,000 / 110,000 · 6-digit 33,000 / 66,000 · 7-digit 11,000 / 22,000 · 8-digit free / 11,000 KRW. Refund within 7 days if nobody has used it yet.'
+                                       : '기본 / 좋은 번호 — 4자리 110,000 / 220,000 · 5자리 55,000 / 110,000 · 6자리 33,000 / 66,000 · 7자리 11,000 / 22,000 · 8자리 무료 / 11,000원. 산 지 7일 안이고 아무도 그 번호로 연결하지 않았으면 전액 환불.') + '</div>' +
+        '<div class="row"><button type="button" data-gmore>' + esc(en2 ? 'Other numbers' : '다른 번호 보기') + '</button>' +
+        '<button type="button" data-gwant>' + esc(en2 ? 'Find my own number' : '원하는 번호 찾기') + '</button>' +
+        '<button type="button" data-close>' + esc(T().cancel) + '</button></div>';
+      e.sh.querySelectorAll('[data-gl]').forEach(function(b){ b.onclick = function(){ goodLen = +b.dataset.gl; paintGood(); }; });
+      e.sh.querySelector('[data-gmore]').onclick = paintGood;
+      e.sh.querySelector('[data-gwant]').onclick = function(){ location.href = 'aliascall_numbers.html?len=' + goodLen + '#buyCard'; };
+      e.sh.querySelector('[data-close]').onclick = closeSheet;
+    }
+    async function paintGood(){
+      frame('<div class="none">' + esc(T().loading.replace(/회선을/, '번호를')) + '</div>');
+      var list = [];
+      try {
+        var r = await window.sb.rpc('ac_num_good_list', { p_len: goodLen, p_contains: null, p_limit: 12 });
+        if (r.error) throw r.error;
+        list = r.data || [];
+      } catch (er) { frame('<div class="none">' + esc(en2 ? 'Could not load. Please try again.' : '불러오지 못했어요. 잠시 뒤 다시 해 주세요.') + '</div>'); return; }
+      frame(list.length
+        ? '<div class="gchips">' + list.map(function(g){ return '<button type="button" class="gchip" data-gn="' + esc(g.number) + '"><b>' + esc(fmtNum(String(g.number))) + '</b><small>' + esc(won(g.price)) + '</small></button>'; }).join('') + '</div>'
+        : '<div class="none">' + esc(en2 ? 'All special numbers of this length are sold.' : '이 자릿수의 좋은 번호가 모두 팔렸어요.') + '</div>');
+      e.sh.querySelectorAll('[data-gn]').forEach(function(b){ b.onclick = function(){ location.href = 'aliascall_numbers.html?want=' + encodeURIComponent(b.dataset.gn) + '#buyCard'; }; });
+    }
+    e.bg.style.display = e.sh.style.display = 'block';
+    paintGood();
+  }
   /* 🔴 2026-11-01 — 첫 화면 [💬 대화방] 단추: 들어갈 수 있는 회선 · 1:1 대화방을 모두 보여 주고, 누르면 바로 그 대화방 */
   async function openLines(){
     var t = T(), e = sheetEls(), en2 = en();
@@ -408,7 +459,7 @@
 
   window.AliasSD = {
     openLines: openLines,
-    openBig: openBig, closeBig: function(){ closeBig(); },
+    openBig: openBig, closeBig: function(){ closeBig(); }, openGood: openGood,
     mountAll: function(){ paintAll(); load().then(paintAll); },
     refresh: function(){ lines = null; loading = null; paintAll(); load().then(paintAll); },
     repaint: paintAll

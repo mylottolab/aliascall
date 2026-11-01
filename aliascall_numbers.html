@@ -478,7 +478,17 @@ async function onBought(r){
     history.replaceState(null, '', 'aliascall_numbers.html');
   }
   try { await Promise.all([loadLines(), loadMine(), loadXfers()]); paintLine(); } catch (e) { msg('msgLine', '불러오지 못했어요: ' + (e.message || e)); }
-  if (el('buyCard').style.display !== 'none') { pickLen(4); if (!ACStore.inApp() && window.ACWeb) ACWeb.preload().catch(() => {}); }
+  if (el('buyCard').style.display !== 'none') {
+    /* 🔴 2026-11-01 — 번호판 [💎 좋은번호]에서 고른 번호(?want=) · 자릿수(?len=) 로 바로 */
+    const want = (q.get('want') || '').replace(/[^0-9]/g, '').slice(0, 8);
+    const len = want ? want.length : Math.min(8, Math.max(4, +q.get('len') || 4));
+    pickLen(len >= 4 ? len : 4);
+    if (!ACStore.inApp() && window.ACWeb) ACWeb.preload().catch(() => {});
+    if (want || q.has('len') || location.hash === '#buyCard') {
+      if (want) { el('want').value = want; check(); }
+      setTimeout(() => el('buyCard').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+    }
+  }
 })();
 </script>
 </body>
