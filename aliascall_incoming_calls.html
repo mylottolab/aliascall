@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#1F6F6B">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_callguard.js?v=20261027"></script>
 <script src="aliascall_push.js"></script>
 <script src="aliascall_emoji.js"></script>
 <script src="aliascall_image_compress.js"></script>
@@ -1344,6 +1345,8 @@ function acNative(fn, a, b){
   /* 🔴 2026-10-09 — 폰에 "통화 중" 을 알렸는지 기억합니다(아래 청소부가 씀) */
   if (fn === 'callStarted' || fn === 'callOngoing') _acNativeOpen = true;
   if (fn === 'callEnded') _acNativeOpen = false;
+  /* 🔴 2026-10-27 — 통화 중 [뒤로] 막이 (aliascall_callguard.js) */
+  try { if (window.ACG) { if (fn === 'callOngoing') ACG.on(); if (fn === 'callEnded') ACG.off(); } } catch (e) {}
   /* 🔴 2026-10-09 — 폰 창구는 "이름 + 칸 수" 가 정확히 맞아야 불립니다.
      callEnded() 는 0칸, cancelCall(id) 는 1칸인데 예전엔 늘 2칸(a, b)을 보내 조용히 실패했습니다.
      → 통화가 끝나도 "에일리어스콜 통화 중 ○○:○○" 알림이 남고, 다음 전화의 큰 벨이 안 울렸습니다. */
