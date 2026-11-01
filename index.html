@@ -29,7 +29,7 @@ ACStore.onDone = function(r){
 };
 </script>
 <script src="aliascall_push.js"></script>
-<script src="aliascall_speeddial.js?v=20261101d"></script>
+<script src="aliascall_speeddial.js?v=20261101e"></script>
 <script src="aliascall_beacon.js?v=20261101"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -534,7 +534,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   <!-- 🔴 2026-11-01 긴급 경광등 (긴급 수신 · 긴급 발신) — aliascall_beacon.js -->
   <div data-beacon id="bcHome"></div>
   <!-- 🔴 2026-10-23 단축회선 (1~9 회선 + 회선 전체 · 긴급 · 임시 · 회선 관리) — aliascall_speeddial.js -->
-  <div class="sd-box" data-sd id="sdHome"></div>
+  <div class="sd-box" data-sd data-sd-pop id="sdHome"></div>
 
   <!-- 2026-09-28 (2차): 첫 화면의 "내 회선"은 없앴습니다. ④ 안에 전체 목록이 그대로 있습니다. -->
 
@@ -636,7 +636,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <a class="contacts-link" href="aliascall_hotline_manage.html"><span>👥</span><span data-i18n="manageLink">회선 관리</span></a>
   </div>
   <!-- 🔴 2026-10-23 단축회선 -->
-  <div class="sd-box" data-sd id="sdMsg" style="max-width:360px;margin-bottom:16px;"></div>
+  <div class="sd-box" data-sd data-sd-pop id="sdMsg" style="max-width:360px;margin-bottom:16px;"></div>
 
   <div class="mine-head">
     <span class="t" data-i18n="myLines">내 회선</span>

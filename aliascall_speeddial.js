@@ -56,7 +56,33 @@
     '.sd-row0 .z{font-family:"Space Grotesk",sans-serif;font-size:21px;color:#8ED6CF}' +
     '.sd-row0 .call{background:#2E9E6B;border-color:#2E9E6B;font-size:15px}' +
     '.sd-row0 .call:disabled{opacity:.45}' +
-    '.sd-k{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}';
+    '.sd-k{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}' +
+    /* 🔴 2026-11-01 — 첫 화면 작은 번호판을 누르면 큰 번호판이 튀어나옴 */
+    '.sd-box[data-sd-pop] .sd-num,.sd-box[data-sd-pop] .sd-pad,.sd-box[data-sd-pop] .sd-row0{cursor:zoom-in}' +
+    '#sdBig{position:fixed;inset:0;z-index:8000;display:none;align-items:flex-end;justify-content:center;background:rgba(4,22,20,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}' +
+    '#sdBig.show{display:flex}' +
+    '#sdBig .sd-sheet{width:100%;max-width:560px;max-height:100%;overflow:auto;background:linear-gradient(180deg,#1d5a54,#123f3b);border-radius:24px 24px 0 0;padding:12px 16px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(0,0,0,.4);transform:translateY(105%);transition:transform .26s cubic-bezier(.2,.9,.3,1.15)}' +
+    '#sdBig.up .sd-sheet{transform:translateY(0)}' +
+    '#sdBig .sd-grab{width:44px;height:5px;border-radius:9px;background:rgba(255,255,255,.35);margin:0 auto 8px}' +
+    '#sdBig .sd-x{position:absolute;right:12px;top:8px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.14);color:#fff;font-size:20px;cursor:pointer}' +
+    '#sdBig .sd-sheet{position:relative}' +
+    '.sd-big{max-width:none;margin:0}' +
+    '.sd-big .sd-head{padding:0 50px 10px 2px}' +
+    '.sd-big .sd-head .sd-t{font-size:16px}' +
+    '.sd-big .sd-num{min-height:70px;margin-bottom:10px;padding:6px 8px 6px 16px}' +
+    '.sd-big .sd-num .v{font-size:38px}' +
+    '.sd-big .sd-num .v.ph{font-size:15px}' +
+    '.sd-big .sd-num button{min-width:58px;min-height:52px;font-size:24px}' +
+    '.sd-big .sd-pad,.sd-big .sd-row0{gap:10px}' +
+    '.sd-big .sd-row0{margin-top:10px}' +
+    '.sd-big .sd-k{min-height:min(13vh,84px);padding:8px 12px;border-radius:16px;gap:10px}' +
+    '.sd-big .sd-k .d{font-size:36px;min-width:22px}' +
+    '.sd-big .sd-k .nm{font-size:14px}' +
+    '.sd-big .sd-row0 button{min-height:min(13vh,84px);border-radius:16px;font-size:19px}' +
+    '.sd-big .sd-row0 .z{font-size:36px}' +
+    '.sd-big .sd-row0 .call{font-size:20px}' +
+    '.sd-big .sd-go{gap:8px;margin-top:10px}' +
+    '.sd-big .sd-go a{min-height:56px;font-size:12.5px}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   function en(){ try { return (localStorage.getItem('aliascall_lang') || '').indexOf('en') === 0; } catch (e) { return false; } }
@@ -252,15 +278,65 @@
       location.href = 'aliascall_hotline_join.html?t=' + encodeURIComponent(o.token) + '&via=number';
     } catch (e) { console.warn('[speeddial] 번호 연결 실패', e); flash(t.fail); }
   }
+
+  /* ── 🔴 2026-11-01 큰 번호판 — data-sd-pop 이 붙은 작은 번호판의 숫자 · 번호 칸을 누르면 아래에서 튀어나옴 ── */
+  var big = null;
+  function bigEls(){
+    if (big) return big;
+    var wrap = document.createElement('div'); wrap.id = 'sdBig';
+    wrap.innerHTML = '<div class="sd-sheet" role="dialog" aria-modal="true"><div class="sd-grab"></div>' +
+      '<button type="button" class="sd-x" aria-label="닫기">✕</button><div class="sd-box sd-big" data-sd data-sd-bigbox></div></div>';
+    document.body.appendChild(wrap);
+    wrap.addEventListener('click', function(e){ if (e.target === wrap) closeBig(); });
+    wrap.querySelector('.sd-x').onclick = function(){ closeBig(); };
+    big = { wrap: wrap, box: wrap.querySelector('[data-sd-bigbox]') };
+    return big;
+  }
+  var bigOpen = false;
+  function openBig(){
+    var b = bigEls();
+    paint(b.box);
+    b.wrap.classList.add('show');
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ b.wrap.classList.add('up'); }); });
+    document.documentElement.style.overflow = 'hidden';
+    if (!bigOpen) { bigOpen = true; try { history.pushState({ sdBig: 1 }, ''); } catch (e) {} }
+    try { if (navigator.vibrate) navigator.vibrate(10); } catch (e) {}
+  }
+  function closeBig(fromPop){
+    if (!big || !bigOpen) return;
+    bigOpen = false;
+    big.wrap.classList.remove('up');
+    document.documentElement.style.overflow = '';
+    setTimeout(function(){ if (!bigOpen) big.wrap.classList.remove('show'); }, 260);
+    if (!fromPop) { try { if (history.state && history.state.sdBig) history.back(); } catch (e) {} }
+  }
+  window.addEventListener('popstate', function(){ if (bigOpen) closeBig(true); });
+  window.addEventListener('pageshow', function(){ if (bigOpen) closeBig(true); else if (big) big.wrap.classList.remove('show', 'up'); });
+  /* 작은 번호판: 숫자 · 번호 칸 · 0 · 지움 · 연결을 누르면 (편집 중이 아닐 때) 큰 번호판만 엽니다 */
+  function wirePop(box){
+    if (box._sdPop) return; box._sdPop = true;
+    function hit(e){
+      if (editing || !e.target || !e.target.closest) return null;
+      return e.target.closest('.sd-num,.sd-pad,.sd-row0');
+    }
+    ['pointerdown', 'mousedown', 'touchstart'].forEach(function(ev){
+      box.addEventListener(ev, function(e){ if (hit(e)) e.stopPropagation(); }, true);
+    });
+    box.addEventListener('click', function(e){
+      if (!hit(e)) return;
+      e.preventDefault(); e.stopPropagation();
+      openBig();
+    }, true);
+  }
   function boxes(){ return document.querySelectorAll('[data-sd]'); }
-  function paintAll(){ boxes().forEach(paint); }
+  function paintAll(){ boxes().forEach(function(b){ paint(b); if (b.hasAttribute('data-sd-pop')) wirePop(b); }); }
 
   async function tap(d){
     var s = readSlots(), x = s[d];
     if (x && !editing) {
       await load();
       var ln = lineOf(x.ref);
-      if (ln) { location.href = ln.href; return; }
+      if (ln) { if (bigOpen) { bigOpen = false; } location.href = ln.href; return; }
       if (!confirm(T().goneAsk)) return;
     }
     openSheet(d);
@@ -332,6 +408,7 @@
 
   window.AliasSD = {
     openLines: openLines,
+    openBig: openBig, closeBig: function(){ closeBig(); },
     mountAll: function(){ paintAll(); load().then(paintAll); },
     refresh: function(){ lines = null; loading = null; paintAll(); load().then(paintAll); },
     repaint: paintAll
