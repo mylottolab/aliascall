@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>회선번호 관리 — Aliascall Admin</title>
+<meta name="robots" content="noindex">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- 2026-11-01 신설: 회선번호 판매 · 7일 환불 신청 처리 · 명의 이전 현황 (DB: line_numbers.sql 의 ac_num_admin_*) -->
+<style>
+body{ margin:0; background:#F2F5F3; color:#12302E; font-family:system-ui,sans-serif; word-break:keep-all; }
+header{ display:flex; align-items:center; gap:10px; padding:14px 18px; background:#fff; border-bottom:1px solid #DCE3DE; }
+header a{ color:#1F6F6B; font-weight:700; text-decoration:none; font-size:13px; }
+main{ max-width:960px; margin:0 auto; padding:16px; }
+.card{ background:#fff; border-radius:14px; padding:14px 16px; margin-bottom:12px; }
+h2{ font-size:16px; margin:0 0 8px; }
+table{ width:100%; border-collapse:collapse; font-size:13px; }
+th,td{ padding:7px 6px; border-bottom:1px solid #E6ECE8; text-align:left; vertical-align:top; }
+th{ color:#3E5654; font-weight:600; }
+.num{ font-family:ui-monospace,monospace; font-weight:700; }
+button{ padding:6px 10px; border-radius:8px; border:1px solid #CBD6D1; background:#fff; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
+button.ok{ background:#1F6F6B; color:#fff; border-color:#1F6F6B; }
+.muted{ color:#3E5654; font-size:12.5px; line-height:1.6; }
+.st-requested{ color:#C1483A; font-weight:800; } .st-done{ color:#2E7D4F; } .st-rejected{ color:#777; }
+</style>
+</head>
+<body>
+<header><a href="aliascall_admin_dashboard.html">← 관리자</a><b style="flex:1">📞 회선번호 관리</b><span id="who" class="muted"></span></header>
+<main>
+  <div id="deny" class="card" style="display:none">관리자만 볼 수 있습니다.</div>
+  <div id="app" style="display:none">
+    <div class="card">
+      <h2>7일 환불 신청</h2>
+      <p class="muted">손님이 번호 화면에서 [7일 환불]을 누른 건입니다(산 지 7일 안 · 아무도 그 번호로 찾아오지 않음). 번호는 이미 놓아 줬습니다.<br>
+        <b>구글</b>: Play Console → 주문 관리에서 주문을 찾아 [환불] / <b>카드(이니시스)</b>: 이니시스 가맹점 관리자에서 결제 취소 → 그다음 여기서 [환불 완료].</p>
+      <div id="refunds"></div>
+    </div>
+    <div class="card"><h2>판매 (완료된 결제)</h2><div id="sales"></div></div>
+    <div class="card"><h2>쓰는 중인 번호</h2><div id="counts"></div></div>
+    <div class="card"><h2>명의 이전 (최근 50건)</h2><div id="xfers"></div></div>
+  </div>
+</main>
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const el = (id) => document.getElementById(id);
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const won = (n) => (Number(n) || 0).toLocaleString('ko-KR') + '원';
+const day = (d) => d ? new Date(d).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+const ST = { requested:'신청', done:'환불 완료', rejected:'거절', offered:'신청', accepted:'수락 · 결제 대기', cancelled:'취소', declined:'거절' };
+async function load(){
+  const r = await sb.rpc('ac_num_admin_overview');
+  const d = r.data || {};
+  if (r.error || !d.ok) { el('deny').style.display = 'block'; el('app').style.display = 'none'; return; }
+  el('app').style.display = 'block';
+  el('refunds').innerHTML = d.refunds.length ? '<table><tr><th>번호</th><th>상품 · 금액</th><th>손님</th><th>결제</th><th>신청</th><th>상태</th><th></th></tr>' + d.refunds.map((x) =>
+    '<tr><td class="num">' + esc(x.number) + '</td><td>' + esc(x.sku) + '<br>' + won(x.price) + '</td><td>' + esc(x.who) + '</td><td>' + esc(x.method) + '<br><small style="word-break:break-all">' + esc((x.ext || '').slice(0, 40)) + '</small></td>' +
+    '<td>' + day(x.created_at) + '</td><td class="st-' + esc(x.status) + '">' + esc(ST[x.status] || x.status) + (x.note ? '<br><small>' + esc(x.note) + '</small>' : '') + '</td>' +
+    '<td>' + (x.status === 'requested' ? '<button class="ok" data-ok="' + esc(x.id) + '">환불 완료</button> <button data-no="' + esc(x.id) + '">거절</button>' : '') + '</td></tr>').join('') + '</table>'
+    : '<p class="muted">신청이 없습니다.</p>';
+  el('sales').innerHTML = d.sales.length ? '<table><tr><th>상품</th><th>건수</th><th>금액</th></tr>' + d.sales.map((x) => '<tr><td>' + esc(x.sku) + '</td><td>' + x.n + '</td><td>' + won(x.won) + '</td></tr>').join('') + '</table>' : '<p class="muted">아직 판매가 없습니다.</p>';
+  const ks = Object.keys(d.counts || {}).sort();
+  el('counts').innerHTML = ks.length ? '<table><tr><th>자릿수 · 등급 · 받은 방법</th><th>개수</th></tr>' + ks.map((k) => { const p = k.split('_'); return '<tr><td>' + p[0] + '자리 · ' + (p[1] === 'good' ? '좋은 번호' : '기본') + ' · ' + ({ free:'무료', purchase:'구매', transfer:'이전', admin:'관리자' }[p[2]] || p[2]) + '</td><td>' + d.counts[k] + '</td></tr>'; }).join('') + '</table>' : '<p class="muted">아직 없습니다.</p>';
+  el('xfers').innerHTML = d.transfers.length ? '<table><tr><th>번호</th><th>상태</th><th>신청</th><th>완료</th></tr>' + d.transfers.map((x) => '<tr><td class="num">' + esc(x.number) + '</td><td>' + esc(ST[x.status] || x.status) + '</td><td>' + day(x.created_at) + '</td><td>' + day(x.done_at) + '</td></tr>').join('') + '</table>' : '<p class="muted">없습니다.</p>';
+}
+document.addEventListener('click', async (e) => {
+  const ok = e.target.closest('[data-ok]'), no = e.target.closest('[data-no]');
+  if (!ok && !no) return;
+  const id = (ok || no).dataset.ok || (ok || no).dataset.no;
+  const note = prompt(ok ? '메모(선택): 예) Play 주문 GPA.xxxx 환불' : '거절 이유(손님께 따로 연락하세요)') ;
+  if (note === null) return;
+  const r = await sb.rpc('ac_num_admin_refund_done', { p_id: id, p_ok: !!ok, p_note: note || null });
+  if (r.error || !(r.data || {}).ok) alert('처리하지 못했습니다.');
+  load();
+});
+(async function(){
+  const s = (await sb.auth.getSession()).data.session;
+  if (!s) { location.href = 'aliascall_my_account.html?next=aliascall_admin_numbers.html'; return; }
+  el('who').textContent = decodeURIComponent((s.user.email || '').split('@')[0]);
+  load();
+})();
+</script>
+</body>
+</html>

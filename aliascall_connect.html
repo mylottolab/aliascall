@@ -11,6 +11,8 @@
 <meta name="apple-mobile-web-app-title" content="Aliascall">
 <meta name="theme-color" content="#1F6F6B">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_hold.js?v=20261101"></script>
+<script src="aliascall_callguard.js?v=20261101"></script>
 <script src="aliascall_push.js"></script>
 <script src="aliascall_emoji.js"></script>
 <script src="aliascall_image_compress.js"></script>
@@ -741,6 +743,7 @@ function renderFoundRegistration(data){
   lastFoundData = data;
   const foundEl = document.getElementById('stateFound');
   document.getElementById('foundEmoji').textContent = CATEGORY_EMOJI[data.category] || '❓';
+  document.getElementById('stateFound').dataset.category = data.category || '';   // 🔴 2026-11-01 경광등(발신)에 적어 둘 종류
   document.getElementById('foundTitle').textContent = data.search_key || data.title || CATEGORY_LABEL_OF(data.category) || T().fallbackItem;
   document.getElementById('foundSub').textContent = CATEGORY_LABEL_OF(data.category) || data.category;
   /* 2026-09-28: 임시연락처 — 주인의 이름표는 보여주지 않습니다(주인만 보는 것) */
@@ -892,6 +895,7 @@ async function init(){
     }
 
     renderFoundRegistration(data);
+    if (typeof acApplyConnectMode === 'function') acApplyConnectMode(data.id);   // 🔴 2026-10-18 기간이 끝난 차량은 메시지 · 채팅 · 사진만
 
     await loadCategoryDetail(data.id, data.category);
     await loadMedia(data.id);
@@ -940,6 +944,7 @@ async function initCaseResumeFlow(caseId, loadingEl, errorEl){
     if (regErr || !reg) { errorEl.style.display = 'block'; return; }
 
     renderFoundRegistration(reg);
+    if (typeof acApplyConnectMode === 'function') acApplyConnectMode(reg.id);   // 🔴 2026-10-18
     await loadCategoryDetail(reg.id, reg.category);
     await loadMedia(reg.id);
 
@@ -1014,6 +1019,7 @@ async function initIncomingCallFlow(sessionToken, loadingEl, errorEl){
     if (regErr || !reg) { errorEl.style.display = 'block'; return; }
 
     renderFoundRegistration(reg);
+    if (typeof acApplyConnectMode === 'function') acApplyConnectMode(reg.id);   // 🔴 2026-10-18
     await loadCategoryDetail(reg.id, reg.category);
     await loadMedia(reg.id);
 
@@ -1409,6 +1415,8 @@ function acNativeC(fn, a, b){
   /* 🔴 2026-10-09 — 폰에 "통화 중" 을 알렸는지 기억합니다(아래 청소부가 씀) */
   if (fn === 'callStarted' || fn === 'callOngoing') _acNativeOpen = true;
   if (fn === 'callEnded') _acNativeOpen = false;
+  /* 🔴 2026-10-27 — 통화 중 [뒤로] 막이 (aliascall_callguard.js) */
+  try { if (window.ACG) { if (fn === 'callOngoing') ACG.on(); if (fn === 'callEnded') ACG.off(); } } catch (e) {}
   /* 🔴 2026-10-09 — 폰 창구는 "이름 + 칸 수" 가 정확히 맞아야 불립니다.
      callEnded() 는 0칸, cancelCall(id) 는 1칸인데 예전엔 늘 2칸(a, b)을 보내 조용히 실패했습니다.
      → 통화가 끝나도 "에일리어스콜 통화 중 ○○:○○" 알림이 남고, 다음 전화의 큰 벨이 안 울렸습니다. */
@@ -1509,6 +1517,17 @@ function getFinderAnonId(){
 }
 const finderAnonId = getFinderAnonId();
 let currentCaseId = null;
+/* 🔴 2026-11-01 — 🚨 긴급 발신 경광등: 이 폰에서 연락한 건을 적어 둡니다(aliascall_beacon.js) */
+function acBeaconRemember(caseId){
+  try {
+    if (!caseId || !window.AliasBeacon) return;
+    var sf = document.getElementById('stateFound');
+    var cat = (sf && sf.dataset.category) || '';
+    if (cat === 'temp_contact') return;   // 임시연락처는 [임시] 갈래 — 경광등에 올리지 않음
+    AliasBeacon.remember(caseId, sf && sf.dataset.registrationId, (document.getElementById('foundTitle') || {}).textContent || '', cat);
+  } catch (e) {}
+}
+
 let caseRealtimeChannel = null;
 let caseMessagePollInterval = null;
 let renderedMsgIds = new Set(); // 2026-08-20: 폴링 시 중복 렌더링 방지용
@@ -1556,6 +1575,12 @@ function makeSessionToken(){
 }
 
 async function startCall(mode){
+  /* 🔴 2026-10-18 — 기간이 끝난 차량: 통화를 시작하지 않고(주인에게 "통화 시도" 기록도 남기지 않고) 메시지로 */
+  if (window.acConnectModeVal === 'message_only' && typeof acSetMessageOnly === 'function') {
+    alert(acModeText().callOff);
+    switchMode('message');
+    return;
+  }
   currentMode = mode;
   activeCallRole = 'outgoing'; // 2026-08-20 (3단계)
   const overlay = document.getElementById('callingOverlay');
@@ -1589,6 +1614,7 @@ async function startCall(mode){
     if (!openRes.ok && tempGate(openData.error)) { overlay.classList.remove('show'); return; }   // 2026-09-28
     if (openRes.ok) {
       currentCaseId = openData.caseId;
+      acBeaconRemember(currentCaseId);
       renderedMsgIds = new Set();
       ownerLastReadAt = openData.ownerLastReadAt || null; // 2026-08-23 신설
       let lastEl2 = null, lastMsg2 = null;
@@ -1630,6 +1656,22 @@ async function startCall(mode){
   }
 
   if (error) {
+    /* 🔴 2026-10-18 — 기간이 끝난 차량은 DB 가 통화를 거절합니다. 메시지로 이어 갑니다. */
+    if (/plan_message_only/.test(String(error.message || '')) && typeof acSetMessageOnly === 'function') {
+      overlay.classList.remove('show');
+      window.acConnectModeVal = 'message_only';
+      acSetMessageOnly(true);
+      alert(acModeText().callOff);
+      switchMode('message');
+      return;
+    }
+    if (/plan_blocked/.test(String(error.message || ''))) {   // 이 등록은 지금 연결이 쉬고 있음
+      overlay.classList.remove('show');
+      document.getElementById('stateFound').style.display = 'none';
+      var bn = document.getElementById('bottomNav'); if (bn) bn.style.display = 'none';
+      document.getElementById('stateExpired').style.display = 'block';
+      return;
+    }
     alert(I18N[currentLang].callFailed);
     overlay.classList.remove('show');
     return;
@@ -2124,6 +2166,7 @@ async function startLiveChatOnly(){
     return;
   }
   currentCaseId = openData.caseId;
+  acBeaconRemember(currentCaseId);
   renderedMsgIds = new Set();
   ownerLastReadAt = openData.ownerLastReadAt || null; // 2026-08-23 신설
   let lastEl3 = null, lastMsg3 = null;
@@ -2713,6 +2756,7 @@ document.getElementById('textMsgSendBtn').addEventListener('click', async () => 
     });
     const openData = await openRes.json();
     if (!openRes.ok) throw new Error(openData.error || '사건 생성 실패');
+    acBeaconRemember(openData.caseId);
 
     // 2) 사건함에 실제 문자 내용 저장
     const msgRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
@@ -2760,6 +2804,7 @@ applyLang(currentLang);
 </script>
 </div><!-- /app-shell -->
 <script src="aliascall_block.js"></script>
+<script src="aliascall_beacon.js?v=20261101"></script>
 <script>
 /* 🔴 2026-10-29 "나도 만들기" 한 줄: 로그인 안 한 방문자(QR을 찍고 연락하는 분)에게만 */
 (function(){
@@ -2774,6 +2819,49 @@ applyLang(currentLang);
     } catch (e) {}
   }, 1200);
 })();
+/* =====================================================================
+   🔴 2026-10-18 — 연결 방식 (회사 결정 2026-10-17)
+   · 차량은 주인의 이용 기간(+유예 30일)이 끝나도 메시지 · 채팅 · 사진으로 계속 연결
+   · 음성 · 영상 통화는 이용권이 있을 때만 — DB(connect_mode_guard)가 최종으로 지킵니다
+   · 서버는 'full' | 'message_only' | 'blocked' 낱말 하나만 돌려줍니다(개인정보 없음)
+   ===================================================================== */
+function acModeText(){
+  return (typeof currentLang !== 'undefined' && currentLang === 'en') ? {
+    note: '✉️ You can reach this vehicle\'s owner by message, chat or photo. The owner gets a notification right away.',
+    callOff: 'Calls are not available for this vehicle right now. Please leave a message — the owner is notified right away.',
+  } : {
+    note: '✉️ 이 차량은 메시지 · 채팅 · 사진으로 연락할 수 있어요. 남기시면 차주에게 바로 알림이 갑니다.',
+    callOff: '지금 이 차량은 통화 대신 메시지로 연락할 수 있어요. 메시지를 남기시면 차주에게 바로 알림이 갑니다.',
+  };
+}
+/* 언어를 바꾸면 안내 문구도 다시 씁니다 */
+document.addEventListener('click', function(e){
+  if (e.target && e.target.closest && e.target.closest('.lang-btn,[data-lang]')) {
+    setTimeout(function(){ var n = document.getElementById('acModeNote'); if (n && n.style.display !== 'none') n.textContent = acModeText().note; }, 50);
+  }
+});
+function acSetMessageOnly(on){
+  ['navVoice', 'navVideo'].forEach(function(id){
+    var b = document.getElementById(id); if (b) b.style.display = on ? 'none' : '';
+  });
+  var note = document.getElementById('acModeNote');
+  if (on && !note) {
+    note = document.createElement('div');
+    note.id = 'acModeNote';
+    note.style.cssText = 'margin:12px 0;padding:12px 14px;border-radius:12px;background:#FFF4EC;color:#7A3A1C;font-size:14px;line-height:1.55;word-break:keep-all';
+    var host = document.querySelector('#stateFound .found-card') || document.getElementById('stateFound');
+    if (host) host.appendChild(note);
+  }
+  if (note) { note.textContent = acModeText().note; note.style.display = on ? '' : 'none'; }
+}
+async function acApplyConnectMode(regId){
+  try {
+    if (!regId) return;
+    var r = await sb.rpc('registration_connect_mode', { p_registration_id: regId });
+    window.acConnectModeVal = r.error ? '' : r.data;
+    acSetMessageOnly(window.acConnectModeVal === 'message_only');
+  } catch (e) { /* 함수가 아직 없으면(옛 DB) 예전처럼 둡니다 */ }
+}
 </script>
 </body>
 </html>

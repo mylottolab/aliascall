@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- 🔴 2026-11-01 — 아이폰 앱 심사 중에만 쓰는 예전 화면(그대로 얼린 사본). 승인 뒤 지웁니다. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Aliascall — 이용권</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_e2ee.js"></script>
+<script src="aliascall_store.js"></script>
+<script src="aliascall_web_pay.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<!--
+  ═══════════════════════════════════════════════════════════════
+  2026-09-28 신설: 이용권 (새 상품 일곱 개 · 2026-09-27 확정)
+
+    긴급 이용권     12개월   2,200원 ($2.2 — 웹)           ① 긴급등록 ② 긴급연락 ③ 임시연락처
+    일반 이용권     3·6·12개월  9,900 · 17,000 · 29,000원   + ④ 2인 회선 5GB
+    프리미엄 이용권  3·6·12개월 16,000 · 28,000 · 48,000원   + ④ 4인 회선 20GB
+    (일반·프리미엄은 덤 1개월 — 실제 4 · 7 · 13개월)
+
+  🔴 앱 안에서는 구글 결제만 보입니다(구글 규칙). 앱 안에서 웹 결제로
+    안내하는 글이나 링크를 넣지 않습니다.
+  🔴 값과 개월수는 서버(aliascall-google-verify)가 상품 번호로 정합니다.
+    이 화면의 숫자는 보여주기용입니다. 바꿀 때는 세 곳(여기 · 서버 · Play Console)을 함께.
+  ⚠ 암호화(Secure)와 용도는 값 차이가 없어서 손님이 고른 대로 보냅니다.
+  ═══════════════════════════════════════════════════════════════
+-->
+<style>
+:root{
+  --ink:#12302E; --ink-soft:#3E5654; --paper:#B8D3BE; --card:#FFFFFF;
+  --teal:#1F6F6B; --teal-deep:#123F3D; --teal-tint:#E4EFEE;
+  --coral:#E8734A; --coral-tint:#FDEAE1;
+  --line:#DCE3DE; --danger:#C1483A; --found:#2E7D4F; --brass:#C9A24B;
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; min-height:100vh; word-break:keep-all;
+      padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+h1,h2,h3{ font-family:'Space Grotesk','Inter',sans-serif; margin:0; font-weight:700; }
+header{ padding:18px 20px 4px; display:flex; align-items:center; gap:9px; }
+.back{ background:none; border:none; font-size:20px; color:var(--ink); cursor:pointer; padding:8px 8px 8px 0; }
+.brand{ width:28px; height:28px; border-radius:8px; background:var(--teal); color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.bname{ font-size:16px; font-weight:600; flex:1; }
+.bname em{ font-style:normal; color:var(--coral); }
+.lang{ display:flex; gap:2px; background:rgba(255,255,255,.6); border-radius:20px; padding:3px; }
+.lang button{ border:none; background:none; font-size:11px; font-weight:700; padding:5px 10px; border-radius:16px; color:var(--ink-soft); cursor:pointer; }
+.lang button.on{ background:var(--teal); color:#fff; }
+main{ max-width:430px; margin:0 auto; padding:10px 20px 60px; }
+.title{ font-size:24px; margin:8px 0 4px; }
+.sub{ font-size:13.5px; color:var(--ink-soft); line-height:1.65; margin:0 0 18px; }
+
+.plan{ background:var(--card); border:2px solid transparent; border-radius:18px; padding:16px; margin-bottom:10px; cursor:pointer; display:block; width:100%; text-align:left; font-family:inherit; color:inherit; }
+.plan.on{ border-color:var(--teal); background:#F4FAF9; }
+#webPay{ margin:6px 0 10px; }
+.wp-notice{ background:#fff; border:1.5px solid #C9A24B; border-radius:14px; padding:13px 14px; margin-bottom:10px; }
+.wp-nt{ font-size:12.5px; font-weight:700; color:#8a6416; margin-bottom:7px; }
+.wp-list{ margin:0 0 9px; padding-left:18px; font-size:11.5px; line-height:1.6; color:#3E5654; }
+.wp-list li{ margin-bottom:4px; }
+.wp-agree{ display:flex; gap:8px; align-items:center; font-size:12.5px; font-weight:700; border-top:1px solid #DCE3DE; padding-top:9px; cursor:pointer; }
+.wp-agree input{ width:17px; height:17px; accent-color:#C9A24B; }
+.wp-tabs{ display:flex; gap:8px; margin-bottom:10px; }
+.wp-tabs button{ flex:1; border:1.5px solid #DCE3DE; background:#fff; border-radius:10px; padding:11px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; color:#12302E; }
+.wp-tabs button.on{ border-color:#1F6F6B; background:#E4EFEE; }
+.wp-qty{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:9px; font-size:13px; font-weight:700; }
+.wp-qty select{ border:1.5px solid #DCE3DE; border-radius:9px; padding:8px 10px; font-size:13px; font-family:inherit; }
+.lp-prices{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 6px; }
+.lp-prices span{ font-size:12.5px; background:#E4EFEE; color:#123F3D; border-radius:9px; padding:5px 9px; }
+.lp-prices b{ font-weight:800; margin-right:3px; }
+.lp-warn{ font-size:12px; line-height:1.55; color:#8E2F12; background:#FBEAE7; border-radius:9px; padding:7px 9px; margin-top:7px; }
+.plan .row{ display:flex; align-items:baseline; gap:8px; }
+.plan .nm{ font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; flex:1; }
+.plan .pr{ font-size:15px; font-weight:700; }
+.plan .pr small{ font-weight:500; font-size:11.5px; color:var(--ink-soft); }
+.plan .inc{ display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
+.plan .inc span{ font-size:11.5px; font-weight:600; border-radius:20px; padding:3px 9px; background:var(--teal-tint); color:var(--teal-deep); }
+.plan .inc span.x{ background:var(--coral-tint); color:#9A4526; }
+.plan .ds{ font-size:12.5px; color:var(--ink-soft); margin-top:8px; line-height:1.55; }
+
+.sect{ font-size:13px; font-weight:700; margin:20px 2px 8px; }
+.durs{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.dur{ position:relative; background:var(--card); border:2px solid transparent; border-radius:14px; padding:12px 6px; text-align:center; cursor:pointer; font-family:inherit; color:inherit; }
+.dur.on{ border-color:var(--teal); background:#F4FAF9; }
+.dur .m{ font-weight:700; font-size:15px; }
+.dur .real{ font-size:11px; color:var(--found); font-weight:600; margin-top:2px; }
+.dur .p{ font-size:13px; font-weight:700; margin-top:6px; }
+.dur .best{ position:absolute; top:-9px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:700; color:#fff; background:var(--coral); border-radius:20px; padding:2px 8px; white-space:nowrap; }
+
+.opts{ background:var(--card); border-radius:16px; padding:6px 14px; }
+.opt{ display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
+.opt:last-child{ border-bottom:none; }
+.opt .tx{ flex:1; }
+.opt .t1{ font-size:14px; font-weight:700; }
+.opt .t2{ font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.5; }
+.opt .t2.warn{ color:var(--danger); }
+.sw{ position:relative; width:46px; height:26px; border:none; border-radius:20px; background:#C9D3CF; cursor:pointer; flex-shrink:0; }
+.sw::after{ content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .15s; }
+.sw.on{ background:var(--teal); }
+.sw.on::after{ left:23px; }
+.seg{ display:flex; gap:4px; background:var(--teal-tint); border-radius:12px; padding:3px; flex-shrink:0; }
+.seg button{ border:none; background:none; font-family:inherit; font-size:12.5px; font-weight:700; padding:8px 10px; border-radius:9px; color:var(--ink-soft); cursor:pointer; }
+.seg button.on{ background:#fff; color:var(--ink); }
+
+.sum{ display:flex; justify-content:space-between; align-items:baseline; margin:20px 2px 10px; }
+.sum .l{ font-size:13px; color:var(--ink-soft); }
+.sum .v{ font-size:22px; font-weight:800; }
+.buy{ width:100%; border:none; border-radius:16px; padding:17px; font-family:inherit; font-size:16px; font-weight:800; background:var(--teal); color:#fff; cursor:pointer; }
+.buy:disabled{ opacity:.5; cursor:default; }
+.modes{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.mode{ background:var(--card); border:2px solid transparent; border-radius:14px; padding:13px 12px; text-align:left; font-family:inherit; color:inherit; cursor:pointer; }
+.mode.on{ border-color:var(--teal); background:#F4FAF9; }
+.mode b{ display:block; font-size:14px; margin-bottom:3px; }
+.mode span{ font-size:11.5px; color:var(--ink-soft); line-height:1.45; }
+.mode:disabled{ opacity:.45; cursor:default; }
+.lines{ background:var(--card); border-radius:16px; padding:4px 12px; margin-top:8px; }
+.ln{ display:flex; align-items:center; gap:10px; width:100%; background:none; border:none; border-bottom:1px solid var(--line); padding:12px 2px; text-align:left; font-family:inherit; color:inherit; cursor:pointer; }
+.ln:last-child{ border-bottom:none; }
+.ln .dot{ width:20px; height:20px; border-radius:50%; border:2px solid #B9C7C2; flex-shrink:0; }
+.ln.on .dot{ border-color:var(--teal); box-shadow:inset 0 0 0 4px #fff; background:var(--teal); }
+.ln .tx{ flex:1; min-width:0; }
+.ln .n{ font-weight:700; font-size:14px; }
+.ln .s{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+.ln .tag{ font-size:10.5px; font-weight:700; border-radius:20px; padding:2px 8px; background:var(--coral-tint); color:#9A4526; flex-shrink:0; }
+.ln:disabled{ opacity:.45; cursor:default; }
+.hint{ font-size:12px; color:var(--ink-soft); line-height:1.6; margin:8px 2px 0; }
+.hint.up{ color:var(--teal-deep); background:#E7F3F0; border-radius:12px; padding:10px 12px; }
+.namebox{ background:var(--card); border-radius:16px; padding:12px 14px; margin-top:8px; }
+.namebox label{ font-size:13px; font-weight:700; }
+.namebox input{ width:100%; box-sizing:border-box; margin-top:7px; border:1.5px solid var(--line); border-radius:11px; padding:11px 12px; font-family:inherit; font-size:15px; }
+.namebox input:focus{ outline:none; border-color:var(--teal); }
+.note{ font-size:12px; color:var(--ink-soft); line-height:1.7; margin:14px 2px 0; white-space:pre-line; }
+.free{ margin-top:18px; background:rgba(255,255,255,.55); border-radius:14px; padding:12px 14px; font-size:12.5px; line-height:1.65; }
+.free b{ color:var(--teal-deep); }
+
+.msg{ display:none; margin-top:12px; border-radius:12px; padding:12px 14px; font-size:13.5px; line-height:1.6; white-space:pre-line; background:#FBEAE7; color:#8E2F22; }
+.msg.ok{ background:#E3F2E8; color:#1F5A36; }
+.msg.show{ display:block; }
+
+.panel{ display:none; background:var(--card); border-radius:18px; padding:22px 18px; text-align:center; }
+.panel.show{ display:block; }
+.panel h2{ font-size:21px; margin-bottom:8px; }
+.panel p{ font-size:13.5px; color:var(--ink-soft); line-height:1.7; margin:0 0 14px; }
+.keyrow{ display:flex; gap:6px; margin:10px 0 14px; }
+.keyrow input{ flex:1; min-width:0; border:1.5px solid var(--line); border-radius:10px; padding:10px; font-size:10.5px; font-family:'IBM Plex Mono',monospace; background:var(--teal-tint); color:var(--ink-soft); }
+.keyrow button{ border:none; border-radius:10px; padding:0 14px; background:var(--teal); color:#fff; font-weight:700; font-family:inherit; cursor:pointer; }
+.btn2{ display:block; width:100%; border:none; border-radius:12px; padding:14px; font-family:inherit; font-size:14px; font-weight:700; text-decoration:none; margin-top:8px; box-sizing:border-box; }
+.btn2.p{ background:var(--teal); color:#fff; }
+.btn2.s{ background:var(--teal-tint); color:var(--teal-deep); }
+button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
+</style>
+<!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
+<script src="aliascall_theme.js?v=20261029c"></script>
+</head>
+<body>
+<header>
+  <button class="back" id="backBtn" aria-label="뒤로">←</button>
+  <div class="brand">A</div>
+  <div class="bname">Alias<em>call</em></div>
+  <div class="lang"><button data-lang="ko">KR</button><button data-lang="en">EN</button></div>
+</header>
+
+<main>
+  <div id="shop">
+    <h1 class="title" data-i18n="title">이용권</h1>
+    <!-- 🔴 2026-09-30 무료 체험 중이면 덤 안내 -->
+    <div id="trialBonus" style="display:none;background:#FDF3E4;border:1.5px solid #E9C979;border-radius:14px;padding:11px 13px;margin:4px 0 14px;font-size:13px;line-height:1.6;color:#5E4410;"></div>
+    <p class="sub" data-i18n="sub">번호를 드러내지 않고 연락하는 모든 기능이 이용권 하나에 들어 있습니다. 자동으로 다시 결제되지 않습니다.</p>
+
+    <button type="button" class="plan" data-plan="emergency">
+      <div class="row"><span class="nm" data-i18n="pEmg">긴급 이용권</span><span class="pr">2,200<small data-i18n="won">원</small> <small data-i18n="per12">/ 12개월</small></span></div>
+      <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span></div>
+      <div class="ds" data-i18n="dEmg">차량 · 소지품 QR과 1회용 임시연락처를 쓰시는 분께.</div>
+    </button>
+    <!-- 🔴 2026-10-09 — Pro 긴급: 긴급 이용권 + 번호판 글자 인식 무제한 -->
+    <button type="button" class="plan" data-plan="emergency_pro">
+      <div class="row"><span class="nm" data-i18n="pEmgPro">Pro 긴급 이용권</span><span class="pr">5,500<small data-i18n="won">원</small> <small data-i18n="per12">/ 12개월</small></span></div>
+      <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="iOcr">📷 번호판 인식 무제한</span></div>
+      <div class="ds" data-i18n="dEmgPro">긴급 이용권에 번호판 찍어서 찾기를 횟수 제한 없이. 주차 · 운전이 잦은 분께.</div>
+    </button>
+    <button type="button" class="plan" data-plan="basic">
+      <div class="row"><span class="nm" data-i18n="pBasic">일반 이용권</span><span class="pr"><small data-i18n="fromPre"></small>9,900<small data-i18n="won">원</small><small data-i18n="fromPost">부터</small></span></div>
+      <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="i4b">④ 2인 회선 · 5GB</span></div>
+      <div class="ds" data-i18n="dBasic">둘이서 쓰는 보안통신. 상대를 바꿀 수 있고, 암호화도 고를 수 있습니다.</div>
+    </button>
+    <button type="button" class="plan" data-plan="premium">
+      <div class="row"><span class="nm" data-i18n="pPrem">프리미엄 이용권</span><span class="pr"><small data-i18n="fromPre"></small>16,000<small data-i18n="won">원</small><small data-i18n="fromPost">부터</small></span></div>
+      <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="i4p">④ 4인 회선 · 20GB</span></div>
+      <div class="ds" data-i18n="dPrem">가족 · 친한 친구 · 작은 팀까지 네 명이 함께 쓰는 보안통신.</div>
+    </button>
+
+    <!-- 🔴 2026-10-01 — 업무용 프로 (웹과 같은 값 · 같은 기간 · 덤 없음) -->
+    <div class="sect" data-i18n="sPro" style="margin-top:18px;">업무용 · 프로</div>
+    <p class="sub" data-i18n="proSub" style="margin-top:-4px;">가게 · 사무소 · 상담 창구처럼 손님 문의를 번호 없이 받는 곳. 방을 여러 개 열어 손님마다 따로 대화합니다.</p>
+    <button type="button" class="plan" data-plan="pro_starter">
+      <div class="row"><span class="nm" data-i18n="pStarter">프로 스타터</span><span class="pr"><small data-i18n="fromPre"></small>9,900<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
+      <div class="inc"><span data-i18n="r50">방 50개</span><span data-i18n="g50">50GB</span></div>
+    </button>
+    <button type="button" class="plan" data-plan="pro_business">
+      <div class="row"><span class="nm" data-i18n="pBusiness">프로 비즈니스</span><span class="pr"><small data-i18n="fromPre"></small>19,900<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
+      <div class="inc"><span data-i18n="r100">방 100개</span><span data-i18n="g150">150GB</span></div>
+    </button>
+    <button type="button" class="plan" data-plan="pro_enterprise">
+      <div class="row"><span class="nm" data-i18n="pEnterprise">프로 엔터프라이즈</span><span class="pr"><small data-i18n="fromPre"></small>39,900<small data-i18n="won">원</small><small data-i18n="perMo">/ 월</small></span></div>
+      <div class="inc"><span data-i18n="r150">방 150개</span><span data-i18n="g400">400GB</span></div>
+    </button>
+    <!-- 🔴 2026-10-01 광고형 덧상품 — 늘 보입니다(프로가 없으면 고를 수는 있고 결제는 잠김) -->
+    <button type="button" class="plan" data-plan="listing" id="listingCard">
+      <div class="row"><span class="nm" data-i18n="pListing">공개 업체 목록 게재</span><span class="pr" style="font-size:12px;" data-i18n="adTag">광고형</span></div>
+      <div class="lp-prices">
+        <span><b data-i18n="m1">1개월</b> 5,500<small data-i18n="won">원</small></span>
+        <span><b data-i18n="m6">6개월</b> 29,700<small data-i18n="won">원</small></span>
+        <span><b data-i18n="m12">12개월</b> 54,800<small data-i18n="won">원</small></span>
+      </div>
+      <div class="ds" data-i18n-html="listTurns">구매하면 업무용 프로가 <b>광고 게재형</b>으로 바뀝니다. 공개 업체 목록에 올라, 손님이 찾아와 번호 없이 문의합니다.</div>
+      <div class="lp-warn" data-i18n="listVerify">⚠ 게시는 사업자등록증과 해당 자격증(면허 · 허가증 등)을 올리고 저희 확인을 통과한 뒤 시작됩니다.</div>
+      <div class="ds" id="listingDs"></div>
+    </button>
+
+    <!-- 🔴 2026-10-01 — 프로 · 게재의 기간은 게재 카드 바로 밑 (추가 사용량보다 위) -->
+    <div id="proOpts" style="display:none;">
+      <div class="sect" data-i18n="sDur">기간</div>
+      <div class="durs" id="durs2"></div>
+      <div class="hint" id="proHint"></div>
+    </div>
+
+    <!-- 🔴 2026-10-01 추가 사용량 — 내가 연 회선이나 프로 구독이 있을 때만 보입니다 -->
+    <div class="sect" data-i18n="sUsage" id="usageSect" style="margin-top:18px;display:none;">사용량이 모자랄 때</div>
+    <button type="button" class="plan" data-plan="usage" id="usageCard" style="display:none;">
+      <div class="row"><span class="nm" data-i18n="pUsage">추가 사용량 1GB</span><span class="pr">2,000<small data-i18n="won">원</small> <small data-i18n="per3">/ 3개월</small></span></div>
+      <div class="ds" data-i18n="dUsage">모든 상품 공통. 회선의 사용량을 다 쓰면 새 통화가 멈춥니다(문자는 계속). 붙일 회선을 골라 1GB씩 더하세요.</div>
+    </button>
+    <div id="usageOpts" style="display:none;">
+      <div class="sect" data-i18n="sTarget">어느 회선에 붙일까요?</div>
+      <div class="lines" id="usageList"></div>
+      <div class="hint" id="usageHint"></div>
+      <div class="wp-qty" id="usageQtyRow" style="display:none;">
+        <span data-i18n="wpQty">몇 GB 더할까요?</span>
+        <select id="usageQty">
+          <option value="1">1GB · 2,000</option><option value="2">2GB · 4,000</option><option value="3">3GB · 6,000</option>
+          <option value="5">5GB · 10,000</option><option value="10">10GB · 20,000</option>
+        </select>
+      </div>
+    </div>
+
+
+    <!-- 🔴 2026-09-28 — 회선은 "대화 상대" 가 기준입니다.
+         먼저 "지금 대화를 이어가기(연장)" 인지 "새 대화 창구(새 회선)" 인지 묻습니다.
+         · 이어가기: 내 회선 가운데 고름. 2인 회선에 프리미엄이면 4인으로 올리기
+         · 새 회선: 이름을 꼭 붙이고, 암호화 · 용도를 고름
+         ⚠ 암호화 여부는 이어가기로 바꿀 수 없습니다(열쇠가 회선마다 따로). -->
+    <div id="lineOpts" style="display:none;">
+      <div class="sect" data-i18n="sHow">어떻게 쓰실 건가요?</div>
+      <div class="modes">
+        <button type="button" class="mode" id="mCont"><b data-i18n="mCont">지금 대화 이어가기</b><span data-i18n="mContD">쓰던 회선의 기간을 늘립니다</span></button>
+        <button type="button" class="mode" id="mNew"><b data-i18n="mNew">새 대화 창구 열기</b><span data-i18n="mNewD">다른 상대와 쓸 회선을 새로 엽니다</span></button>
+      </div>
+
+      <div id="contBox" style="display:none;">
+        <div class="lines" id="lineList"></div>
+        <div class="hint" id="contHint"></div>
+      </div>
+
+      <div id="newBox" style="display:none;">
+        <div class="namebox">
+          <label for="lineName" data-i18n="nameL">누구와 쓰실 회선인가요?</label>
+          <input id="lineName" maxlength="30" autocomplete="off" data-i18n-ph="nameP" placeholder="예) 아내와 · 김 과장 · 우리 가족">
+        </div>
+        <div class="opts" style="margin-top:8px;">
+          <div class="opt">
+            <div class="tx"><div class="t1" data-i18n="oSec">🔒 암호화 (Secure)</div>
+              <div class="t2" id="secHint" data-i18n="oSecOff">서버에 안전하게 보관되며 기기를 바꿔도 이어집니다</div></div>
+            <button type="button" class="sw" id="secSw" aria-label="암호화"></button>
+          </div>
+          <div class="opt">
+            <div class="tx"><div class="t1" data-i18n="oPur">용도</div>
+              <div class="t2" data-i18n="oPurD">업무용이면 대화방에 사적인 질문 카드가 뜨지 않습니다</div></div>
+            <div class="seg" id="purSeg"><button type="button" data-p="personal" class="on" data-i18n="pp">우리끼리</button><button type="button" data-p="work" data-i18n="pw">업무용</button></div>
+          </div>
+        </div>
+        <div class="hint" data-i18n="invited">상대가 이미 회선을 열어 초대했다면 따로 사지 않아도 됩니다. 회선은 여는 사람만 결제하고, 초대받은 분은 무료로 대화합니다.</div>
+      </div>
+
+      <div class="sect" data-i18n="sDur">기간</div>
+      <div class="durs" id="durs"></div>
+    </div>
+
+    <div class="sum"><span class="l" id="sumL"></span><span class="v" id="sumV"></span></div>
+    <!-- 🔴 2026-10-01 웹 결제 — 앱은 Google Play, 웹은 국내카드(이니시스) · PayPal -->
+    <div id="webPay" style="display:none;">
+      <div class="wp-notice">
+        <div class="wp-nt" data-i18n="wpNt">⚠️ 결제 전 꼭 확인해주세요</div>
+        <ol class="wp-list">
+          <li data-i18n-html="wp1"></li>
+          <li data-i18n-html="wp2"></li>
+          <li data-i18n-html="wp3"></li>
+        </ol>
+        <label class="wp-agree"><input type="checkbox" id="wpAgree"> <span data-i18n="wpAgree">위 내용을 확인했으며 동의합니다</span></label>
+      </div>
+      <div class="wp-tabs">
+        <button type="button" class="on" data-m="inicis" data-i18n="wpCard">💳 국내카드</button>
+        <button type="button" data-m="paypal">🌐 PayPal</button>
+      </div>
+      <div id="wpPaypal" style="display:none;"></div>
+    </div>
+    <button type="button" class="buy" id="buyBtn" disabled></button>
+    <div class="msg" id="msg"></div>
+
+    <p class="note" data-i18n="note">· 기간이 끝나도 받기 · 읽기 · 끊기는 그대로 됩니다.
+· 남은 기간이 있으면 이어서 더해집니다.
+· 결제와 환불은 Google Play가 처리합니다. 카드 정보는 저희에게 오지 않습니다.</p>
+    <div class="free" data-i18n-html="free">🐾 아동 · 치매 어르신 · 반려동물 등록은 <b>이용권 없이도 무료로</b> 연결됩니다.</div>
+  </div>
+
+  <!-- 결제가 끝난 뒤 -->
+  <div class="panel" id="donePanel">
+    <h2 id="doneT"></h2>
+    <p id="doneP"></p>
+    <div id="keyBox" style="display:none;">
+      <p style="color:var(--danger);font-weight:700;" data-i18n="keyWarn">아래 링크를 지금 꼭 저장해두세요. 이 링크(#k= 뒷부분 포함)를 잃어버리면 저희도 대화를 복구할 수 없습니다.</p>
+      <div class="keyrow"><input id="keyLink" readonly aria-label="초대 링크"><button type="button" id="keyCopy" data-i18n="copy">복사</button></div>
+    </div>
+    <a class="btn2 p" id="doneGo" href="aliascall_hotline_manage.html"></a>
+    <a class="btn2 s" href="index.html" data-i18n="home">첫 화면으로</a>
+  </div>
+</main>
+
+<script>
+const I18N = {
+  ko: {
+    title:'이용권', sub:'번호를 드러내지 않고 연락하는 모든 기능이 이용권 하나에 들어 있습니다. 자동으로 다시 결제되지 않습니다.',
+    pEmg:'긴급 이용권', pEmgPro:'Pro 긴급 이용권', iOcr:'📷 번호판 인식 무제한', dEmgPro:'긴급 이용권에 번호판 찍어서 찾기를 횟수 제한 없이. 주차 · 운전이 잦은 분께.', pBasic:'일반 이용권', pPrem:'프리미엄 이용권', won:'원', per12:'/ 12개월', fromPre:'', fromPost:'부터',
+    i1:'① 긴급등록', i2:'② 긴급연락', i3:'③ 임시연락처', i4b:'④ 2인 회선 · 5GB', i4p:'④ 4인 회선 · 20GB',
+    dEmg:'차량 · 소지품 QR과 1회용 임시연락처를 쓰시는 분께.',
+    dBasic:'둘이서 쓰는 보안통신. 상대를 바꿀 수 있고, 암호화도 고를 수 있습니다.',
+    dPrem:'가족 · 친한 친구 · 작은 팀까지 네 명이 함께 쓰는 보안통신.',
+    sDur:'기간', sOpt:'회선 설정', m:'{n}개월', real:'실제 {n}개월', best:'가장 알뜰',
+    oSec:'🔒 암호화 (Secure)', oSecOff:'서버에 안전하게 보관되며 기기를 바꿔도 이어집니다',
+    oSecOn:'열쇠가 링크에만 있어 저희 서버도 내용을 못 봅니다. 링크를 잃으면 복구가 안 됩니다',
+    oPur:'용도', oPurD:'업무용이면 대화방에 사적인 질문 카드가 뜨지 않습니다', pp:'우리끼리', pw:'업무용',
+    sum:'{name} · {m}', total:'{p}원',
+    buy:'Google Play 로 결제', wait:'결제창을 여는 중…', checking:'결제를 확인하는 중…', pick:'이용권을 골라주세요',
+    login:'로그인하고 결제하기',
+    note:'· 기간이 끝나도 받기 · 읽기 · 끊기는 그대로 됩니다.\n· 남은 기간이 있으면 이어서 더해집니다.\n· 결제와 환불은 Google Play가 처리합니다. 카드 정보는 저희에게 오지 않습니다.',
+    noteWeb:'· 기간이 끝나도 받기 · 읽기 · 끊기는 그대로 됩니다.\n· 남은 기간이 있으면 이어서 더해집니다.',
+    free:'🐾 아동 · 치매 어르신 · 반려동물 등록은 <b>이용권 없이도 무료로</b> 연결됩니다.',
+    oldApp:'앱을 최신 판으로 업데이트하시면 이 화면에서 바로 결제하실 수 있습니다.', update:'Play 스토어에서 업데이트',
+    web:'', webGo:'', buyWeb:'결제하기', agreeFirst:'위 확인사항에 먼저 동의해주세요', webFail:'결제를 마치지 못했습니다',
+    wpNt:'⚠️ 결제 전 꼭 확인해주세요', wpAgree:'위 내용을 확인했으며 동의합니다', wpCard:'💳 국내카드', wpQty:'몇 GB 더할까요?',
+    wp1:'자동 결제는 없습니다. 남은 기간이 있으면 그 뒤에 이어서 더해집니다.',
+    wp2:'<b>결제일부터 7일 이내</b>이고 이용을 시작하지 않으셨다면 <b>전액 환불</b>됩니다. 이용을 시작하신 뒤에는 이용하신 기간과 위약금 10%를 뺀 금액을 돌려드립니다.',
+    wp3:'회선 기간이 끝나고 30일이 지나면 사진 · 동영상 · 음성 파일은 삭제됩니다(문자 기록은 유지). <a href="aliascall_refund.html" target="_blank" style="color:#123F3D;font-weight:700;">취소·환불 규정 ›</a>',
+    canceled:'결제를 그만두었습니다.', pending:'결제가 확정되면 이용권이 더해집니다. 잠시 기다려 주세요.',
+    owned:'마치지 못한 결제가 있어 정리하고 있습니다. 잠시 뒤 다시 눌러주세요.',
+    cleared:'취소·환불된 결제를 정리했습니다. 이제 다시 사실 수 있습니다.',
+    fail:'결제를 확인하지 못했습니다. 돈이 빠져나갔다면 앱을 완전히 껐다 켜주세요. 한 번 더 확인합니다. 그래도 안 되면 고객센터로 알려주세요.',
+    loginFirst:'로그인한 뒤 앱을 다시 열면 결제가 이어서 처리됩니다.',
+    dTline:'회선이 만들어졌습니다', dPline:'관리 화면에서 초대 링크를 확인하고 상대에게 보내세요.', goManage:'회선 관리로 가기',
+    sUsage:'사용량이 모자랄 때', pUsage:'추가 사용량 1GB', per3:'/ 3개월',
+    dUsage:'모든 상품 공통. 회선의 사용량을 다 쓰면 새 통화가 멈춥니다(문자는 계속). 붙일 회선을 골라 1GB씩 더하세요.',
+    sTarget:'어느 회선에 붙일까요?', proAll:'프로 구독 전체', roomsShare:'모든 방이 함께 씀',
+    usedOf:'{u} / {c}GB 사용 · {p}%', pickTarget:'붙일 회선을 고르세요',
+    qtyNote:'수량(1~10개)은 다음 결제 창에서 고르실 수 있어요. 1개 = 1GB · 2,000원.',
+    endsOn:'이 회선은 {d}에 끝납니다.', gone3m:'추가분은 산 날부터 3개월 동안 쓸 수 있고, 남은 양은 그 뒤 사라집니다.',
+    extendFirst:'⚠ 한 달도 남지 않았습니다. 회선이 끝나면 추가분도 함께 쓸 수 없으니 먼저 연장하시길 권합니다.',
+    dTusage:'사용량을 더했습니다', dPusage:'고르신 회선에서 바로 보내기 · 걸기를 이어가실 수 있습니다.',
+    noTarget:'추가 사용량을 붙일 회선을 찾지 못했습니다. 방금 결제는 곧 자동으로 취소됩니다.',
+    sPro:'업무용 · 프로', proSub:'가게 · 사무소 · 상담 창구처럼 손님 문의를 번호 없이 받는 곳. 방을 여러 개 열어 손님마다 따로 대화합니다.',
+    pStarter:'프로 스타터', pBusiness:'프로 비즈니스', pEnterprise:'프로 엔터프라이즈', pListing:'공개 업체 목록 게재', perMo:'/ 월',
+    r50:'방 50개', r100:'방 100개', r150:'방 150개', g50:'50GB', g150:'150GB', g400:'400GB',
+    proHint:'같은 등급의 프로가 있으면 새로 만들지 않고 기간을 늘립니다. 만들어 둔 방은 그대로입니다.',
+    listHint:'공개 업체 목록에 우리 가게를 올립니다. 게재는 프로 구독이 끝나는 날({d})까지입니다.',
+    listDs:'손님이 업체 목록에서 찾아 번호 없이 문의할 수 있게 올립니다.',
+    dTpro:'프로 구독이 열렸습니다', dPpro:'회선 관리에서 손님용 방을 만들고 초대 링크를 건네세요.',
+    dTlist:'게재 이용권을 샀습니다', dPlist:'이제 업체 정보를 채우고 사업자등록증(자격증이 필요한 업종은 자격증도)을 올려 주세요. 저희 확인을 통과하면 [공개 켜기]로 게시됩니다.', goBizReg:'업체 공개 등록으로',
+    noPro:'공개 게재는 프로 구독이 있어야 합니다. 방금 결제는 곧 자동으로 취소됩니다.',
+    adTag:'광고형', m1:'1개월', m6:'6개월', m12:'12개월',
+    listTurns:'구매하면 업무용 프로가 <b>광고 게재형</b>으로 바뀝니다. 공개 업체 목록에 올라, 손님이 찾아와 번호 없이 문의합니다.',
+    listVerify:'⚠ 게시는 사업자등록증과 해당 자격증(면허 · 허가증 등)을 올리고 저희 확인을 통과한 뒤 시작됩니다.',
+    listVerifyShort:'⚠ 결제 뒤 회선 관리에서 사업자등록증 · 자격증을 올려 주세요. 저희 확인을 통과하면 게시됩니다.',
+    needPro:'공개 게재는 프로(스타터 · 비즈니스 · 엔터프라이즈)가 있어야 살 수 있어요. 프로를 먼저 골라 주세요.',
+    dTemg:'긴급 이용권이 더해졌습니다', dPemg:'차량 · 소지품 QR과 임시연락처를 12개월 동안 쓰실 수 있습니다.', goHome:'첫 화면으로', goMy:'My Page에서 확인',
+    keyWarn:'아래 링크를 지금 꼭 저장해두세요. 이 링크(#k= 뒷부분 포함)를 잃어버리면 저희도 대화를 복구할 수 없습니다.',
+    copy:'복사', copied:'복사됨', home:'첫 화면으로',
+    dText:'회선이 연장되었습니다', dPext:'쓰던 방이 그대로 이어집니다.',
+    dTup:'4인 회선으로 올렸습니다', dPup:'대화 · 초대 링크 · 열쇠는 그대로이고, 이제 네 명까지 들어올 수 있습니다.',
+    sHow:'어떻게 쓰실 건가요?', mCont:'지금 대화 이어가기', mContD:'쓰던 회선의 기간을 늘립니다',
+    mNew:'새 대화 창구 열기', mNewD:'다른 상대와 쓸 회선을 새로 엽니다',
+    noLines:'아직 연 회선이 없습니다. 새 대화 창구를 열어주세요.',
+    nameL:'누구와 쓰실 회선인가요?', nameP:'예) 아내와 · 김 과장 · 우리 가족', nameNeed:'회선 이름을 적어주세요',
+    invited:'상대가 이미 회선을 열어 초대했다면 따로 사지 않아도 됩니다. 회선은 여는 사람만 결제하고, 초대받은 분은 무료로 대화합니다.',
+    p2:'2인', p4:'4인', until:'{d}까지', ended:'끝남', peers:'상대: {p}', noPeer:'아직 상대 없음',
+    tUp:'4인으로 올리기', tExt:'연장', tNo:'일반으론 연장 불가',
+    hExt:'고른 회선의 기간을 늘립니다. 대화 · 암호화 · 용도는 그대로이고 사용량이 더해집니다.',
+    hUp:'이 2인 회선을 <b>4인으로 올립니다.</b> 남은 기간은 그대로 두고 그 뒤에 기간을 이어 붙입니다. 대화 · 초대 링크 · 열쇠는 그대로입니다.',
+    h4basic:'4인 회선은 프리미엄 이용권으로 연장해 주세요.', pickLine:'이어갈 회선을 골라주세요',
+    secNo:'암호화 여부는 쓰던 회선을 이어가며 바꿀 수 없습니다. 암호화가 필요하면 새 대화 창구를 열어 같은 상대를 초대하세요.',
+  },
+  en: {
+    title:'Plans', sub:'Every number-free feature comes with one plan. It never renews automatically.',
+    pEmg:'Emergency plan', pEmgPro:'Emergency Pro', iOcr:'📷 Unlimited plate reading', dEmgPro:'The Emergency plan plus unlimited licence-plate photo search. For people who park and drive a lot.', pBasic:'Standard plan', pPrem:'Premium plan', won:' KRW', per12:'/ 12 months', fromPre:'from ', fromPost:'',
+    i1:'① Register', i2:'② Contact', i3:'③ One-time card', i4b:'④ 2-person line · 5GB', i4p:'④ 4-person line · 20GB',
+    dEmg:'For item QR codes and one-time contact cards.',
+    dBasic:'Secure line for two. Change your partner anytime, encryption optional.',
+    dPrem:'Secure line for up to four — family, close friends or a small team.',
+    sDur:'Duration', sOpt:'Line settings', m:'{n} months', real:'{n} months total', best:'Best value',
+    oSec:'🔒 Encryption (Secure)', oSecOff:'Stored safely on our server; continues on a new phone',
+    oSecOn:'The key lives only in your link — even we cannot read it. Lose the link and it cannot be recovered',
+    oPur:'Purpose', oPurD:'Work lines never show personal question cards', pp:'Personal', pw:'Work',
+    sum:'{name} · {m}', total:'{p} KRW',
+    buy:'Pay with Google Play', wait:'Opening payment…', checking:'Checking payment…', pick:'Choose a plan',
+    login:'Sign in to pay',
+    note:'· Receiving, reading and cutting off keep working after it ends.\n· Remaining time is carried over.\n· Google Play handles payment and refunds. Your card details never reach us.',
+    noteWeb:'· Receiving, reading and cutting off keep working after it ends.\n· Remaining time is carried over.',
+    free:'🐾 Registering children, elderly with dementia and pets is <b>always free</b>.',
+    oldApp:'Update the app to buy right here.', update:'Update on Play Store',
+    web:'', webGo:'', buyWeb:'Pay', agreeFirst:'Please agree to the notice above first', webFail:'The payment did not complete',
+    wpNt:'⚠️ Please read before paying', wpAgree:'I have read and agree to the above', wpCard:'💳 Korean card', wpQty:'How many GB to add?',
+    wp1:'Nothing renews automatically. Any time you have left is carried over.',
+    wp2:'Within <b>7 days of payment</b> and before you start using it, you get a <b>full refund</b>. After you start, we refund the amount minus the period used and a 10% fee.',
+    wp3:'30 days after a line ends, photos, videos and voice files are deleted (text history is kept). <a href="aliascall_refund_en.html" target="_blank" style="color:#123F3D;font-weight:700;">Refund policy ›</a>',
+    canceled:'Payment was cancelled.', pending:'Your plan will be added once the payment clears.',
+    owned:'Finishing an earlier payment. Please try again in a moment.',
+    cleared:'A cancelled or refunded payment was cleared. You can buy again now.',
+    fail:'We could not verify the payment. If you were charged, fully close and reopen the app and we will check again.',
+    loginFirst:'Sign in and reopen the app to finish the payment.',
+    dTline:'Your line is ready', dPline:'Open line management to share the invite link.', goManage:'Manage lines',
+    sUsage:'Running out of data?', pUsage:'Extra usage 1GB', per3:'/ 3 months',
+    dUsage:'For every plan. When a line uses up its data, new calls stop (messages still work). Pick a line and add 1GB at a time.',
+    sTarget:'Which line should get it?', proAll:'Whole Pro plan', roomsShare:'shared by all rooms',
+    usedOf:'{u} / {c}GB used · {p}%', pickTarget:'Pick a line',
+    qtyNote:'Choose the quantity (1–10) in the next payment window. 1 = 1GB · KRW 2,000.',
+    endsOn:'This line ends on {d}.', gone3m:'Extra usage lasts 3 months from purchase; anything left after that expires.',
+    extendFirst:'⚠ Less than a month left. When the line ends, extra usage cannot be used either — consider extending first.',
+    dTusage:'Usage added', dPusage:'You can keep sending and calling on the line you picked.',
+    noTarget:'Could not find the line to add usage to. This payment will be canceled automatically.',
+    sPro:'For business · Pro', proSub:'For shops, offices and help desks that take customer inquiries without sharing a number. Open many rooms, one per customer.',
+    pStarter:'Pro Starter', pBusiness:'Pro Business', pEnterprise:'Pro Enterprise', pListing:'Public business listing', perMo:'/ mo',
+    r50:'50 rooms', r100:'100 rooms', r150:'150 rooms', g50:'50GB', g150:'150GB', g400:'400GB',
+    proHint:'If you already have the same Pro tier, its period is extended. Your rooms stay as they are.',
+    listHint:'Lists your business publicly until your Pro plan ends ({d}).',
+    listDs:'Customers can find you in the directory and reach you without a number.',
+    dTpro:'Your Pro plan is ready', dPpro:'Create customer rooms in My lines and share their invite links.',
+    dTlist:'Listing purchased', dPlist:'Now fill in your business details and upload your business registration (and licence if required). Once approved, turn on Go public.', goBizReg:'Go to business listing',
+    noPro:'A Pro plan is required for listing. This payment will be canceled automatically.',
+    adTag:'Ad listing', m1:'1 mo', m6:'6 mo', m12:'12 mo',
+    listTurns:'Turns your Pro plan into an <b>ad-listed</b> plan: your business appears in the public directory and customers reach you without a number.',
+    listVerify:'⚠ Your listing goes live after you upload your business registration and any required licence and we approve them.',
+    listVerifyShort:'⚠ After paying, upload your business registration and licence in My lines. Your listing goes live once approved.',
+    needPro:'A Pro plan (Starter, Business or Enterprise) is required for listing. Please choose a Pro plan first.',
+    dTemg:'Emergency plan added', dPemg:'Item QR codes and one-time cards are yours for 12 months.', goHome:'Home', goMy:'Check in My Page',
+    keyWarn:'Save this link now. Without it (including everything after #k=), nobody — not even us — can recover the chat.',
+    copy:'Copy', copied:'Copied', home:'Home',
+    dText:'Your line was extended', dPext:'Your room continues as before.',
+    dTup:'Upgraded to a 4-person line', dPup:'Messages, invite link and key stay the same — up to four people can join now.',
+    sHow:'How will you use it?', mCont:'Continue a conversation', mContD:'Extend a line you already have',
+    mNew:'Open a new line', mNewD:'For a different person or group',
+    noLines:'You have no lines yet. Open a new one.',
+    nameL:'Who is this line for?', nameP:'e.g. My wife · Mr. Kim · Family', nameNeed:'Please name the line',
+    invited:'If someone already invited you to their line, you do not need to buy one — only the person who opens a line pays.',
+    p2:'2-person', p4:'4-person', until:'until {d}', ended:'ended', peers:'With: {p}', noPeer:'No one yet',
+    tUp:'Upgrade to 4', tExt:'Extend', tNo:'Use Premium',
+    hExt:'Extends the chosen line. Messages, encryption and purpose stay; usage is added.',
+    hUp:'This 2-person line becomes <b>4-person</b>. Remaining time is kept and the new period is added after it. Messages, link and key stay.',
+    h4basic:'Please extend 4-person lines with the Premium plan.', pickLine:'Choose a line to continue',
+    secNo:'Encryption cannot be changed on an existing line. To use encryption, open a new line and invite the same person.',
+  },
+};
+let LANG = (localStorage.getItem('aliascall_lang') || 'ko').indexOf('en') === 0 ? 'en' : 'ko';
+const T = (k, v) => { let s = (I18N[LANG][k] ?? I18N.ko[k] ?? k); if (v) Object.keys(v).forEach((x) => { s = s.replace('{' + x + '}', v[x]); }); return s; };
+const fmt = (n) => Number(n).toLocaleString(LANG === 'en' ? 'en-US' : 'ko-KR');
+const el = (id) => document.getElementById(id);
+
+/* 🔴 서버(aliascall-google-verify) · Play Console 과 같아야 합니다 */
+const CATALOG = {
+  emergency: { name:'pEmg', durs: [ { m:12, real:12, p:2200, sku:'ac_plan_emergency_12m' } ] },   // 2026-09-28 1,800 → 2,200
+  emergency_pro: { name:'pEmgPro', durs: [ { m:12, real:12, p:5500, sku:'ac_plan_emergency_pro_12m' } ] },   // 🔴 2026-10-09 번호판 인식 무제한
+  basic:     { name:'pBasic', line:true, durs: [
+    { m:3,  real:4,  p:9900,  sku:'ac_plan_basic_3m' },
+    { m:6,  real:7,  p:17000, sku:'ac_plan_basic_6m' },
+    { m:12, real:13, p:29000, sku:'ac_plan_basic_12m', best:true } ] },
+  premium:   { name:'pPrem', line:true, durs: [
+    { m:3,  real:4,  p:16000, sku:'ac_plan_premium_3m' },
+    { m:6,  real:7,  p:28000, sku:'ac_plan_premium_6m' },
+    { m:12, real:13, p:48000, sku:'ac_plan_premium_12m', best:true } ] },
+  /* 🔴 2026-10-01 — 프로 · 게재 (덤 없음: real = m) */
+  pro_starter:    { name:'pStarter', pro:true, durs: [
+    { m:1, real:1, p:9900, sku:'ac_pro_starter_1m' }, { m:6, real:6, p:53500, sku:'ac_pro_starter_6m' },
+    { m:12, real:12, p:98600, sku:'ac_pro_starter_12m', best:true } ] },
+  pro_business:   { name:'pBusiness', pro:true, durs: [
+    { m:1, real:1, p:19900, sku:'ac_pro_business_1m' }, { m:6, real:6, p:107500, sku:'ac_pro_business_6m' },
+    { m:12, real:12, p:198200, sku:'ac_pro_business_12m', best:true } ] },
+  pro_enterprise: { name:'pEnterprise', pro:true, durs: [
+    { m:1, real:1, p:39900, sku:'ac_pro_enterprise_1m' }, { m:6, real:6, p:215500, sku:'ac_pro_enterprise_6m' },
+    { m:12, real:12, p:397400, sku:'ac_pro_enterprise_12m', best:true } ] },
+  usage:          { name:'pUsage', usage:true, durs: [ { m:3, real:3, p:2000, sku:'ac_usage_1gb_3m' } ] },
+  listing:        { name:'pListing', pro:true, listing:true, durs: [
+    { m:1, real:1, p:5500, sku:'ac_listing_1m' }, { m:6, real:6, p:29700, sku:'ac_listing_6m' },
+    { m:12, real:12, p:54800, sku:'ac_listing_12m' } ] },
+};
+let myPro = null;
+let usageTargets = [], usagePick = null;   // 🔴 추가 사용량을 붙일 곳 [{ kind, id, name, persons, secure, used_gb, cap_gb, expires_at }]   // 🔴 살아 있는 프로 구독 { tier, expires_at, is_public } — 게재 카드에 씁니다
+
+const sb = supabase.createClient('https://qmwaraittiurkynszjts.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y');
+let session = null;
+let plan = null, dur = null, secure = false, purpose = 'personal';
+/* 🔴 2026-09-28 — 회선 고르기 */
+let mode = null;          // 'cont' 이어가기 | 'new' 새 회선
+let myLines = [];         // 내가 연 회선 [{ id, name, persons, secure, expires, peers }]
+let pick = null;          // 이어갈 회선
+const persons = (t) => /^(economy_4|premium_4)/.test(t) ? 4 : (/^(hotline_1to1|hotline_everybody)/.test(t) ? 2 : 0);
+const MODE = ACStore.inApp() ? 'app' : (ACStore.oldApp() ? 'old' : 'web');
+
+function paintText(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = T(n.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach((n) => { n.innerHTML = T(n.dataset.i18nHtml); });
+  document.querySelectorAll('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.lang === LANG));
+  if (MODE !== 'app') document.querySelector('.note').textContent = T('noteWeb');
+  if (MODE === 'web') { el('webPay').style.display = ''; el('usageQtyRow').style.display = ''; }
+}
+
+function paint(){
+  document.querySelectorAll('.plan').forEach((b) => b.classList.toggle('on', b.dataset.plan === plan));
+  const c = plan ? CATALOG[plan] : null;
+  el('lineOpts').style.display = c && c.line ? '' : 'none';
+  if (c && c.line) paintLines();
+  if (c && c.line) {
+    el('durs').innerHTML = c.durs.map((d, i) =>
+      '<button type="button" class="dur' + (dur === d ? ' on' : '') + '" data-i="' + i + '">' +
+      (d.best ? '<span class="best">' + T('best') + '</span>' : '') +
+      '<div class="m">' + T('m', { n: d.m }) + '</div>' +
+      '<div class="real">' + T('real', { n: d.real }) + '</div>' +
+      '<div class="p">' + fmt(d.p) + T('won') + '</div></button>').join('');
+  }
+  /* 🔴 추가 사용량 — 붙일 곳 고르기 */
+  el('usageOpts').style.display = c && c.usage ? '' : 'none';
+  if (c && c.usage) {
+    el('usageList').innerHTML = usageTargets.map((t, i) => {
+      const pct = t.cap_gb > 0 ? Math.min(100, Math.round(t.used_gb / t.cap_gb * 100)) : 0;
+      const nm = t.kind === 'pro' ? (T('proAll') + ' · ' + t.name) : t.name;
+      const sub = (t.kind === 'pro' ? T('roomsShare') : (t.persons === 4 ? T('p4') : T('p2'))) + (t.secure ? ' · 🔒' : '') +
+                  ' · ' + T('usedOf', { u: t.used_gb, c: t.cap_gb, p: pct });
+      return '<button type="button" class="ln' + (usagePick === t ? ' on' : '') + '" data-i="' + i + '">' +
+        '<span class="dot"></span><span class="tx"><div class="n">' + esc(nm) + '</div>' +
+        '<div class="s">' + esc(sub) + '</div>' +
+        '<div style="height:5px;border-radius:99px;background:#E4EFEE;margin-top:6px;overflow:hidden;"><i style="display:block;height:5px;width:' + pct + '%;background:' + (pct >= 90 ? '#C0532F' : '#1F6F6B') + ';"></i></div></span></button>';
+    }).join('');
+    const t = usagePick;
+    let h = T('qtyNote');
+    if (t) {
+      const left = (new Date(t.expires_at) - new Date()) / 86400000;
+      h = T('endsOn', { d: new Date(t.expires_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR') }) + ' ' + (left < 30 ? T('extendFirst') : T('gone3m')) + '\n' + h;
+    }
+    el('usageHint').textContent = h; el('usageHint').style.whiteSpace = 'pre-line';
+  }
+  /* 🔴 프로 · 게재 기간 */
+  el('proOpts').style.display = c && c.pro ? '' : 'none';
+  if (c && c.pro) {
+    el('durs2').innerHTML = c.durs.map((d, i) =>
+      '<button type="button" class="dur' + (dur === d ? ' on' : '') + '" data-i="' + i + '">' +
+      (d.best ? '<span class="best">' + T('best') + '</span>' : '') +
+      '<div class="m">' + T('m', { n: d.m }) + '</div>' +
+      '<div class="p">' + fmt(d.p) + T('won') + '</div></button>').join('');
+    el('proHint').textContent = c.listing
+      ? (myPro ? T('listHint', { d: new Date(myPro.expires_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR') }) + '\n' + T('listVerifyShort') : T('needPro'))
+      : T('proHint');
+    el('proHint').style.whiteSpace = 'pre-line';
+  }
+  el('secSw').classList.toggle('on', secure);
+  el('lineName').placeholder = T('nameP');
+  el('secHint').textContent = T(secure ? 'oSecOn' : 'oSecOff');
+  el('secHint').classList.toggle('warn', secure);
+  document.querySelectorAll('#purSeg button').forEach((b) => b.classList.toggle('on', b.dataset.p === purpose));
+
+  if (dur) {
+    el('sumL').textContent = T('sum', { name: T(c.name), m: T('m', { n: dur.real }) });
+    el('sumV').textContent = fmt(dur.p) + T('won');
+  } else { el('sumL').textContent = ''; el('sumV').textContent = ''; }
+
+  const b = el('buyBtn');
+  if (MODE === 'old') { b.disabled = false; b.textContent = T('update'); return; }
+  if (!session) { b.disabled = false; b.textContent = T('login'); return; }
+  const need = lineNeed() || (c && c.usage && !usagePick ? T('pickTarget') : '') || (c && c.listing && !myPro ? T('needPro') : '');
+  if (MODE === 'web') {
+    /* 🔴 웹: 확인사항 동의 → 국내카드는 이 단추, PayPal 은 아래 노란 단추 */
+    const agreed = el('wpAgree').checked;
+    const viaPaypal = webMethod === 'paypal';
+    el('wpPaypal').style.display = viaPaypal && agreed && dur && !need ? '' : 'none';
+    if (viaPaypal && agreed && dur && !need && !paypalDrawn) { paypalDrawn = true; ACWeb.paypal(sb, 'wpPaypal', webOrder, webDone); }
+    b.style.display = viaPaypal && agreed && dur && !need ? 'none' : '';
+    b.disabled = !dur || !!need || !agreed;
+    b.textContent = !dur ? T('pick') : (need || (!agreed ? T('agreeFirst') : T('buyWeb')));
+    if (c && c.usage) el('sumV').textContent = fmt(dur.p * webQty()) + T('won');
+    return;
+  }
+  b.disabled = !dur || !!need;
+  b.textContent = !dur ? T('pick') : (need || T('buy'));
+}
+
+/* 회선 고르기 칸 그리기 */
+function lineNeed(){
+  const c = plan ? CATALOG[plan] : null;
+  if (!c || !c.line) return '';
+  if (mode === 'cont') {
+    if (!pick) return T('pickLine');
+    const pp = c === CATALOG.premium ? 4 : 2;
+    if (pick.persons === 4 && pp === 2) return T('h4basic');
+    return '';
+  }
+  if (mode === 'new') return el('lineName').value.trim() ? '' : T('nameNeed');
+  return T('pickLine');
+}
+function paintLines(){
+  const prem = plan === 'premium';
+  const eligible = (l) => prem ? true : l.persons === 2;
+  el('mCont').disabled = !myLines.length;
+  if (!myLines.length && mode === 'cont') mode = 'new';
+  el('mCont').classList.toggle('on', mode === 'cont');
+  el('mNew').classList.toggle('on', mode === 'new');
+  el('contBox').style.display = mode === 'cont' ? '' : 'none';
+  el('newBox').style.display = mode === 'new' ? '' : 'none';
+
+  if (mode === 'cont') {
+    el('lineList').innerHTML = myLines.map((l, i) => {
+      const ok = eligible(l);
+      const tag = !ok ? T('tNo') : (prem && l.persons === 2 ? T('tUp') : T('tExt'));
+      const when = l.expires ? (new Date(l.expires) > new Date() ? T('until', { d: new Date(l.expires).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR') }) : T('ended')) : '';
+      const who = l.peers.length ? T('peers', { p: l.peers.join(', ') }) : T('noPeer');
+      return '<button type="button" class="ln' + (pick === l ? ' on' : '') + '" data-i="' + i + '"' + (ok ? '' : ' disabled') + '>' +
+        '<span class="dot"></span><span class="tx"><div class="n">' + esc(l.name) + (l.secure ? ' 🔒' : '') + '</div>' +
+        '<div class="s">' + esc((l.persons === 4 ? T('p4') : T('p2')) + ' · ' + who + ' · ' + when) + '</div></span>' +
+        '<span class="tag">' + esc(tag) + '</span></button>';
+    }).join('');
+    const h = el('contHint');
+    if (pick && prem && pick.persons === 2) { h.className = 'hint up'; h.innerHTML = T('hUp') + '<br>' + esc(T('secNo')); }
+    else { h.className = 'hint'; h.textContent = (pick ? T('hExt') + ' ' : '') + T('secNo'); }
+  }
+}
+function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function say(t, ok){ const m = el('msg'); m.textContent = t; m.classList.toggle('ok', !!ok); m.classList.add('show'); }
+function hush(){ el('msg').classList.remove('show'); }
+
+document.querySelectorAll('.plan').forEach((b) => b.addEventListener('click', () => {
+  plan = b.dataset.plan;
+  const c = CATALOG[plan];
+  dur = c.durs.find((d) => d.best) || c.durs[0];
+  if (c.listing && myPro) {
+    /* 게재는 프로가 끝날 때까지 — 남은 달 수에 가장 가까운 기간을 먼저 골라 둡니다 */
+    const left = Math.max(1, Math.round((new Date(myPro.expires_at) - new Date()) / (30.4 * 86400000)));
+    dur = c.durs.reduce((a, d) => Math.abs(d.m - left) < Math.abs(a.m - left) ? d : a, c.durs[0]);
+  }
+  hush(); paint();
+}));
+el('usageList').addEventListener('click', (e) => {
+  const b = e.target.closest('.ln'); if (!b) return;
+  usagePick = usageTargets[+b.dataset.i]; paint();
+});
+el('durs2').addEventListener('click', (e) => {
+  const b = e.target.closest('.dur'); if (!b) return;
+  dur = CATALOG[plan].durs[+b.dataset.i]; paint();
+});
+el('durs').addEventListener('click', (e) => {
+  const b = e.target.closest('.dur'); if (!b) return;
+  dur = CATALOG[plan].durs[+b.dataset.i]; paint();
+});
+el('secSw').addEventListener('click', () => { secure = !secure; paint(); });
+el('mCont').addEventListener('click', () => { mode = 'cont'; paint(); });
+el('mNew').addEventListener('click', () => { mode = 'new'; pick = null; paint(); });
+el('lineList').addEventListener('click', (e) => {
+  const b = e.target.closest('.ln'); if (!b || b.disabled) return;
+  pick = myLines[+b.dataset.i]; paint();
+});
+el('lineName').addEventListener('input', () => paint());
+el('purSeg').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return; purpose = b.dataset.p; paint();
+});
+
+el('buyBtn').addEventListener('click', async () => {
+  hush();
+  if (MODE === 'old') { location.href = 'https://play.google.com/store/apps/details?id=com.weaveapp.aliascall'; return; }
+  if (!session) { location.href = 'aliascall_my_account.html?next=' + encodeURIComponent('aliascall_plans.html'); return; }
+  if (MODE === 'web') {
+    const o = webOrder(); if (!o) return;
+    const b = el('buyBtn'); b.disabled = true; b.textContent = T('wait');
+    /* 암호화 새 회선이면 열쇠를 미리 만들어 이 기기에만 잠깐 둡니다(서버로 보내지 않음) */
+    if (o.opts.secure && typeof window.e2eeGenerateKeyBase64 === 'function') {
+      try { sessionStorage.setItem('aliascall_pending_e2ee_key', await window.e2eeGenerateKeyBase64()); } catch (e) {}
+    } else { try { sessionStorage.removeItem('aliascall_pending_e2ee_key'); } catch (e) {} }
+    const ok = await ACWeb.inicis(sb, o.sku, o.opts, {
+      buyername: (session.user.user_metadata && session.user.user_metadata.nickname) || '회원',
+      buyertel: '', buyeremail: session.user.email || '' });
+    if (!ok) { b.disabled = false; b.textContent = T('buyWeb'); }
+    return;
+  }
+  if (!dur) return;
+  const b = el('buyBtn'); b.disabled = true; b.textContent = T('wait');
+  const line = CATALOG[plan].line;
+  await ACStore.buy(dur.sku, {
+    secure: line && mode === 'new' && secure,
+    purpose,
+    extendHotlineId: line && mode === 'cont' && pick ? pick.id : null,
+    lineName: line && mode === 'new' ? el('lineName').value.trim() : '',
+    usageKind: plan === 'usage' && usagePick ? usagePick.kind : null,
+    usageTargetId: plan === 'usage' && usagePick ? usagePick.id : null,
+  });
+  setTimeout(() => { if (b.textContent === T('wait')) { b.textContent = T('checking'); } }, 1500);
+});
+
+/* ═══ 🔴 2026-10-01 웹 결제 ═══ */
+let webMethod = 'inicis', paypalDrawn = false;
+function webQty(){ return Math.max(1, Math.min(10, Number(el('usageQty').value) || 1)); }
+/* 지금 고른 것 → 서버로 보낼 주문 (앱의 ACStore.buy 와 같은 선택) */
+function webOrder(){
+  if (!dur) return null;
+  const line = CATALOG[plan].line;
+  return { sku: dur.sku, opts: {
+    secure: !!(line && mode === 'new' && secure), purpose,
+    extendHotlineId: line && mode === 'cont' && pick ? pick.id : null,
+    lineName: line && mode === 'new' ? el('lineName').value.trim() : '',
+    usageKind: plan === 'usage' && usagePick ? usagePick.kind : null,
+    usageTargetId: plan === 'usage' && usagePick ? usagePick.id : null,
+    qty: plan === 'usage' ? webQty() : 1,
+  } };
+}
+/* 결제가 끝나면(국내카드는 돌아온 주소로, PayPal 은 바로) — 앱과 같은 완료 화면 */
+function webDone(r){
+  if (r && r.ok && r.kind === 'line' && r.hotlineId && !r.extended && !r.upgraded) {
+    let key = null; try { key = sessionStorage.getItem('aliascall_pending_e2ee_key'); } catch (e) {}
+    if (key) {
+      try { localStorage.setItem('aliascall_hotline_key_' + r.hotlineId, key); sessionStorage.removeItem('aliascall_pending_e2ee_key'); } catch (e) {}
+      r.ownerLink = location.origin + '/aliascall_hotline_room.html?hotline=' + r.hotlineId + '#k=' + key;
+    }
+  }
+  ACStore.onDone(r || { ok: false });
+}
+el('wpAgree').addEventListener('change', () => paint());
+el('usageQty').addEventListener('change', () => paint());
+document.querySelectorAll('.wp-tabs button').forEach((t) => t.addEventListener('click', () => {
+  document.querySelectorAll('.wp-tabs button').forEach((x) => x.classList.toggle('on', x === t));
+  webMethod = t.dataset.m; paint();
+}));
+if (MODE === 'web' && window.ACWeb) ACWeb.preload().catch(() => {});
+
+/* 결제 결과 — 앱 → aliascall_store.js → 여기 */
+ACStore.onDone = function(r){
+  const b = el('buyBtn');
+  b.disabled = false; b.textContent = T('buy');
+  if (r.ok) {
+    el('shop').style.display = 'none';
+    el('donePanel').classList.add('show');
+    if (r.kind === 'line' && r.upgraded) {
+      el('doneT').textContent = T('dTup'); el('doneP').textContent = T('dPup');
+      el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
+    } else if (r.kind === 'line' && r.extended) {
+      el('doneT').textContent = T('dText'); el('doneP').textContent = T('dPext');
+      el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
+    } else if (r.kind === 'line') {
+      el('doneT').textContent = T('dTline'); el('doneP').textContent = T('dPline');
+      el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
+      if (r.ownerLink) { el('keyBox').style.display = ''; el('keyLink').value = r.ownerLink; }
+    } else if (r.kind === 'usage') {
+      el('doneT').textContent = T('dTusage'); el('doneP').textContent = T('dPusage');
+      el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
+    } else if (r.kind === 'pro') {
+      el('doneT').textContent = T('dTpro'); el('doneP').textContent = T('dPpro');
+      el('doneGo').textContent = T('goManage'); el('doneGo').href = 'aliascall_hotline_manage.html';
+    } else if (r.kind === 'listing') {
+      el('doneT').textContent = T('dTlist'); el('doneP').textContent = T('dPlist');
+      el('doneGo').textContent = T('goBizReg'); el('doneGo').href = 'aliascall_business_register.html' + (r.subscriptionId ? '?sub=' + encodeURIComponent(r.subscriptionId) : '');
+    } else {
+      el('doneT').textContent = T('dTemg'); el('doneP').textContent = T('dPemg');
+      /* 2026-09-28: 아래 [첫 화면으로] 와 겹치지 않게, 끝나는 날을 볼 수 있는 곳으로 */
+      el('doneGo').textContent = T('goMy'); el('doneGo').href = 'aliascall_my_account.html';
+    }
+    return;
+  }
+  if (r.canceled) return say(T('canceled'));
+  if (r.pending)  return say(T('pending'), true);
+  if (r.owned)    return say(T('owned'));
+  if (r.cleared)  return say(T('cleared'), true);
+  if (r.error === 'login') return say(T('loginFirst'));
+  if (r.noPro) return say(T('noPro'));
+  if (r.noTarget) return say(T('noTarget'));
+  say(T('fail') + (r.error ? '\n(' + r.error + (r.code != null ? ' · ' + r.code : '') + ')' : ''));
+};
+
+el('keyCopy').addEventListener('click', () => {
+  navigator.clipboard.writeText(el('keyLink').value).then(() => {
+    el('keyCopy').textContent = T('copied');
+    setTimeout(() => { el('keyCopy').textContent = T('copy'); }, 1500);
+  });
+});
+el('backBtn').addEventListener('click', () => { if (history.length > 1) history.back(); else location.href = 'index.html'; });
+document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('click', () => {
+  LANG = b.dataset.lang;
+  try { localStorage.setItem('aliascall_lang', LANG); } catch (e) {}
+  paintText(); paint();
+}));
+
+(async function(){
+  paintText();
+  if (MODE === 'old') say(T('oldApp'), true);
+  /* 🔴 국내카드 결제창에서 돌아왔을 때 (?webpaid=1 …) */
+  { const q = new URLSearchParams(location.search);
+    if (q.get('webpaid') === '1') {
+      const r = { ok: true, kind: q.get('kind'), extended: q.get('extended') === 'true', upgraded: q.get('upgraded') === 'true',
+                  hotlineId: q.get('hotlineId') || null, inviteToken: q.get('inviteToken') || null, subscriptionId: q.get('subscriptionId') || null };
+      history.replaceState(null, '', 'aliascall_plans.html');
+      setTimeout(() => webDone(r), 0);
+    } else if (q.get('webpaid') === '0') {
+      history.replaceState(null, '', 'aliascall_plans.html');
+      setTimeout(() => say(T('webFail') + (q.get('msg') ? '\n(' + q.get('msg') + ')' : '')), 0);
+    } }
+  try { session = (await sb.auth.getSession()).data.session; } catch (e) { session = null; }
+  /* 🔴 2026-10-01 — 추가 사용량: 붙일 곳(내 회선 · 프로 구독). 거의 다 쓴 곳을 먼저 */
+  if (session) {
+    try {
+      const { data: ut } = await sb.rpc('my_usage_targets');
+      usageTargets = (ut || []).map((t) => ({ ...t, used_gb: Number(t.used_gb), cap_gb: Number(t.cap_gb) }))
+        .sort((a, b) => (b.cap_gb ? b.used_gb / b.cap_gb : 0) - (a.cap_gb ? a.used_gb / a.cap_gb : 0));
+      if (usageTargets.length) { el('usageSect').style.display = ''; el('usageCard').style.display = ''; }
+      const qp = new URLSearchParams(location.search);
+      const want = qp.get('usage') || qp.get('usagePro');
+      if (want && usageTargets.length) {
+        usagePick = usageTargets.find((t) => t.id === want) || usageTargets[0];
+        plan = 'usage'; dur = CATALOG.usage.durs[0];
+        setTimeout(() => { paint(); el('usageCard').scrollIntoView({ block: 'center' }); }, 0);
+      } else if (usageTargets.length) usagePick = usageTargets[0];
+    } catch (e) {}
+  }
+  /* 🔴 2026-10-01 — 살아 있는 프로 구독이 있으면 게재(광고형) 카드를 보입니다 */
+  if (session) {
+    try {
+      const { data: ps } = await sb.from('hotline_subscriptions').select('tier, expires_at, is_public')
+        .eq('owner_user_id', session.user.id).eq('status', 'active').gt('expires_at', new Date().toISOString())
+        .order('expires_at', { ascending: false }).limit(1);
+      myPro = (ps && ps[0]) || null;
+      if (myPro && myPro.is_public) el('listingDs').textContent = (LANG === 'en' ? '✓ Already listed.' : '✓ 지금 게재 중입니다.');
+    } catch (e) {}
+  }
+  /* 🔴 2026-09-30 — 무료 체험 중이면: 지금 사면 남은 체험 그대로 + 긴급 기능 1개월 더 */
+  if (session) {
+    try {
+      const tr = await sb.rpc('my_trial');
+      if (tr.data && tr.data.in_trial) {
+        const days = Math.max(0, Math.ceil((new Date(tr.data.ends_at) - new Date()) / 86400000));
+        const b = el('trialBonus');
+        b.textContent = LANG === 'en'
+          ? ('🎁 Free trial · ' + days + ' days left. Buy now and keep your remaining trial days plus 1 extra month of emergency features.')
+          : ('🎁 무료 체험 중 · ' + days + '일 남음. 지금 이용권을 사면 남은 체험 기간은 그대로, 긴급 기능 1개월을 더 드립니다.');
+        b.style.display = '';
+      }
+    } catch (e) {}
+  }
+  const qs = new URLSearchParams(location.search);
+  const want = qs.get('plan');
+  if (want && CATALOG[want]) { plan = want; const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0]; }
+  /* 🔴 2026-10-21 — 첫 화면 "일상 업무용 회선" 에서 오면 용도를 업무용으로 */
+  if (qs.get('purpose') === 'work') purpose = 'work';
+
+  /* 내가 연 회선 — 이어가기 목록 */
+  if (session) {
+    try {
+      const { data: hs } = await sb.from('hotlines')
+        .select('id, title, client_label, tier, expires_at, archived_at, subscription_id')
+        .eq('owner_user_id', session.user.id).is('archived_at', null)
+        .order('expires_at', { ascending: false }).limit(50);
+      const list = (hs || []).filter((h) => !h.subscription_id && persons(h.tier));
+      let peers = {};
+      if (list.length) {
+        try {
+          const { data: mem } = await sb.from('hotline_members').select('hotline_id, nickname, role, status')
+            .in('hotline_id', list.map((h) => h.id));
+          (mem || []).forEach((m) => {
+            if (m.role === 'owner' || (m.status && m.status !== 'active') || !m.nickname) return;
+            (peers[m.hotline_id] = peers[m.hotline_id] || []).push(m.nickname);
+          });
+        } catch (e) { peers = {}; }
+      }
+      myLines = list.map((h) => ({
+        id: h.id, persons: persons(h.tier), secure: /_secure$/.test(h.tier), expires: h.expires_at,
+        name: h.client_label || h.title || (persons(h.tier) === 4 ? T('p4') : T('p2')), peers: peers[h.id] || [],
+      }));
+    } catch (e) { console.warn('[plans] 내 회선을 못 읽었습니다', e); }
+  }
+  mode = myLines.length ? null : 'new';
+
+  /* 회선 관리의 [연장하기] 로 왔으면 그 회선을 골라 둡니다 */
+  const extId = qs.get('extend');
+  const hit = extId ? myLines.find((l) => l.id === extId) : null;
+  if (hit) {
+    mode = 'cont'; pick = hit;
+    plan = hit.persons === 4 ? 'premium' : 'basic';
+    const c = CATALOG[plan]; dur = c.durs.find((d) => d.best) || c.durs[0];
+  }
+  paint();
+})();
+</script>
+</body>
+</html>

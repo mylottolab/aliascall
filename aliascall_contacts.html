@@ -317,6 +317,37 @@ async function loadEmergency(){
     console.warn('[contacts] 긴급 읽기 실패', e);
     emgError = true;
   }
+  await loadEmergencyOut();
+  emg.sort((a, b) => new Date(b.lastAt || 0) - new Date(a.lastAt || 0));
+}
+
+/* 🔴 2026-11-01 — 긴급 연락 = 긴급 수신 + 긴급 발신(이 폰에서 내가 연락한 건)을 시간순으로, 끝난 건까지 */
+async function loadEmergencyOut(){
+  let list = [], fid = '';
+  try { list = JSON.parse(localStorage.getItem('aliascall_out_cases') || '[]') || []; fid = localStorage.getItem('aliascall_finder_anon_id') || ''; } catch (e) {}
+  if (!list.length || !fid) return;
+  const en = LANG === 'en';
+  const rows = await Promise.all(list.slice(0, 20).map(async (x) => {
+    try {
+      const r = await fetch(SUPABASE_URL + '/functions/v1/aliascall-case-messages', { method:'POST', headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ caseId: x.id, finderAnonId: fid }) });
+      if (!r.ok) return null;
+      const d = await r.json();
+      const ms = d.messages || [], m = ms[ms.length - 1];
+      return {
+        kind:'emergency', ref:x.id, local:true, out:true,
+        emoji: CAT_EMOJI[x.cat] || '📤',
+        base: (x.title || T().item) + (en ? ' · I contacted' : ' · 내가 연락'),
+        title: '📤 ' + (x.title || T().item),
+        closed: d.status === 'closed',
+        lastAt: (m && m.created_at) || new Date(x.at).toISOString(),
+        last: m ? { type: m.message_type === 'call_log' ? 'call_log' : 'text', sender: m.sender === 'finder' ? 'owner' : 'finder',
+                    preview: m.message_type === 'photo' ? '📷' : (m.content || '') } : null,
+        href: 'aliascall_connect.html?case=' + encodeURIComponent(x.id),
+      };
+    } catch (e) { return null; }
+  }));
+  rows.forEach((r) => { if (r && !emg.some((e) => e.ref === r.ref)) emg.push(r); });
 }
 
 // 회선 — 내가 연 방(서버) + 초대받아 들어간 방(이 폰의 기록)
@@ -394,7 +425,7 @@ function rowHtml(c, i){
   const name = lb || (c.kind === 'emergency' ? c.title : c.base);
   let sub = '';
   if (c.kind === 'emergency') {
-    sub = lb ? c.base : T().finder;
+    sub = lb ? c.base : (c.out ? (LANG === 'en' ? 'I contacted' : '내가 연락') : T().finder);   // 🔴 2026-11-01 발신 건
   } else {
     sub = lb ? T().originalPrefix + c.base : (c.detail || '');
   }
