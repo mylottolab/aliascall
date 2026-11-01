@@ -8,6 +8,7 @@
      · 통화가 끝나면(callEnded) 막이를 풉니다.
    ===================================================================== */
 (function(){
+  if (window.acHeld && acHeld()) return;   // 🔴 2026-11-01 아이폰 앱 심사 중에는 예전처럼(aliascall_hold.js)
   var on = false;
   function en(){ return /^en/i.test(document.documentElement.lang || ''); }
   function tip(){
