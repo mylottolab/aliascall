@@ -243,7 +243,7 @@
           raw.unshift({ hotlineId: d.hotline, title: '1:1 · #' + n, isOwner: false, token: d.token, lastVisitedAt: new Date().toISOString() });
           localStorage.setItem('aliascall_my_lines', JSON.stringify(raw.slice(0, 30)));
         } catch (e) {}
-        location.href = (d.auto ? 'aliascall_hotline_room.html?t=' : 'aliascall_hotline_join.html?via=number&t=') + encodeURIComponent(d.token);
+        location.href = ((d.auto || d.again) ? 'aliascall_hotline_room.html?t=' : 'aliascall_hotline_join.html?via=number&t=') + encodeURIComponent(d.token);   // 전에 연결한 방이면 바로 대화방(승인 전이면 대화방이 기다림 화면을 보여 줌)
         return;
       }
       dial = ''; paintAll();
