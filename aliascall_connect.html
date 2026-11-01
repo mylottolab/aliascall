@@ -743,6 +743,7 @@ function renderFoundRegistration(data){
   lastFoundData = data;
   const foundEl = document.getElementById('stateFound');
   document.getElementById('foundEmoji').textContent = CATEGORY_EMOJI[data.category] || '❓';
+  document.getElementById('stateFound').dataset.category = data.category || '';   // 🔴 2026-11-01 경광등(발신)에 적어 둘 종류
   document.getElementById('foundTitle').textContent = data.search_key || data.title || CATEGORY_LABEL_OF(data.category) || T().fallbackItem;
   document.getElementById('foundSub').textContent = CATEGORY_LABEL_OF(data.category) || data.category;
   /* 2026-09-28: 임시연락처 — 주인의 이름표는 보여주지 않습니다(주인만 보는 것) */
@@ -1516,6 +1517,17 @@ function getFinderAnonId(){
 }
 const finderAnonId = getFinderAnonId();
 let currentCaseId = null;
+/* 🔴 2026-11-01 — 🚨 긴급 발신 경광등: 이 폰에서 연락한 건을 적어 둡니다(aliascall_beacon.js) */
+function acBeaconRemember(caseId){
+  try {
+    if (!caseId || !window.AliasBeacon) return;
+    var sf = document.getElementById('stateFound');
+    var cat = (sf && sf.dataset.category) || '';
+    if (cat === 'temp_contact') return;   // 임시연락처는 [임시] 갈래 — 경광등에 올리지 않음
+    AliasBeacon.remember(caseId, sf && sf.dataset.registrationId, (document.getElementById('foundTitle') || {}).textContent || '', cat);
+  } catch (e) {}
+}
+
 let caseRealtimeChannel = null;
 let caseMessagePollInterval = null;
 let renderedMsgIds = new Set(); // 2026-08-20: 폴링 시 중복 렌더링 방지용
@@ -1602,6 +1614,7 @@ async function startCall(mode){
     if (!openRes.ok && tempGate(openData.error)) { overlay.classList.remove('show'); return; }   // 2026-09-28
     if (openRes.ok) {
       currentCaseId = openData.caseId;
+      acBeaconRemember(currentCaseId);
       renderedMsgIds = new Set();
       ownerLastReadAt = openData.ownerLastReadAt || null; // 2026-08-23 신설
       let lastEl2 = null, lastMsg2 = null;
@@ -2153,6 +2166,7 @@ async function startLiveChatOnly(){
     return;
   }
   currentCaseId = openData.caseId;
+  acBeaconRemember(currentCaseId);
   renderedMsgIds = new Set();
   ownerLastReadAt = openData.ownerLastReadAt || null; // 2026-08-23 신설
   let lastEl3 = null, lastMsg3 = null;
@@ -2742,6 +2756,7 @@ document.getElementById('textMsgSendBtn').addEventListener('click', async () => 
     });
     const openData = await openRes.json();
     if (!openRes.ok) throw new Error(openData.error || '사건 생성 실패');
+    acBeaconRemember(openData.caseId);
 
     // 2) 사건함에 실제 문자 내용 저장
     const msgRes = await fetch(`${SUPABASE_URL}/functions/v1/aliascall-case-message`, {
@@ -2789,6 +2804,7 @@ applyLang(currentLang);
 </script>
 </div><!-- /app-shell -->
 <script src="aliascall_block.js"></script>
+<script src="aliascall_beacon.js?v=20261101"></script>
 <script>
 /* 🔴 2026-10-29 "나도 만들기" 한 줄: 로그인 안 한 방문자(QR을 찍고 연락하는 분)에게만 */
 (function(){

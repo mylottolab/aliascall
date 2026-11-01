@@ -86,6 +86,11 @@ select,input{ width:100%; min-height:48px; border:1.5px solid var(--line); borde
       <p class="muted">회선마다 숫자 번호를 하나 붙일 수 있어요. 상대는 에일리어스콜 첫 화면 숫자판에 <b>번호를 누르고 [연결]</b>만 하면 그 회선에 참가를 요청하고, <b>주인이 승인</b>하면 대화 · 통화가 시작됩니다. 전화번호는 서로 보이지 않습니다.</p>
     </div>
 
+    <div class="card" id="xferCard" style="display:none">
+      <h2>🔁 명의 이전</h2>
+      <div id="xferList"></div>
+    </div>
+
     <div class="card" id="mineCard">
       <h2>내 회선번호</h2>
       <div id="mineList"><p class="muted">불러오는 중…</p></div>
@@ -169,11 +174,101 @@ async function loadLines(){
 }
 async function loadMine(){
   mine = await rpc('ac_num_mine');
-  el('mineList').innerHTML = mine.length ? mine.map((m) => '<div class="mine"><span class="num">' + esc(fmt(m.number)) + '</span>' +
-      '<span class="t">' + esc(m.title || '회선 없음') + (m.alive ? '' : ' · 회선 쉬는 중') + '</span>' +
-      (m.grade === 'good' ? '<span class="tag">좋은 번호</span>' : '') + (m.alive ? '' : '<span class="tag off">쉼</span>') + '</div>').join('')
+  const held = window.acHeld && acHeld();
+  el('mineList').innerHTML = mine.length ? mine.map((m, i) => {
+    const keep = m.keep_until ? '<br><small>잡아 둔 날: ~' + esc(new Date(m.keep_until).toLocaleDateString('ko-KR')) + '</small>' : '';
+    const acts = [];
+    if (!m.hotline || !m.alive) acts.push('<button class="mini" data-act="move" data-i="' + i + '">회선에 붙이기</button>');
+    if (!held) acts.push('<button class="mini" data-act="keep" data-i="' + i + '">1년 더 잡아 두기 · 1,100원</button>');
+    if (!held) acts.push('<button class="mini" data-act="xfer" data-i="' + i + '">🔁 명의 이전</button>');
+    if (!held && m.can_refund) acts.push('<button class="mini" data-act="refund" data-i="' + i + '">7일 환불</button>');
+    return '<div class="mine" style="flex-wrap:wrap"><span class="num">' + esc(fmt(m.number)) + '</span>' +
+      '<span class="t">' + esc(m.title || '회선 없음') + (m.hotline && !m.alive ? ' · 회선 쉬는 중' : '') + keep + '</span>' +
+      (m.grade === 'good' ? '<span class="tag">좋은 번호</span>' : '') + (m.hotline && m.alive ? '' : '<span class="tag off">쉼</span>') +
+      '<div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">' + acts.join('') + '</div></div>';
+  }).join('')
     : '<p class="muted">아직 번호가 없어요. 아래에서 회선을 고르고 무료 번호를 받거나 짧은 번호를 사 보세요.</p>';
 }
+
+/* 🔴 2026-11-01 — 결제 하나로 묶음: 앱은 스토어, 웹은 카드 */
+async function pay(sku, doneMsg){
+  if (ACStore.inApp()) {
+    ACStore.onDone = async (r) => {
+      if (r && r.ok) { toast(doneMsg || '결제가 끝났어요'); await refreshAll(); return; }
+      if (r && r.canceled) { toast('결제를 취소했어요'); return; }
+      alert('결제를 마치지 못했어요. ' + ((r && r.error) || ''));
+    };
+    await ACStore.buy(sku, {});
+    toast('결제창을 여는 중…');
+  } else {
+    await ACWeb.inicis(sb, sku, {}, { buyername: '회원' });
+  }
+}
+async function refreshAll(){ await Promise.all([loadMine(), loadXfers()]); paintLine(); }
+const XERR = { no_user: '그 닉네임의 회원이 없어요.', self: '내 닉네임이에요.', pending: '이 번호는 이미 이전 신청 중이에요.', too_many: '오늘은 신청을 너무 많이 했어요. 내일 다시 해 주세요.',
+  expired: '이전 신청이 끝났거나 취소됐어요.', seller_gone: '넘기는 분에게 이제 이 번호가 없어요.', not_owner: '내 번호가 아니에요.',
+  not_bought: '돈을 내고 산 번호만 환불할 수 있어요.', too_late: '산 지 7일이 지나 환불할 수 없어요.', used: '이미 누군가 이 번호로 찾아와서 환불할 수 없어요.',
+  line_ended: '살아 있는 회선에만 붙일 수 있어요.', has_number: '그 회선에는 이미 번호가 있어요.' };
+/* 에일리어스콜 로그인 주소 (마이페이지와 같은 규칙) */
+function nickToEmail(nick){ const n = String(nick || '').trim().toLowerCase().replace(/[^a-z0-9가-힣]/g, ''); return n ? encodeURIComponent(n) + '@guest.aliascall.internal' : ''; }
+
+el('mineList').addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const m = mine[+b.dataset.i]; if (!m) return;
+  try {
+    if (b.dataset.act === 'keep') {
+      if (!confirm(fmt(m.number) + ' 를 1년 더 잡아 둘까요? (1,100원)\n회선이 끝나도 지금 잡아 둔 날에서 1년 동안 내 번호로 남아요.')) return;
+      const r = await rpc('ac_num_keep_start', { p_number: m.number });
+      if (!r.ok) { alert(XERR[r.error] || r.error); return; }
+      await pay('ac_num_keep', '1년 더 잡아 두었어요');
+    } else if (b.dataset.act === 'xfer') {
+      const nick = prompt(fmt(m.number) + ' 를 넘겨받을 분의 에일리어스콜 닉네임을 적어 주세요.\n받는 분이 수락하고 수수료 5,500원을 내면 번호가 옮겨집니다(두 분 사이의 가격에는 회사가 관여하지 않아요).');
+      if (!nick) return;
+      const r = await rpc('ac_num_transfer_offer', { p_number: m.number, p_buyer_email: nickToEmail(nick) });
+      if (!r.ok) { alert(XERR[r.error] || r.error); return; }
+      toast('이전을 신청했어요. 받는 분 화면에 보입니다(7일 동안).');
+      await loadXfers();
+    } else if (b.dataset.act === 'refund') {
+      if (!confirm(fmt(m.number) + ' 를 환불할까요?\n번호는 바로 놓아 주고, 영업일 3일 안에 결제한 곳(구글 · 카드)으로 전액 환불해 드립니다.')) return;
+      const r = await rpc('ac_num_refund_request', { p_number: m.number });
+      if (!r.ok) { alert(XERR[r.error] || r.error); return; }
+      toast('환불을 신청했어요'); await refreshAll();
+    } else if (b.dataset.act === 'move') {
+      const l = curLine();
+      if (!l) { alert('위의 "번호를 붙일 회선"에서 회선을 먼저 골라 주세요.'); return; }
+      if (!confirm(fmt(m.number) + ' 를 "' + (l.title || '이 회선') + '" 에 붙일까요?')) return;
+      const r = await rpc('ac_num_move', { p_number: m.number, p_hotline: l.id });
+      if (!r.ok) { alert(XERR[r.error] || r.error); return; }
+      toast('회선에 붙였어요'); await refreshAll();
+    }
+  } catch (err) { alert(err.message || String(err)); }
+});
+
+async function loadXfers(){
+  let list = [];
+  try { list = await rpc('ac_num_transfers_mine'); } catch (e) { list = []; }
+  const open = list.filter((t) => t.status === 'offered' || t.status === 'accepted');
+  el('xferCard').style.display = open.length ? 'block' : 'none';
+  el('xferList').innerHTML = open.map((t) => t.role === 'buyer'
+    ? '<div class="mine" style="flex-wrap:wrap"><span class="num">' + esc(fmt(t.number)) + '</span><span class="t"><b>' + esc(t.other || '') + '</b> 님이 이 번호를 넘겨주려고 해요</span>' +
+      '<div style="flex-basis:100%;display:flex;gap:6px;margin-top:6px"><button class="mini" style="background:var(--coral);color:#fff;border-color:var(--coral)" data-x="accept" data-id="' + esc(t.id) + '">수락 · 5,500원 내기</button>' +
+      '<button class="mini" data-x="cancel" data-id="' + esc(t.id) + '">거절</button></div></div>'
+    : '<div class="mine"><span class="num">' + esc(fmt(t.number)) + '</span><span class="t"><b>' + esc(t.other || '') + '</b> 님에게 넘기는 중 · 받는 분이 수락하면 옮겨져요</span>' +
+      '<button class="mini" data-x="cancel" data-id="' + esc(t.id) + '">취소</button></div>').join('');
+}
+el('xferList').addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-x]'); if (!b) return;
+  try {
+    if (b.dataset.x === 'cancel') {
+      if (!confirm('이전을 취소(거절)할까요?')) return;
+      await rpc('ac_num_transfer_cancel', { p_id: b.dataset.id }); await loadXfers(); return;
+    }
+    const r = await rpc('ac_num_transfer_accept', { p_id: b.dataset.id });
+    if (!r.ok) { alert(XERR[r.error] || r.error); await loadXfers(); return; }
+    await pay('ac_num_transfer', '번호를 넘겨받았어요. 회선에 붙여 주세요.');
+  } catch (err) { alert(err.message || String(err)); }
+});
+
 function paintLine(){
   const l = curLine();
   msg('msgLine', '');
@@ -255,7 +350,7 @@ el('buyBtn').onclick = async function(){
   if (!pending) return;
   if (!l) { msg('msgBuy', '번호를 붙일 회선을 먼저 골라 주세요.'); return; }
   const m = mine.find((x) => x.hotline === l.id);
-  if (m && !confirm('"' + (l.title || '이 회선') + '" 의 지금 번호 ' + fmt(m.number) + ' 대신 ' + fmt(pending.number) + ' 를 붙일까요?\n지금 번호는 놓아 주게 되고, 6개월 뒤 다른 분이 쓸 수 있어요.')) return;
+  if (m && !confirm('"' + (l.title || '이 회선') + '" 의 지금 번호 ' + fmt(m.number) + ' 대신 ' + fmt(pending.number) + ' 를 붙일까요?\n' + (m.source === 'free' ? '지금 번호(무료)는 놓아 주게 되고, 6개월 뒤 다른 분이 쓸 수 있어요.' : '지금 번호는 회선에서만 떼어 내고 내 번호로 남아요(다른 회선에 붙일 수 있어요).'))) return;
   this.disabled = true;
   try {
     const h = await rpc('ac_num_hold', { p_hotline: l.id, p_number: pending.number });
@@ -291,7 +386,7 @@ async function onBought(r){
     else alert(q.get('msg') || '결제를 마치지 못했어요.');
     history.replaceState(null, '', 'aliascall_numbers.html');
   }
-  try { await Promise.all([loadLines(), loadMine()]); paintLine(); } catch (e) { msg('msgLine', '불러오지 못했어요: ' + (e.message || e)); }
+  try { await Promise.all([loadLines(), loadMine(), loadXfers()]); paintLine(); } catch (e) { msg('msgLine', '불러오지 못했어요: ' + (e.message || e)); }
   if (el('buyCard').style.display !== 'none') { pickLen(4); if (!ACStore.inApp() && window.ACWeb) ACWeb.preload().catch(() => {}); }
 })();
 </script>
