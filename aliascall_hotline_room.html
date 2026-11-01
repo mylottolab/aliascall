@@ -1506,6 +1506,15 @@ async function init(){
         el.textContent = msg;
         showState('stateError'); return;
       }
+      /* 🔴 2026-11-01 — 방문자가 주인용 주소(?hotline=)로 들어온 경우(통화 기록 · 최근 회선 · 1:1 번호 방 등):
+         이 폰에 적어 둔 초대 열쇠(?t=)로 다시 엽니다. 주인이 아니라고 막히지 않게. */
+      if (directHotlineId && !inviteToken) {
+        try {
+          const list = JSON.parse(localStorage.getItem(MY_LINES_KEY) || '[]') || [];
+          const mineRow = list.find((x) => x && x.hotlineId === directHotlineId && x.token);
+          if (mineRow) { window.location.replace('aliascall_hotline_room.html?t=' + encodeURIComponent(mineRow.token) + window.location.hash); return; }
+        } catch (e) {}
+      }
       document.getElementById('errorMsg').textContent = data.error || T('errCannotEnter'); showState('stateError'); return;
     }
 
