@@ -66,17 +66,19 @@
           pick:'번 단축회선에 넣을 회선을 고르세요', pickSub:'누르면 그 회선 대화방이 바로 열려 통화 · 메시지를 할 수 있습니다. 이 폰에만 저장됩니다.',
           inSlot:'번에 있음', clear:'이 칸 비우기', cancel:'닫기', loading:'회선을 읽는 중…', noLines:'아직 회선이 없습니다. 회선을 먼저 만들거나 초대를 받아 들어가 주세요.',
           login:'로그인하면 회선을 단축회선에 넣을 수 있습니다.', goneAsk:'이 회선은 끝났거나 이 폰에서 찾을 수 없습니다. 다른 회선으로 바꿀까요?',
-          ph:'회선번호를 누르고 [연결] · 숫자를 길게 누르면 단축회선', del:'지움', call:'📞 연결', short:'회선번호는 4~8자리예요.', noZero:'회선번호는 0으로 시작하지 않아요.',
+          ph:'번호를 누르고 [연결] · 숫자를 길게 누르면 단축회선', del:'지움', call:'📞 연결', short:'회선번호는 4~8자리예요.', noZero:'회선번호는 0으로 시작하지 않아요.',
           none:'없는 회선번호예요. 번호를 다시 확인해 주세요.', resting:'지금 쉬고 있는 회선번호예요(회선 기간이 끝남).',
-          secure:'🔒 암호화 회선이라 번호만으로는 대화를 열 수 없어요. 회선 주인에게 초대 링크를 받아 주세요.', fail:'연결하지 못했어요. 잠시 뒤 다시 해 주세요.' },
+          secure:'🔒 암호화 회선이라 번호만으로는 대화를 열 수 없어요. 회선 주인에게 초대 링크를 받아 주세요.', fail:'연결하지 못했어요. 잠시 뒤 다시 해 주세요.',
+          off:'번호로 연락을 받지 않는 번호예요.', myNum:'📞 내 번호', self:'내 번호예요.', busy:'지금은 연결 요청이 많아요. 잠시 뒤 다시 해 주세요.' },
     en: { title:'⚡ Quick Lines', edit:'Edit', done:'Done', empty:'Empty', add:'＋ Add', gone:'Ended',
           all:'All lines', emg:'Emergency', tmp:'Temporary', mng:'Manage lines',
           pick:': choose a line', pickSub:'Tap it later to open that line’s chat right away for calls and messages. Saved on this phone only.',
           inSlot:' in use', clear:'Clear this slot', cancel:'Close', loading:'Loading your lines…', noLines:'You have no lines yet. Open a line or join one by invitation first.',
           login:'Log in to add lines to Quick Lines.', goneAsk:'This line has ended or cannot be found on this phone. Choose another line?',
-          ph:'Dial a line number, then [Connect] · hold a digit for Quick Lines', del:'Del', call:'📞 Connect', short:'Line numbers have 4–8 digits.', noZero:'Line numbers never start with 0.',
+          ph:'Dial a number, then [Connect] · hold a digit for Quick Lines', del:'Del', call:'📞 Connect', short:'Line numbers have 4–8 digits.', noZero:'Line numbers never start with 0.',
           none:'No such line number. Please check it.', resting:'This line number is resting (the line has ended).',
-          secure:'🔒 This is an encrypted line — a number alone cannot open its chat. Ask the owner for an invitation link.', fail:'Could not connect. Please try again.' }
+          secure:'🔒 This is an encrypted line — a number alone cannot open its chat. Ask the owner for an invitation link.', fail:'Could not connect. Please try again.',
+          off:'This number does not take contacts.', myNum:'📞 My number', self:'That is your own number.', busy:'Too many requests right now. Please try again later.' }
   };
   function T(){ return en() ? TX.en : TX.ko; }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
@@ -144,7 +146,9 @@
   var editing = false;
   function paint(box){
     var t = T(), s = readSlots(), h = '';
-    h += '<div class="sd-head"><span class="sd-t">' + esc(t.title) + '</span><button type="button" data-sd-edit class="' + (editing ? 'on' : '') + '">' + esc(editing ? t.done : t.edit) + '</button></div>';
+    h += '<div class="sd-head"><span class="sd-t">' + esc(t.title) + '</span><span style="display:flex;gap:6px">' +
+         (window.acHeld && acHeld() ? '' : '<a href="aliascall_numbers.html" style="background:none;border:1px solid rgba(255,255,255,.3);color:#cfe7e4;font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 11px;text-decoration:none">' + esc(t.myNum) + '</a>') +
+         '<button type="button" data-sd-edit class="' + (editing ? 'on' : '') + '">' + esc(editing ? t.done : t.edit) + '</button></span></div>';
     h += '<div class="sd-num"><span class="v' + (dial ? '' : ' ph') + '" data-sd-v>' + esc(dial ? fmtNum(dial) : t.ph) + '</span>' +
          (dial ? '<button type="button" data-sd-del aria-label="' + esc(t.del) + '">⌫</button>' : '') + '</div>';
     h += '<div class="sd-pad">';
@@ -208,6 +212,14 @@
       press(d);
     };
   }
+  /* 회선 참가 때 쓰는 이 폰 표시와 같은 것(aliascall_hotline_join.html) */
+  function anonId(){
+    try {
+      var id = localStorage.getItem('aliascall_hotline_anon_id');
+      if (!id) { id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Array.from({ length: 32 }, function(){ return Math.floor(Math.random() * 16).toString(16); }).join(''); localStorage.setItem('aliascall_hotline_anon_id', id); }
+      return id;
+    } catch (e) { return ''; }
+  }
   async function connect(){
     var t = T(), n = dial;
     if (n.length < 4) { flash(t.short); return; }
@@ -217,7 +229,23 @@
       var r = await sb.rpc('ac_num_lookup', { p_number: n });
       var o = (r && r.data) || {};
       if (r.error) throw r.error;
-      if (!o.ok) { flash(o.error === 'resting' ? t.resting : o.error === 'bad' ? t.short : t.none); return; }
+      if (!o.ok) { flash(t[o.error] || (o.error === 'bad' ? t.short : t.none)); return; }
+      /* 🔴 2026-11-01 — 사람 번호(1:1): 두 사람만의 대화방을 찾거나 만들어 들어감 */
+      if (o.kind === 'person') {
+        var nick = ''; try { nick = localStorage.getItem('aliascall_inquiry_nick') || localStorage.getItem('aliascall_caller_name') || ''; } catch (e) {}
+        var dr = await sb.rpc('ac_num_dial', { p_number: n, p_anon: anonId(), p_nick: nick || null });
+        var d = (dr && dr.data) || {};
+        if (dr.error || !d.ok) { flash(t[d.error] || t.fail); return; }
+        dial = ''; paintAll();
+        try {
+          var raw = JSON.parse(localStorage.getItem('aliascall_my_lines') || '[]'); if (!Array.isArray(raw)) raw = [];
+          raw = raw.filter(function(x){ return x && x.hotlineId !== d.hotline; });
+          raw.unshift({ hotlineId: d.hotline, title: '1:1 · #' + n, isOwner: false, token: d.token, lastVisitedAt: new Date().toISOString() });
+          localStorage.setItem('aliascall_my_lines', JSON.stringify(raw.slice(0, 30)));
+        } catch (e) {}
+        location.href = (d.auto ? 'aliascall_hotline_room.html?t=' : 'aliascall_hotline_join.html?via=number&t=') + encodeURIComponent(d.token);
+        return;
+      }
       dial = ''; paintAll();
       if (o.mine && o.hotline) { location.href = 'aliascall_hotline_room.html?hotline=' + encodeURIComponent(o.hotline) + '&from=dial'; return; }
       if (o.secure || !o.token) { alert(t.secure); return; }

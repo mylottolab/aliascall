@@ -1181,7 +1181,15 @@ function acNumMap(){
   return _acNumP;
 }
 function acNumFmt(n){ n = String(n || ''); return n.length === 7 ? n.slice(0, 3) + ' ' + n.slice(3) : n.length === 8 ? n.slice(0, 4) + ' ' + n.slice(4) : n; }
+/* 🔴 2026-11-01 — 사람 번호(1:1)로 생긴 대화방: 연장 · 사용량 · 회선번호 단추 대신 "1:1" 표시 (이용권 기간 동안 무료) */
+let _acDirP = null;
+function acDirectMap(){
+  if (!_acDirP) _acDirP = sb.rpc('ac_direct_mine').then((r) => { const m = {}; ((r && r.data) || []).forEach((x) => { m[x.hotline] = x.number || ''; }); return m; }).catch(() => ({}));
+  return _acDirP;
+}
 async function acNumRow(h){
+  const dm = await acDirectMap();
+  if (h.id in dm) return `<div class="usage-add" style="pointer-events:none;opacity:.9">🙋 ${LANG === 'en' ? '1:1 chat via my number' : '내 번호'} ${dm[h.id] ? '<b>' + acNumFmt(dm[h.id]) + '</b>' : ''} ${LANG === 'en' ? '· free while your plan is active' : '로 연결된 1:1 대화방 · 이용권 기간 동안 무료'}</div>`;
   if ((window.acHeld && acHeld()) || (h.expires_at && new Date(h.expires_at) < new Date())) return '';   // 아이폰 앱 심사 중 · 끝난 회선은 그대로
   const n = (await acNumMap())[h.id];
   const en = LANG === 'en';
@@ -1191,6 +1199,7 @@ async function acNumRow(h){
 }
 
 async function renderHotlineItem(h){
+  const isDirect = (h.id in (await acDirectMap()));   // 🔴 2026-11-01 1:1 대화방
   const [{ data: members }, { data: requests }] = await Promise.all([
     sb.from('hotline_members').select('*').eq('hotline_id', h.id).eq('status', 'approved'),
     sb.from('hotline_join_requests').select('*').eq('hotline_id', h.id).eq('status', 'pending').order('requested_at', { ascending: true }),
@@ -1301,14 +1310,14 @@ async function renderHotlineItem(h){
       </div>
       <div class="hl-item-meta">${(members || []).length} / ${h.max_participants}${LANG === 'en' ? ' joined' : '명 참가 중'}</div>
 
-      ${expiryWarningHtml}
+      ${isDirect ? '' : expiryWarningHtml}
 
       ${linkSectionHtml}
       ${await acNumRow(h)}
 
       <div class="usage-bar-track"><div class="usage-bar-fill" style="width:${usagePercent}%;"></div></div>
       <div class="usage-label">${LANG === 'en' ? 'Usage' : '사용량'} ${h.usage_used_gb.toFixed(1)}GB / ${h.usage_cap_gb}GB (${usagePercent}%)</div>
-      ${/* 🔴 2026-10-01 — 이 회선에 추가 사용량 1GB 더하기 (이 회선이 골라진 채로 이용권 화면) */ (!h.subscription_id && !(h.expires_at && new Date(h.expires_at) < new Date())) ? `<a class="usage-add" href="aliascall_plans.html?usage=${h.id}"${usagePercent >= 80 ? ' data-hot="1"' : ''}>${LANG === 'en' ? '＋ Add usage (1GB · KRW 2,000)' : '＋ 사용량 추가 (1GB · 2,000원)'}</a>` : ''}
+      ${/* 🔴 2026-10-01 — 이 회선에 추가 사용량 1GB 더하기 (이 회선이 골라진 채로 이용권 화면) */ (!isDirect && !h.subscription_id && !(h.expires_at && new Date(h.expires_at) < new Date())) ? `<a class="usage-add" href="aliascall_plans.html?usage=${h.id}"${usagePercent >= 80 ? ' data-hot="1"' : ''}>${LANG === 'en' ? '＋ Add usage (1GB · KRW 2,000)' : '＋ 사용량 추가 (1GB · 2,000원)'}</a>` : ''}
 
       ${requestsHtml}
       ${membersHtml}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<title>회선번호 — 에일리어스콜</title>
+<title>내 번호 · 회선번호 — 에일리어스콜</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_hold.js?v=20261101"></script>
 <script src="aliascall_store.js"></script>
@@ -71,7 +71,7 @@ select,input{ width:100%; min-height:48px; border:1.5px solid var(--line); borde
 <body>
 <header>
   <a class="back" href="aliascall_hotline_manage.html" aria-label="뒤로">←</a>
-  <span class="bname">📞 회선번호</span>
+  <span class="bname">📞 내 번호 · 회선번호</span>
 </header>
 <main>
   <div id="loginCard" class="card" style="display:none">
@@ -82,8 +82,18 @@ select,input{ width:100%; min-height:48px; border:1.5px solid var(--line); borde
 
   <div id="app" style="display:none">
     <div class="card">
-      <h2>회선번호란?</h2>
-      <p class="muted">회선마다 숫자 번호를 하나 붙일 수 있어요. 상대는 에일리어스콜 첫 화면 숫자판에 <b>번호를 누르고 [연결]</b>만 하면 그 회선에 참가를 요청하고, <b>주인이 승인</b>하면 대화 · 통화가 시작됩니다. 전화번호는 서로 보이지 않습니다.</p>
+      <h2>에일리어스콜 번호란?</h2>
+      <p class="muted">상대는 에일리어스콜 첫 화면 숫자판에 <b>번호를 누르고 [연결]</b>만 하면 됩니다. 전화번호는 서로 보이지 않아요. 번호마다 <b>연결할 곳</b>을 고를 수 있어요.</p>
+      <p class="muted">· <b>나에게(1:1)</b> — 부름번호처럼. 연락해 온 분과 <b>두 사람만의 대화방</b>이 생기고 그 안에서 메시지 · 음성 · 영상. 이용권이 있는 동안 무료<br>
+        · <b>회선에</b> — 가족방 · 모임방처럼 여러 사람이 쓰는 내 회선으로 참가 요청</p>
+    </div>
+
+    <div class="card" id="personCard" style="display:none">
+      <h2>🙋 나에게 오는 번호 (1:1)</h2>
+      <p class="muted">계정마다 8자리 번호 하나는 무료예요. 받은 번호는 아래 "내 번호"에서 받는 방식(승인 받기 · 모두 받기 · 안 받기)을 바꿀 수 있어요.</p>
+      <button class="btn" id="getFreeP" type="button">무료 8자리 내 번호 받기</button>
+      <div id="freePPick" class="chips"></div>
+      <div id="msgP" class="msg"></div>
     </div>
 
     <div class="card" id="xferCard" style="display:none">
@@ -92,12 +102,13 @@ select,input{ width:100%; min-height:48px; border:1.5px solid var(--line); borde
     </div>
 
     <div class="card" id="mineCard">
-      <h2>내 회선번호</h2>
+      <h2>내 번호</h2>
       <div id="mineList"><p class="muted">불러오는 중…</p></div>
     </div>
 
     <div class="card">
-      <h2>번호를 붙일 회선</h2>
+      <h2>회선에 붙이는 번호</h2>
+      <p class="muted" style="margin-top:0">여러 사람이 쓰는 내 회선(가족방 · 모임방)에도 번호를 붙일 수 있어요. 회선마다 8자리 하나 무료.</p>
       <select id="line"></select>
       <p class="muted" id="lineNote"></p>
       <div id="curBox" style="display:none;margin-top:8px">
@@ -114,7 +125,9 @@ select,input{ width:100%; min-height:48px; border:1.5px solid var(--line); borde
 
     <div class="card" id="buyCard">
       <h2>짧은 번호 · 좋은 번호 사기</h2>
-      <p class="muted">짧을수록 기억하기 쉬워요. 한 번 사면 회선이 살아 있는 동안 쓰고, 회선이 끝나도 기본 90일 · 좋은 번호 180일 동안 내 번호로 남습니다. 사면 지금 번호 대신 이 번호가 회선에 붙어요.</p>
+      <p class="muted">짧을수록 기억하기 쉬워요. 한 번 사면 이용권(나에게) · 회선(회선에)이 살아 있는 동안 쓰고, 끝나도 기본 90일 · 좋은 번호 180일 동안 내 번호로 남습니다. 연결할 곳은 산 뒤에도 바꿀 수 있어요.</p>
+      <label class="muted" for="buyTarget" style="display:block;margin:6px 0 4px"><b>연결할 곳</b></label>
+      <select id="buyTarget"></select>
       <div class="tabs" id="tabs">
         <button type="button" data-len="4">4자리</button><button type="button" data-len="5">5자리</button><button type="button" data-len="6">6자리</button><button type="button" data-len="7">7자리</button><button type="button" data-len="8">8자리</button>
       </div>
@@ -139,6 +152,22 @@ select,input{ width:100%; min-height:48px; border:1.5px solid var(--line); borde
   </div>
 </main>
 <div class="toast" id="toast"></div>
+<!-- 번호 설정 창: 연결할 곳 · 받는 방식 -->
+<div id="setBg" style="position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:40"></div>
+<div id="setBox" style="position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom,0px));display:none;z-index:41;max-width:520px;margin:0 auto">
+  <h2 id="setTitle" style="font-size:17px;margin-bottom:8px"></h2>
+  <p class="muted" style="margin:0 0 4px"><b>연결할 곳</b></p>
+  <select id="setTarget"></select>
+  <p class="muted" style="margin:12px 0 4px"><b>받는 방식</b></p>
+  <select id="setMode">
+    <option value="request">승인 받기 — 모르는 분은 내가 수락해야 연결 (추천)</option>
+    <option value="all">모두 받기 — 누구든 바로 연결 (가게 · 업무용)</option>
+    <option value="off">번호로 안 받기 — 이 번호로는 아무도 연결 못 함</option>
+  </select>
+  <div id="msgSet" class="msg"></div>
+  <button class="btn" id="setSave" type="button">저장</button>
+  <button class="btn ghost" id="setClose" type="button">닫기</button>
+</div>
 
 <script>
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
@@ -162,33 +191,93 @@ async function rpc(fn, args){ const r = await sb.rpc(fn, args || {}); if (r.erro
 const curLine = () => lines.find((l) => l.id === el('line').value) || null;
 const isSecure = (l) => /_secure$/.test(String((l && l.tier) || ''));
 
+let directIds = new Set();
 async function loadLines(){
   const now = new Date().toISOString();
+  try { const dm = await rpc('ac_direct_mine'); directIds = new Set((dm || []).map((x) => x.hotline)); } catch (e) { directIds = new Set(); }
   const { data, error } = await sb.from('hotlines').select('id, title, tier, expires_at, archived_at, subscription_id')
     .eq('owner_user_id', session.user.id).is('archived_at', null).gt('expires_at', now).order('created_at', { ascending: false });
   if (error) throw error;
-  lines = data || [];
+  lines = (data || []).filter((l) => !directIds.has(l.id));   // 1:1 대화방은 번호를 붙이는 회선이 아님
   const want = new URLSearchParams(location.search).get('hotline');
   el('line').innerHTML = lines.length ? lines.map((l) => '<option value="' + esc(l.id) + '"' + (l.id === want ? ' selected' : '') + '>' + esc(l.title || '이름 없는 회선') + '</option>').join('')
     : '<option value="">살아 있는 회선이 없어요</option>';
+  const opts = '<option value="person">🙋 나에게 (1:1)</option>' + lines.map((l) => '<option value="' + esc(l.id) + '">👥 회선: ' + esc(l.title || '이름 없는 회선') + '</option>').join('');
+  el('buyTarget').innerHTML = opts; el('setTarget').innerHTML = opts;
+  if (want && lines.some((l) => l.id === want)) el('buyTarget').value = want;
 }
 async function loadMine(){
   mine = await rpc('ac_num_mine');
   const held = window.acHeld && acHeld();
+  const MODE = { request: '승인 받기', all: '모두 받기', off: '안 받기' };
   el('mineList').innerHTML = mine.length ? mine.map((m, i) => {
     const keep = m.keep_until ? '<br><small>잡아 둔 날: ~' + esc(new Date(m.keep_until).toLocaleDateString('ko-KR')) + '</small>' : '';
-    const acts = [];
-    if (!m.hotline || !m.alive) acts.push('<button class="mini" data-act="move" data-i="' + i + '">회선에 붙이기</button>');
+    const where = m.target === 'person'
+      ? '🙋 나에게 (1:1) · ' + esc(MODE[m.mode] || '') + (m.rooms ? ' · 1:1 대화방 ' + m.rooms + '개' : '')
+      : '👥 회선: ' + esc(m.title || '회선 없음') + ' · ' + esc(MODE[m.mode] || '') + (m.hotline && !m.alive ? ' · 회선 쉬는 중' : '');
+    const acts = ['<button class="mini" data-act="set" data-i="' + i + '">⚙ 연결할 곳 · 받는 방식</button>'];
+    acts.push('<button class="mini" data-act="share" data-i="' + i + '">알려 주기</button>');
     if (!held) acts.push('<button class="mini" data-act="keep" data-i="' + i + '">1년 더 잡아 두기 · 1,100원</button>');
     if (!held) acts.push('<button class="mini" data-act="xfer" data-i="' + i + '">🔁 명의 이전</button>');
     if (!held && m.can_refund) acts.push('<button class="mini" data-act="refund" data-i="' + i + '">7일 환불</button>');
     return '<div class="mine" style="flex-wrap:wrap"><span class="num">' + esc(fmt(m.number)) + '</span>' +
-      '<span class="t">' + esc(m.title || '회선 없음') + (m.hotline && !m.alive ? ' · 회선 쉬는 중' : '') + keep + '</span>' +
-      (m.grade === 'good' ? '<span class="tag">좋은 번호</span>' : '') + (m.hotline && m.alive ? '' : '<span class="tag off">쉼</span>') +
+      '<span class="t">' + where + keep + '</span>' +
+      (m.grade === 'good' ? '<span class="tag">좋은 번호</span>' : '') + (m.alive && m.mode !== 'off' ? '' : '<span class="tag off">쉼</span>') +
       '<div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">' + acts.join('') + '</div></div>';
   }).join('')
-    : '<p class="muted">아직 번호가 없어요. 아래에서 회선을 고르고 무료 번호를 받거나 짧은 번호를 사 보세요.</p>';
+    : '<p class="muted">아직 번호가 없어요. 위에서 무료 내 번호를 받거나 아래에서 짧은 번호를 사 보세요.</p>';
+  el('personCard').style.display = mine.some((m) => m.source === 'free' && m.target === 'person') ? 'none' : 'block';
 }
+
+/* ── 번호 설정 창 ── */
+let setIdx = -1;
+function openSet(i){
+  const m = mine[i]; if (!m) return;
+  setIdx = i; msg('msgSet', '');
+  el('setTitle').textContent = fmt(m.number) + ' 설정';
+  el('setTarget').value = m.target === 'person' ? 'person' : (m.hotline || 'person');
+  el('setMode').value = m.mode || 'request';
+  el('setBg').style.display = el('setBox').style.display = 'block';
+}
+function closeSet(){ el('setBg').style.display = el('setBox').style.display = 'none'; }
+el('setBg').onclick = closeSet; el('setClose').onclick = closeSet;
+el('setSave').onclick = async function(){
+  const m = mine[setIdx]; if (!m) return;
+  const t = el('setTarget').value;
+  this.disabled = true;
+  try {
+    const r = await rpc('ac_num_set', { p_number: m.number, p_target: t === 'person' ? 'person' : 'line', p_hotline: t === 'person' ? null : t, p_mode: el('setMode').value });
+    if (!r.ok) { msg('msgSet', XERR[r.error] || r.error); this.disabled = false; return; }
+    closeSet(); toast('저장했어요'); await refreshAll();
+  } catch (e) { msg('msgSet', e.message || String(e)); }
+  this.disabled = false;
+};
+async function shareNumber(n, title){
+  const text = '에일리어스콜 번호 ' + fmt(n) + (title ? ' (' + title + ')' : '') + '\n에일리어스콜 앱 첫 화면 숫자판에 ' + n + ' 을 누르고 [연결]을 눌러 주세요. 전화번호는 서로 보이지 않아요.\nhttps://aliascall.com/';
+  try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { return; }
+  try { await navigator.clipboard.writeText(text); toast('안내 글을 복사했어요'); } catch (e) {}
+}
+
+/* ── 무료 8자리 내 번호(1:1) ── */
+el('getFreeP').onclick = async function(){
+  this.disabled = true; msg('msgP', '');
+  try {
+    const r = await rpc('ac_num_offer_free');
+    el('freePPick').innerHTML = (r.numbers || []).map((n) => '<button class="chip" type="button" data-n="' + esc(n) + '"><span class="num">' + esc(fmt(n)) + '</span><small>이 번호로 할게요</small></button>').join('') +
+      '<button class="chip" type="button" data-again="1" style="border-color:var(--line);background:#fff"><span>🔄</span><small>다른 번호 3개</small></button>';
+  } catch (e) { msg('msgP', e.message || String(e)); }
+  this.disabled = false;
+};
+el('freePPick').addEventListener('click', async (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.again) { el('getFreeP').click(); return; }
+  try {
+    const r = await rpc('ac_num_take_free_person', { p_number: b.dataset.n });
+    if (!r.ok) { msg('msgP', ERR[r.error] || XERR[r.error] || r.error); return; }
+    toast('내 번호 ' + fmt(r.number) + ' 를 받았어요'); el('freePPick').innerHTML = '';
+    await refreshAll();
+  } catch (err) { msg('msgP', err.message || String(err)); }
+});
 
 /* 🔴 2026-11-01 — 결제 하나로 묶음: 앱은 스토어, 웹은 카드 */
 async function pay(sku, doneMsg){
@@ -208,7 +297,7 @@ async function refreshAll(){ await Promise.all([loadMine(), loadXfers()]); paint
 const XERR = { no_user: '그 닉네임의 회원이 없어요.', self: '내 닉네임이에요.', pending: '이 번호는 이미 이전 신청 중이에요.', too_many: '오늘은 신청을 너무 많이 했어요. 내일 다시 해 주세요.',
   expired: '이전 신청이 끝났거나 취소됐어요.', seller_gone: '넘기는 분에게 이제 이 번호가 없어요.', not_owner: '내 번호가 아니에요.',
   not_bought: '돈을 내고 산 번호만 환불할 수 있어요.', too_late: '산 지 7일이 지나 환불할 수 없어요.', used: '이미 누군가 이 번호로 찾아와서 환불할 수 없어요.',
-  line_ended: '살아 있는 회선에만 붙일 수 있어요.', has_number: '그 회선에는 이미 번호가 있어요.' };
+  line_ended: '살아 있는 회선에만 붙일 수 있어요.', has_number: '그 회선에는 이미 번호가 있어요.', direct_room: '1:1 대화방에는 번호를 붙일 수 없어요.', bad: '다시 골라 주세요.' };
 /* 에일리어스콜 로그인 주소 (마이페이지와 같은 규칙) */
 function nickToEmail(nick){ const n = String(nick || '').trim().toLowerCase().replace(/[^a-z0-9가-힣]/g, ''); return n ? encodeURIComponent(n) + '@guest.aliascall.internal' : ''; }
 
@@ -216,6 +305,8 @@ el('mineList').addEventListener('click', async (e) => {
   const b = e.target.closest('button[data-act]'); if (!b) return;
   const m = mine[+b.dataset.i]; if (!m) return;
   try {
+    if (b.dataset.act === 'set') { openSet(+b.dataset.i); return; }
+    if (b.dataset.act === 'share') { await shareNumber(m.number, m.target === 'person' ? '' : m.title); return; }
     if (b.dataset.act === 'keep') {
       if (!confirm(fmt(m.number) + ' 를 1년 더 잡아 둘까요? (1,100원)\n회선이 끝나도 지금 잡아 둔 날에서 1년 동안 내 번호로 남아요.')) return;
       const r = await rpc('ac_num_keep_start', { p_number: m.number });
@@ -265,7 +356,7 @@ el('xferList').addEventListener('click', async (e) => {
     }
     const r = await rpc('ac_num_transfer_accept', { p_id: b.dataset.id });
     if (!r.ok) { alert(XERR[r.error] || r.error); await loadXfers(); return; }
-    await pay('ac_num_transfer', '번호를 넘겨받았어요. 회선에 붙여 주세요.');
+    await pay('ac_num_transfer', '번호를 넘겨받았어요. 이제 내 번호(1:1)로 쓰입니다.');
   } catch (err) { alert(err.message || String(err)); }
 });
 
@@ -337,7 +428,7 @@ async function check(){
     const r = await rpc('ac_num_check', { p_number: n });
     if (!r.ok) { msg('msgBuy', ERR[r.error] || r.error); return; }
     if (!r.free) { msg('msgBuy', fmt(r.number) + ' — ' + ERR.taken); return; }
-    if (!r.sku) { msg('msgBuy', fmt(r.number) + ' 은(는) 무료 8자리 번호예요. 무료 번호는 위의 [무료 8자리 번호 받기]에서 무작위로 고를 수 있어요.', true); return; }
+    if (!r.sku) { msg('msgBuy', fmt(r.number) + ' 은(는) 무료 8자리 번호예요. 무료 번호는 위의 [무료 8자리 내 번호 받기] · [무료 8자리 번호 받기]에서 무작위로 고를 수 있어요.', true); return; }
     pending = r;
     msg('msgBuy', fmt(r.number) + ' — 살 수 있어요 · ' + (r.good ? '좋은 번호 · ' : '') + won(r.price), true);
     el('buyBtn').textContent = fmt(r.number) + ' 사기 · ' + won(r.price);
@@ -346,14 +437,14 @@ async function check(){
 }
 
 el('buyBtn').onclick = async function(){
-  const l = curLine();
   if (!pending) return;
-  if (!l) { msg('msgBuy', '번호를 붙일 회선을 먼저 골라 주세요.'); return; }
-  const m = mine.find((x) => x.hotline === l.id);
-  if (m && !confirm('"' + (l.title || '이 회선') + '" 의 지금 번호 ' + fmt(m.number) + ' 대신 ' + fmt(pending.number) + ' 를 붙일까요?\n' + (m.source === 'free' ? '지금 번호(무료)는 놓아 주게 되고, 6개월 뒤 다른 분이 쓸 수 있어요.' : '지금 번호는 회선에서만 떼어 내고 내 번호로 남아요(다른 회선에 붙일 수 있어요).'))) return;
+  const tv = el('buyTarget').value;
+  const l = tv === 'person' ? null : lines.find((x) => x.id === tv) || null;
+  const m = l ? mine.find((x) => x.hotline === l.id) : null;
+  if (m && !confirm('"' + (l.title || '이 회선') + '" 의 지금 번호 ' + fmt(m.number) + ' 대신 ' + fmt(pending.number) + ' 를 붙일까요?\n' + (m.source === 'free' ? '지금 번호(무료)는 놓아 주게 되고, 6개월 뒤 다른 분이 쓸 수 있어요.' : '지금 번호는 회선에서만 떼어 내고 내 번호(1:1)로 남아요.'))) return;
   this.disabled = true;
   try {
-    const h = await rpc('ac_num_hold', { p_hotline: l.id, p_number: pending.number });
+    const h = await rpc('ac_num_hold', { p_hotline: l ? l.id : null, p_number: pending.number });
     if (!h.ok) { msg('msgBuy', ERR[h.error] || h.error); this.disabled = false; return; }
     if (ACStore.inApp()) {
       ACStore.onDone = onBought;
@@ -367,7 +458,7 @@ el('buyBtn').onclick = async function(){
 };
 async function onBought(r){
   el('buyBtn').disabled = false;
-  if (r && r.ok) { toast('번호를 붙였어요!'); el('buyBtn').style.display = 'none'; msg('msgBuy', '결제가 끝나 번호를 붙였어요.', true); await loadMine(); paintLine(); loadGood(); return; }
+  if (r && r.ok) { toast('번호를 받았어요!'); el('buyBtn').style.display = 'none'; msg('msgBuy', '결제가 끝나 번호를 받았어요.', true); await refreshAll(); loadGood(); return; }
   if (r && r.canceled) { msg('msgBuy', '결제를 취소했어요.'); return; }
   if (r && r.pending) { msg('msgBuy', '결제가 확인되는 중이에요. 잠시 뒤 다시 열어 주세요.', true); return; }
   msg('msgBuy', '결제를 마치지 못했어요. ' + ((r && r.error) || ''));
@@ -382,7 +473,7 @@ async function onBought(r){
   /* 웹 결제에서 돌아옴 */
   const q = new URLSearchParams(location.search);
   if (q.has('webpaid')) {
-    if (q.get('webpaid') === '1') toast('결제가 끝나 번호 ' + fmt(q.get('number') || '') + ' 를 붙였어요');
+    if (q.get('webpaid') === '1') toast('결제가 끝났어요' + (q.get('number') ? ' · 번호 ' + fmt(q.get('number')) : ''));
     else alert(q.get('msg') || '결제를 마치지 못했어요.');
     history.replaceState(null, '', 'aliascall_numbers.html');
   }
