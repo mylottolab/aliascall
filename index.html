@@ -25,6 +25,7 @@ ACStore.onDone = function(r){
 };
 </script>
 <script src="aliascall_push.js"></script>
+<script src="aliascall_speeddial.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -216,7 +217,7 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .case-inbox-empty{ font-size:11.5px; color:rgba(255,255,255,.5); padding:10px 2px; text-align:center; }
 .case-inbox-alert-title{ font-style:italic; font-size:11.5px; color:rgba(255,255,255,.7); padding:2px 2px 8px; }
 
-footer{ text-align:center; padding:26px 24px 40px; font-size:11px; color:rgba(255,255,255,.4); line-height:1.7; }
+footer{ text-align:center; padding:14px 20px 30px; font-size:11px; color:rgba(255,255,255,.4); line-height:1.6; }   /* 🔴 2026-10-23 줄임 */
 footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 /* 2026-08-23 신설: 통신판매업자 기본 표시사항 */
 .biz-info{ margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,.1); font-size:10px; color:rgba(255,255,255,.35); line-height:1.8; }
@@ -244,19 +245,20 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 /* ═══ 2026-09-28 신설: 첫 화면 네 칸 (33차 3-4) ═══
    ⚠ 여전히 한 파일 안에서 화면만 바꿉니다. 연결요청 수신이 이 파일에 있습니다. */
 #viewHome{ padding:10px 16px 0; max-width:420px; margin:0 auto; }
-.home-grid{ position:relative; display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin:8px 0 18px; }
-.tile{ background:#fff; color:var(--ink); border:none; border-radius:18px; aspect-ratio:1/1; min-height:160px;
-       padding:14px 6px; cursor:pointer; font-family:inherit; text-align:center;
+.home-grid{ position:relative; display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin:4px 0 8px; }
+.tile{ background:#fff; color:var(--ink); border:none; border-radius:18px; min-height:118px;   /* 🔴 2026-10-23 단축회선 자리를 내려고 낮췄습니다(예전: 정사각형) */
+       padding:10px 6px; cursor:pointer; font-family:inherit; text-align:center;
        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
        border-top:6px solid var(--teal); box-shadow:0 6px 18px -8px rgba(0,0,0,.45); transition:transform .12s ease; }
 .tile:active{ transform:scale(.97); }
-.tile .t-name{ font-family:'Inter',sans-serif; font-size:19px; font-weight:800; line-height:1.35; letter-spacing:-.01em; }
+.tile .t-name{ font-family:'Inter',sans-serif; font-size:17px; font-weight:800; line-height:1.35; letter-spacing:-.01em; }
 .tile .t-sub{ font-size:10.5px; letter-spacing:-.02em; color:var(--ink-soft); line-height:1.5; }
 .tile.t-reg, .tile.t-alert{ border-top-color:var(--coral); }
 .tile.t-temp{ border-top-color:var(--brass); }
 /* 윗줄 칸은 글씨를 조금 위로, 아랫줄 칸은 조금 아래로 — 가운데 띠에 가리지 않게 */
-.tile.t-reg, .tile.t-alert{ justify-content:center; padding-bottom:30px; }
-.tile.t-temp, .tile.t-msg{ padding-top:30px; }
+.tile.t-reg, .tile.t-alert{ justify-content:center; padding-bottom:22px; }
+.tile.t-temp, .tile.t-msg{ padding-top:22px; }
+.tile{ gap:6px; }
 .no-num{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); pointer-events:none;
          background:linear-gradient(180deg,#E36A5C,#B9342A); color:#fff; font-weight:800; font-size:14px;
          padding:9px 18px; border-radius:10px; white-space:nowrap; border:2px solid #fff;
@@ -315,14 +317,14 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 .cat.emg .entry .pt{ background:var(--coral-tint); color:#B4552E; }
 
 /* 알림 띠 */
-.alerts-strip{ display:none; align-items:center; gap:10px; background:var(--coral); border-radius:12px; padding:12px 14px; margin-top:10px; text-decoration:none; color:#fff; }
+.alerts-strip{ display:none; align-items:center; gap:10px; background:var(--coral); border-radius:12px; padding:9px 14px; margin-top:6px; text-decoration:none; color:#fff; }
 .alerts-strip.show{ display:flex; }
 .alerts-strip .n{ background:#fff; color:var(--coral); font-size:12px; font-weight:700; border-radius:20px; padding:2px 9px; }
 .alerts-strip .t{ flex:1; font-size:12.5px; font-weight:700; }
 /* 2026-08-29 신설(v69): 승인 대기 문의 — 보안회선 쪽.
    ⚠ 위 alerts-strip은 안심콜(등록물) 알림이라 색과 이동 위치가 다릅니다. */
 .wait-strip{ display:none; align-items:center; gap:10px; background:var(--teal-deep, #123F3D);
-  border-radius:12px; padding:12px 14px; margin-top:10px; text-decoration:none; color:#fff; }
+  border-radius:12px; padding:9px 14px; margin-top:6px; text-decoration:none; color:#fff; }
 .wait-strip.show{ display:flex; }
 .wait-strip .n{ background:#fff; color:var(--teal-deep, #123F3D); font-size:12px; font-weight:700; border-radius:20px; padding:2px 9px; }
 .wait-strip .t{ flex:1; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -332,7 +334,24 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 
 
 /* 2026-08-28 신설: 순환 배너 */
-.banner-box{ margin:18px 0 6px; }
+.banner-box{ margin:8px 0 2px; }
+/* 🔴 2026-10-23 광고 막대 + 펼치는 네모 칸 */
+.ad-bar{ display:flex; align-items:center; gap:9px; width:100%; padding:10px 14px; border-radius:12px; cursor:pointer; font-family:inherit;
+  background:rgba(232,169,138,.14); border:1px solid rgba(232,169,138,.55); color:#fff; text-align:left; }
+.ad-bar .ab-i{ font-size:16px; }
+.ad-bar .ab-t{ flex:1; font-size:13px; font-weight:800; color:#F3C2A8; }
+.ad-bar .ab-n{ font-size:11px; font-weight:800; background:#E8734A; color:#fff; border-radius:20px; padding:2px 8px; }
+.ad-bar .ab-n:empty{ display:none; }
+.ad-bar .ab-a{ font-size:16px; transition:transform .2s; color:#F3C2A8; }
+.ad-bar[aria-expanded="true"] .ab-a{ transform:rotate(90deg); }
+.ad-panel{ display:none; margin-top:7px; }
+.ad-panel.open{ display:block; }
+.ad-panel .banner-strip{ display:grid; grid-template-columns:repeat(2,1fr); gap:7px; overflow:visible; }
+.ad-panel .bn{ width:auto; min-height:76px; display:flex; flex-direction:column; }
+.ad-panel .bn .bn-ask{ margin-top:auto; padding-top:8px; }
+.ad-panel .bn .bn-c{ align-self:flex-start; }
+.ad-panel .bn .bn-ask span{ display:block; text-align:center; padding:7px 4px; border-radius:9px; background:var(--coral); color:#fff; font-size:11.5px; font-weight:800; }
+.ad-all{ display:block; text-align:right; font-size:11.5px; color:#9FBDB9; text-decoration:none; padding:7px 2px 0; }
 .banner-head{ display:flex; align-items:center; margin:0 2px 9px; }
 .banner-head .bh-t{ flex:1; font-size:12px; font-weight:700; color:#E8A98A; }
 .banner-head a{ font-size:10.5px; color:#9FBDB9; text-decoration:none; }
@@ -486,6 +505,9 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
     <span>›</span>
   </a>
 
+  <!-- 🔴 2026-10-23 단축회선 (1~9 회선 + 회선 전체 · 긴급 · 임시 · 회선 관리) — aliascall_speeddial.js -->
+  <div class="sd-box" data-sd id="sdHome"></div>
+
   <!-- 2026-09-28 (2차): 첫 화면의 "내 회선"은 없앴습니다. ④ 안에 전체 목록이 그대로 있습니다. -->
 
   <!-- ⚠ 2026-08-28 신설: 순환 배너.
@@ -493,12 +515,16 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
        별도로 팔면 상품이 둘이 되고, 돈 낸 사람보다 배너가 더 잘 보이는
        모순이 생깁니다.
        ⚠ 등록 업체가 없으면 아예 나타나지 않습니다. -->
-  <div class="banner-box" id="bannerBox" style="display:none;">
-    <div class="banner-head">
-      <span class="bh-t" data-i18n="bannerTitle">📣 이런 곳도 있어요</span>
-      <a href="aliascall_directory.html" data-i18n="bannerAll">전체 보기 ›</a>
+  <!-- 🔴 2026-10-23 — 단축회선이 들어오며 배너는 한 줄 막대로 접었습니다. 누르면 업체 네모 칸들이 펼쳐집니다. -->
+  <div class="banner-box" id="bannerBox">
+    <button type="button" class="ad-bar" id="adBar" aria-expanded="false">
+      <span class="ab-i">📣</span><span class="ab-t" data-i18n="adBarTitle">각종 전문업체 문의처</span>
+      <span class="ab-n" id="adBarN"></span><span class="ab-a" id="adBarA">›</span>
+    </button>
+    <div class="ad-panel" id="adPanel">
+      <div class="banner-strip" id="bannerStrip"></div>
+      <a class="ad-all" href="aliascall_directory.html" data-i18n="bannerAll">전체 보기 ›</a>
     </div>
-    <div class="banner-strip" id="bannerStrip"></div>
   </div>
 </div>
 
@@ -569,18 +595,20 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 <div class="view" id="viewMsg">
 
   <!-- ⚠ 2026-08-28 신설: Emergency 쪽에는 제목이 있는데 여기엔 없었습니다. -->
-  <div class="section-header secure">
+  <div class="section-header secure" style="margin-top:8px;">
     <div class="section-header-title" data-i18n="secMsgTitle">💬 Alias The Next-Gen Messenger</div>
     <div class="section-header-sub" data-i18n="secMsgSub">번호 없이, 우리끼리만 아는 회선</div>
   </div>
 
   <!-- 2026-09-28 (② 연락처): 연락처 입구. 회선 갈래가 먼저 열립니다. -->
-  <div class="contacts-row" style="margin-bottom:14px;">
+  <div class="contacts-row" style="margin-top:8px;margin-bottom:4px;">
     <a class="contacts-link" href="aliascall_contacts.html?tab=line&amp;from=msg"><span>📇</span><span data-i18n="contactsLink">연락처</span></a>
     <a class="contacts-link" href="aliascall_calls.html?tab=line&amp;from=msg"><span>📞</span><span data-i18n="callsLink">통화기록</span></a>
     <!-- 2026-09-29: 폰에서 회선 관리(초대 · 이름 바꾸기)로 가는 입구가 잘 안 보였습니다 -->
     <a class="contacts-link" href="aliascall_hotline_manage.html"><span>👥</span><span data-i18n="manageLink">회선 관리</span></a>
   </div>
+  <!-- 🔴 2026-10-23 단축회선 -->
+  <div class="sd-box" data-sd id="sdMsg" style="max-width:360px;margin-bottom:16px;"></div>
 
   <div class="mine-head">
     <span class="t" data-i18n="myLines">내 회선</span>
@@ -714,8 +742,8 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 </div><!-- /viewEmg2 -->
 
 <footer>
-  <a href="aliascall_guide.html" data-i18n="guideEmergency">ℹ️ 안심비상연락 사용설명서</a><br>
-  <a href="aliascall_secure_guide.html" data-i18n="guideSecure">ℹ️ 안심보안회선 사용설명서</a><br><br>
+  <a href="aliascall_guide.html" data-i18n="guideEmergency">ℹ️ 안심비상연락 사용설명서</a> ·
+  <a href="aliascall_secure_guide.html" data-i18n="guideSecure">ℹ️ 안심보안회선 사용설명서</a><br>
   <span data-i18n="footerNote1">Aliascall은 실제 번호를 노출하지 않는 안전한 연결 서비스입니다.</span><br>
   <span data-i18n="footerNote2">실시간 위치추적 기능은 없습니다.</span>
   <!-- 🔴 2026-10-29 유치대리점 모집 (앱 안에서는 애플 승인 뒤에 보이게) -->
@@ -779,6 +807,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.sb = sb;   // 🔴 2026-10-23 단축회선(aliascall_speeddial.js)이 같이 씁니다
 
 // ── 실시간 수신 감지 + 가벼운 알림 배너 ──
 // 2026-08-19 (3차 — 중복코드 통합): 예전엔 이 화면도 전화 응답(WebRTC)을 통째로 직접 처리했는데,
@@ -1114,9 +1143,9 @@ function relDay(iso){
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
   if (d <= 0) return T().relToday;
   if (d === 1) return T().relYesterday;
-  if (d < 30) return (LANG === 'en') ? (d + ' days ago') : (d + '일 전');
+  if (d < 30) return (currentLang === 'en') ? (d + ' days ago') : (d + '일 전');
   const m = Math.floor(d / 30);
-  return (LANG === 'en') ? (m + ' months ago') : (m + '개월 전');
+  return (currentLang === 'en') ? (m + ' months ago') : (m + '개월 전');
 }
 
 
@@ -1155,13 +1184,21 @@ async function renderBanner(){
 
   let rows = [];
   try {
-    const { data, error } = await sb.rpc('list_banner_businesses', { p_limit: 8 });
+    const { data, error } = await sb.rpc('list_banner_businesses', { p_limit: 12 });
     if (error) throw error;
     rows = data || [];
   } catch (e) {
     console.warn('[banner] 불러오기 실패', e);
-    return;   // 조용히 넘어갑니다. 배너가 없다고 홈이 망가지면 안 됩니다.
+    rows = [];   // 조용히 넘어갑니다. 막대는 남겨 두고 누르면 전체 목록으로 갑니다.
   }
+  /* 🔴 2026-10-23 — 막대를 누르면 펼치기 / 업체가 없으면 전체 목록 화면으로 */
+  const bar = document.getElementById('adBar'), panel = document.getElementById('adPanel');
+  document.getElementById('adBarN').textContent = rows.length ? String(rows.length) : '';
+  bar.onclick = () => {
+    if (!rows.length) { location.href = 'aliascall_directory.html'; return; }
+    const open = !panel.classList.contains('open');
+    panel.classList.toggle('open', open); bar.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
   if (rows.length === 0) return;
 
   strip.innerHTML = '';
@@ -1180,6 +1217,12 @@ async function renderBanner(){
       rg.className = 'bn-r'; rg.textContent = '📍 ' + r.region;
       a.appendChild(rg);
     }
+    /* 🔴 2026-10-23 — 누르면 업체 화면의 상담 요청 칸으로 바로(대화가 열리면 그 방에서 통화) */
+    a.href += '&ask=1';
+    const k = document.createElement('div');
+    k.className = 'bn-ask';
+    k.innerHTML = '<span>' + (currentLang === 'en' ? '💬 Ask' : '💬 상담 요청') + '</span>';
+    a.appendChild(k);
     strip.appendChild(a);
   });
   box.style.display = 'block';
@@ -1595,7 +1638,7 @@ const I18N = {
     unreadStrip: '읽지 않은 메시지가 있습니다',
     unreadStripOne: '님과의 대화에 새 메시지가 있습니다',
     lineNoTalk: '아직 대화가 없습니다',
-    bannerTitle: '📣 이런 곳도 있어요',
+    bannerTitle: '📣 이런 곳도 있어요', adBarTitle: '각종 전문업체 문의처',
     bannerAll: '전체 보기 ›',
     mySubs: '📁 내 구독 관리',
     // 2026-09-01 신설: 구독이 있는 분의 화면에서 상품 목록 앞에 붙습니다
@@ -1732,7 +1775,7 @@ const I18N = {
     unreadStrip: 'You have unread messages',
     unreadStripOne: ' sent you a new message',
     lineNoTalk: 'No conversation yet',
-    bannerTitle: '📣 Places you can reach',
+    bannerTitle: '📣 Places you can reach', adBarTitle: 'Professional services directory',
     bannerAll: 'See all ›',
     mySubs: '📁 My subscriptions',
     // 2026-09-01 신설
@@ -1862,6 +1905,7 @@ let currentLang = localStorage.getItem('aliascall_lang') || 'ko';
 
 function applyLang(lang){
   currentLang = lang;
+  try { if (window.AliasSD) setTimeout(function(){ AliasSD.repaint(); }, 0); } catch (e) {}
   localStorage.setItem('aliascall_lang', lang);
   document.documentElement.lang = lang;
 
@@ -1975,6 +2019,7 @@ function renderLoginStatus(){
   renderMyLines('myLinesHome', 3);
   renderMyLines('myLinesFull');
   applyLang(currentLang);
+  try { if (window.AliasSD) AliasSD.mountAll(); } catch (e) { console.warn('[home] 단축회선 실패', e); }
   // ⚠ 2026-08-29(v69): 반드시 맨 마지막에, try로 감쌉니다.
   //   중간에 두었더니 여기서 오류가 났을 때 "내 회선"까지 통째로 안 그려졌습니다.
   //   새로 붙이는 기능이 기존 화면을 죽이면 안 됩니다.
