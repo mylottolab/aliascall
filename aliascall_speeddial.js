@@ -308,7 +308,30 @@
     e.sh.querySelector('[data-close]').onclick = closeSheet;
   }
 
+  /* 🔴 2026-11-01 — 첫 화면 [💬 대화방] 단추: 들어갈 수 있는 회선 · 1:1 대화방을 모두 보여 주고, 누르면 바로 그 대화방 */
+  async function openLines(){
+    var t = T(), e = sheetEls(), en2 = en();
+    var ttl = en2 ? '💬 My chats' : '💬 내 대화방';
+    var sub = en2 ? 'Lines and 1:1 chats you can enter. Tap one to open it.' : '내가 연 회선 · 승인받아 들어간 회선 · 번호로 연결된 1:1 대화방입니다. 누르면 바로 열려요.';
+    e.sh.innerHTML = '<h3>' + esc(ttl) + '</h3><div class="sub">' + esc(sub) + '</div><div class="none">' + esc(t.loading) + '</div>';
+    e.bg.style.display = e.sh.style.display = 'block';
+    lines = null; loading = null;
+    await load();
+    var list = (lines || []).slice();
+    var body = !list.length
+      ? '<div class="none">' + esc(!loggedIn ? t.login : t.noLines) + '</div>'
+      : list.map(function(ln, i){
+          return '<button type="button" class="it" data-go="' + i + '"><span class="e">' + esc(ln.emoji) + '</span><span class="n"><b>' + esc(ln.name) + '</b>' +
+            (ln.detail && ln.detail !== ln.name ? '<small>' + esc(ln.detail) + '</small>' : '') + '</span><span class="tag">' + (en2 ? 'Open ›' : '열기 ›') + '</span></button>';
+        }).join('');
+    e.sh.innerHTML = '<h3>' + esc(ttl) + '</h3><div class="sub">' + esc(sub) + '</div>' + body +
+      '<div class="row"><button type="button" data-close>' + esc(t.cancel) + '</button></div>';
+    e.sh.querySelectorAll('[data-go]').forEach(function(b){ b.onclick = function(){ var ln = list[+b.dataset.go]; if (ln) location.href = ln.href; }; });
+    e.sh.querySelector('[data-close]').onclick = closeSheet;
+  }
+
   window.AliasSD = {
+    openLines: openLines,
     mountAll: function(){ paintAll(); load().then(paintAll); },
     refresh: function(){ lines = null; loading = null; paintAll(); load().then(paintAll); },
     repaint: paintAll
