@@ -243,7 +243,17 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   font-size:11.5px; font-weight:700; text-decoration:none;
   border:1px solid rgba(255,255,255,.2);
 }
-.hero-tagline{ font-size:12px; color:#9FBDB9; margin-top:7px; text-align:center; line-height:1.6; }
+/* 🔴 2026-11-01 — 처음 쓰는 분도 바로 찾게: My Page 바로 밑 [🔍 찾기·QR] (가운데 큰 단추와 같은 곳으로) */
+.find-btn{
+  position:absolute; left:16px; top:54px;
+  display:inline-flex; align-items:center; gap:4px;
+  background:linear-gradient(135deg,#F08A5D,#E8734A); color:#fff;
+  border-radius:20px; padding:5px 12px 5px 10px;
+  font-size:11.5px; font-weight:800; text-decoration:none; letter-spacing:-.01em;
+  box-shadow:0 2px 8px rgba(232,115,74,.35);
+}
+.find-btn:active{ filter:brightness(.92); }
+.hero-tagline{ font-size:12px; color:#9FBDB9; margin-top:24px; text-align:center; line-height:1.6; }
 .view{ display:none; }
 .view.show{ display:block; }
 
@@ -456,6 +466,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   <!-- ⚠ 2026-08-28 신설: 통합 마이페이지.
        Emergency와 Messenger 이용현황을 한 곳에서 봅니다. -->
   <a class="mypage-btn" href="aliascall_my_account.html" data-i18n="myPage">My Page</a>
+  <a class="find-btn" href="aliascall_search_mockup.html" id="findBtn"><span aria-hidden="true">🔍</span><span data-i18n="findBtn">찾기·QR</span></a>
   <!-- ⚠ 2026-08-28: 로고를 누르면 첫 화면으로 돌아갑니다.
        모바일에서 작은 "‹ 홈"을 누르기 어렵다는 지적을 반영했습니다. -->
   <button type="button" class="hero-brand" id="brandHome" data-i18n-aria="backHomeAria" aria-label="첫 화면으로">Alias<em>call</em></button>
@@ -1676,7 +1687,7 @@ const I18N = {
     tSoon: '곧 열립니다', backHome: '‹ 첫 화면으로', contactsLink: '연락처', callsLink: '통화기록', plansLink: '이용권', manageLink: '회선 관리',
     secMsgTitle: '💬 Alias The Next-Gen Messenger',
     secMsgSub: '번호 없이, 우리끼리만 아는 회선',
-    myPage: 'My Page',
+    myPage: 'My Page', findBtn: '찾기·QR',
     backHome: '‹ 홈',
     relToday: '오늘', relYesterday: '어제',
     pLove: '우리끼리 회선', pLoveSub: '정말 친한 연인 · 친구 · 가족만 남 모르게 쓰는 보안회선',
@@ -1812,7 +1823,7 @@ const I18N = {
     tSoon: 'Coming soon', backHome: '‹ Back to start', contactsLink: 'Contacts', callsLink: 'Call history', plansLink: 'Plans', manageLink: 'My lines',
     secMsgTitle: '💬 Alias The Next-Gen Messenger',
     secMsgSub: 'A line only you and your people know — no phone numbers',
-    myPage: 'My Page',
+    myPage: 'My Page', findBtn: 'Find·QR',
     backHome: '‹ Home',
     relToday: 'today', relYesterday: 'yesterday',
     pLove: 'Our own line', pLoveSub: 'A private line only your closest people know',
