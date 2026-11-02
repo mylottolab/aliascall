@@ -75,6 +75,10 @@ main{ max-width:400px; margin:0 auto; padding:20px 24px 60px; }
 .usage-bar-track{ background:var(--line); border-radius:20px; height:6px; overflow:hidden; margin-bottom:4px; }
 .usage-bar-fill{ background:var(--teal); height:100%; border-radius:20px; }
 .usage-add{ display:inline-block; margin:4px 0 10px; font-size:12.5px; font-weight:700; color:var(--teal-deep); text-decoration:none; border:1.5px solid var(--line); border-radius:10px; padding:7px 11px; }
+.acb-info{ font-size:12px; color:var(--ink-soft,#3E5654); margin:2px 0 4px; line-height:1.6; }
+.acb-left{ color:var(--teal-deep,#123F3D); }
+.acb-tag{ font-weight:800; color:#8E2F12; }
+button.usage-add{ font-family:inherit; cursor:pointer; background:transparent; margin-right:6px; }
 .usage-add[data-hot]{ border-color:#C0532F; color:#8E2F12; background:#FBEAE7; }
 .usage-label{ font-size:10.5px; color:var(--ink-soft); margin-bottom:14px; }
 
@@ -589,6 +593,13 @@ function renderSubCard(sub){
     if (upct >= 80) uadd.dataset.hot = '1';
     uadd.textContent = (LANG === 'en' ? '＋ Add usage to the whole plan (1GB · KRW 2,000)' : '＋ 사용량 추가 — 구독 전체에 (1GB · 2,000원)');
     card.appendChild(uadd);
+    /* 🔴 2026-11-03 다음 달 몫 당겨 쓰기 · 남은 기간 · 다시 채우는 날 */
+    const firstRoom = (roomsBySub[sub.id] || []).find((r) => !r.archived_at) || (roomsBySub[sub.id] || [])[0];
+    if (firstRoom) {
+      const bx = document.createElement('div');
+      card.appendChild(bx);
+      acUsageStateOf(firstRoom.id).then((st) => { bx.innerHTML = acBorrowHtml('pro', sub.id, st); });
+    }
   }
 
   const bar = document.createElement('div');
@@ -1198,6 +1209,64 @@ async function acNumRow(h){
     : (en ? '📞 Get a line number (8 digits free)' : '📞 회선번호 받기 (8자리 무료 · 짧은 번호도 있어요)')}</a>`;
 }
 
+
+/* =====================================================================
+   🔴 2026-11-03 — 다음 달 몫 당겨 쓰기 (회선 · 프로 구독)
+   이번 달에 한 달치를 더하고 이용 기간을 한 달 줄입니다. 남은 기간이 한 달보다 길 때만.
+   ===================================================================== */
+function acFmtDate(d){ return new Date(d).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' }); }
+function acLeftText(exp){
+  const now = new Date(), e = new Date(exp);
+  if (!(e > now)) return LANG === 'en' ? 'ended' : '끝남';
+  let m = (e.getFullYear() - now.getFullYear()) * 12 + (e.getMonth() - now.getMonth());
+  let t = new Date(now); t.setMonth(t.getMonth() + m);
+  if (t > e) { m -= 1; t = new Date(now); t.setMonth(t.getMonth() + m); }
+  const d = Math.floor((e - t) / 86400000);
+  if (LANG === 'en') return (m ? m + ' mo ' : '') + d + ' days left';
+  return (m ? m + '개월 ' : '') + d + '일 남음';
+}
+function acMinusMonth(exp){ const d = new Date(exp); d.setMonth(d.getMonth() - 1); return d; }
+function acBorrowHtml(kind, id, st){
+  if (!st || !st.found) return '';
+  const refill = st.refill_at ? (LANG === 'en' ? 'Refills ' : '') + new Date(st.refill_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR', { month: 'numeric', day: 'numeric' }) + (LANG === 'en' ? '' : ' 다시 채움') : '';
+  let h = `<div class="acb-info">${LANG === 'en' ? 'Plan until' : '이용 기간'} <b>~${acFmtDate(st.expires_at)}</b> · <b class="acb-left">${acLeftText(st.expires_at)}</b>${refill ? ' · ' + refill : ''}` +
+          (Number(st.borrow_gb) > 0 ? ` · <span class="acb-tag">${LANG === 'en' ? 'Borrowed this month +' : '이번 달 당겨 씀 +'}${Number(st.borrow_gb)}GB</span>` : '') + `</div>`;
+  if (st.can_borrow) {
+    const gb = Number(st.base_gb) || 0;
+    h += `<button type="button" class="usage-add acb-btn"${st.over ? ' data-hot="1"' : ''} data-acb-kind="${kind}" data-acb-id="${id}" data-acb-gb="${gb}" data-acb-exp="${st.expires_at}">` +
+         (LANG === 'en' ? `⏩ Borrow next month (+${gb}GB · plan 1 month shorter)` : `⏩ 다음 달 몫 당겨 쓰기 (+${gb}GB · 기간 1개월 줄어듦)`) + `</button>`;
+  }
+  return h;
+}
+async function acBorrowAsk(kind, id, gb, exp){
+  const newExp = acMinusMonth(exp);
+  const msg = LANG === 'en'
+    ? `Borrow next month's ${gb}GB now?\n\nPlan end: ${acFmtDate(exp)} → ${acFmtDate(newExp)}\nAfter this: ${acLeftText(newExp)}\n\nThe borrowed data is for this month only.`
+    : `다음 달 몫 ${gb}GB를 지금 당겨 쓸까요?\n\n이용 기간: ${acFmtDate(exp)} → ${acFmtDate(newExp)}\n당긴 뒤 남는 기간: ${acLeftText(newExp)}\n\n당긴 양은 이번 달 안에 씁니다.`;
+  if (!confirm(msg)) return false;
+  const { data, error } = await sb.rpc('ac_usage_borrow', { p_kind: kind, p_target: id });
+  if (error || !data || !data.ok) {
+    const why = data && data.error === 'too_short' ? (LANG === 'en' ? 'Less than a month is left on this plan, so it cannot be borrowed.' : '남은 이용 기간이 한 달이 안 되어 당겨 쓸 수 없어요.')
+              : (LANG === 'en' ? 'Could not borrow. Please try again.' : '당겨 쓰지 못했어요. 잠시 뒤 다시 해 주세요.') + (error ? ' (' + error.message + ')' : '');
+    alert(why); return false;
+  }
+  alert(LANG === 'en'
+    ? `Done — +${data.gb}GB for this month.\nPlan now ends ${acFmtDate(data.expires_at)} (${acLeftText(data.expires_at)}).`
+    : `당겨 썼어요 — 이번 달 +${data.gb}GB\n이용 기간: ~${acFmtDate(data.expires_at)} (${acLeftText(data.expires_at)})`);
+  return true;
+}
+document.addEventListener('click', async function(e){
+  const b = e.target.closest && e.target.closest('[data-acb-kind]');
+  if (!b) return;
+  b.disabled = true;
+  const ok = await acBorrowAsk(b.dataset.acbKind, b.dataset.acbId, b.dataset.acbGb, b.dataset.acbExp);
+  b.disabled = false;
+  if (ok) location.reload();
+});
+async function acUsageStateOf(hotlineId){
+  try { const { data } = await sb.rpc('hotline_usage_state', { p_hotline: hotlineId }); return data; } catch (e) { return null; }
+}
+
 async function renderHotlineItem(h){
   const isDirect = (h.id in (await acDirectMap()));   // 🔴 2026-11-01 1:1 대화방
   const [{ data: members }, { data: requests }] = await Promise.all([
@@ -1319,6 +1388,8 @@ async function renderHotlineItem(h){
       <div class="usage-bar-track"><div class="usage-bar-fill" style="width:${usagePercent}%;"></div></div>
       <div class="usage-label">${LANG === 'en' ? 'This month' : '이번 달 사용량'} ${monthUsed.toFixed(1)}GB / ${h.usage_cap_gb}GB (${usagePercent}%)${h.usage_cycle_at ? ' · ' + (LANG === 'en' ? 'refills ' : '') + new Date(new Date(h.usage_cycle_at).setMonth(new Date(h.usage_cycle_at).getMonth() + 1)).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR', { month: 'numeric', day: 'numeric' }) + (LANG === 'en' ? '' : ' 다시 채움') : ''}</div>
       ${/* 🔴 2026-10-01 — 이 회선에 추가 사용량 1GB 더하기 (이 회선이 골라진 채로 이용권 화면) */ (!isDirect && !h.subscription_id && !(h.expires_at && new Date(h.expires_at) < new Date())) ? `<a class="usage-add" href="aliascall_plans.html?usage=${h.id}"${usagePercent >= 80 ? ' data-hot="1"' : ''}>${LANG === 'en' ? '＋ Add usage (1GB · KRW 2,000)' : '＋ 사용량 추가 (1GB · 2,000원)'}</a>` : ''}
+
+      ${(!isDirect && !h.subscription_id && !(h.expires_at && new Date(h.expires_at) < new Date())) ? acBorrowHtml('line', h.id, await acUsageStateOf(h.id)) : ''}
 
       ${requestsHtml}
       ${membersHtml}

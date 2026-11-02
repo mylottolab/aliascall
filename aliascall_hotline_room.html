@@ -3205,6 +3205,36 @@ async function startCall(mode){
   if (st && st.over) {
     if (isRoomOwner) {
       const q = st.pool ? ('usagePro=' + encodeURIComponent(st.subscriptionId)) : ('usage=' + encodeURIComponent(hotlineId));
+      /* 🔴 2026-11-03 — 남은 기간이 한 달보다 길면 먼저 "다음 달 몫 당겨 쓰기"를 권합니다 */
+      if (st.can_borrow && st.expires_at && st.base_gb) {
+        const loc = (LANG === 'en') ? 'en-US' : 'ko-KR';
+        const fmt = (d) => new Date(d).toLocaleDateString(loc, { year: 'numeric', month: 'numeric', day: 'numeric' });
+        const ne = new Date(st.expires_at); ne.setMonth(ne.getMonth() - 1);
+        const ask = (LANG === 'en')
+          ? `This month's data is used up (${st.used_gb} / ${st.cap_gb}GB).
+
+Borrow next month's ${st.base_gb}GB now?
+Plan end: ${fmt(st.expires_at)} → ${fmt(ne)}
+
+(Cancel = buy extra data instead)`
+          : `이번 달 사용량(${st.used_gb} / ${st.cap_gb}GB)을 모두 쓰셨습니다.
+
+다음 달 몫 ${st.base_gb}GB를 지금 당겨 쓸까요?
+이용 기간: ${fmt(st.expires_at)} → ${fmt(ne)} (1개월 줄어듦)
+
+(취소 = 대신 추가 사용량 사기)`;
+        if (confirm(ask)) {
+          try {
+            const { data } = await sb.rpc('ac_usage_borrow', { p_kind: st.pool ? 'pro' : 'line', p_target: st.pool ? st.subscriptionId : hotlineId });
+            if (data && data.ok) {
+              alert((LANG === 'en') ? `Done — +${data.gb}GB this month. Plan ends ${fmt(data.expires_at)}.` : `당겨 썼어요 — 이번 달 +${data.gb}GB\n이용 기간: ~${fmt(data.expires_at)}\n이제 통화를 다시 걸 수 있어요.`);
+              return startCall(mode);
+            }
+          } catch (e) { console.warn('[usage] 당겨 쓰기 실패', e); }
+          alert((LANG === 'en') ? 'Could not borrow. Please try again.' : '당겨 쓰지 못했어요. 잠시 뒤 다시 해 주세요.');
+          return;
+        }
+      }
       if (confirm(T('overCapOwner').replace('{u}', st.used_gb).replace('{c}', st.cap_gb))) location.href = 'aliascall_plans.html?' + q;
     } else {
       alert(T('overCapMember'));
