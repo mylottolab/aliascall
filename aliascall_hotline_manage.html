@@ -1227,7 +1227,7 @@ function acLeftText(exp){
 }
 function acMinusMonth(exp){ const d = new Date(exp); d.setMonth(d.getMonth() - 1); return d; }
 function acBorrowHtml(kind, id, st){
-  if (!st || !st.found) return '';
+  if (!st || !st.found || !st.expires_at) return '';   // SQL(usage_borrow) 전에는 숨김
   const refill = st.refill_at ? (LANG === 'en' ? 'Refills ' : '') + new Date(st.refill_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR', { month: 'numeric', day: 'numeric' }) + (LANG === 'en' ? '' : ' 다시 채움') : '';
   let h = `<div class="acb-info">${LANG === 'en' ? 'Plan until' : '이용 기간'} <b>~${acFmtDate(st.expires_at)}</b> · <b class="acb-left">${acLeftText(st.expires_at)}</b>${refill ? ' · ' + refill : ''}` +
           (Number(st.borrow_gb) > 0 ? ` · <span class="acb-tag">${LANG === 'en' ? 'Borrowed this month +' : '이번 달 당겨 씀 +'}${Number(st.borrow_gb)}GB</span>` : '') + `</div>`;
