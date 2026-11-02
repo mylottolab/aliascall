@@ -1308,7 +1308,7 @@ async function renderMySubs(){
     const meta = document.createElement('div');
     meta.className = 'subcard-meta';
     meta.textContent = t.subExpires + ' ' + new Date(sub.expires_at).toLocaleDateString(locale)
-                     + ' · ' + sub.usage_cap_gb + 'GB';
+                     + ' · ' + t.subMonthly + sub.usage_cap_gb + 'GB';
     card.appendChild(meta);
 
     const btns = document.createElement('div');
@@ -1673,7 +1673,7 @@ const I18N = {
     prodHeadTitle: '사용하면 편리한 최신 메신저 상품소개',
     subManage: '방 관리',
     subDigest: '📖 대화 모아보기',
-    subExpires: '만료',
+    subExpires: '만료', subMonthly: '매달 ',
     subActive: '활성',
     subExpired: '만료됨',
     subRenew: '연장하기',
@@ -1810,7 +1810,7 @@ const I18N = {
     prodHeadTitle: 'Latest messenger plans worth a look',
     subManage: 'Manage rooms',
     subDigest: '📖 Conversation digest',
-    subExpires: 'Expires',
+    subExpires: 'Expires', subMonthly: 'monthly ',
     subActive: 'Active',
     subExpired: 'Expired',
     subRenew: 'Renew',

@@ -236,7 +236,7 @@ const I18N = {
     empty: '아직 개설한 핫라인이 없어요.',
     subsTitle: '📁 전문관리용 구독',
     subExpires: '만료',
-    subUsage: '사용량',
+    subUsage: '이번 달 사용량',
     subActive: '활성',
     subArchived: '접어둠',
     displayNameLabel: '의뢰인에게 보일 내 이름',
@@ -329,7 +329,7 @@ const I18N = {
     empty: "You haven't created any hotlines yet.",
     subsTitle: '📁 Pro Business subscriptions',
     subExpires: 'Expires',
-    subUsage: 'Usage',
+    subUsage: 'This month',
     subActive: 'Active',
     subArchived: 'Archived',
     displayNameLabel: 'Your name as clients see it',
@@ -1205,7 +1205,8 @@ async function renderHotlineItem(h){
     sb.from('hotline_join_requests').select('*').eq('hotline_id', h.id).eq('status', 'pending').order('requested_at', { ascending: true }),
   ]);
 
-  const usagePercent = h.usage_cap_gb > 0 ? Math.min(100, Math.round((h.usage_used_gb / h.usage_cap_gb) * 100)) : 0;
+  const monthUsed = Number(h.usage_month_gb != null ? h.usage_month_gb : h.usage_used_gb) || 0;   // 🔴 2026-11-03 매달 다시 채움
+  const usagePercent = h.usage_cap_gb > 0 ? Math.min(100, Math.round((monthUsed / h.usage_cap_gb) * 100)) : 0;
   const expiresLabel = new Date(h.expires_at).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' });
 
   // 2026-08-23 신설: 만료됐는데 아직 연장 안 한 핫라인 — 30일 뒤 파일 자동삭제 예정 안내
@@ -1316,7 +1317,7 @@ async function renderHotlineItem(h){
       ${await acNumRow(h)}
 
       <div class="usage-bar-track"><div class="usage-bar-fill" style="width:${usagePercent}%;"></div></div>
-      <div class="usage-label">${LANG === 'en' ? 'Usage' : '사용량'} ${h.usage_used_gb.toFixed(1)}GB / ${h.usage_cap_gb}GB (${usagePercent}%)</div>
+      <div class="usage-label">${LANG === 'en' ? 'This month' : '이번 달 사용량'} ${monthUsed.toFixed(1)}GB / ${h.usage_cap_gb}GB (${usagePercent}%)${h.usage_cycle_at ? ' · ' + (LANG === 'en' ? 'refills ' : '') + new Date(new Date(h.usage_cycle_at).setMonth(new Date(h.usage_cycle_at).getMonth() + 1)).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ko-KR', { month: 'numeric', day: 'numeric' }) + (LANG === 'en' ? '' : ' 다시 채움') : ''}</div>
       ${/* 🔴 2026-10-01 — 이 회선에 추가 사용량 1GB 더하기 (이 회선이 골라진 채로 이용권 화면) */ (!isDirect && !h.subscription_id && !(h.expires_at && new Date(h.expires_at) < new Date())) ? `<a class="usage-add" href="aliascall_plans.html?usage=${h.id}"${usagePercent >= 80 ? ' data-hot="1"' : ''}>${LANG === 'en' ? '＋ Add usage (1GB · KRW 2,000)' : '＋ 사용량 추가 (1GB · 2,000원)'}</a>` : ''}
 
       ${requestsHtml}
