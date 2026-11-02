@@ -19,8 +19,8 @@ if (window.acHeld && acHeld()) location.replace('aliascall_plans_ios.html' + loc
   2026-09-28 신설: 이용권 (새 상품 일곱 개 · 2026-09-27 확정)
 
     긴급 이용권     12개월   2,200원 ($2.2 — 웹)           ① 긴급등록 ② 긴급연락 ③ 임시연락처
-    일반 이용권     3·6·12개월  9,900 · 17,000 · 29,000원   + ④ 2인 회선 매달 5GB
-    프리미엄 이용권  3·6·12개월 16,000 · 28,000 · 48,000원   + ④ 4인 회선 매달 20GB
+    일반 이용권     3·6·12개월  9,900 · 17,000 · 29,000원   + ④ 2인 회선 3개월마다 5GB
+    프리미엄 이용권  3·6·12개월 16,000 · 28,000 · 48,000원   + ④ 4인 회선 3개월마다 20GB
     (일반·프리미엄은 덤 1개월 — 실제 4 · 7 · 13개월)
 
   🔴 앱 안에서는 구글 결제만 보입니다(구글 규칙). 앱 안에서 웹 결제로
@@ -223,12 +223,12 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
     </button>
     <button type="button" class="plan" data-plan="basic" data-goal="people more">
       <div class="row"><span class="nm" data-i18n="pBasic">일반 이용권</span><span class="pr"><small data-i18n="fromPre"></small>9,900<small data-i18n="won">원</small><small data-i18n="fromPost">부터</small></span></div>
-      <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="i4b">④ 2인 회선 · 매달 5GB</span></div>
+      <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="i4b">④ 2인 회선 · 3개월마다 5GB</span></div>
       <div class="ds" data-i18n="dBasic">둘이서 쓰는 보안통신. 상대를 바꿀 수 있고, 암호화도 고를 수 있습니다.</div>
     </button>
     <button type="button" class="plan" data-plan="premium" data-goal="people more">
       <div class="row"><span class="nm" data-i18n="pPrem">프리미엄 이용권</span><span class="pr"><small data-i18n="fromPre"></small>16,000<small data-i18n="won">원</small><small data-i18n="fromPost">부터</small></span></div>
-      <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="i4p">④ 4인 회선 · 매달 20GB</span></div>
+      <div class="inc"><span data-i18n="i1">① 긴급등록</span><span data-i18n="i2">② 긴급연락</span><span data-i18n="i3">③ 임시연락처</span><span class="x" data-i18n="i4p">④ 4인 회선 · 3개월마다 20GB</span></div>
       <div class="ds" data-i18n="dPrem">가족 · 친한 친구 · 작은 팀까지 네 명이 함께 쓰는 보안통신.</div>
     </button>
 
@@ -380,7 +380,7 @@ const I18N = {
   ko: {
     title:'이용권', sub:'번호를 드러내지 않고 연락하는 모든 기능이 이용권 하나에 들어 있습니다. 자동으로 다시 결제되지 않습니다.',
     pEmg:'긴급 이용권', pEmgPro:'Pro 긴급 이용권', iOcr:'📷 문자인식 무제한', dEmgPro:'기본형에 글자 찍어서 찾기(번호판 · 라벨 검색어)를 횟수 제한 없이. 주차 · 운전이 잦은 분께.', pBasic:'일반 이용권', pPrem:'프리미엄 이용권', won:'원', per12:'/ 12개월', fromPre:'', fromPost:'부터',
-    i1:'① 긴급등록', i2:'② 긴급연락', i3:'③ 임시연락처', i4b:'④ 2인 회선 · 매달 5GB', i4p:'④ 4인 회선 · 매달 20GB',
+    i1:'① 긴급등록', i2:'② 긴급연락', i3:'③ 임시연락처', i4b:'④ 2인 회선 · 3개월마다 5GB', i4p:'④ 4인 회선 · 3개월마다 20GB',
     dEmg:'차량 등록 · 소지품 QR이나 라벨 검색어 · 1회용 임시연락처.',
     dBasic:'둘이서 쓰는 보안통신. 상대를 바꿀 수 있고, 암호화도 고를 수 있습니다.',
     dPrem:'가족 · 친한 친구 · 작은 팀까지 네 명이 함께 쓰는 보안통신.',
@@ -407,9 +407,9 @@ const I18N = {
     loginFirst:'로그인한 뒤 앱을 다시 열면 결제가 이어서 처리됩니다.',
     dTline:'회선이 만들어졌습니다', dPline:'관리 화면에서 초대 링크를 확인하고 상대에게 보내세요.', goManage:'회선 관리로 가기',
     sUsage:'사용량이 모자랄 때', pUsage:'추가 사용량 1GB', per3:'/ 3개월',
-    dUsage:'모든 상품 공통. 사용량은 이용권을 시작한 날을 기준으로 매달 다시 채워집니다. 그 달 사용량을 다 쓰면 새 통화가 멈춥니다(문자는 계속). 남은 기간이 한 달보다 길면 회선 관리에서 다음 달 몫을 당겨 쓸 수 있어요(기간 1개월 줄어듦). 추가 사용량은 3개월 동안 다음 달로 넘어가며 씁니다.',
+    dUsage:'모든 상품 공통. 사용량은 이용권을 시작한 날을 기준으로 다시 채워집니다(일반 · 프리미엄 3개월마다 · 프로 매달). 그 기간 사용량을 다 쓰면 새 통화가 멈춥니다(문자는 계속). 남은 기간이 넉넉하면 다음 기간 몫을 당겨 쓸 수 있어요(그만큼 기간이 줄어듦). 추가 사용량은 3개월 동안 다음 달로 넘어가며 씁니다.',
     sTarget:'어느 회선에 붙일까요?', proAll:'프로 구독 전체', roomsShare:'모든 방이 함께 씀',
-    usedOf:'이번 달 {u} / {c}GB 사용 · {p}%', pickTarget:'붙일 회선을 고르세요',
+    usedOf:'이번 기간 {u} / {c}GB 사용 · {p}%', pickTarget:'붙일 회선을 고르세요',
     qtyNote:'수량(1~10개)은 다음 결제 창에서 고르실 수 있어요. 1개 = 1GB · 2,000원.',
     endsOn:'이 회선은 {d}에 끝납니다.', gone3m:'추가분은 산 날부터 3개월 동안 쓸 수 있고, 남은 양은 그 뒤 사라집니다.',
     extendFirst:'⚠ 한 달도 남지 않았습니다. 회선이 끝나면 추가분도 함께 쓸 수 없으니 먼저 연장하시길 권합니다.',
@@ -463,7 +463,7 @@ const I18N = {
   en: {
     title:'Plans', sub:'Every number-free feature comes with one plan. It never renews automatically.',
     pEmg:'Emergency plan', pEmgPro:'Emergency Pro', iOcr:'📷 Unlimited plate reading', dEmgPro:'The Emergency plan plus unlimited licence-plate photo search. For people who park and drive a lot.', pBasic:'Standard plan', pPrem:'Premium plan', won:' KRW', per12:'/ 12 months', fromPre:'from ', fromPost:'',
-    i1:'① Register', i2:'② Contact', i3:'③ One-time card', i4b:'④ 2-person line · 5GB a month', i4p:'④ 4-person line · 20GB a month',
+    i1:'① Register', i2:'② Contact', i3:'③ One-time card', i4b:'④ 2-person line · 5GB every 3 months', i4p:'④ 4-person line · 20GB every 3 months',
     dEmg:'For item QR codes and one-time contact cards.',
     dBasic:'Secure line for two. Change your partner anytime, encryption optional.',
     dPrem:'Secure line for up to four — family, close friends or a small team.',
@@ -490,9 +490,9 @@ const I18N = {
     loginFirst:'Sign in and reopen the app to finish the payment.',
     dTline:'Your line is ready', dPline:'Open line management to share the invite link.', goManage:'Manage lines',
     sUsage:'Running out of data?', pUsage:'Extra usage 1GB', per3:'/ 3 months',
-    dUsage:'For every plan. Data refills every month from the day your plan started. When a month’s data runs out, new calls stop (messages still work). With more than a month left you can borrow next month’s data in Manage lines (plan ends a month earlier). Extra data carries over for 3 months.',
+    dUsage:'For every plan. Data refills from the day your plan started (Basic · Premium every 3 months, Pro every month). When a period’s data runs out, new calls stop (messages still work). With enough time left you can borrow the next period’s data (the plan ends that much earlier). Extra data carries over for 3 months.',
     sTarget:'Which line should get it?', proAll:'Whole Pro plan', roomsShare:'shared by all rooms',
-    usedOf:'This month {u} / {c}GB used · {p}%', pickTarget:'Pick a line',
+    usedOf:'This period {u} / {c}GB used · {p}%', pickTarget:'Pick a line',
     qtyNote:'Choose the quantity (1–10) in the next payment window. 1 = 1GB · KRW 2,000.',
     endsOn:'This line ends on {d}.', gone3m:'Extra usage lasts 3 months from purchase; anything left after that expires.',
     extendFirst:'⚠ Less than a month left. When the line ends, extra usage cannot be used either — consider extending first.',
