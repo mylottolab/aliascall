@@ -243,6 +243,7 @@
       if (!r.style || !r.selectorText) continue;
       if (/^:root$|^html$/.test(r.selectorText.trim())) continue;
       if (/\.ac-th-/.test(r.selectorText)) continue;
+      if (/\.ac-keep|\.sd-good/.test(r.selectorText)) continue;   // 🔴 2026-11-03 야간에도 색을 그대로 두는 것(💎 좋은번호 단추 등)
       fixDecl(r.style);
     }
   }
