@@ -59,7 +59,7 @@
     '.sd-k{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}' +
     /* 🔴 2026-11-01 — 💎 좋은번호 */
     '.sd-head{flex-wrap:wrap;gap:6px}' +
-    '.sd-head .sd-good{background:linear-gradient(135deg,#F6C453,#E8734A);border:none;color:#3a1d06;font-weight:800;white-space:nowrap}' +
+    '.sd-head .sd-good,.sd-head button.sd-good{background:#FFD24A !important;border:1.5px solid #FFE58A !important;color:#1F1300 !important;-webkit-text-fill-color:#1F1300 !important;opacity:1 !important;font-weight:900 !important;font-size:12.5px !important;text-shadow:none !important;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25)}' +
     '#sdSheet .gtabs{display:flex;gap:6px;margin:4px 0 10px}' +
     '#sdSheet .gtabs button{flex:1;padding:9px 0;border-radius:10px;border:1px solid #cdd8d7;background:#f3f6f6;font-family:inherit;font-weight:800;font-size:13.5px;color:#16302E;cursor:pointer}' +
     '#sdSheet .gtabs button.on{background:#16302E;border-color:#16302E;color:#fff}' +
