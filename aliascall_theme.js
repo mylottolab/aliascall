@@ -528,7 +528,7 @@
 (function(){
   try {
     if (document.querySelector('script[src*="aliascall_partner_ref.js"]')) return;
-    var s = document.createElement('script'); s.src = 'aliascall_partner_ref.js?v=20261029'; s.defer = true;
+    var s = document.createElement('script'); s.src = 'aliascall_partner_ref.js?v=20261103'; s.defer = true;
     (document.head || document.documentElement).appendChild(s);
   } catch (e) {}
 })();

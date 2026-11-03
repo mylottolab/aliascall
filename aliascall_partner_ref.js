@@ -11,7 +11,7 @@
   var KEY = 'partner_ref_v1';
   var PARTNER_PAGE = 'https://aliascall.com/aliascall_partner.html';
   // 앱(아이폰 · 안드로이드) 안에서는 "대리점 모집" 홍보를 아직 숨깁니다. 애플 승인 뒤 true 로.
-  var PROMO_IN_APP = false;
+  var PROMO_IN_APP = true;   // 🔴 2026-11-03 iOS 1.2 승인 → 앱에서도 보임
 
   function isApp(){
     try { if (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) return true; } catch (e) {}
