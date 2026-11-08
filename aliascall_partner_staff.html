@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>매장 직원 안내 — 부름 · 에일리어스콜</title>
+<title>매장 직원 안내 — 부름 · 누름 · 가림</title>
 <meta name="robots" content="noindex">
 <!--
   2026-10-29 신설: 유치대리점 매장 직원용 한 장 안내 (화면 · A4 인쇄)
@@ -37,27 +37,27 @@ td{ border-bottom:1px solid var(--line); padding:7px 4px; vertical-align:top; li
 td:first-child{ width:34%; font-weight:800; }
 .foot{ font-size:12px; color:var(--soft); margin-top:14px; text-align:center; }
 @media (max-width:600px){ .two{ grid-template-columns:1fr; } .sheet{ padding:20px 16px; border-radius:0; } }
-@media print{ body{ background:#fff; } .bar{ display:none; } .sheet{ max-width:none; margin:0; padding:0; border-radius:0; } h1{ font-size:21px; } h2{ margin:10px 0 6px; font-size:15px; } li, td{ line-height:1.5; font-size:12.5px; } .say{ font-size:13px; line-height:1.6; padding:9px 12px; } .box p{ font-size:12px; } .foot{ margin-top:8px; } }
+@media print{ body{ background:#fff; } .bar{ display:none; } .sheet{ max-width:none; margin:0; padding:0; border-radius:0; } h1{ font-size:21px; } h2{ margin:7px 0 4px; font-size:14px; } li, td{ line-height:1.42; font-size:11.5px; } td{ padding:4px 6px !important; } ol, ul{ margin:4px 0 !important; } .say{ font-size:13px; line-height:1.6; padding:9px 12px; } .box p{ font-size:12px; } .foot{ margin-top:8px; } }
 </style>
 </head>
 <body>
 <div class="bar"><a href="aliascall_partner.html">← 대리점 화면</a><button onclick="window.print()">🖨 인쇄하기</button></div>
 <div class="sheet">
   <h1>매장 직원 30초 안내</h1>
-  <div class="meta">부름 · 에일리어스콜 <span id="storeLine"></span> · 우리 매장 추천 코드 <span class="code" id="code">——————</span></div>
+  <div class="meta">부름 · 누름 · 가림(구 에일리어스콜) <span id="storeLine"></span> · 우리 매장 추천 코드 <span class="code" id="code">——————</span></div>
 
   <h2>① 이렇게 말해 보세요 (30초)</h2>
   <div class="say">
     "혹시 중고거래나 주차할 때 <b>전화번호 알려 주기 꺼려지신 적</b> 있으세요?<br>
-    <b>부름</b>은 내 전화번호 대신 부름번호로 전화 · 메신저를 하는 앱이고,
-    <b>에일리어스콜</b>은 차나 물건, 반려동물에 QR을 붙여 두면 번호를 몰라도 연락이 오게 해 주는 앱이에요.<br>
+    <b>부름</b>은 내 전화번호 대신 닉네임 · 부름번호로 전화 · 메신저를 하는 앱이고(부모님용 1:1 핫라인 <b>누름</b>도 들어 있어요),
+    <b>가림</b>은 차나 물건, 반려동물에 QR을 붙여 두면 번호를 몰라도 연락이 오게 해 주는 앱이에요.<br>
     여기 QR 찍으시면 바로 써 보실 수 있어요."
   </div>
 
   <div class="two" style="margin-top:10px">
     <div class="box"><b class="t">📞 부름 — 이런 손님께</b>
-      <p>중고거래 · 소개팅 · 모임 · 장사하시는 분, 번호를 주기 싫은데 연락은 해야 하는 분</p></div>
-    <div class="box"><b class="t">🚗 에일리어스콜 — 이런 손님께</b>
+      <p>중고거래 · 소개팅 · 모임 · 장사하시는 분, 번호를 주기 싫은데 연락은 해야 하는 분. 부모님 폰에 「누르면 바로 자녀」를 만들어 드리고 싶은 분(누름)</p></div>
+    <div class="box"><b class="t">🚗 가림(구 에일리어스콜) — 이런 손님께</b>
       <p>차 주차 연락, 잃어버린 물건 · 반려동물 · 어르신 · 아이 연락처 QR, 1회용 임시연락처가 필요한 분</p></div>
   </div>
 
@@ -74,7 +74,7 @@ td:first-child{ width:34%; font-weight:800; }
   <div class="no"><ul>
     <li><b>가입 · 동의 · 결제는 손님이 직접</b> 합니다. 직원이 손님 정보로 대신 가입하거나 대신 결제하지 마세요.</li>
     <li><b>"가입해야 개통해 드려요"처럼 조건을 걸지 마세요.</b> 권해 드리기만 합니다.</li>
-    <li>없는 기능을 말하거나 과장하지 마세요. 모르는 것은 "앱 안 사용법을 보시면 돼요"라고 안내해 주세요.</li>
+    <li>없는 기능을 말하거나 과장하지 마세요. 모르는 것은 "유튜브 '위브앱솔루션' 채널에 사용법 영상이 있어요"라고 안내해 주세요.</li>
     <li>직원 본인이나 지인 명의로 가짜 가입을 만들면 수수료가 취소되고 대리점이 정지됩니다.</li>
     <li>손님 휴대폰을 만질 때는 꼭 먼저 허락을 받으세요.</li>
   </ul></div>
@@ -82,13 +82,15 @@ td:first-child{ width:34%; font-weight:800; }
   <h2>④ 손님이 자주 묻는 것</h2>
   <table>
     <tr><td>돈 내야 해요?</td><td>가입과 설치는 무료입니다. 계속 쓰시려면 앱 안에서 이용권을 사는 방식이고, 가격은 앱 안 "이용권" 화면에 나와 있습니다.</td></tr>
-    <tr><td>상대방도 앱을 깔아야 해요?</td><td>에일리어스콜 QR은 상대가 앱 없이 카메라로 찍기만 하면 연락할 수 있습니다. 부름은 서로 부름번호로 연락합니다.</td></tr>
+    <tr><td>상대방도 앱을 깔아야 해요?</td><td>가림 QR은 상대가 앱 없이 카메라로 찍기만 하면 연락할 수 있습니다. 부름은 서로 부름번호로 연락합니다.</td></tr>
     <tr><td>내 번호가 보여요?</td><td>아니요. 상대방에게 내 전화번호가 보이지 않는 것이 두 앱의 핵심입니다.</td></tr>
-    <tr><td>아이폰도 돼요?</td><td>웹(QR로 열리는 화면)에서는 아이폰 · 안드로이드 모두 됩니다. 앱은 스토어에서 이름으로 찾아 보세요.</td></tr>
+    <tr><td>아이폰도 돼요?</td><td>네. App Store · Google Play 모두 있습니다. QR로 열리는 웹 화면에서도 됩니다.</td></tr>
+    <tr><td>쓰는 법을 모르겠어요</td><td>유튜브에서 <b>'위브앱솔루션'</b>(@weveapp)을 찾으면 앱별 3분 · 10분 사용법 영상이 있습니다. 인스타 · X · 틱톡에도 짧은 영상이 있어요.</td></tr>
+    <tr><td>더 물어보고 싶어요</td><td>카카오톡에서 <b>「위브앱솔루션」</b> 채널을 찾아 1:1 채팅으로 물어보시면 됩니다.</td></tr>
     <tr><td>코드를 잘못 넣었어요</td><td>코드는 한 번 넣으면 바꿀 수 없습니다. 넣기 전에 숫자 6자리를 꼭 같이 확인해 주세요.</td></tr>
   </table>
 
-  <div class="foot">문의: 위브앱솔루션 · weapps.kr@gmail.com · 010-9237-9042 · 대리점 화면 aliascall.com/aliascall_partner.html</div>
+  <div class="foot">문의: 위브앱솔루션 · 카카오톡 「위브앱솔루션」 · weapps.kr@gmail.com · 010-9237-9042 · 대리점 화면 aliascall.com/aliascall_partner.html</div>
 </div>
 <script>
 (function(){

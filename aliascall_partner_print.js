@@ -47,7 +47,7 @@
     '.pp-foot{position:absolute;left:0;right:0;bottom:12mm;text-align:center;font-size:13pt;color:#3E5654}',
     '.pp-foot b{color:#12302E;font-size:16pt}',
     /* 세움 POP */
-    '.pp-half{height:148.5mm;padding:9mm 12mm 7mm;text-align:center;position:relative}',
+    '.pp-half{height:148.5mm;padding:7mm 12mm 5mm;text-align:center;position:relative}',
     '.pp-half.flip{transform:rotate(180deg)}',
     '.pp-fold{position:absolute;left:0;right:0;top:148.5mm;border-top:.4mm dashed #9AA;}',
     '.pp-fold span{position:absolute;right:6mm;top:-4mm;font-size:8pt;color:#899;background:#fff;padding:0 2mm}',
@@ -57,7 +57,7 @@
     '.pp-half .pp-app{padding:3.5mm 3mm}',
     '.pp-half .pp-app .nm{font-size:16pt}',
     '.pp-half .pp-app .d{font-size:9.5pt;min-height:8mm;margin:1mm 0 2mm}',
-    '.pp-half .pp-app img{width:38mm;height:38mm}',
+    '.pp-half .pp-app img{width:33mm;height:33mm}',
     '.pp-half .pp-code{margin:0;padding:3mm}',
     '.pp-half .pp-code .l{font-size:10.5pt}',
     '.pp-half .pp-code .c{font-size:28pt}',
@@ -73,22 +73,28 @@
     '.pp-card .st{font-size:6.5pt;color:#3E5654;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '.pp-card .q{width:22mm;text-align:center;font-size:6.5pt;font-weight:800}',
     '.pp-card .q img{width:21mm;height:21mm;display:block;margin:0 auto .5mm}',
+    '.pp-info{margin:5mm 14mm 0;border-radius:4mm;background:#FFF6DA;border:.5mm solid #E9C46A;padding:3.5mm 4mm;text-align:center;font-size:11.5pt;line-height:1.6;color:#3E3A20}',
+    '.pp-store{font-size:11pt;font-weight:800;color:#1F6F6B;margin-top:1mm}',
+    '.pp-half .pp-info{margin:2.5mm 0 0;padding:2mm 3mm;font-size:8.8pt}',
+    '.pp-card .vi{font-size:5.6pt;color:#3E5654;line-height:1.3;margin-top:.6mm}',
     '.pp-cut{position:absolute;left:0;right:0;bottom:8mm;text-align:center;font-size:8pt;color:#899}'
   ].join('\n');
 
-  var AC_D = '차 · 물건 · 반려동물 QR 긴급연락<br>1회용 임시연락처 · 보안회선';
-  var BU_D = '내 전화번호 대신 부름번호로<br>전화 · 메신저 · 영상통화';
+  var AC_D = '8자리 가림 번호 · 차 · 물건 · 반려동물<br>QR 긴급연락 · 1회용 임시연락처';
+  var INFO = '📺 사용법 영상: 유튜브 <b>@weveapp</b> · 인스타 · X · 틱톡 &nbsp;|&nbsp; 💛 문의: 카카오톡 <b>「위브앱솔루션」</b>';
+  var BU_D = '번호 대신 닉네임 · 부름번호로 전화 · 메신저<br>+ 누름(부모님 1:1 핫라인) 포함';
 
   function poster(o){
     return '<div class="pp-page">' +
-      '<div class="pp-top"><div class="pp-kick">부름 · 에일리어스콜</div>' +
+      '<div class="pp-top"><div class="pp-kick">부름 · 누름 · 가림(구 에일리어스콜) · App Store · Google Play</div>' +
       '<div class="pp-h">내 번호는 숨기고<br>연락은 그대로</div>' +
       '<div class="pp-sub">전화번호를 알려 주지 않아도 통화 · 메신저 · 긴급연락이 됩니다</div></div>' +
       '<div class="pp-two">' +
         '<div class="pp-app"><div class="nm">부름</div><div class="d">' + BU_D + '</div><img src="' + o.qBu + '" alt=""><div class="s">📷 카메라로 찍어 보세요</div></div>' +
-        '<div class="pp-app ac"><div class="nm">에일리어스콜</div><div class="d">' + AC_D + '</div><img src="' + o.qAc + '" alt=""><div class="s">📷 카메라로 찍어 보세요</div></div>' +
+        '<div class="pp-app ac"><div class="nm">가림</div><div class="d">' + AC_D + '</div><img src="' + o.qAc + '" alt=""><div class="s">📷 카메라로 찍어 보세요</div></div>' +
       '</div>' +
       '<div class="pp-code"><div class="l">앱 스토어에서 설치하셨나요? 가입 후 <b>"추천 대리점"</b>에 이 코드를 넣어 주세요</div><div class="c">' + esc(o.code) + '</div></div>' +
+      '<div class="pp-info">' + INFO + '</div>' +
       '<div class="pp-foot">' + (o.store ? '<b>' + esc(o.store) + '</b> 추천 · ' : '') + '설치가 어려우시면 직원에게 말씀해 주세요</div>' +
     '</div>';
   }
@@ -98,20 +104,21 @@
       '<div class="pp-sub">번호를 알려 주지 않아도 통화 · 메신저 · 긴급연락</div>' +
       '<div class="pp-two">' +
         '<div class="pp-app"><div class="nm">부름</div><div class="d">' + BU_D + '</div><img src="' + o.qBu + '" alt=""></div>' +
-        '<div class="pp-app ac"><div class="nm">에일리어스콜</div><div class="d">' + AC_D + '</div><img src="' + o.qAc + '" alt=""></div>' +
+        '<div class="pp-app ac"><div class="nm">가림</div><div class="d">' + AC_D + '</div><img src="' + o.qAc + '" alt=""></div>' +
       '</div>' +
       '<div class="pp-code"><div class="l">앱으로 설치하셨으면 가입 후 "추천 대리점"에</div><div class="c">' + esc(o.code) + '</div></div>' +
       '<div class="st">' + (o.store ? esc(o.store) + ' 추천 · ' : '') + '카메라로 QR을 찍어 보세요</div>' +
+      '<div class="pp-info">' + INFO + '</div>' +
     '</div>';
   }
   function tent(o){
     return '<div class="pp-page">' + half(o, true) + '<div class="pp-fold"><span>✂ 접는 선 — 반으로 접어 세우세요</span></div>' + half(o, false) + '</div>';
   }
   function cards(o){
-    var one = '<div class="pp-card"><div class="tx"><div><div class="k">부름 · 에일리어스콜</div><div class="h">내 번호는 숨기고<br>연락은 그대로</div></div>' +
+    var one = '<div class="pp-card"><div class="tx"><div><div class="k">부름 · 누름 · 가림</div><div class="h">내 번호는 숨기고<br>연락은 그대로</div></div>' +
       '<div><div class="cl">앱 설치 후 "추천 대리점"에</div><div class="cc">' + esc(o.code) + '</div>' +
-      (o.store ? '<div class="st">' + esc(o.store) + ' 추천</div>' : '') + '</div></div>' +
-      '<div class="q"><img src="' + o.qBu + '" alt="">부름</div><div class="q"><img src="' + o.qAc + '" alt="">에일리어스콜</div></div>';
+      (o.store ? '<div class="st">' + esc(o.store) + ' 추천</div>' : '') + '<div class="vi">사용법 영상 유튜브 @weveapp<br>문의 카카오톡 「위브앱솔루션」</div></div></div>' +
+      '<div class="q"><img src="' + o.qBu + '" alt="">부름</div><div class="q"><img src="' + o.qAc + '" alt="">가림</div></div>';
     var s = ''; for (var i = 0; i < 10; i++) s += one;
     return '<div class="pp-page"><div class="pp-cards">' + s + '</div><div class="pp-cut">✂ 점선을 따라 잘라 쓰세요 · 같은 안내문 10장</div></div>';
   }
