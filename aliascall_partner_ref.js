@@ -83,7 +83,7 @@
     if (!isApp() || PROMO_IN_APP) {
       html += '<a href="' + PARTNER_PAGE + '" target="_blank" rel="noopener" class="' + CFG.rowClass + '" style="text-decoration:none;color:inherit">' +
         '<span class="pl"><b>' + T('💼 유치대리점 모집', '💼 Become a partner') + '</b><span class="ps" style="display:block;font-size:12.5px;opacity:.75;margin-top:2px">' +
-        T('부름 · 에일리어스콜을 소개하고, 손님이 살 때마다 10%를 받으세요', 'Introduce us and earn 10% on every purchase (Korea only)') + '</span></span>' +
+        T('부름 · 누름 · 가림 · 바로너 · 바로카를 소개하고, 손님이 살 때마다 10%를 받으세요', 'Introduce us and earn 10% on every purchase (Korea only)') + '</span></span>' +
         '<span style="' + CFG.btnStyle + ';white-space:nowrap">' + T('알아보기 ›', 'Learn more ›') + '</span></a>';
     }
     box.innerHTML = html;

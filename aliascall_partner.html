@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<title>유치대리점 — 부름 · 에일리어스콜</title>
-<meta name="description" content="부름 · 에일리어스콜을 소개하고 손님이 산 금액의 10%를 받으세요. 개인 · 사업자 모두 신청할 수 있습니다.">
+<title>유치대리점 — 부름 · 누름 · 가림 · 바로너 · 바로카</title>
+<meta name="description" content="부름 · 누름 · 가림 · 바로너 · 바로카를 소개하고 손님이 산 금액의 10%를 받으세요. 개인 · 사업자 모두 신청할 수 있습니다.">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -135,7 +135,7 @@ details p{ margin:4px 0 10px; }
   <!-- ── 소개 (로그인 안 함 · 신청 전) ── -->
   <section class="view" id="vIntro">
     <div class="hero">
-      <div class="kick">부름 · 에일리어스콜 유치대리점 모집</div>
+      <div class="kick">부름 · 누름 · 가림 · 바로너 · 바로카 유치대리점 모집</div>
       <h1>소개만 하세요.<br>손님이 살 때마다 10%</h1>
       <p>내 코드로 가입한 손님이 상품을 사거나 연장할 때마다, 부가세를 뺀 금액의 10%를 드립니다. 기간 제한 없이 계속 드립니다.</p>
     </div>
@@ -249,12 +249,14 @@ details p{ margin:4px 0 10px; }
       <div class="lb">내 대리점 코드</div>
       <div class="code" id="myCode">——————</div>
       <div class="links">
-        <div class="lk"><span class="nm">에일리어스콜</span><span class="u" id="uAc"></span><button type="button" data-copy="ac">복사</button></div>
+        <div class="lk"><span class="nm">가림</span><span class="u" id="uAc"></span><button type="button" data-copy="ac">복사</button></div>
         <div class="lk"><span class="nm">부름</span><span class="u" id="uBu"></span><button type="button" data-copy="bu">복사</button></div>
+        <div class="lk"><span class="nm">바로너</span><span class="u" id="uBn"></span><button type="button" data-copy="bn">복사</button></div>
+        <div class="lk"><span class="nm">바로카</span><span class="u" id="uBk"></span><button type="button" data-copy="bk">복사</button></div>
       </div>
       <div class="qr" id="qrBox"></div>
-      <p class="muted" style="margin:6px 0 0">QR은 에일리어스콜 링크입니다. 손님이 링크로 들어와 가입하면 자동으로 내 손님이 됩니다.<br>
-        앱 스토어에서 바로 설치한 손님은 가입 후 <b id="linkDays">30</b>일 안에 <b>마이페이지(부름은 "나" 화면) → 추천 대리점</b>에 코드를 넣으면 됩니다.</p>
+      <p class="muted" style="margin:6px 0 0">QR은 가림(에일리어스콜) 링크입니다. 바로너 · 바로카 손님도 같은 코드로 내 손님이 됩니다. 손님이 링크로 들어와 가입하면 자동으로 내 손님이 됩니다.<br>
+        앱 스토어에서 바로 설치한 손님은 가입 후 <b id="linkDays">30</b>일 안에 <b>마이페이지(부름 · 바로너는 "나" 화면, 바로카는 "내 차" 화면) → 추천 대리점</b>에 코드를 넣으면 됩니다.</p>
       <button class="btn t" id="shareBtn" style="margin-top:12px">카카오톡 · 문자로 보내기</button>
     </div>
 
@@ -275,8 +277,8 @@ details p{ margin:4px 0 10px; }
     <div class="card">
       <h2>내 손님 · 수수료</h2>
       <div class="stats">
-        <div><b id="sAc">0</b><span>에일리어스콜 손님</span></div>
-        <div><b id="sBu">0</b><span>부름 손님</span></div>
+        <div><b id="sAc">0</b><span>가림 · 바로카 손님</span></div>
+        <div><b id="sBu">0</b><span>부름 · 누름 · 바로너 손님</span></div>
         <div><b id="sPend">0</b><span>다음 지급에 넣을 돈(원)</span></div>
       </div>
       <p class="muted" id="buUpd" style="margin:8px 0 0"></p>
@@ -408,11 +410,11 @@ function noticeHtml(n, withAck){
 
 function dash(d){
   const p = d.partner;
-  const ac = 'https://aliascall.com/?ref=' + p.code, bu = 'https://burum.kr/?ref=' + p.code;
-  el('myCode').textContent = p.code; el('uAc').textContent = ac; el('uBu').textContent = bu;
+  const ac = 'https://aliascall.com/?ref=' + p.code, bu = 'https://burum.kr/?ref=' + p.code, bn = 'https://baronu.kr/?ref=' + p.code, bk = 'https://baroka.kr/?ref=' + p.code;
+  el('myCode').textContent = p.code; el('uAc').textContent = ac; el('uBu').textContent = bu; el('uBn').textContent = bn; el('uBk').textContent = bk;
   el('linkDays').textContent = d.link_days || 30;
   document.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
-    const t = b.dataset.copy === 'ac' ? ac : bu;
+    const t = ({ ac: ac, bu: bu, bn: bn, bk: bk })[b.dataset.copy] || ac;
     try { await navigator.clipboard.writeText(t); toast('링크를 복사했습니다.'); } catch (e) { prompt('아래 링크를 복사하세요', t); }
   });
   el('qrBox').innerHTML = ''; try { new QRCode(el('qrBox'), { text: ac, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M }); } catch (e) {}
@@ -426,7 +428,7 @@ function dash(d){
     PartnerPrint.open(b.dataset.print, { code: p.code, store });
   });
   el('shareBtn').onclick = async () => {
-    const text = '번호 노출 없는 안전한 통화 · 메신저\n부름: ' + bu + '\n에일리어스콜: ' + ac + '\n가입할 때 대리점 코드 ' + p.code + ' 를 넣어 주세요.';
+    const text = '번호 노출 없는 안전한 연락 앱\n부름(누름): ' + bu + '\n가림: ' + ac + '\n바로너: ' + bn + '\n바로카: ' + bk + '\n가입할 때 대리점 코드 ' + p.code + ' 를 넣어 주세요.\n사용법 영상: 유튜브 @weveapp · 문의: 카카오톡 「위브앱솔루션」';
     if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { return; } }
     try { await navigator.clipboard.writeText(text); toast('문구를 복사했습니다. 카카오톡이나 문자에 붙여 넣으세요.'); } catch (e) { prompt('복사해서 보내세요', text); }
   };
@@ -435,7 +437,7 @@ function dash(d){
   el('bankLine').textContent = '받는 통장: ' + p.bank;
 
   const months = d.months || [];
-  el('monthsBox').innerHTML = months.length ? '<table><tr><th>달</th><th>에일리어스콜</th><th>부름</th><th>합계</th></tr>' +
+  el('monthsBox').innerHTML = months.length ? '<table><tr><th>달</th><th>가림 · 바로카</th><th>부름 · 바로너</th><th>합계</th></tr>' +
     months.map(m => '<tr><td>' + esc(m.month) + '</td><td>' + won(m.aliascall) + '</td><td>' + won(m.burum) + '</td><td><b>' + won(m.total) + '</b></td></tr>').join('') + '</table>'
     : '<p class="muted">아직 정산된 수수료가 없습니다. 매달 15일 전에 지난달 실적이 정산되어 여기에 나타납니다.</p>';
   const pays = d.payouts || [];

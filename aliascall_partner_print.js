@@ -29,22 +29,22 @@
     '#ppArea{font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;color:#12302E;word-break:keep-all}',
     '.pp-page{width:210mm;height:297mm;position:relative;overflow:hidden;page-break-after:always;break-after:page;background:#fff}',
     /* 포스터 */
-    '.pp-top{background:#123F3D;color:#fff;padding:16mm 14mm 13mm;text-align:center}',
+    '.pp-top{background:#123F3D;color:#fff;padding:12mm 14mm 10mm;text-align:center}',
     '.pp-kick{font-size:13pt;font-weight:700;color:#E9C46A;letter-spacing:.04em}',
     '.pp-h{font-size:38pt;line-height:1.22;font-weight:900;margin:5mm 0 4mm}',
     '.pp-sub{font-size:14pt;color:#CFE3DF;line-height:1.5}',
-    '.pp-two{display:flex;gap:8mm;padding:11mm 12mm 6mm;justify-content:center}',
+    '.pp-two{display:flex;gap:8mm;padding:8mm 12mm 4mm;justify-content:center}',
     '.pp-app{flex:1;border:1.2mm solid #1F6F6B;border-radius:6mm;padding:6mm 5mm 5mm;text-align:center}',
     '.pp-app.ac{border-color:#E8734A}',
     '.pp-app .nm{font-size:22pt;font-weight:900}',
     '.pp-app.ac .nm{color:#C0532E}',
     '.pp-app .d{font-size:11.5pt;line-height:1.5;margin:2mm 0 4mm;color:#3E5654;min-height:12mm}',
-    '.pp-app img{width:58mm;height:58mm;display:block;margin:0 auto}',
+    '.pp-app img{width:50mm;height:50mm;display:block;margin:0 auto}',
     '.pp-app .s{font-size:11pt;font-weight:700;margin-top:3mm}',
     '.pp-code{margin:2mm 14mm 0;border-radius:6mm;background:#FDEAE1;padding:6mm;text-align:center}',
     '.pp-code .l{font-size:13pt;font-weight:700;line-height:1.5}',
     '.pp-code .c{font-size:44pt;font-weight:900;letter-spacing:.14em;color:#123F3D;margin-top:1mm}',
-    '.pp-foot{position:absolute;left:0;right:0;bottom:12mm;text-align:center;font-size:13pt;color:#3E5654}',
+    '.pp-foot{margin-top:4mm;text-align:center;font-size:13pt;color:#3E5654}',
     '.pp-foot b{color:#12302E;font-size:16pt}',
     /* 세움 POP */
     '.pp-half{height:148.5mm;padding:7mm 12mm 5mm;text-align:center;position:relative}',
@@ -77,6 +77,9 @@
     '.pp-store{font-size:11pt;font-weight:800;color:#1F6F6B;margin-top:1mm}',
     '.pp-half .pp-info{margin:2.5mm 0 0;padding:2mm 3mm;font-size:8.8pt}',
     '.pp-card .vi{font-size:5.6pt;color:#3E5654;line-height:1.3;margin-top:.6mm}',
+    '.pp-mini{display:flex;gap:6mm;justify-content:center;align-items:center;margin:0 14mm 3mm;font-size:11pt;font-weight:700;color:#3E5654}',
+    '.pp-mini img{width:24mm;height:24mm}',
+    '.pp-mini div{text-align:center}',
     '.pp-cut{position:absolute;left:0;right:0;bottom:8mm;text-align:center;font-size:8pt;color:#899}'
   ].join('\n');
 
@@ -86,13 +89,14 @@
 
   function poster(o){
     return '<div class="pp-page">' +
-      '<div class="pp-top"><div class="pp-kick">부름 · 누름 · 가림(구 에일리어스콜) · App Store · Google Play</div>' +
+      '<div class="pp-top"><div class="pp-kick">부름 · 누름 · 가림(구 에일리어스콜) · 바로너 · 바로카 · App Store · Google Play</div>' +
       '<div class="pp-h">내 번호는 숨기고<br>연락은 그대로</div>' +
       '<div class="pp-sub">전화번호를 알려 주지 않아도 통화 · 메신저 · 긴급연락이 됩니다</div></div>' +
       '<div class="pp-two">' +
         '<div class="pp-app"><div class="nm">부름</div><div class="d">' + BU_D + '</div><img src="' + o.qBu + '" alt=""><div class="s">📷 카메라로 찍어 보세요</div></div>' +
         '<div class="pp-app ac"><div class="nm">가림</div><div class="d">' + AC_D + '</div><img src="' + o.qAc + '" alt=""><div class="s">📷 카메라로 찍어 보세요</div></div>' +
       '</div>' +
+      '<div class="pp-mini"><span>같은 코드로<br>이 앱들도 →</span><div><img src="' + o.qBn + '" alt=""><br>바로너</div><div><img src="' + o.qBk + '" alt=""><br>바로카</div></div>' +
       '<div class="pp-code"><div class="l">앱 스토어에서 설치하셨나요? 가입 후 <b>"추천 대리점"</b>에 이 코드를 넣어 주세요</div><div class="c">' + esc(o.code) + '</div></div>' +
       '<div class="pp-info">' + INFO + '</div>' +
       '<div class="pp-foot">' + (o.store ? '<b>' + esc(o.store) + '</b> 추천 · ' : '') + '설치가 어려우시면 직원에게 말씀해 주세요</div>' +
@@ -101,7 +105,7 @@
   function half(o, flip){
     return '<div class="pp-half' + (flip ? ' flip' : '') + '">' +
       '<div class="pp-h">내 번호는 숨기고, 연락은 그대로</div>' +
-      '<div class="pp-sub">번호를 알려 주지 않아도 통화 · 메신저 · 긴급연락</div>' +
+      '<div class="pp-sub">번호를 알려 주지 않아도 통화 · 메신저 · 긴급연락 · 바로너 · 바로카도 같은 코드</div>' +
       '<div class="pp-two">' +
         '<div class="pp-app"><div class="nm">부름</div><div class="d">' + BU_D + '</div><img src="' + o.qBu + '" alt=""></div>' +
         '<div class="pp-app ac"><div class="nm">가림</div><div class="d">' + AC_D + '</div><img src="' + o.qAc + '" alt=""></div>' +
@@ -115,7 +119,7 @@
     return '<div class="pp-page">' + half(o, true) + '<div class="pp-fold"><span>✂ 접는 선 — 반으로 접어 세우세요</span></div>' + half(o, false) + '</div>';
   }
   function cards(o){
-    var one = '<div class="pp-card"><div class="tx"><div><div class="k">부름 · 누름 · 가림</div><div class="h">내 번호는 숨기고<br>연락은 그대로</div></div>' +
+    var one = '<div class="pp-card"><div class="tx"><div><div class="k">부름 · 누름 · 가림 · 바로너 · 바로카</div><div class="h">내 번호는 숨기고<br>연락은 그대로</div></div>' +
       '<div><div class="cl">앱 설치 후 "추천 대리점"에</div><div class="cc">' + esc(o.code) + '</div>' +
       (o.store ? '<div class="st">' + esc(o.store) + ' 추천</div>' : '') + '<div class="vi">사용법 영상 유튜브 @weveapp<br>문의 카카오톡 「위브앱솔루션」</div></div></div>' +
       '<div class="q"><img src="' + o.qBu + '" alt="">부름</div><div class="q"><img src="' + o.qAc + '" alt="">가림</div></div>';
@@ -126,7 +130,8 @@
   function open(kind, o){
     if (typeof QRCode === 'undefined') { alert('QR을 만들지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.'); return; }
     var data = { code: o.code, store: (o.store || '').trim(),
-      qBu: qr('https://burum.kr/?ref=' + o.code, 600), qAc: qr('https://aliascall.com/?ref=' + o.code, 600) };
+      qBu: qr('https://burum.kr/?ref=' + o.code, 600), qAc: qr('https://aliascall.com/?ref=' + o.code, 600),
+      qBn: qr('https://baronu.kr/?ref=' + o.code, 400), qBk: qr('https://baroka.kr/?ref=' + o.code, 400) };
     var st = document.getElementById('ppCss');
     if (!st) { st = document.createElement('style'); st.id = 'ppCss'; st.textContent = CSS; document.head.appendChild(st); }
     var area = document.getElementById('ppArea');
