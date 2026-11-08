@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>위브앱 통합 관리</title>
+<!--
+ 🔴 2026-11-09 신설 — 위브앱솔루션 5개 앱 통합 관리 화면
+   한 화면에서 탭만 바꿔 부름 · 누름 · 바로너(부름 서버) / 가림 · 바로카(에일리어스콜 서버) / 유치대리점을 봅니다.
+   각 탭은 이미 있는 관리자 화면을 그대로 안에 띄웁니다(새 서버 기능 · 새 권한 없음).
+   ⚠ 로그인 · 관리자 확인은 각 관리자 화면이 스스로 합니다. 이 화면에는 비밀번호 · 키가 없습니다.
+   ⚠ 부름(burum.kr) · 바로카(baroka.kr) 탭은 처음 한 번 그 탭 안에서 로그인해야 합니다(브라우저가 사이트마다 로그인을 따로 기억).
+-->
+<style>
+:root{--bg:#f3f4f7;--card:#fff;--ink:#1b1f2a;--sub:#5d6475;--line:#dfe3ea;--acc:#1f4fd1;--acc-soft:#e7eefc;
+  --bu:#11805a;--ac:#0d7466;--bk:#1b2d6b;--pt:#c0532e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11141b;--card:#1a1f29;--ink:#e8ebf2;--sub:#9aa3b5;--line:#2c3342;--acc:#7c9cff;--acc-soft:#1e2a48;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#11141b;--card:#1a1f29;--ink:#e8ebf2;--sub:#9aa3b5;--line:#2c3342;--acc:#7c9cff;--acc-soft:#1e2a48;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;display:flex;flex-direction:column;word-break:keep-all}
+header{background:var(--card);border-bottom:1px solid var(--line);padding:10px max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left));position:sticky;top:0;z-index:5}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(145deg,#1f4fd1,#7c5cf0);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center}
+h1{font-size:17px;margin:0;flex:1;min-width:0}
+h1 small{font-size:12px;color:var(--sub);font-weight:600;margin-left:6px}
+.tbtn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:7px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap}
+.tbtn:hover{border-color:var(--acc)}
+nav.main{display:flex;gap:4px;overflow-x:auto;margin-top:10px;scrollbar-width:none}
+nav.main::-webkit-scrollbar{display:none}
+nav.main button{border:none;background:none;color:var(--sub);font:inherit;font-size:14.5px;font-weight:800;padding:10px 14px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+nav.main button.on{color:var(--ink);border-bottom-color:var(--c,var(--acc))}
+nav.sub{display:flex;gap:6px;flex-wrap:wrap;padding:10px max(14px,env(safe-area-inset-right)) 8px max(14px,env(safe-area-inset-left));background:var(--bg);border-bottom:1px solid var(--line)}
+nav.sub:empty{display:none}
+nav.sub button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 13px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+nav.sub button.on{background:var(--c,var(--acc));border-color:var(--c,var(--acc));color:#fff}
+nav.sub .open{margin-left:auto;font-size:12.5px;color:var(--sub);background:none;border:none;text-decoration:underline;cursor:pointer;padding:6px 4px}
+main{flex:1;min-height:0;position:relative}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg)}
+iframe[hidden]{display:none}
+.panel{position:absolute;inset:0;overflow:auto;padding:18px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
+.panel[hidden]{display:none}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card h3{margin:0;font-size:15px;display:flex;align-items:center;gap:8px}
+.card p{margin:0;font-size:13px;color:var(--sub);line-height:1.6}
+.card .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:0 0 auto}
+h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
+.note{background:var(--acc-soft);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.7}
+.links a{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:13.5px}
+.links a:first-of-type{border-top:none}
+.links a span{color:var(--sub);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div class="logo">W</div>
+    <h1>위브앱 통합 관리<small>부름 · 누름 · 가림 · 바로너 · 바로카</small></h1>
+    <button class="tbtn" id="reload" type="button" title="지금 탭 새로고침">↻ 새로고침</button>
+    <button class="tbtn" id="theme" type="button">🌙</button>
+  </div>
+  <nav class="main" id="main"></nav>
+</header>
+<nav class="sub" id="sub"></nav>
+<main id="stage"></main>
+
+<script>
+(function(){
+  'use strict';
+  var AC = 'https://aliascall.com/', BU = 'https://burum.kr/', BK = 'https://baroka.kr/';
+  /* 탭: 큰 탭 → 작은 탭(관리자 화면 주소) */
+  var TABS = [
+    { id:'home', name:'🏠 처음', c:'var(--acc)', panel:true },
+    { id:'stats', name:'📊 매출 · 통계', c:'#7c5cf0', subs:[
+      { id:'st_ac', name:'가림 · 바로카 통계', url: AC + 'aliascall_admin_stats.html' },
+      { id:'st_bu', name:'부름 · 누름 · 바로너 통계', url: BU + 'burum_admin_stats.html' } ]},
+    { id:'burum', name:'🟢 부름 · 누름 · 바로너', c:'var(--bu)', subs:[
+      { id:'bu_admin', name:'회원 · 운영', url: BU + 'alias_admin.html' },
+      { id:'bu_stats', name:'일일 통계', url: BU + 'burum_admin_stats.html' },
+      { id:'bu_num', name:'번호 · 선물', url: BU + 'burum_admin_numbers.html' },
+      { id:'bu_vid', name:'추천 영상', url: BU + 'burum_admin_videos.html' },
+      { id:'bu_music', name:'배경음', url: BU + 'burum_admin_music.html' } ]},
+    { id:'garim', name:'🟩 가림', c:'var(--ac)', subs:[
+      { id:'ac_dash', name:'통합 관리(회원 · 결제 · 신고)', url: AC + 'aliascall_admin_dashboard.html' },
+      { id:'ac_stats', name:'일일 통계', url: AC + 'aliascall_admin_stats.html' },
+      { id:'ac_verify', name:'업체 심사', url: AC + 'aliascall_admin_verify.html' },
+      { id:'ac_bank', name:'무통장입금', url: AC + 'aliascall_admin_bank_transfers.html' },
+      { id:'ac_num', name:'회선번호', url: AC + 'aliascall_admin_numbers.html' } ]},
+    { id:'baroka', name:'🚗 바로카', c:'var(--bk)', subs:[
+      { id:'bk_admin', name:'바로카 관리(갤러리 신고 · 등록권 · 타일 광고)', url: BK + 'admin.html' } ]},
+    { id:'partner', name:'💼 유치대리점', c:'var(--pt)', subs:[
+      { id:'pt_admin', name:'대리점 심사 · 정산', url: AC + 'aliascall_admin_partners.html' } ]}
+  ];
+  var $ = function(id){ return document.getElementById(id); };
+  var KEY = 'weave_admin_tab_v1';
+  var frames = {};          // 한 번 연 화면은 그대로 둡니다(다시 로그인하지 않게)
+  var cur = { main:'home', sub:null };
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(cur)); } catch (e) {} }
+  function tab(id){ for (var i = 0; i < TABS.length; i++) if (TABS[i].id === id) return TABS[i]; return TABS[0]; }
+
+  function homePanel(){
+    var p = document.createElement('div'); p.className = 'panel'; p.id = 'p_home';
+    var cards = TABS.filter(function(t){ return t.subs; }).map(function(t){
+      return '<div class="card" style="--c:' + t.c + '"><h3><span class="dot"></span>' + t.name + '</h3>' +
+        '<div class="row">' + t.subs.map(function(s){ return '<button class="tbtn" type="button" data-go="' + t.id + '|' + s.id + '">' + s.name + '</button>'; }).join('') + '</div></div>';
+    }).join('');
+    p.innerHTML = '<div class="wrap">' +
+      '<div class="note">탭을 누르면 각 앱의 관리자 화면이 이 안에 열립니다. <b>처음 한 번은 탭 안에서 관리자 로그인</b>을 해 주세요(가림 · 유치대리점 탭은 한 번, 부름 탭 한 번, 바로카 탭 한 번). 한 번 연 탭은 다른 탭으로 옮겨도 그대로 남아 있습니다.<br>' +
+      '서버는 두 곳입니다 — <b>부름 서버</b>: 부름 · 누름 · 바로너 / <b>에일리어스콜 서버</b>: 가림 · 바로카 · 유치대리점.</div>' +
+      '<h2>바로 가기</h2><div class="grid">' + cards + '</div>' +
+      '<h2>매일 볼 곳 (밖의 사이트 — 새 창)</h2><div class="grid">' +
+        '<div class="card"><h3>📦 스토어</h3><div class="links">' +
+          '<a href="https://play.google.com/console" target="_blank" rel="noopener">Google Play Console <span>심사 · 리뷰 · 매출 ›</span></a>' +
+          '<a href="https://appstoreconnect.apple.com" target="_blank" rel="noopener">App Store Connect <span>심사 · 리뷰 · 매출 ›</span></a>' +
+          '<a href="https://magic.codemagic.io/apps" target="_blank" rel="noopener">Codemagic <span>아이폰 빌드 ›</span></a></div></div>' +
+        '<div class="card"><h3>💬 손님 문의 · 홍보</h3><div class="links">' +
+          '<a href="https://business.kakao.com/" target="_blank" rel="noopener">카카오 비즈니스 · 채널 채팅 <span>1:1 문의 ›</span></a>' +
+          '<a href="https://studio.youtube.com" target="_blank" rel="noopener">YouTube Studio <span>댓글 · 조회수 ›</span></a>' +
+          '<a href="https://blog.naver.com/weveapp" target="_blank" rel="noopener">네이버 블로그 <span>weveapp ›</span></a>' +
+          '<a href="https://www.instagram.com/weveapp_kr/" target="_blank" rel="noopener">인스타그램 <span>@weveapp_kr ›</span></a>' +
+          '<a href="https://x.com/weveapp_kr" target="_blank" rel="noopener">X <span>@weveapp_kr ›</span></a>' +
+          '<a href="https://www.tiktok.com/@weveapp" target="_blank" rel="noopener">틱톡 <span>@weveapp ›</span></a></div></div>' +
+        '<div class="card"><h3>🛠 서버 · 메일</h3><div class="links">' +
+          '<a href="https://supabase.com/dashboard/projects" target="_blank" rel="noopener">Supabase <span>부름 · 에일리어스콜 서버 ›</span></a>' +
+          '<a href="https://mail.google.com" target="_blank" rel="noopener">Gmail <span>weapps.kr@gmail.com ›</span></a>' +
+          '<a href="https://firebase.google.com/" target="_blank" rel="noopener">Firebase <span>푸시 알림 ›</span></a></div></div>' +
+        '<div class="card"><h3>🌐 앱 사이트</h3><div class="links">' +
+          '<a href="https://burum.kr" target="_blank" rel="noopener">부름 · 누름 <span>burum.kr ›</span></a>' +
+          '<a href="https://aliascall.com" target="_blank" rel="noopener">가림 <span>aliascall.com ›</span></a>' +
+          '<a href="https://baronu.kr" target="_blank" rel="noopener">바로너 <span>baronu.kr ›</span></a>' +
+          '<a href="https://baroka.kr" target="_blank" rel="noopener">바로카 <span>baroka.kr ›</span></a></div></div>' +
+      '</div></div>';
+    p.addEventListener('click', function(e){
+      var b = e.target.closest('[data-go]'); if (!b) return;
+      var x = b.dataset.go.split('|'); show(x[0], x[1]);
+    });
+    return p;
+  }
+
+  function show(mainId, subId){
+    var t = tab(mainId);
+    cur.main = t.id;
+    if (t.subs) { var ok = t.subs.some(function(s){ return s.id === subId; }); cur.sub = ok ? subId : (cur.subOf && cur.subOf[t.id]) || t.subs[0].id; }
+    else cur.sub = null;
+    cur.subOf = cur.subOf || {}; if (cur.sub) cur.subOf[t.id] = cur.sub;
+    save();
+    // 큰 탭
+    [].forEach.call($('main').children, function(b){ b.classList.toggle('on', b.dataset.id === t.id); b.style.setProperty('--c', tab(b.dataset.id).c); });
+    // 작은 탭
+    var sub = $('sub'); sub.innerHTML = ''; sub.style.setProperty('--c', t.c);
+    if (t.subs) {
+      t.subs.forEach(function(s){
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = s.name; b.className = s.id === cur.sub ? 'on' : '';
+        b.onclick = function(){ show(t.id, s.id); }; sub.appendChild(b);
+      });
+      var s0 = t.subs.filter(function(s){ return s.id === cur.sub; })[0];
+      var o = document.createElement('a'); o.className = 'open'; o.textContent = '새 창으로 열기 ↗'; o.href = s0.url; o.target = '_blank'; o.rel = 'noopener'; sub.appendChild(o);
+    }
+    // 내용
+    var stage = $('stage');
+    [].forEach.call(stage.children, function(el){ el.hidden = true; });
+    if (t.panel) { var hp = $('p_home') || stage.appendChild(homePanel()); hp.hidden = false; return; }
+    var key = cur.sub, f = frames[key];
+    var url = t.subs.filter(function(s){ return s.id === key; })[0].url;
+    // 같은 주소를 쓰는 탭(예: 통계)은 한 화면을 같이 씁니다
+    for (var k in frames) if (frames[k].dataset.url === url) { f = frames[k]; break; }
+    if (!f) {
+      f = document.createElement('iframe'); f.src = url; f.dataset.url = url; f.title = key;
+      f.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      stage.appendChild(f); frames[key] = f;
+    }
+    f.hidden = false;
+  }
+
+  TABS.forEach(function(t){
+    var b = document.createElement('button'); b.type = 'button'; b.textContent = t.name; b.dataset.id = t.id;
+    b.onclick = function(){ show(t.id); }; $('main').appendChild(b);
+  });
+  $('reload').onclick = function(){
+    var f = [].filter.call($('stage').querySelectorAll('iframe'), function(x){ return !x.hidden; })[0];
+    if (f) { try { f.contentWindow.location.reload(); } catch (e) { f.src = f.dataset.url; } }
+  };
+  // 낮 · 밤
+  var TK = 'weave_admin_theme';
+  function applyTheme(v){ if (v) document.documentElement.setAttribute('data-theme', v); else document.documentElement.removeAttribute('data-theme');
+    $('theme').textContent = (v || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark' ? '☀️' : '🌙'; }
+  var tv = null; try { tv = localStorage.getItem(TK); } catch (e) {}
+  applyTheme(tv);
+  $('theme').onclick = function(){
+    var now = document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    var nx = now === 'dark' ? 'light' : 'dark'; try { localStorage.setItem(TK, nx); } catch (e) {} applyTheme(nx);
+  };
+  var last = load();
+  if (last && last.subOf) cur.subOf = last.subOf;
+  show(last ? last.main : 'home', last ? last.sub : null);
+})();
+</script>
+</body>
+</html>
