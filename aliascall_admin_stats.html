@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Aliascall 일일 통계</title>
+<title>가림 · 바로카 일일 통계</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{ --bg:#F4F6F8; --card:#FFFFFF; --ink:#16212E; --soft:#5A6878; --line:#DDE3EA; --acc:#1F6F6B; --acc-tint:#E4EFEE; --bad:#B4412F; }
@@ -56,7 +56,7 @@ tr.sum td{ font-weight:800; border-top:2px solid var(--ink); }
 </div></div>
 
 <header>
-  <h1>📊 Aliascall 일일 통계</h1>
+  <h1>📊 가림 · 바로카 일일 통계</h1>
   <span class="who" id="who"></span>
   <button type="button" id="logout">로그아웃</button>
 </header>
@@ -76,6 +76,11 @@ tr.sum td{ font-weight:800; border-top:2px solid var(--ink); }
   <div class="cards" id="cards"></div>
 
   <section>
+    <h2>앱별 매출 (기간 합계)</h2>
+    <div class="cards" id="appCards"></div>
+  </section>
+
+  <section>
     <h2>일일 현황</h2>
     <div class="tw"><table id="daily"><thead><tr><th>날짜</th><th>신규 가입</th><th>결제 건수</th><th>매출</th><th>환불</th><th>환불 금액</th></tr></thead><tbody><tr><td colspan="6" class="msg">불러오는 중…</td></tr></tbody></table></div>
   </section>
@@ -93,6 +98,8 @@ tr.sum td{ font-weight:800; border-top:2px solid var(--ink); }
 </main>
 
 <script>
+const APPS = ['가림', '바로카'];
+const APP_OF = (p) => /^baroka/.test(String(p || '')) ? '바로카' : '가림';
 const el = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 function money(obj){
@@ -138,6 +145,14 @@ function paint(data){
     ['전체 회원', (data.totals.members_total || 0).toLocaleString() + '명', '지금까지'],
   ].map((c) => '<div class="card"><div class="k">' + esc(c[0]) + '</div><div class="v">' + esc(c[1]) + '</div><div class="s">' + esc(c[2]) + '</div></div>').join('');
 
+
+  /* 🔴 2026-11-09 앱별 매출 — 같은 결제 장부를 쓰는 앱을 상품 번호로 나눠 보여 줍니다 */
+  const apps = {};
+  prods.forEach((p) => { const a = APP_OF(p.product); const k = a + '|' + p.currency;
+    apps[k] = apps[k] || { app: a, currency: p.currency, orders: 0, amount: 0 }; apps[k].orders += p.orders; apps[k].amount += Number(p.amount); });
+  const al = Object.values(apps).sort((a, b) => APPS.indexOf(a.app) - APPS.indexOf(b.app));
+  APPS.forEach((a) => { if (!al.some((x) => x.app === a)) al.push({ app: a, currency: 'KRW', orders: 0, amount: 0 }); });
+  el('appCards').innerHTML = al.map((x) => '<div class="card"><div class="k">' + esc(x.app) + '</div><div class="v">' + esc(fmtAmt(x.amount, x.currency)) + '</div><div class="s">결제 ' + x.orders + '건</div></div>').join('');
   const maxS = Math.max(1, ...days.map((d) => d.signups || 0));
   el('daily').querySelector('tbody').innerHTML = days.map((d) => {
     const z = !(d.signups || d.orders || d.refunds);
@@ -191,7 +206,8 @@ const TIER = { hotline_1to1: '일반(2인)', hotline_everybody: '에브리바디
 const SKU_NAME = { ac_plan_emergency_12m: '긴급 이용권 12개월', ac_plan_emergency_pro_12m: 'Pro 긴급 이용권 12개월',
   ac_plan_basic_3m: '일반 3개월', ac_plan_basic_6m: '일반 6개월', ac_plan_basic_12m: '일반 12개월',
   ac_plan_premium_3m: '프리미엄 3개월', ac_plan_premium_6m: '프리미엄 6개월', ac_plan_premium_12m: '프리미엄 12개월',
-  ac_usage_1gb_3m: '추가 사용량 1GB' };
+  ac_usage_1gb_3m: '추가 사용량 1GB',
+  baroka_reg: '바로카 · 차 등록', baroka_change: '바로카 · 번호 변경', baroka_g20: '바로카 · 갤러리 20칸', baroka_g60: '바로카 · 갤러리 60칸' };
 function NAME(p){
   if (SKU_NAME[p]) return SKU_NAME[p];
   let s = String(p || '');
