@@ -149,10 +149,17 @@ async function loadSignupApps(from, to){
   const names = APPS.concat(Object.keys(m).filter((k) => APPS.indexOf(k) < 0));
   box.innerHTML = names.map((n) => { const v = m[n] || { a: 0, g: 0, t: 0 };
     return '<div class="card"><div class="k">' + esc(n) + '</div><div class="v">' + (v.a + v.g) + '명</div><div class="s">아이디 가입 ' + v.a + ' · 가입 없이 시작 ' + v.g + ' · 오늘 ' + v.t + '</div></div>'; }).join('');
+  /* 🔴 맨 위 '오늘 신규 가입' · '기간 신규 가입' 카드에도 앱별로 바로 적어 줍니다 */
+  try {
+    const cs = el('cards').children;
+    const line = (f) => names.map((n) => n + ' ' + f(m[n] || { a: 0, g: 0, t: 0 })).join(' · ');
+    if (cs[0]) cs[0].querySelector('.s').textContent = line((v) => v.t) + (today ? '  (' + today + ')' : '');
+    if (cs[1]) cs[1].querySelector('.s').textContent = line((v) => v.a);
+  } catch (e) {}
   /* 일일 현황의 '신규 가입' 칸 옆에 앱별로 적어 줍니다 */
   const byDay = {}; SU.forEach((r) => { if (!r.accounts) return; (byDay[r.day] = byDay[r.day] || []).push((APPNAME[r.app] || r.app) + ' ' + r.accounts); });
   el('daily').querySelectorAll('tbody tr').forEach((tr) => { const d = tr.firstChild && tr.firstChild.textContent; if (byDay[d] && tr.children[1]) { const sp = document.createElement('div'); sp.style.cssText = 'font-size:11px;opacity:.75'; sp.textContent = byDay[d].join(' · '); tr.children[1].appendChild(sp); } });
-  try { if (parent !== window) parent.postMessage({ type: 'weave_su', src: 'ac', from: from || (last.totals || {}).from, to: to || (last.totals || {}).to, apps: names.map((n) => ({ app: n, accounts: (m[n] || {}).a || 0, guests: (m[n] || {}).g || 0 })) }, 'https://aliascall.com'); } catch (e) {}
+  try { if (parent !== window) parent.postMessage({ type: 'weave_su', src: 'ac', from: from || (last.totals || {}).from, to: to || (last.totals || {}).to, apps: names.map((n) => ({ app: n, accounts: (m[n] || {}).a || 0, guests: (m[n] || {}).g || 0, today: (m[n] || {}).t || 0 })) }, 'https://aliascall.com'); } catch (e) {}
 }
 
 function paint(data){

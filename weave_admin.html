@@ -210,13 +210,13 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     var m = {}; ['ac', 'bu'].forEach(function(k){ (REV[k] && REV[k].apps || []).forEach(function(a){ if ((a.currency || 'KRW').trim() !== 'KRW') return; m[a.app] = m[a.app] || { o: 0, w: 0 }; m[a.app].o += a.orders; m[a.app].w += Number(a.amount); }); });
     var names = ORDER.concat(Object.keys(m).filter(function(k){ return ORDER.indexOf(k) < 0; }));
     var to = 0, tw = 0; names.forEach(function(n){ if (m[n]) { to += m[n].o; tw += m[n].w; } });
-    var su = {}; ['ac', 'bu'].forEach(function(k){ (SUP[k] && SUP[k].apps || []).forEach(function(a){ su[a.app] = (su[a.app] || 0) + a.accounts + a.guests; }); });
-    var sut = 0; Object.keys(su).forEach(function(k){ sut += su[k]; });
+    var su = {}, st = {}; ['ac', 'bu'].forEach(function(k){ (SUP[k] && SUP[k].apps || []).forEach(function(a){ su[a.app] = (su[a.app] || 0) + a.accounts + a.guests; st[a.app] = (st[a.app] || 0) + (a.today || 0); }); });
+    var sut = 0, stt = 0; Object.keys(su).forEach(function(k){ sut += su[k]; stt += st[k] || 0; });
     Object.keys(su).forEach(function(k){ if (names.indexOf(k) < 0) names.push(k); });
-    var cell = function(n, v, cls, g){ return '<div class="c ' + (cls || '') + '"><div class="k">' + n + '</div><div class="v">' + (v ? won(v.w) : '…') + '</div><div class="s">' + (v ? '결제 ' + v.o + '건' : '불러오는 중') + (g != null ? ' · 가입 ' + g + '명' : '') + '</div></div>'; };
+    var cell = function(n, v, cls, g){ return '<div class="c ' + (cls || '') + '"><div class="k">' + n + '</div><div class="v">' + (v ? won(v.w) : '…') + '</div><div class="s">' + (v ? '결제 ' + v.o + '건' : '불러오는 중') + (g != null ? ' · 가입 ' + g.n + '명' + (g.t ? ' <b style="color:#e0632f">(오늘 +' + g.t + ')</b>' : '') : '') + '</div></div>'; };
     var per = function(k){ return REV[k] ? (REV[k].from + ' ~ ' + REV[k].to) : '로그인 필요'; };
-    box.innerHTML = '<div class="row">' + cell('다섯 앱 합계', (REV.ac || REV.bu) ? { o: to, w: tw } : null, 'tot', (SUP.ac || SUP.bu) ? sut : null) +
-      names.map(function(n){ var have = (n === '가림' || n === '바로카') ? REV.ac : REV.bu; var hs = (n === '가림' || n === '바로카') ? SUP.ac : SUP.bu; return cell(n, have ? (m[n] || { o: 0, w: 0 }) : null, '', hs ? (su[n] || 0) : null); }).join('') + '</div>' +
+    box.innerHTML = '<div class="row">' + cell('다섯 앱 합계', (REV.ac || REV.bu) ? { o: to, w: tw } : null, 'tot', (SUP.ac || SUP.bu) ? { n: sut, t: stt } : null) +
+      names.map(function(n){ var have = (n === '가림' || n === '바로카') ? REV.ac : REV.bu; var hs = (n === '가림' || n === '바로카') ? SUP.ac : SUP.bu; return cell(n, have ? (m[n] || { o: 0, w: 0 }) : null, '', hs ? { n: su[n] || 0, t: st[n] || 0 } : null); }).join('') + '</div>' +
       '<div class="cap">기간 — 가림 · 바로카: ' + per('ac') + ' · 부름 · 누름 · 바로너: ' + per('bu') + ' (아래 통계 화면에서 기간을 바꾸면 함께 바뀝니다 · 원화 결제만)</div>';
   }
   window.addEventListener('message', function(e){
