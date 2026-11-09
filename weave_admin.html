@@ -69,7 +69,7 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
 <header>
   <div class="top">
     <div class="logo">W</div>
-    <h1>위브앱 통합 관리<small>부름 · 누름 · 가림 · 바로너 · 바로카</small></h1>
+    <h1>위브앱 통합 관리<small>부름 · 누름 · 가림 · 바로너 · 바로카 · 알림로또 · PaperLotto</small></h1>
     <button class="tbtn" id="reload" type="button" title="지금 탭 새로고침">↻ 새로고침</button>
     <button class="tbtn" id="theme" type="button">🌙</button>
   </div>
@@ -103,7 +103,17 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     { id:'baroka', name:'🚗 바로카', c:'var(--bk)', subs:[
       { id:'bk_admin', name:'바로카 관리(갤러리 신고 · 등록권 · 타일 광고)', url: BK + 'admin.html' } ]},
     { id:'partner', name:'💼 유치대리점', c:'var(--pt)', subs:[
-      { id:'pt_admin', name:'대리점 심사 · 정산', url: AC + 'aliascall_admin_partners.html' } ]}
+      { id:'pt_admin', name:'대리점 심사 · 정산', url: AC + 'aliascall_admin_partners.html' } ]},
+    /* 🔴 2026-11-09 로또 두 앱 — 따로 봅니다(합산 없음). 각 화면이 스스로 관리자 로그인을 합니다 */
+    { id:'allim', name:'🎱 알림로또', c:'#d9480f', subs:[
+      { id:'al_sales', name:'매출 · 입금 · 가입 · 접속', url: 'https://my-lotto-lab-api.onrender.com/pay/admin_points.html' },
+      { id:'al_admin', name:'통계 · 당첨결과 관리', url: 'https://mylottolab.github.io/my-lotto-lab/admin.html' } ]},
+    { id:'paper', name:'📄 PaperLotto', c:'#b08900', subs:[
+      { id:'pl_reports', name:'매출 · 회원 리포트', url: 'https://paperlotto.com/paperlotto_admin_reports.html' },
+      { id:'pl_card', name:'카드결제', url: 'https://paperlotto.com/paperlotto_admin_card_payments.html' },
+      { id:'pl_bank', name:'무통장입금', url: 'https://paperlotto.com/paperlotto_admin_bank_transfers.html' },
+      { id:'pl_visits', name:'방문 통계', url: 'https://paperlotto.com/paperlotto_admin_visits.html' },
+      { id:'pl_login', name:'관리자 로그인', url: 'https://paperlotto.com/paperlotto_admin_login.html' } ]}
   ];
   var $ = function(id){ return document.getElementById(id); };
   var KEY = 'weave_admin_tab_v1';
@@ -121,7 +131,7 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     }).join('');
     p.innerHTML = '<div class="wrap">' +
       '<div class="note">탭을 누르면 각 앱의 관리자 화면이 이 안에 열립니다. <b>처음 한 번은 탭 안에서 관리자 로그인</b>을 해 주세요(가림 · 유치대리점 탭은 한 번, 부름 탭 한 번, 바로카 탭 한 번). 한 번 연 탭은 다른 탭으로 옮겨도 그대로 남아 있습니다.<br>' +
-      '서버는 두 곳입니다 — <b>부름 서버</b>: 부름 · 누름 · 바로너 / <b>에일리어스콜 서버</b>: 가림 · 바로카 · 유치대리점.</div>' +
+      '서버는 두 곳입니다 — <b>부름 서버</b>: 부름 · 누름 · 바로너 / <b>에일리어스콜 서버</b>: 가림 · 바로카 · 유치대리점. 알림로또 · PaperLotto는 각자 따로 봅니다(합산하지 않음). 알림로또 매출 화면은 서버가 잠들어 있으면 처음 열 때 30초~1분 걸릴 수 있습니다.</div>' +
       '<h2>바로 가기</h2><div class="grid">' + cards + '</div>' +
       '<h2>매일 볼 곳 (밖의 사이트 — 새 창)</h2><div class="grid">' +
         '<div class="card"><h3>📦 스토어</h3><div class="links">' +
@@ -143,7 +153,9 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
           '<a href="https://burum.kr" target="_blank" rel="noopener">부름 · 누름 <span>burum.kr ›</span></a>' +
           '<a href="https://aliascall.com" target="_blank" rel="noopener">가림 <span>aliascall.com ›</span></a>' +
           '<a href="https://baronu.kr" target="_blank" rel="noopener">바로너 <span>baronu.kr ›</span></a>' +
-          '<a href="https://baroka.kr" target="_blank" rel="noopener">바로카 <span>baroka.kr ›</span></a></div></div>' +
+          '<a href="https://baroka.kr" target="_blank" rel="noopener">바로카 <span>baroka.kr ›</span></a>' +
+          '<a href="https://mylottolab.github.io/my-lotto-lab/" target="_blank" rel="noopener">알림로또 <span>mylottolab.github.io ›</span></a>' +
+          '<a href="https://paperlotto.com" target="_blank" rel="noopener">PaperLotto <span>paperlotto.com ›</span></a></div></div>' +
       '</div></div>';
     p.addEventListener('click', function(e){
       var b = e.target.closest('[data-go]'); if (!b) return;
