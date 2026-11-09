@@ -81,6 +81,11 @@ tr.sum td{ font-weight:800; border-top:2px solid var(--ink); }
   </section>
 
   <section>
+    <h2>가입자 목록 — 누가 어느 앱으로 가입했나 <label style="font-size:13px;font-weight:600;margin-left:8px"><input type="checkbox" id="suToday" checked> 오늘만</label></h2>
+    <div class="tw"><table id="suList"><thead><tr><th>가입 시각</th><th>닉네임</th><th>앱</th><th>구분</th><th>앱 판정</th></tr></thead><tbody><tr><td colspan="5" class="msg">불러오는 중…</td></tr></tbody></table></div>
+  </section>
+
+  <section>
     <h2>앱별 매출 (기간 합계)</h2>
     <div class="cards" id="appCards"></div>
   </section>
@@ -135,7 +140,28 @@ async function load(){
   }
   last = data; paint(data);
   loadSignupApps(from, to);
+  loadSignupList(from, to);
 }
+
+/* 🔴 2026-11-09 가입자 한 명씩 — admin_signup_list (확정: 가입한 앱 기록 / 추정: 흔적으로 판단) */
+let SL = [];
+async function loadSignupList(from, to){
+  const tb = el('suList').querySelector('tbody');
+  const { data, error } = await SB().rpc('admin_signup_list', { p_from: from, p_to: to });
+  if (error) { tb.innerHTML = '<tr><td colspan="5" class="msg">가입자 목록을 읽지 못했습니다' + (/admin_signup_list/.test(error.message || '') ? ' (signup_apps.sql 새 판을 넣으면 보입니다)' : '') + '.</td></tr>'; return; }
+  SL = data || []; paintSignupList();
+}
+function paintSignupList(){
+  const tb = el('suList').querySelector('tbody');
+  const today = ymd(new Date());
+  const only = el('suToday').checked;
+  const rows = SL.filter((r) => !only || String(r.at).slice(0, 10) === today);
+  tb.innerHTML = rows.length ? rows.map((r) => '<tr' + (String(r.at).slice(0, 10) === today ? ' style="font-weight:700"' : '') + '><td>' + esc(r.at) + '</td><td class="l">' + esc(r.nick || (r.anon ? '(가입 없이 시작)' : '')) + '</td>' +
+    '<td><b>' + esc(APPNAME[r.app] || r.app) + '</b></td><td>' + (r.anon ? '가입 없이 시작' : '아이디 가입') + '</td>' +
+    '<td class="l">' + (r.sure ? '✅ 확정' : '🔎 추정') + ' <span style="font-size:11.5px;opacity:.75">' + esc(r.why || '') + '</span></td></tr>').join('')
+    : '<tr><td colspan="5" class="msg">' + (only ? '오늘 가입한 사람이 없습니다.' : '이 기간에 가입한 사람이 없습니다.') + '</td></tr>';
+}
+el('suToday').addEventListener('change', paintSignupList);
 
 /* 🔴 2026-11-09 앱별 신규 가입 — admin_signup_apps (서버에 함수가 없으면 이 칸만 안내) */
 let SU = null;
