@@ -76,6 +76,11 @@ tr.sum td{ font-weight:800; border-top:2px solid var(--ink); }
   <div class="cards" id="cards"></div>
 
   <section>
+    <h2>앱별 신규 가입 (기간 합계)</h2>
+    <div class="cards" id="suCards"><div class="msg">불러오는 중…</div></div>
+  </section>
+
+  <section>
     <h2>앱별 매출 (기간 합계)</h2>
     <div class="cards" id="appCards"></div>
   </section>
@@ -98,6 +103,7 @@ tr.sum td{ font-weight:800; border-top:2px solid var(--ink); }
 </main>
 
 <script>
+const APPNAME = { burum: '부름', nureum: '누름', baronu: '바로너', nureum_baronu: '누름·바로너(구분 전)', garim: '가림', baroka: '바로카' };
 const APPS = ['가림', '바로카'];
 const APP_OF = (p) => /^baroka/.test(String(p || '')) ? '바로카' : '가림';
 const el = (id) => document.getElementById(id);
@@ -128,6 +134,25 @@ async function load(){
     return;
   }
   last = data; paint(data);
+  loadSignupApps(from, to);
+}
+
+/* 🔴 2026-11-09 앱별 신규 가입 — admin_signup_apps (서버에 함수가 없으면 이 칸만 안내) */
+let SU = null;
+async function loadSignupApps(from, to){
+  const box = el('suCards');
+  const { data, error } = await SB().rpc('admin_signup_apps', { p_from: from, p_to: to });
+  if (error) { box.innerHTML = '<div class="msg" style="grid-column:1/-1">앱별 가입을 읽지 못했습니다' + (/admin_signup_apps/.test(error.message || '') ? ' (signup_apps.sql 을 넣으면 보입니다)' : '') + '.</div>'; return; }
+  SU = data || [];
+  const m = {}; const today = (last && last.days && last.days[0] && last.days[0].day) || '';
+  SU.forEach((r) => { const n = APPNAME[r.app] || r.app; m[n] = m[n] || { a: 0, g: 0, t: 0 }; m[n].a += r.accounts; m[n].g += r.guests; if (r.day === today) m[n].t += r.accounts + r.guests; });
+  const names = APPS.concat(Object.keys(m).filter((k) => APPS.indexOf(k) < 0));
+  box.innerHTML = names.map((n) => { const v = m[n] || { a: 0, g: 0, t: 0 };
+    return '<div class="card"><div class="k">' + esc(n) + '</div><div class="v">' + (v.a + v.g) + '명</div><div class="s">아이디 가입 ' + v.a + ' · 가입 없이 시작 ' + v.g + ' · 오늘 ' + v.t + '</div></div>'; }).join('');
+  /* 일일 현황의 '신규 가입' 칸 옆에 앱별로 적어 줍니다 */
+  const byDay = {}; SU.forEach((r) => { if (!r.accounts) return; (byDay[r.day] = byDay[r.day] || []).push((APPNAME[r.app] || r.app) + ' ' + r.accounts); });
+  el('daily').querySelectorAll('tbody tr').forEach((tr) => { const d = tr.firstChild && tr.firstChild.textContent; if (byDay[d] && tr.children[1]) { const sp = document.createElement('div'); sp.style.cssText = 'font-size:11px;opacity:.75'; sp.textContent = byDay[d].join(' · '); tr.children[1].appendChild(sp); } });
+  try { if (parent !== window) parent.postMessage({ type: 'weave_su', src: 'ac', from: from || (last.totals || {}).from, to: to || (last.totals || {}).to, apps: names.map((n) => ({ app: n, accounts: (m[n] || {}).a || 0, guests: (m[n] || {}).g || 0 })) }, 'https://aliascall.com'); } catch (e) {}
 }
 
 function paint(data){

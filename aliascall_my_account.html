@@ -1840,7 +1840,7 @@ document.getElementById('loginSubmitBtn').addEventListener('click', async () => 
 
   try {
     const email = nicknameToEmail(nickname);
-    const { data: signUpData, error: signUpError } = await sb.auth.signUp({ email, password });
+    const { data: signUpData, error: signUpError } = await sb.auth.signUp({ email, password, options: { data: { app: 'garim' } } });   // 🔴 2026-11-09 앱별 가입 통계
 
     let session = null;
     let isNewAccount = false;
