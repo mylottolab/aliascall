@@ -39,6 +39,16 @@ nav.sub .open{margin-left:auto;font-size:12.5px;color:var(--sub);background:none
 main{flex:1;min-height:0;position:relative}
 iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg)}
 iframe[hidden]{display:none}
+#sum{position:absolute;left:0;right:0;top:0;height:118px;padding:10px max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left));background:var(--bg);border-bottom:1px solid var(--line);overflow-x:auto}
+#sum[hidden]{display:none}
+#sum .row{display:flex;gap:8px;min-width:max-content}
+#sum .c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-width:118px}
+#sum .c .k{font-size:12px;color:var(--sub);font-weight:700}
+#sum .c .v{font-size:17px;font-weight:900;margin-top:2px}
+#sum .c .s{font-size:11.5px;color:var(--sub)}
+#sum .c.tot{background:var(--acc-soft);border-color:transparent}
+#sum .cap{font-size:11.5px;color:var(--sub);margin:6px 2px 0}
+iframe.withsum{top:118px;height:calc(100% - 118px)}
 .panel{position:absolute;inset:0;overflow:auto;padding:18px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
 .panel[hidden]{display:none}
 .wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
@@ -175,7 +185,43 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
       stage.appendChild(f); frames[key] = f;
     }
     f.hidden = false;
+    var sum = $('sum');
+    if (t.id === 'stats') {
+      if (!sum) { sum = document.createElement('div'); sum.id = 'sum'; stage.appendChild(sum); paintSum(); }
+      sum.hidden = false;
+      /* 두 통계 화면을 모두 열어 둡니다(숨긴 쪽도 숫자를 보내오게) */
+      t.subs.forEach(function(s){
+        var ex = null; for (var k in frames) if (frames[k].dataset.url === s.url) ex = frames[k];
+        if (!ex) { ex = document.createElement('iframe'); ex.src = s.url; ex.dataset.url = s.url; ex.title = s.id; ex.hidden = true; stage.appendChild(ex); frames[s.id] = ex; }
+        ex.classList.add('withsum');
+      });
+      f.classList.add('withsum');
+    } else {
+      [].forEach.call(stage.querySelectorAll('iframe'), function(x){ x.classList.remove('withsum'); });
+    }
   }
+
+  /* 🔴 2026-11-09 다섯 앱 매출 한 줄 — 두 통계 화면이 계산한 앱별 합계를 받아 모아 보여 줍니다(postMessage) */
+  var REV = { ac: null, bu: null };
+  var ORDER = ['부름', '누름', '바로너', '가림', '바로카'];
+  function won(n){ return Number(n || 0).toLocaleString('ko-KR') + '원'; }
+  function paintSum(){
+    var box = $('sum'); if (!box) return;
+    var m = {}; ['ac', 'bu'].forEach(function(k){ (REV[k] && REV[k].apps || []).forEach(function(a){ if ((a.currency || 'KRW').trim() !== 'KRW') return; m[a.app] = m[a.app] || { o: 0, w: 0 }; m[a.app].o += a.orders; m[a.app].w += Number(a.amount); }); });
+    var names = ORDER.concat(Object.keys(m).filter(function(k){ return ORDER.indexOf(k) < 0; }));
+    var to = 0, tw = 0; names.forEach(function(n){ if (m[n]) { to += m[n].o; tw += m[n].w; } });
+    var cell = function(n, v, cls){ return '<div class="c ' + (cls || '') + '"><div class="k">' + n + '</div><div class="v">' + (v ? won(v.w) : '…') + '</div><div class="s">' + (v ? '결제 ' + v.o + '건' : '불러오는 중') + '</div></div>'; };
+    var per = function(k){ return REV[k] ? (REV[k].from + ' ~ ' + REV[k].to) : '로그인 필요'; };
+    box.innerHTML = '<div class="row">' + cell('다섯 앱 합계', (REV.ac || REV.bu) ? { o: to, w: tw } : null, 'tot') +
+      names.map(function(n){ var have = (n === '가림' || n === '바로카') ? REV.ac : REV.bu; return cell(n, have ? (m[n] || { o: 0, w: 0 }) : null); }).join('') + '</div>' +
+      '<div class="cap">기간 — 가림 · 바로카: ' + per('ac') + ' · 부름 · 누름 · 바로너: ' + per('bu') + ' (아래 통계 화면에서 기간을 바꾸면 함께 바뀝니다 · 원화 결제만)</div>';
+  }
+  window.addEventListener('message', function(e){
+    if (e.origin !== 'https://aliascall.com' && e.origin !== 'https://burum.kr') return;
+    var d = e.data || {}; if (d.type !== 'weave_rev' || (d.src !== 'ac' && d.src !== 'bu')) return;
+    if ((d.src === 'ac') !== (e.origin === 'https://aliascall.com')) return;
+    REV[d.src] = { from: d.from, to: d.to, apps: Array.isArray(d.apps) ? d.apps : [] }; paintSum();
+  });
 
   TABS.forEach(function(t){
     var b = document.createElement('button'); b.type = 'button'; b.textContent = t.name; b.dataset.id = t.id;

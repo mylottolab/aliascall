@@ -150,8 +150,9 @@ function paint(data){
   const apps = {};
   prods.forEach((p) => { const a = APP_OF(p.product); const k = a + '|' + p.currency;
     apps[k] = apps[k] || { app: a, currency: p.currency, orders: 0, amount: 0 }; apps[k].orders += p.orders; apps[k].amount += Number(p.amount); });
-  const al = Object.values(apps).sort((a, b) => APPS.indexOf(a.app) - APPS.indexOf(b.app));
+  const al = Object.values(apps).sort((a, b) => ((APPS.indexOf(a.app) + 1) || 99) - ((APPS.indexOf(b.app) + 1) || 99));
   APPS.forEach((a) => { if (!al.some((x) => x.app === a)) al.push({ app: a, currency: 'KRW', orders: 0, amount: 0 }); });
+  try { if (parent !== window) parent.postMessage({ type: 'weave_rev', src: 'ac', from: (data.totals || {}).from, to: (data.totals || {}).to, apps: al }, 'https://aliascall.com'); } catch (e) {}
   el('appCards').innerHTML = al.map((x) => '<div class="card"><div class="k">' + esc(x.app) + '</div><div class="v">' + esc(fmtAmt(x.amount, x.currency)) + '</div><div class="s">결제 ' + x.orders + '건</div></div>').join('');
   const maxS = Math.max(1, ...days.map((d) => d.signups || 0));
   el('daily').querySelector('tbody').innerHTML = days.map((d) => {
