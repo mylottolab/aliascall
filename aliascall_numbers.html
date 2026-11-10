@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<title>내 번호 · 회선번호 — 에일리어스콜</title>
+<title>내 번호 · 회선번호 — 가림</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_hold.js?v=20261102"></script>
 <script src="aliascall_store.js"></script>
@@ -82,8 +82,8 @@ select,input{ width:100%; min-height:48px; border:1.5px solid var(--line); borde
 
   <div id="app" style="display:none">
     <div class="card">
-      <h2>에일리어스콜 번호란?</h2>
-      <p class="muted">상대는 에일리어스콜 첫 화면 숫자판에 <b>번호를 누르고 [연결]</b>만 하면 됩니다. 전화번호는 서로 보이지 않아요. 번호마다 <b>연결할 곳</b>을 고를 수 있어요.</p>
+      <h2>가림 번호란?</h2>
+      <p class="muted">상대는 가림 앱 첫 화면 숫자판에 <b>번호를 누르고 [연결]</b>만 하면 됩니다. 전화번호는 서로 보이지 않아요. 번호마다 <b>연결할 곳</b>을 고를 수 있어요.</p>
       <p class="muted">· <b>나에게(1:1)</b> — 부름번호처럼. 연락해 온 분과 <b>두 사람만의 대화방</b>이 생기고 그 안에서 메시지 · 음성 · 영상. 이용권이 있는 동안 무료<br>
         · <b>회선에</b> — 가족방 · 모임방처럼 여러 사람이 쓰는 내 회선으로 참가 요청</p>
     </div>
@@ -253,7 +253,7 @@ el('setSave').onclick = async function(){
   this.disabled = false;
 };
 async function shareNumber(n, title){
-  const text = '에일리어스콜 번호 ' + fmt(n) + (title ? ' (' + title + ')' : '') + '\n에일리어스콜 앱 첫 화면 숫자판에 ' + n + ' 을 누르고 [연결]을 눌러 주세요. 전화번호는 서로 보이지 않아요.\nhttps://aliascall.com/';
+  const text = '가림 번호 ' + fmt(n) + (title ? ' (' + title + ')' : '') + '\n가림 앱(구 에일리어스콜) 첫 화면 숫자판에 ' + n + ' 을 누르고 [연결]을 눌러 주세요. 전화번호는 서로 보이지 않아요.\nhttps://aliascall.com/';
   try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { return; }
   try { await navigator.clipboard.writeText(text); toast('안내 글을 복사했어요'); } catch (e) {}
 }
@@ -313,7 +313,7 @@ el('mineList').addEventListener('click', async (e) => {
       if (!r.ok) { alert(XERR[r.error] || r.error); return; }
       await pay('ac_num_keep', '1년 더 잡아 두었어요');
     } else if (b.dataset.act === 'xfer') {
-      const nick = prompt(fmt(m.number) + ' 를 넘겨받을 분의 에일리어스콜 닉네임을 적어 주세요.\n받는 분이 수락하고 수수료 5,500원을 내면 번호가 옮겨집니다(두 분 사이의 가격에는 회사가 관여하지 않아요).');
+      const nick = prompt(fmt(m.number) + ' 를 넘겨받을 분의 가림 닉네임을 적어 주세요.\n받는 분이 수락하고 수수료 5,500원을 내면 번호가 옮겨집니다(두 분 사이의 가격에는 회사가 관여하지 않아요).');
       if (!nick) return;
       const r = await rpc('ac_num_transfer_offer', { p_number: m.number, p_buyer_email: nickToEmail(nick) });
       if (!r.ok) { alert(XERR[r.error] || r.error); return; }
@@ -395,7 +395,7 @@ el('freePick').addEventListener('click', async (e) => {
 el('copyNum').onclick = async () => { try { await navigator.clipboard.writeText(el('curNum').dataset.n); toast('복사했어요'); } catch (e) { toast(el('curNum').dataset.n); } };
 el('shareNum').onclick = async () => {
   const n = el('curNum').dataset.n, l = curLine();
-  const text = '에일리어스콜 회선번호 ' + fmt(n) + (l && l.title ? ' (' + l.title + ')' : '') + '\n앱 첫 화면 숫자판에 ' + n + ' 을 누르고 [연결]을 눌러 주세요. 전화번호는 서로 보이지 않아요.\nhttps://aliascall.com/';
+  const text = '가림 회선번호 ' + fmt(n) + (l && l.title ? ' (' + l.title + ')' : '') + '\n앱 첫 화면 숫자판에 ' + n + ' 을 누르고 [연결]을 눌러 주세요. 전화번호는 서로 보이지 않아요.\nhttps://aliascall.com/';
   try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { return; }
   try { await navigator.clipboard.writeText(text); toast('안내 글을 복사했어요'); } catch (e) {}
 };

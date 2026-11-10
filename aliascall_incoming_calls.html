@@ -1515,7 +1515,7 @@ async function answerCall(session){
         console.log('[webrtc] connectionState:', pc.connectionState);
         if (pc.connectionState === 'connected') {
           if (!incomingCallConnected) acTrialLimit(mode, session.registration_id, () => hangup(false));   // 🔴 체험 한도
-          if (!incomingCallConnected) acNative('callOngoing', ((typeof currentLang !== 'undefined' && currentLang === 'en') ? 'Aliascall call' : '에일리어스콜 통화'), mode === 'video');
+          if (!incomingCallConnected) acNative('callOngoing', ((typeof currentLang !== 'undefined' && currentLang === 'en') ? 'Aliascall call' : '가림 통화'), mode === 'video');
           incomingCallConnected = true;
           acRecBegin('in', mode, session.case_id || currentCaseId);   // 🔴 2026-10-09 녹음 · 카메라 단추
           document.getElementById('inCallStatus').textContent = T('inCallConnected');
@@ -1742,7 +1742,7 @@ async function createOwnerOffer(mode){
       document.getElementById('inCallStatus').textContent = T('inCallConnected');
       document.getElementById('inCallSub').textContent = '';
       if (!ownerCallWasConnected) acTrialLimit(mode, currentCaseRegistrationId, () => endOwnerCall(false));   // 🔴 체험 한도
-      if (!ownerCallWasConnected) acNative('callOngoing', ((typeof LANG !== 'undefined' && LANG === 'en') ? 'Aliascall call' : '에일리어스콜 통화'), mode === 'video');   // 🔴 버전 15 — 통화 모드 · 알림줄
+      if (!ownerCallWasConnected) acNative('callOngoing', ((typeof LANG !== 'undefined' && LANG === 'en') ? 'Aliascall call' : '가림 통화'), mode === 'video');   // 🔴 버전 15 — 통화 모드 · 알림줄
       ownerCallWasConnected = true;
       acRecBegin('out', mode, currentCaseId);   // 🔴 2026-10-09 녹음 · 카메라 단추
     }
