@@ -305,6 +305,7 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
 <script src="aliascall_theme.js?v=20261103b"></script>
 <script src="aliascall_parking_plate.js?v=20261030"></script>
+<script src="aliascall_qr_sticker.js?v=20261111"></script>
 </head>
 <body>
 
@@ -1376,6 +1377,12 @@ function generateRealQrCode(token){
 // 고화질 QR을 별도로 새로 만들어 저장함
 function triggerQrFileDownload(size){
   if (!createdRegistration) return;
+  /* 🔴 2026-11-11 — 차량 등록만: 「통화를 원하시면 QR코드를 스캔하세요」 스티커로 저장 */
+  if (selectedCategory === 'vehicle' && window.QRSticker && !(window.AliasNative && typeof AliasNative.printPage === 'function')) {
+    const u = QRSticker.make(CONNECT_BASE_URL + createdRegistration.qr_code_token);
+    if (u) QRSticker.save(u, 'garimcall-qr-sticker.png');
+    return;
+  }
   /* 🔴 2026-09-29 — 앱 안에서는 <a download> 가 아무 일도 하지 않습니다.
      그래서 앱에서는 인쇄 창을 열어 "PDF로 저장" 하거나 바로 인쇄하게 합니다. */
   if (window.AliasNative && typeof AliasNative.printPage === 'function') {
@@ -1704,6 +1711,12 @@ function buildPrintCell(mm){
 
 document.getElementById('printNowBtn').addEventListener('click', () => {
   if (!createdRegistration) { alert(I18N[currentLang].completeFirst); return; }
+  /* 🔴 2026-11-11 — 차량 등록만: A4 칸 인쇄 대신 「통화를 원하시면 QR코드를 스캔하세요」 스티커(가로 10cm) */
+  if (selectedCategory === 'vehicle' && window.QRSticker) {
+    const u = QRSticker.make(CONNECT_BASE_URL + createdRegistration.qr_code_token);
+    if (u) QRSticker.print(u);
+    return;
+  }
 
   const sheet = document.getElementById('printSheet');
   sheet.innerHTML = '';
