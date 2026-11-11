@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>가림 사용설명서 · Aliascall Guide</title>
+<title>가림콜 사용설명서 · Aliascall Guide</title>
 <meta name="theme-color" content="#1F6F6B">
 <style>
 :root{ --paper:#B8D3BE; --card:#fff; --ink:#12302E; --soft:#3E5654; --line:#DCE3DE; --teal:#1F6F6B; --deep:#123F3D; --tint:#E4EFEE; --coral:#E8734A; --warn:#FDEAE1; }
@@ -46,7 +46,7 @@ html[lang="ko"] span[data-l="ko"], html[lang="en"] span[data-l="en"]{ display:in
 
 <!-- ═══════════════════════════ 한국어 ═══════════════════════════ -->
 <div data-l="ko">
-  <h1>📘 가림 사용설명서</h1>
+  <h1>📘 가림콜 사용설명서</h1>
   <p class="lede">가림(구 에일리어스콜)은 <b>전화번호를 알려주지 않고</b> 연결되는 안심 연락 앱입니다. 이 설명서는 <b>설치부터 탈퇴까지</b> 순서대로 안내합니다.</p>
 
   <div class="toc"><b>차례</b>
@@ -59,7 +59,7 @@ html[lang="ko"] span[data-l="ko"], html[lang="en"] span[data-l="en"]{ display:in
 
   <section id="k0"><h2>0. 설치</h2>
     <ol>
-      <li>Play 스토어에서 <b>"가림"</b> 또는 <b>"에일리어스콜"</b>을 찾아 <b>설치</b>합니다.</li>
+      <li>Play 스토어에서 <b>"가림콜"</b> 또는 <b>"에일리어스콜"</b>을 찾아 <b>설치</b>합니다.</li>
       <li>앱 없이 <b>aliascall.com</b> 웹으로도 쓸 수 있지만, <b>잠금화면 전화 · 이어폰 단추</b>는 앱에서만 됩니다.</li>
     </ol>
   </section>
@@ -473,7 +473,7 @@ html[lang="ko"] span[data-l="ko"], html[lang="en"] span[data-l="en"]{ display:in
   var lang = pick();
   function apply(){
     document.documentElement.lang = lang;
-    document.title = lang === 'en' ? 'Aliascall Guide' : '가림 사용설명서';
+    document.title = lang === 'en' ? 'Aliascall Guide' : '가림콜 사용설명서';
     document.getElementById('langBtn').textContent = lang === 'en' ? '한국어' : 'EN';
   }
   document.getElementById('langBtn').addEventListener('click', function(){ lang = (lang === 'en') ? 'ko' : 'en'; apply(); window.scrollTo(0, 0); });
