@@ -104,6 +104,9 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
 /* 2026-08-23 신설: 마이페이지 바로 인쇄(100P 차감) */
 .reg-plate-print{ font-size:10px; font-weight:800; color:#fff; background:var(--coral,#E8734A); border:none; border-radius:12px; padding:5px 9px; cursor:pointer; white-space:nowrap; margin-top:5px; display:block; }
+/* 🔴 2026-11-12 차량 등록: 버튼 4개를 「대시보드 알림판」과 같은 크기 · 모양으로(색만 다르게) */
+.reg-vbtn{ font-size:10px !important; font-weight:800 !important; color:#fff !important; border:none; border-radius:12px; padding:5px 9px !important; cursor:pointer; white-space:nowrap; margin-top:5px !important; display:block !important; text-decoration:none; text-align:center; box-sizing:border-box; }
+.reg-qr-wrap .reg-vbtn, .reg-qr-wrap .reg-plate-print{ width:100%; }
 .reg-qr-print{ font-size:10px; font-weight:700; color:#8a6416; background:rgba(201,162,75,.15); border:none; border-radius:12px; padding:4px 9px; cursor:pointer; white-space:nowrap; margin-top:5px; }
 
 /* 2026-08-23 신설: 인쇄 모달(사이즈 선택 + 가득채우기/견본섞기) */
@@ -393,8 +396,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 </style>
 <!-- 🔴 2026-10-07 화면 설정(주간/야간·색깔·글자) -->
 <script src="aliascall_theme.js?v=20261103b"></script>
-<script src="aliascall_parking_plate.js?v=20261112c"></script>
-<script src="aliascall_qr_sticker.js?v=20261112c"></script>
+<script src="aliascall_parking_plate.js?v=20261112d"></script>
+<script src="aliascall_qr_sticker.js?v=20261112d"></script>
 <script src="aliascall_temp_names.js?v=20261029"></script>
 <script>document.addEventListener('DOMContentLoaded',function(){try{if((localStorage.getItem('aliascall_lang')||'').indexOf('en')===0){var b=document.getElementById('acThemeOpen');if(b)b.textContent='🎨 Display';}}catch(e){}});</script>
 </head>
@@ -2171,9 +2174,9 @@ async function loadMyRegistrations(userId){
           <div class="reg-qr-wrap">
             <div class="reg-qr-box" id="qr-${r.id}"></div>
             <div class="reg-qr-token" title="${r.qr_code_token || ''}">${I18N[currentLang].tokenLabel} ${(r.qr_code_token || '').slice(0, 8)}…</div>
-            <button type="button" class="reg-qr-download" data-id="${r.id}" data-name="${label}" data-token="${r.qr_code_token || ''}" data-cat="${r.category}">${I18N[currentLang].qrDownloadBtn}</button>
-            <button type="button" class="reg-qr-print" data-id="${r.id}" data-name="${label}" data-token="${r.qr_code_token || ''}" data-cat="${r.category}">${r.category === 'vehicle' ? (currentLang === 'en' ? '🏷 QR sticker' : '🏷 QR 스티커') : I18N[currentLang].qrPrintBtn}</button>
-            ${r.category === 'vehicle' ? '<a class="reg-film" style="display:inline-block;text-decoration:none;font-size:10px;font-weight:700;color:#6a3d9a;background:rgba(106,61,154,.1);border-radius:12px;padding:4px 9px;margin-top:5px;white-space:nowrap" href="https://www.coupang.com/vp/products/8626482812?vendorItemId=92033809085" target="_blank" rel="noopener">' + (currentLang === 'en' ? '🛡 Protective film' : '🛡 보호필름 사기') + '</a>' : ''}
+            <button type="button" class="reg-qr-download${r.category === 'vehicle' ? ' reg-vbtn' : ''}" ${r.category === 'vehicle' ? 'style="background:#1F8A83"' : ''} data-id="${r.id}" data-name="${label}" data-token="${r.qr_code_token || ''}" data-cat="${r.category}">${r.category === 'vehicle' ? (currentLang === 'en' ? '⬇ QR download' : '⬇ QR 다운로드') : I18N[currentLang].qrDownloadBtn}</button>
+            <button type="button" class="reg-qr-print${r.category === 'vehicle' ? ' reg-vbtn' : ''}" ${r.category === 'vehicle' ? 'style="background:#6A3D9A"' : ''} data-id="${r.id}" data-name="${label}" data-token="${r.qr_code_token || ''}" data-cat="${r.category}">${r.category === 'vehicle' ? (currentLang === 'en' ? '🏷 Print QR sticker' : '🏷 QR 스티커 인쇄') : I18N[currentLang].qrPrintBtn}</button>
+            ${r.category === 'vehicle' ? '<a class="reg-film reg-vbtn" style="background:#2F6FD6" href="https://www.coupang.com/vp/products/8626482812?vendorItemId=92033809085" target="_blank" rel="noopener">' + (currentLang === 'en' ? '🛡 Buy protective film' : '🛡 보호필름 구매') + '</a>' : ''}
             ${r.category === 'vehicle' && r.qr_code_token ? '<button type="button" class="reg-plate-print" data-token="' + r.qr_code_token + '">' + (currentLang === 'en' ? '🔺 Dashboard sign' : '🔺 대시보드 알림판') + '</button>' : ''}
           </div>
           <div class="reg-media-thumbs" id="media-${r.id}"></div>
