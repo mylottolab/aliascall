@@ -12,6 +12,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#1F6F6B">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_store.js"></script>
+<script src="aliascall_web_pay.js"></script>
 <script src="aliascall_payments.js"></script>
 <script src="aliascall_push.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -104,6 +106,8 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
 
 /* 2026-08-23 신설: 마이페이지 바로 인쇄(100P 차감) */
 .reg-plate-print{ font-size:10px; font-weight:800; color:#fff; background:var(--coral,#E8734A); border:none; border-radius:12px; padding:5px 9px; cursor:pointer; white-space:nowrap; margin-top:5px; display:block; }
+.reg-car-on{ font-size:10px; font-weight:800; color:#1F8A83; margin-top:7px; text-align:center; }
+.reg-car-hint{ font-size:9.5px; color:var(--ink-soft,#7a8580); text-align:center; line-height:1.4; margin-top:3px; }
 /* 🔴 2026-11-12 차량 등록: 버튼 4개를 「대시보드 알림판」과 같은 크기 · 모양으로(색만 다르게) */
 .reg-vbtn{ font-size:10px !important; font-weight:800 !important; color:#fff !important; border:none; border-radius:12px; padding:5px 9px !important; cursor:pointer; white-space:nowrap; margin-top:5px !important; display:block !important; text-decoration:none; text-align:center; box-sizing:border-box; }
 .reg-qr-wrap .reg-vbtn, .reg-qr-wrap .reg-plate-print{ width:100%; }
@@ -2145,6 +2149,67 @@ async function loadSubscriptionStatus(userId){
 const CONNECT_BASE_URL = 'https://aliascall.com/aliascall_connect.html?t=';
 const MEDIA_TYPE_ICON = { video:'🎬', audio:'🎵', document:'📄' };
 
+/* ── 🔴 2026-11-12 가림콜 차량 이용권 (바로카와 같은 규칙 · 같은 권) ───────────────────
+   등록 1대 2,500원(garim_car_reg) · 번호 변경 2,500원(garim_car_change) · 처분(삭제)은 무료.
+   앱 안 = 구글 · 애플 결제, 웹 = 국내카드(이니시스). 결제 뒤 권으로 마무리(baroka_claim · baroka_change_plate). */
+const CAR_PEND = 'garim_car_pending';
+const CAR_ERR = {
+  bad_plate: '차번호가 번호판 모양(예: 12가 3456)이 아니에요. 「수정」에서 차번호를 고친 뒤 다시 눌러 주세요.',
+  no_credit: '이용권이 아직 들어오지 않았어요. 잠시 뒤 다시 눌러 주세요.',
+  same: '지금 번호와 같아요.', not_mine: '내 등록이 아니에요.', not_vehicle: '차량 등록에서만 쓸 수 있어요.', login: '다시 로그인해 주세요.',
+};
+async function carFinish(job){
+  const r = job.kind === 'reg'
+    ? await sb.rpc('baroka_claim', { p_reg: job.reg })
+    : await sb.rpc('baroka_change_plate', { p_reg: job.reg, p_plate: job.plate });
+  const d = r.data || {};
+  if (r.error || !d.ok) { alert(CAR_ERR[d.error] || ('처리하지 못했어요. ' + ((r.error && r.error.message) || d.error || ''))); return false; }
+  try { localStorage.removeItem(CAR_PEND); } catch (e) {}
+  alert(job.kind === 'reg'
+    ? '차량 이용권이 적용됐어요. 이제 이 차는 월 요금 없이 전화 + 문자로 연결됩니다.' + (d.dup ? '\n(같은 차번호가 이미 다른 분께도 등록되어 있어요. 내 차가 맞는지 확인해 주세요.)' : '')
+    : '차번호를 바꿨어요. QR은 그대로 써도 됩니다.');
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) loadMyRegistrations(session.user.id);
+  return true;
+}
+async function carPass(kind, regId, plate){
+  const { data: st } = await sb.rpc('baroka_state');
+  if (!st || !st.ok) { alert(CAR_ERR.login); return; }
+  const job = { kind: kind, reg: regId, plate: plate || '' };
+  if ((kind === 'reg' ? st.reg_credits : st.change_credits) > 0) return carFinish(job);
+  try { localStorage.setItem(CAR_PEND, JSON.stringify(job)); } catch (e) {}
+  const sku = kind === 'reg' ? 'garim_car_reg' : 'garim_car_change';
+  if (window.ACStore && ACStore.inApp()) {
+    ACStore.onDone = async (res) => {
+      if (res.ok) await carResume(true);
+      else if (res.canceled) { try { localStorage.removeItem(CAR_PEND); } catch (e) {} }
+      else if (!res.pending) alert('결제를 마치지 못했어요. ' + (res.error || ''));
+    };
+    ACStore.buy(sku, {});
+    return;
+  }
+  if (window.ACStore && ACStore.oldApp && ACStore.oldApp()) { alert('앱을 최신으로 업데이트한 뒤 다시 눌러 주세요.'); return; }
+  if (!window.ACWeb) { alert('결제 창을 열지 못했어요. 새로고침 후 다시 눌러 주세요.'); return; }
+  const ok = await ACWeb.inicis(sb, sku, { reg: regId, plate: plate || '' }, { buyername: '회원' });
+  if (!ok) { try { localStorage.removeItem(CAR_PEND); } catch (e) {} }
+}
+/* 결제창에서 돌아왔거나(?webpaid=) 앱 결제가 끝났을 때 · 못 끝낸 것이 있으면 이어서 마무리 */
+let carResumed = false;
+async function carResume(force){
+  if (carResumed && !force) return; carResumed = true;
+  const q = new URLSearchParams(location.search);
+  const sku = q.get('sku') || '';
+  if (sku.startsWith('garim_car') && q.get('webpaid') === '0') {
+    alert(q.get('msg') || '결제를 마치지 못했어요.');
+    try { localStorage.removeItem(CAR_PEND); } catch (e) {}
+  }
+  if (sku.startsWith('garim_car')) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+  let job = null; try { job = JSON.parse(localStorage.getItem(CAR_PEND) || 'null'); } catch (e) {}
+  if (!job) return;
+  const { data: st } = await sb.rpc('baroka_state');
+  if (st && st.ok && (job.kind === 'reg' ? st.reg_credits : st.change_credits) > 0) await carFinish(job);
+}
+
 async function loadMyRegistrations(userId){
   const container = document.getElementById('myRegistrations');
   const { data, error } = await sb.from('registrations')
@@ -2158,6 +2223,13 @@ async function loadMyRegistrations(userId){
     return;
   }
 
+  /* 🔴 2026-11-12 — 차량 이용권(바로카와 같은 권). 이용권을 쓴 차 = 언제나 전화 + 메시지 */
+  let CARST = null;
+  if (data.some((r) => r.category === 'vehicle')) {
+    try { const { data: st } = await sb.rpc('baroka_state'); CARST = (st && st.ok) ? st : null; } catch (e) { console.warn('[car pass]', e); }
+  }
+  window.__carPaid = new Set(((CARST && CARST.cars) || []).map((c) => c.id));
+  if (!carResumed) setTimeout(() => carResume(false), 300);
   container.innerHTML = data.map((r) => {
     const label = r.search_key || r.title || CATEGORY_LABEL_OF(r.category) || T().fallbackItem;
     const foreverBadge = NEVER_EXPIRES.includes(r.category)
@@ -2178,6 +2250,9 @@ async function loadMyRegistrations(userId){
             <button type="button" class="reg-qr-print${r.category === 'vehicle' ? ' reg-vbtn' : ''}" ${r.category === 'vehicle' ? 'style="background:#6A3D9A"' : ''} data-id="${r.id}" data-name="${label}" data-token="${r.qr_code_token || ''}" data-cat="${r.category}">${r.category === 'vehicle' ? (currentLang === 'en' ? '🏷 Print QR sticker' : '🏷 QR 스티커 인쇄') : I18N[currentLang].qrPrintBtn}</button>
             ${r.category === 'vehicle' ? '<a class="reg-film reg-vbtn" style="background:#2F6FD6" href="https://www.coupang.com/vp/products/8626482812?vendorItemId=92033809085" target="_blank" rel="noopener">' + (currentLang === 'en' ? '🛡 Buy protective film' : '🛡 보호필름 구매') + '</a>' : ''}
             ${r.category === 'vehicle' && r.qr_code_token ? '<button type="button" class="reg-plate-print" data-token="' + r.qr_code_token + '">' + (currentLang === 'en' ? '🔺 Dashboard sign' : '🔺 대시보드 알림판') + '</button>' : ''}
+            ${r.category === 'vehicle' ? (window.__carPaid.has(r.id)
+              ? '<div class="reg-car-on">' + (currentLang === 'en' ? '✅ Car pass · call + message' : '✅ 차량 이용권 · 전화+문자') + '</div><button type="button" class="reg-vbtn reg-car-change" style="background:#4A5A6A" data-id="' + r.id + '">' + (currentLang === 'en' ? '🔁 Change plate (₩2,500)' : '🔁 번호 변경 2,500원') + '</button>'
+              : '<button type="button" class="reg-vbtn reg-car-buy" style="background:#C98A1B" data-id="' + r.id + '">' + (currentLang === 'en' ? '🎫 Car pass ₩2,500' : '🎫 차량 이용권 2,500원') + '</button><div class="reg-car-hint">' + (currentLang === 'en' ? 'One payment · no monthly fee. Without it: message only.' : '한 번 결제 · 월 요금 없음<br>없으면 메시지로만 연결') + '</div>') : ''}
           </div>
           <div class="reg-media-thumbs" id="media-${r.id}"></div>
         </div>
@@ -2198,6 +2273,11 @@ async function loadMyRegistrations(userId){
   container.querySelectorAll('.reg-qr-download').forEach((btn) => {
     btn.addEventListener('click', () => (btn.dataset.cat === 'vehicle' && window.QRSticker) ? vehicleSticker(btn.dataset.id, btn.dataset.token, false) : downloadQr(btn.dataset.name, btn.dataset.token));
   });
+  container.querySelectorAll('.reg-car-buy').forEach((btn) => btn.addEventListener('click', () => carPass('reg', btn.dataset.id)));
+  container.querySelectorAll('.reg-car-change').forEach((btn) => btn.addEventListener('click', () => {
+    const p = prompt(currentLang === 'en' ? 'New plate number (e.g. 12가 3456)' : '새 차번호를 적어 주세요 (예: 12가 3456)');
+    if (p && p.trim()) carPass('change', btn.dataset.id, p.trim());
+  }));
   // 🔴 2026-10-29 주차 알림판 인쇄(차량만)
   container.querySelectorAll('.reg-plate-print').forEach((btn) => {
     btn.addEventListener('click', () => { if (window.ParkingPlate) ParkingPlate.print({ token: btn.dataset.token }); });
@@ -2567,6 +2647,9 @@ async function openEditModal(regId, category){
     if (category === 'vehicle') {
       document.getElementById('editFieldsVehicle').style.display = 'block';
       document.getElementById('editPlateNumber').value = detail?.plate_number || '';
+      { const pi = document.getElementById('editPlateNumber'); const paid = !!(window.__carPaid && window.__carPaid.has(regId));
+        pi.readOnly = paid; pi.style.opacity = paid ? '.6' : '';
+        pi.title = paid ? '차량 이용권을 쓴 차는 「번호 변경 2,500원」으로 바꿉니다' : ''; }
       document.getElementById('editVehicleMake').value = detail?.make || '';
       document.getElementById('editVehicleColor').value = detail?.color || '';
     } else if (category === 'lost_item') {
@@ -2732,7 +2815,8 @@ document.getElementById('editRegSaveBtn').addEventListener('click', async () => 
     const { data: { session } } = await sb.auth.getSession();
     await loadMyRegistrations(session.user.id);
   } catch (e) {
-    alert(T().alertSaveFail + e.message);
+    if (String(e && e.message || '').includes('baroka_change_required')) alert('차량 이용권을 쓴 차는 차번호를 「🔁 번호 변경 2,500원」으로 바꿉니다.');
+    else alert(T().alertSaveFail + e.message);
   } finally {
     btn.disabled = false; btn.textContent = T().saveBtn;
   }
