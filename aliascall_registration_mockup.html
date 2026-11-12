@@ -601,6 +601,9 @@ main{ max-width:520px; margin:0 auto; padding:28px 20px 120px; }
     <button class="btn btn-primary" id="printNowBtn" style="margin-top:10px; background:var(--teal-deep);" data-i18n="printNowBtn">🖨️ 지금 인쇄하기</button>
     <!-- 🔴 2026-10-29 차량이면: 전화번호 대신 QR 주차 알림판 -->
     <button class="btn" id="platePrintBtn" style="display:none;margin-top:10px;background:var(--coral,#E8734A);color:#fff;border:none">🔺 대시보드 알림판 인쇄 (위 「인쇄」는 6×6cm QR 스티커 4장)</button>
+    <!-- 🔴 2026-11-12 차량 이용권(2,500원 · 한 번) — 마이페이지에서 이 차에 바로 적용 -->
+    <a id="carPassLink" href="#" style="display:none;text-align:center;margin-top:10px;padding:12px;border-radius:12px;background:#C98A1B;color:#fff;font-weight:800;text-decoration:none">🎫 이 차에 차량 이용권 적용 (2,500원 · 한 번 · 월 요금 없음)</a>
+    <div id="carPassHint" style="display:none;text-align:center;font-size:12px;color:#7a8580;margin-top:4px">이용권이 없으면 메시지로만 연결돼요 · 다른 이용권이 있으면 그 기간에는 안 사셔도 돼요</div>
     <a id="filmLink" href="https://www.coupang.com/vp/products/8626482812?vendorItemId=92033809085" target="_blank" rel="noopener" style="display:none;text-align:center;margin-top:8px;font-size:13px;font-weight:700;color:#6a3d9a">🛡 투명 보호필름(6.5 × 6.5cm) 구매 — 붙이면 방수 · 붙이기 쉬움 ›</a>
     <div class="error-text" id="err5" data-i18n="err5">포인트가 부족합니다. 충전 후 다시 시도해주세요.</div>
     <a href="#" class="guide-link" id="goRechargeLink" style="display:none;" data-i18n="goRecharge">💰 충전하러 가기</a>
@@ -1889,6 +1892,9 @@ function initPetAiUpsell(registrationId){
   setInterval(function(){
     try { b.style.display = (selectedCategory === 'vehicle' && createdRegistration && createdRegistration.qr_code_token) ? 'block' : 'none'; } catch (e) {}
     try { var fl = document.getElementById('filmLink'); if (fl) fl.style.display = b.style.display; } catch (e) {}
+    try { var cl = document.getElementById('carPassLink'), ch = document.getElementById('carPassHint');
+          if (cl) { cl.style.display = b.style.display; if (createdRegistration) cl.href = 'aliascall_my_account.html?carpass=' + encodeURIComponent(createdRegistration.id); }
+          if (ch) ch.style.display = b.style.display; } catch (e) {}
   }, 800);
   b.addEventListener('click', function(){ if (window.ParkingPlate && createdRegistration) ParkingPlate.print({ token: createdRegistration.qr_code_token }); });
 })();

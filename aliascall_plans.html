@@ -198,6 +198,8 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
       <div class="sect" style="font-size:16px;margin-top:4px;" data-i18n="gQ">무엇을 하고 싶으세요?</div>
       <div class="goals">
         <button type="button" class="goal" data-goal="car"><span class="gi">🚗</span><span class="gt"><b data-i18n="gCar">차 · 소지품에 QR(또는 등록한 검색어)을 붙여 연락받기</b><span data-i18n="gCarD">주차 · 분실물 연락을 번호 없이. 차량은 등록만 하면 번호판으로 찾아요</span></span><span class="gp" data-i18n-html="gCarP">기본형 연 2,200원<br>문자인식 무제한 연 5,500원</span></button>
+        <!-- 🔴 2026-11-12 차량 이용권(바로카와 같은 규칙) — 차 한 대에 붙이는 상품이라 마이페이지 차량 카드에서 삽니다 -->
+        <a class="goal" href="aliascall_my_account.html?carpass=1" style="text-decoration:none;color:inherit"><span class="gi">🎫</span><span class="gt"><b data-i18n="gCarPass">차 한 대만 · 차량 이용권</b><span data-i18n="gCarPassD">한 번 결제 · 월 요금 없음 · 차를 바꿀 때까지 전화 + 문자. 번호 변경 2,500원 · 처분은 무료</span></span><span class="gp" data-i18n="gCarPassP">2,500원</span></a>
         <button type="button" class="goal" data-goal="people"><span class="gi">💚</span><span class="gt"><b data-i18n="gPeople">정해진 사람과 번호 없이 대화 · 통화</b><span data-i18n="gPeopleD">연인 · 가족 · 친구 · 비서 · 거래처. 긴급 기능도 함께 들어 있어요</span></span><span class="gp" data-i18n="gPeopleP">3개월 9,900원~</span></button>
         <button type="button" class="goal" data-goal="biz"><span class="gi">💼</span><span class="gt"><b data-i18n="gBiz">손님 문의를 번호 없이 받기</b><span data-i18n="gBizD">가게 · 사무소 · 병원 · 상담 창구. 손님마다 방을 따로</span></span><span class="gp" data-i18n="gBizP">월 9,900원~</span></button>
         <button type="button" class="goal" data-goal="more"><span class="gi">➕</span><span class="gt"><b data-i18n="gMore">쓰던 것 늘리기</b><span data-i18n="gMoreD">기간 연장 · 4인으로 올리기 · 사용량 더하기</span></span><span class="gp"></span></button>
@@ -447,6 +449,7 @@ const I18N = {
     secNo:'암호화 여부는 쓰던 회선을 이어가며 바꿀 수 없습니다. 암호화가 필요하면 새 대화 창구를 열어 같은 상대를 초대하세요.',
     gQ:'무엇을 하고 싶으세요?', gAll:'📋 전체 상품 한꺼번에 보기', gBack:'← 처음으로 (다른 것 고르기)',
     gCar:'차 · 소지품에 QR(또는 등록한 검색어)을 붙여 연락받기', gCarD:'주차 · 분실물 연락을 번호 없이. 차량은 등록만 하면 번호판으로 찾아요', gCarP:'기본형 연 2,200원<br>문자인식 무제한 연 5,500원',
+    gCarPass:'차 한 대만 · 차량 이용권', gCarPassD:'한 번 결제 · 월 요금 없음 · 차를 바꿀 때까지 전화 + 문자. 번호 변경 2,500원 · 처분은 무료', gCarPassP:'2,500원',
     gPeople:'정해진 사람과 번호 없이 대화 · 통화', gPeopleD:'연인 · 가족 · 친구 · 비서 · 거래처. 긴급 기능도 함께 들어 있어요', gPeopleP:'3개월 9,900원~',
     gBiz:'손님 문의를 번호 없이 받기', gBizD:'가게 · 사무소 · 병원 · 상담 창구. 손님마다 방을 따로', gBizP:'월 9,900원~',
     gMore:'쓰던 것 늘리기', gMoreD:'기간 연장 · 4인으로 올리기 · 사용량 더하기',
@@ -530,6 +533,7 @@ const I18N = {
     secNo:'Encryption cannot be changed on an existing line. To use encryption, open a new line and invite the same person.',
     gQ:'What would you like to do?', gAll:'📋 See every plan at once', gBack:'← Start over (choose something else)',
     gCar:'Get contacted through a QR (or a registered keyword) on your car or belongings', gCarD:'Parking and lost-item contact without your number. Cars only need registering — found by plate', gCarP:'Basic 2,200 KRW / yr<br>Unlimited text scan 5,500 KRW / yr',
+    gCarPass:'One car only · Car pass', gCarPassD:'Pay once · no monthly fee · calls + messages until you change the car. Plate change 2,500 KRW · removal free', gCarPassP:'2,500 KRW',
     gPeople:'Talk and call certain people without numbers', gPeopleD:'Partner · family · friends · assistant · client. Emergency features included', gPeopleP:'from 9,900 KRW / 3 mo',
     gBiz:'Take customer inquiries without a number', gBizD:'Shops · offices · clinics · help desks. One room per customer', gBizP:'from 9,900 KRW / mo',
     gMore:'Extend what you have', gMoreD:'Extend · upgrade to 4 people · add usage',
@@ -622,7 +626,7 @@ function paintGoal(){
   el('goalBack').style.display = goal ? '' : 'none';
 }
 function goalOf(p){ return /^emergency/.test(p) ? 'car' : (p === 'basic' || p === 'premium') ? 'people' : (/^pro_|listing/.test(p) ? 'biz' : (p === 'usage' ? 'more' : 'all')); }
-document.querySelectorAll('.goal').forEach((b) => b.addEventListener('click', () => {
+document.querySelectorAll('.goal[data-goal]').forEach((b) => b.addEventListener('click', () => {
   goal = b.dataset.goal; plan = null; dur = null; hush();
   if (goal === 'more' && myLines.length) mode = 'cont';
   paintGoal(); paint(); window.scrollTo(0, 0);

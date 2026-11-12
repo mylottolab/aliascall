@@ -2152,6 +2152,7 @@ const MEDIA_TYPE_ICON = { video:'🎬', audio:'🎵', document:'📄' };
 /* ── 🔴 2026-11-12 가림콜 차량 이용권 (바로카와 같은 규칙 · 같은 권) ───────────────────
    등록 1대 2,500원(garim_car_reg) · 번호 변경 2,500원(garim_car_change) · 처분(삭제)은 무료.
    앱 안 = 구글 · 애플 결제, 웹 = 국내카드(이니시스). 결제 뒤 권으로 마무리(baroka_claim · baroka_change_plate). */
+function carDate(d){ return currentLang === 'en' ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : (d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일'); }
 const CAR_PEND = 'garim_car_pending';
 const CAR_ERR = {
   bad_plate: '차번호가 번호판 모양(예: 12가 3456)이 아니에요. 「수정」에서 차번호를 고친 뒤 다시 눌러 주세요.',
@@ -2177,6 +2178,14 @@ async function carPass(kind, regId, plate){
   if (!st || !st.ok) { alert(CAR_ERR.login); return; }
   const job = { kind: kind, reg: regId, plate: plate || '' };
   if ((kind === 'reg' ? st.reg_credits : st.change_credits) > 0) return carFinish(job);
+  /* 🔴 다른 이용권으로 이미 전화까지 되는 분께는 「지금 안 사셔도 된다」를 먼저 알립니다 */
+  if (kind === 'reg' && window.__subUntil) {
+    const d = carDate(window.__subUntil);
+    const msg = currentLang === 'en'
+      ? 'Your current pass already connects calls + messages for this car until ' + d + ', so you do not need to buy now.\n\nPlease buy the car pass before ' + d + '. If you buy now, the car pass keeps this car connected until you change the car.\n\nBuy now?'
+      : '회원님은 지금 쓰시는 이용권이 있어 ' + d + '까지는 구입하지 않으셔도 이 차가 전화 + 문자로 연결됩니다.\n그 만기 전에 차량 이용권 구매를 부탁드립니다.\n\n지금 구매하시면 차량 이용권은 차량을 바꾸기 전까지 계속 이용하실 수 있습니다.\n\n지금 구매하시겠어요?';
+    if (!confirm(msg)) return;
+  }
   try { localStorage.setItem(CAR_PEND, JSON.stringify(job)); } catch (e) {}
   const sku = kind === 'reg' ? 'garim_car_reg' : 'garim_car_change';
   if (window.ACStore && ACStore.inApp()) {
@@ -2205,6 +2214,19 @@ async function carResume(force){
   }
   if (sku.startsWith('garim_car')) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
   let job = null; try { job = JSON.parse(localStorage.getItem(CAR_PEND) || 'null'); } catch (e) {}
+  /* 요금제 화면 · 등록 완료 화면에서 「차량 이용권」을 누르고 왔을 때 (?carpass=1 · ?carpass=<등록 번호>) */
+  const cp = q.get('carpass');
+  if (cp && !job) {
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    const btns = Array.from(document.querySelectorAll('.reg-car-buy'));
+    const one = cp !== '1' ? btns.find((b) => b.dataset.id === cp) : (btns.length === 1 ? btns[0] : null);
+    if (one) { one.scrollIntoView({ block: 'center' }); setTimeout(() => one.click(), 400); }
+    else if (cp !== '1' && window.__carPaid && window.__carPaid.has(cp)) alert('이 차에는 이미 차량 이용권이 적용되어 있어요.');
+    else if (btns.length) { btns[0].scrollIntoView({ block: 'center' }); alert('차량 이용권을 적용할 차의 「🎫 차량 이용권 2,500원」을 눌러 주세요.'); }
+    else if (!document.querySelector('.reg-car-on')) { if (confirm('먼저 차를 등록해야 해요. 지금 차를 등록하시겠어요?')) location.href = 'aliascall_registration_mockup.html'; }
+    else alert('등록하신 차에는 모두 차량 이용권이 적용되어 있어요.');
+    return;
+  }
   if (!job) return;
   const { data: st } = await sb.rpc('baroka_state');
   if (st && st.ok && (job.kind === 'reg' ? st.reg_credits : st.change_credits) > 0) await carFinish(job);
@@ -2229,6 +2251,9 @@ async function loadMyRegistrations(userId){
     try { const { data: st } = await sb.rpc('baroka_state'); CARST = (st && st.ok) ? st : null; } catch (e) { console.warn('[car pass]', e); }
   }
   window.__carPaid = new Set(((CARST && CARST.cars) || []).map((c) => c.id));
+  window.__subUntil = null;
+  try { const { data: pf } = await sb.from('profiles').select('subscription_expires_at').eq('id', userId).maybeSingle();
+        const u = pf && pf.subscription_expires_at ? new Date(pf.subscription_expires_at) : null; window.__subUntil = (u && u > new Date()) ? u : null; } catch (e) {}
   if (!carResumed) setTimeout(() => carResume(false), 300);
   container.innerHTML = data.map((r) => {
     const label = r.search_key || r.title || CATEGORY_LABEL_OF(r.category) || T().fallbackItem;
@@ -2252,7 +2277,9 @@ async function loadMyRegistrations(userId){
             ${r.category === 'vehicle' && r.qr_code_token ? '<button type="button" class="reg-plate-print" data-token="' + r.qr_code_token + '">' + (currentLang === 'en' ? '🔺 Dashboard sign' : '🔺 대시보드 알림판') + '</button>' : ''}
             ${r.category === 'vehicle' ? (window.__carPaid.has(r.id)
               ? '<div class="reg-car-on">' + (currentLang === 'en' ? '✅ Car pass · call + message' : '✅ 차량 이용권 · 전화+문자') + '</div><button type="button" class="reg-vbtn reg-car-change" style="background:#4A5A6A" data-id="' + r.id + '">' + (currentLang === 'en' ? '🔁 Change plate (₩2,500)' : '🔁 번호 변경 2,500원') + '</button>'
-              : '<button type="button" class="reg-vbtn reg-car-buy" style="background:#C98A1B" data-id="' + r.id + '">' + (currentLang === 'en' ? '🎫 Car pass ₩2,500' : '🎫 차량 이용권 2,500원') + '</button><div class="reg-car-hint">' + (currentLang === 'en' ? 'One payment · no monthly fee. Without it: message only.' : '한 번 결제 · 월 요금 없음<br>없으면 메시지로만 연결') + '</div>') : ''}
+              : '<button type="button" class="reg-vbtn reg-car-buy" style="background:#C98A1B" data-id="' + r.id + '">' + (currentLang === 'en' ? '🎫 Car pass ₩2,500' : '🎫 차량 이용권 2,500원') + '</button><div class="reg-car-hint">' + (window.__subUntil
+                  ? (currentLang === 'en' ? 'Your current pass already covers calls until ' + carDate(window.__subUntil) + '.<br>Buy before then to keep calls after it.' : '지금 이용권으로 ' + carDate(window.__subUntil) + '까지<br>전화+문자 연결 중 · 그 전에 사 두세요')
+                  : (currentLang === 'en' ? 'One payment · no monthly fee. Without it: message only.' : '한 번 결제 · 월 요금 없음<br>없으면 메시지로만 연결')) + '</div>') : ''}
           </div>
           <div class="reg-media-thumbs" id="media-${r.id}"></div>
         </div>
