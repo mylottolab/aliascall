@@ -614,6 +614,7 @@ main{ max-width:480px; margin:0 auto; padding:28px 20px 60px; }
     </div>
 
     <div class="section-title" data-i18n="myRegistrationsTitle">내 등록물</div>
+    <div id="regInclNote" style="display:none;border-radius:14px;padding:11px 13px;margin:0 0 12px;font-size:12.5px;line-height:1.6;"></div>
     <div id="myRegistrations"></div>
     </div><!-- /svc-zone emg -->
 
@@ -2255,6 +2256,24 @@ async function loadMyRegistrations(userId){
   try { const { data: pf } = await sb.from('profiles').select('subscription_expires_at').eq('id', userId).maybeSingle();
         const u = pf && pf.subscription_expires_at ? new Date(pf.subscription_expires_at) : null; window.__subUntil = (u && u > new Date()) ? u : null; } catch (e) {}
   if (!carResumed) setTimeout(() => carResume(false), 300);
+  /* 🔴 2026-11-12 이용권 기간 동안 등록물도 전화 연결 — 지금 상태를 한 줄로 */
+  try {
+    const n = document.getElementById('regInclNote');
+    if (n) {
+      n.style.display = 'block';
+      if (window.__subUntil) {
+        n.style.cssText += ';background:#E8F6F3;color:#0E3532;border:1.5px solid #9ED9CF';
+        n.innerHTML = currentLang === 'en'
+          ? '✅ Thanks to your current pass, <b>all registrations connect by call + message until ' + carDate(window.__subUntil) + '</b>.'
+          : '✅ 지금 쓰시는 이용권 덕분에 <b>' + carDate(window.__subUntil) + '까지 모든 등록물이 전화 + 문자로 연결</b>됩니다.';
+      } else {
+        n.style.cssText += ';background:#FDF3E4;color:#5E4410;border:1.5px solid #E9C979';
+        n.innerHTML = currentLang === 'en'
+          ? '🎁 Buy a line pass or an emergency pass and <b>all registrations connect by call + message for that period</b>. <a href="aliascall_plans.html" style="color:inherit;font-weight:800">See passes ›</a>'
+          : '🎁 회선 이용권이나 긴급 이용권을 사시면 <b>그 기간 동안 모든 등록물이 전화 + 문자로 연결</b>됩니다. <a href="aliascall_plans.html" style="color:inherit;font-weight:800">이용권 보기 ›</a>';
+      }
+    }
+  } catch (e) {}
   container.innerHTML = data.map((r) => {
     const label = r.search_key || r.title || CATEGORY_LABEL_OF(r.category) || T().fallbackItem;
     const foreverBadge = NEVER_EXPIRES.includes(r.category)

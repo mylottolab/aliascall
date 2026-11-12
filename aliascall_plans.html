@@ -193,6 +193,8 @@ button:focus-visible, a:focus-visible{ outline:2px solid var(--coral); outline-o
     <div id="trialBonus" style="display:none;background:#FDF3E4;border:1.5px solid #E9C979;border-radius:14px;padding:11px 13px;margin:4px 0 14px;font-size:13px;line-height:1.6;color:#5E4410;"></div>
     <p class="sub" data-i18n="sub">번호를 드러내지 않고 연락하는 모든 기능이 이용권 하나에 들어 있습니다. 자동으로 다시 결제되지 않습니다.</p>
 
+    <!-- 🔴 2026-11-12 이용권 기간 = 등록물(차량 · 물건)도 전화 연결 — 많이들 모르셔서 -->
+    <div id="regIncl" style="background:#E8F6F3;border:1.5px solid #9ED9CF;border-radius:14px;padding:11px 13px;margin:0 0 14px;font-size:13px;line-height:1.6;color:#0E3532;" data-i18n-html="regIncl">🎁 <b>알고 계셨나요?</b> 회선 이용권이나 긴급 이용권을 사시면, <b>그 기간 동안 차량 · 물건 등 내 등록물도 모두 전화 + 문자로 연결</b>됩니다. 등록용 이용권을 따로 사지 않으셔도 됩니다. (업무용 프로 구독 제외)</div>
     <!-- 🔴 2026-10-21 목적부터 고르기 -->
     <div id="goalBox">
       <div class="sect" style="font-size:16px;margin-top:4px;" data-i18n="gQ">무엇을 하고 싶으세요?</div>
@@ -449,6 +451,7 @@ const I18N = {
     secNo:'암호화 여부는 쓰던 회선을 이어가며 바꿀 수 없습니다. 암호화가 필요하면 새 대화 창구를 열어 같은 상대를 초대하세요.',
     gQ:'무엇을 하고 싶으세요?', gAll:'📋 전체 상품 한꺼번에 보기', gBack:'← 처음으로 (다른 것 고르기)',
     gCar:'차 · 소지품에 QR(또는 등록한 검색어)을 붙여 연락받기', gCarD:'주차 · 분실물 연락을 번호 없이. 차량은 등록만 하면 번호판으로 찾아요', gCarP:'기본형 연 2,200원<br>문자인식 무제한 연 5,500원',
+    regIncl:'🎁 <b>알고 계셨나요?</b> 회선 이용권이나 긴급 이용권을 사시면, <b>그 기간 동안 차량 · 물건 등 내 등록물도 모두 전화 + 문자로 연결</b>됩니다. 등록용 이용권을 따로 사지 않으셔도 됩니다. (업무용 프로 구독 제외)',
     gCarPass:'차 한 대만 · 차량 이용권', gCarPassD:'한 번 결제 · 월 요금 없음 · 차를 바꿀 때까지 전화 + 문자. 번호 변경 2,500원 · 처분은 무료', gCarPassP:'2,500원',
     gPeople:'정해진 사람과 번호 없이 대화 · 통화', gPeopleD:'연인 · 가족 · 친구 · 비서 · 거래처. 긴급 기능도 함께 들어 있어요', gPeopleP:'3개월 9,900원~',
     gBiz:'손님 문의를 번호 없이 받기', gBizD:'가게 · 사무소 · 병원 · 상담 창구. 손님마다 방을 따로', gBizP:'월 9,900원~',
@@ -533,6 +536,7 @@ const I18N = {
     secNo:'Encryption cannot be changed on an existing line. To use encryption, open a new line and invite the same person.',
     gQ:'What would you like to do?', gAll:'📋 See every plan at once', gBack:'← Start over (choose something else)',
     gCar:'Get contacted through a QR (or a registered keyword) on your car or belongings', gCarD:'Parking and lost-item contact without your number. Cars only need registering — found by plate', gCarP:'Basic 2,200 KRW / yr<br>Unlimited text scan 5,500 KRW / yr',
+    regIncl:'🎁 <b>Did you know?</b> With a line pass or an emergency pass, <b>all your registrations (car, belongings…) also connect by call + message for that period</b>. No separate registration pass needed. (Business Pro excluded)',
     gCarPass:'One car only · Car pass', gCarPassD:'Pay once · no monthly fee · calls + messages until you change the car. Plate change 2,500 KRW · removal free', gCarPassP:'2,500 KRW',
     gPeople:'Talk and call certain people without numbers', gPeopleD:'Partner · family · friends · assistant · client. Emergency features included', gPeopleP:'from 9,900 KRW / 3 mo',
     gBiz:'Take customer inquiries without a number', gBizD:'Shops · offices · clinics · help desks. One room per customer', gBizP:'from 9,900 KRW / mo',
