@@ -2153,6 +2153,15 @@ const MEDIA_TYPE_ICON = { video:'🎬', audio:'🎵', document:'📄' };
 /* ── 🔴 2026-11-12 가림콜 차량 이용권 (바로카와 같은 규칙 · 같은 권) ───────────────────
    등록 1대 2,500원(garim_car_reg) · 번호 변경 2,500원(garim_car_change) · 처분(삭제)은 무료.
    앱 안 = 구글 · 애플 결제, 웹 = 국내카드(이니시스). 결제 뒤 권으로 마무리(baroka_claim · baroka_change_plate). */
+function couponPhase(c){ const n = new Date(); return n < new Date(c.full_until) ? 'full' : (n < new Date(c.msg_until) ? 'msg' : 'off'); }
+function couponHint(c){
+  const ph = couponPhase(c), f = carDate(new Date(c.full_until)), m = carDate(new Date(c.msg_until));
+  if (currentLang === 'en') return ph === 'full' ? '🎁 Free month: calls + messages until ' + f + ', messages only until ' + m
+    : ph === 'msg' ? '<b style="color:#B7791F">⚠ Free calls ended · messages only until ' + m + '</b>' : '<b style="color:#C0392B">⛔ Free period ended · contact stopped</b>';
+  return ph === 'full' ? '🎁 1개월 무료 · ' + f + '까지 전화+문자<br>' + m + '까지 문자만 · 그 뒤 연결 멈춤'
+    : ph === 'msg' ? '<b style="color:#B7791F">⚠ 무료 전화 끝 · ' + m + '까지 문자만</b><br>그 전에 이용권을 사 주세요'
+    : '<b style="color:#C0392B">⛔ 무료 기간 끝 · 연결이 멈췄어요</b><br>이용권을 사면 바로 다시 열려요';
+}
 function carDate(d){ return currentLang === 'en' ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : (d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일'); }
 const CAR_PEND = 'garim_car_pending';
 const CAR_ERR = {
@@ -2252,10 +2261,34 @@ async function loadMyRegistrations(userId){
     try { const { data: st } = await sb.rpc('baroka_state'); CARST = (st && st.ok) ? st : null; } catch (e) { console.warn('[car pass]', e); }
   }
   window.__carPaid = new Set(((CARST && CARST.cars) || []).map((c) => c.id));
+  /* 🔴 2026-11-12 간편 등록(garimcall.com/car) 1개월 무료 쿠폰 차 */
+  window.__carCoupon = {};
+  if (data.some((r) => r.category === 'vehicle')) {
+    try { const { data: cl } = await sb.rpc('car_coupon_list'); (cl || []).forEach((c) => { if (!c.paid) window.__carCoupon[c.id] = c; }); } catch (e) {}
+  }
   window.__subUntil = null;
   try { const { data: pf } = await sb.from('profiles').select('subscription_expires_at').eq('id', userId).maybeSingle();
         const u = pf && pf.subscription_expires_at ? new Date(pf.subscription_expires_at) : null; window.__subUntil = (u && u > new Date()) ? u : null; } catch (e) {}
   if (!carResumed) setTimeout(() => carResume(false), 300);
+  /* 🔴 쿠폰이 끝나 가면 하루 한 번 이용권을 권합니다(중간중간 등록 요청) */
+  try {
+    const due = Object.values(window.__carCoupon).filter((c) => couponPhase(c) !== 'full');
+    const soon = Object.values(window.__carCoupon).filter((c) => couponPhase(c) === 'full' && (new Date(c.full_until) - new Date()) < 5 * 86400000);
+    const pick = due[0] || soon[0];
+    const key = 'car_coupon_nag_' + new Date().toDateString();
+    if (pick && !window.__subUntil && !localStorage.getItem(key)) {
+      localStorage.setItem(key, '1');
+      const ph = couponPhase(pick);
+      setTimeout(() => {
+        const msg = ph === 'off'
+          ? '🚗 ' + pick.plate + ' — 무료 기간이 끝나 지금은 연결이 멈춰 있어요.\n차량 이용권(2,500원 · 한 번)을 사면 바로 다시 전화 + 문자로 연결됩니다.\n\n지금 사시겠어요?'
+          : ph === 'msg'
+          ? '🚗 ' + pick.plate + ' — 무료 전화 기간이 끝나 ' + carDate(new Date(pick.msg_until)) + '까지는 문자만 와요. 그 뒤엔 연결이 멈춥니다.\n차량 이용권(2,500원 · 한 번 · 월 요금 없음)으로 계속 쓰세요.\n\n지금 사시겠어요?'
+          : '🚗 ' + pick.plate + ' — 1개월 무료 전화가 ' + carDate(new Date(pick.full_until)) + '에 끝나요.\n차량 이용권(2,500원 · 한 번 · 월 요금 없음)을 사 두면 차를 바꿀 때까지 계속 연결됩니다.\n\n지금 사시겠어요?';
+        if (confirm(msg)) carPass('reg', pick.id);
+      }, 900);
+    }
+  } catch (e) {}
   /* 🔴 2026-11-12 이용권 기간 동안 등록물도 전화 연결 — 지금 상태를 한 줄로 */
   try {
     const n = document.getElementById('regInclNote');
@@ -2296,7 +2329,7 @@ async function loadMyRegistrations(userId){
             ${r.category === 'vehicle' && r.qr_code_token ? '<button type="button" class="reg-plate-print" data-token="' + r.qr_code_token + '">' + (currentLang === 'en' ? '🔺 Dashboard sign' : '🔺 대시보드 알림판') + '</button>' : ''}
             ${r.category === 'vehicle' ? (window.__carPaid.has(r.id)
               ? '<div class="reg-car-on">' + (currentLang === 'en' ? '✅ Car pass · call + message' : '✅ 차량 이용권 · 전화+문자') + '</div><button type="button" class="reg-vbtn reg-car-change" style="background:#4A5A6A" data-id="' + r.id + '">' + (currentLang === 'en' ? '🔁 Change plate (₩2,500)' : '🔁 번호 변경 2,500원') + '</button>'
-              : '<button type="button" class="reg-vbtn reg-car-buy" style="background:#C98A1B" data-id="' + r.id + '">' + (currentLang === 'en' ? '🎫 Car pass ₩2,500' : '🎫 차량 이용권 2,500원') + '</button><div class="reg-car-hint">' + (window.__subUntil
+              : '<button type="button" class="reg-vbtn reg-car-buy" style="background:#C98A1B" data-id="' + r.id + '">' + (currentLang === 'en' ? '🎫 Car pass ₩2,500' : '🎫 차량 이용권 2,500원') + '</button><div class="reg-car-hint">' + (window.__carCoupon[r.id] && !window.__subUntil ? couponHint(window.__carCoupon[r.id]) : window.__subUntil
                   ? (currentLang === 'en' ? 'Your current pass already covers calls until ' + carDate(window.__subUntil) + '.<br>Buy before then to keep calls after it.' : '지금 이용권으로 ' + carDate(window.__subUntil) + '까지<br>전화+문자 연결 중 · 그 전에 사 두세요')
                   : (currentLang === 'en' ? 'One payment · no monthly fee. Without it: message only.' : '한 번 결제 · 월 요금 없음<br>없으면 메시지로만 연결')) + '</div>') : ''}
           </div>

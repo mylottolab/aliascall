@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>차량 간편 등록 · 1개월 무료 — 가림콜 · 바로카</title>
+<meta name="description" content="차번호만 넣으면 끝. 전화번호 없이 주차 연락을 받는 QR 스티커 — 1개월 무료.">
+<link rel="icon" href="/aliascall_icon_192.png">
+<!-- 🔴 2026-11-12 차량 간편 등록 (garimcall.com/car) — 앱과 따로, 30초 등록 + 1개월 무료 쿠폰 자동
+     · 처음 1개월 전화 + 문자 → 다음 1개월 문자만 → 그 뒤 연결 끊김(이용권으로 다시 열림)
+     · 계정은 닉네임 + 비밀번호(전화번호 없음). 같은 계정으로 가림콜 · 바로카 앱에 그대로 로그인
+     · 서버: car_coupon_check · car_coupon_claim (baroka/sql/4_car_coupon.sql) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="aliascall_qr_sticker.js?v=20261112c"></script>
+<script src="aliascall_parking_plate.js?v=20261112e"></script>
+<style>
+:root{ --teal:#1F6F6B; --deep:#123F3D; --tint:#E4EFEE; --gold:#F5B800; --coral:#E8734A; --ink:#13201f; --soft:#5b6b68; --bg:#F4F7F6; --card:#fff; }
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif; word-break:keep-all; }
+.hero{ background:linear-gradient(160deg,var(--deep),var(--teal)); color:#fff; padding:28px 18px 34px; text-align:center; }
+.hero .badge{ display:inline-block; background:var(--gold); color:var(--deep); font-weight:900; font-size:14px; padding:6px 14px; border-radius:20px; }
+.hero h1{ font-size:27px; line-height:1.3; margin:14px 0 8px; }
+.hero p{ margin:0; opacity:.92; font-size:15px; line-height:1.6; }
+main{ max-width:520px; margin:-18px auto 40px; padding:0 14px; }
+.card{ background:var(--card); border-radius:18px; padding:18px 16px; margin-bottom:14px; box-shadow:0 6px 20px rgba(18,63,61,.08); }
+.step{ display:flex; align-items:center; gap:10px; font-weight:900; font-size:17px; margin-bottom:12px; }
+.step b{ width:28px; height:28px; border-radius:50%; background:var(--deep); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:15px; flex:none; }
+label{ display:block; font-size:13px; font-weight:700; color:var(--soft); margin:10px 0 6px; }
+input[type=text],input[type=password]{ width:100%; font-size:18px; padding:13px 14px; border:2px solid #d5e1df; border-radius:12px; outline:none; background:#fff; }
+input:focus{ border-color:var(--teal); }
+#plate{ font-size:24px; font-weight:900; text-align:center; letter-spacing:.04em; }
+.hint{ font-size:12.5px; color:var(--soft); margin-top:6px; line-height:1.55; }
+.err{ color:#c0392b; font-size:13px; font-weight:700; margin-top:6px; min-height:1em; }
+.photo{ display:flex; gap:10px; align-items:center; margin-top:6px; }
+.photo label.btn{ margin:0; }
+.photo img{ width:84px; height:60px; object-fit:cover; border-radius:8px; display:none; }
+.apps{ display:grid; gap:10px; }
+.app{ display:flex; gap:12px; align-items:flex-start; border:2.5px solid #e1e8e6; border-radius:14px; padding:13px; cursor:pointer; background:#fff; text-align:left; font:inherit; color:inherit; width:100%; }
+.app.on{ border-color:var(--teal); background:var(--tint); }
+.app .ic{ font-size:30px; line-height:1; }
+.app b{ font-size:16px; display:block; }
+.app span{ font-size:13px; color:var(--soft); line-height:1.5; display:block; margin-top:3px; }
+.app small{ display:block; margin-top:6px; font-size:12px; font-weight:800; color:var(--deep); }
+.btn{ display:block; width:100%; border:none; border-radius:14px; padding:15px; font-size:17px; font-weight:900; cursor:pointer; text-align:center; text-decoration:none; }
+.btn.main{ background:var(--gold); color:var(--deep); }
+.btn.main:disabled{ opacity:.55; }
+.btn.line{ background:#fff; color:var(--deep); border:2px solid #d5e1df; font-size:14px; padding:10px 12px; width:auto; display:inline-block; }
+.btn.sm{ font-size:15px; padding:12px; margin-top:8px; color:#fff; }
+.agree{ display:flex; gap:8px; align-items:flex-start; font-size:12.5px; color:var(--soft); line-height:1.6; margin-top:12px; }
+.agree input{ margin-top:3px; width:18px; height:18px; flex:none; }
+.who{ background:var(--tint); border-radius:12px; padding:11px 12px; font-size:14px; }
+.who a{ color:var(--teal); font-weight:800; }
+.tl{ display:grid; gap:8px; margin:12px 0 4px; }
+.tl div{ display:flex; gap:10px; align-items:center; font-size:14px; border-radius:12px; padding:10px 12px; }
+.tl .a{ background:#E5F6EE; } .tl .b{ background:#FFF6DC; } .tl .c{ background:#F3F3F3; color:#666; }
+.tl i{ font-style:normal; font-size:20px; }
+.done h2{ margin:4px 0 6px; font-size:22px; }
+.store{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.store a{ flex:1 1 140px; }
+.foot{ text-align:center; font-size:12px; color:var(--soft); line-height:1.7; margin-top:18px; }
+[hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="hero">
+  <span class="badge">🎁 지금 등록하면 1개월 무료</span>
+  <h1>차번호만 넣으면 끝<br>전화번호 없이 주차 연락 받기</h1>
+  <p>QR 스티커를 앞유리에 붙이면, 찍은 사람이<br>내 번호를 모른 채 바로 연락합니다.</p>
+</div>
+
+<main>
+  <!-- 입력 -->
+  <div id="form">
+    <div class="card">
+      <div class="step"><b>1</b> 내 차</div>
+      <label for="plate">차번호</label>
+      <input type="text" id="plate" placeholder="12가 3456" autocomplete="off" inputmode="text">
+      <div class="err" id="plateErr"></div>
+      <label>차 사진 <span style="font-weight:500">(선택 · 번호판이 보이게 — 내 차가 맞는지 확인용, 다른 사람에게 보이지 않아요)</span></label>
+      <div class="photo">
+        <label class="btn line" for="photo">📷 사진 찍기 · 고르기</label>
+        <input type="file" id="photo" accept="image/*" capture="environment" hidden>
+        <img id="photoPrev" alt="">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step"><b>2</b> 쓰실 앱 고르기</div>
+      <div class="apps">
+        <button type="button" class="app on" data-app="garim">
+          <span class="ic">🔒</span>
+          <span><b>가림콜</b><span>차량 + 분실물 · 아이 · 반려동물까지. 내 번호 대신 8자리 가림 번호, 메시지 · 음성 · 영상 연락.</span>
+          <small>무료 뒤: 차량 이용권 2,500원(한 번) 또는 긴급 이용권 연 2,200원~</small></span>
+        </button>
+        <button type="button" class="app" data-app="baroka">
+          <span class="ic">🚗</span>
+          <span><b>바로카</b><span>차 전용 · 간단하게. 번호판으로 찾고 전화 · 문자 · 사진, 주차 안내판.</span>
+          <small>무료 뒤: 차 등록 2,500원(한 번 · 차 바꿀 때까지)</small></span>
+        </button>
+      </div>
+      <div class="hint">어느 쪽을 고르셔도 같은 계정 · 같은 QR로 두 앱 모두에서 볼 수 있어요.</div>
+    </div>
+
+    <div class="card">
+      <div class="step"><b>3</b> 계정 만들기 <span style="font-size:13px;font-weight:600;color:var(--soft)">(전화번호 없음)</span></div>
+      <div id="whoBox" class="who" hidden></div>
+      <div id="acctBox">
+        <label for="nick">닉네임 (앱 로그인 아이디)</label>
+        <input type="text" id="nick" placeholder="예: 홍길동차" autocomplete="username" maxlength="20">
+        <label for="pw">비밀번호 (6자 이상)</label>
+        <input type="password" id="pw" placeholder="앱에서 로그인할 때 씁니다" autocomplete="new-password">
+        <div class="hint">이 닉네임과 비밀번호로 가림콜 · 바로카 앱에 그대로 로그인합니다. 꼭 기억해 두세요.</div>
+      </div>
+      <div class="err" id="acctErr"></div>
+      <label class="agree"><input type="checkbox" id="agree">
+        <span>차번호 · 차 사진을 연락 서비스(위브앱솔루션)를 위해 보관하는 데 동의합니다. 무료는 <b>1개월 전화 + 문자, 그다음 1개월 문자만</b>이며, 그 뒤에는 이용권을 사기 전까지 연결이 멈춥니다. 자동 결제는 없습니다. <a href="aliascall_privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></span></label>
+    </div>
+
+    <button type="button" class="btn main" id="go">🎁 1개월 무료로 등록하기</button>
+    <div class="err" id="goErr" style="text-align:center"></div>
+  </div>
+
+  <!-- 끝 -->
+  <div id="done" hidden>
+    <div class="card done">
+      <div style="font-size:40px">🎉</div>
+      <h2>등록 완료! <span id="dPlate"></span></h2>
+      <div class="tl">
+        <div class="a"><i>📞</i><span><b>~ <span id="dFull"></span></b> 전화 + 문자 무료</span></div>
+        <div class="b"><i>💬</i><span><b>~ <span id="dMsg"></span></b> 문자만 무료</span></div>
+        <div class="c"><i>⏸</i><span>그 뒤에는 연결이 멈춰요 · <b id="dPrice"></b>으로 계속</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step"><b>4</b> 스티커 뽑아 붙이기</div>
+      <button type="button" class="btn sm" id="pSticker" style="background:#6A3D9A">🏷 QR 스티커 인쇄 (6 × 6cm · 4장)</button>
+      <button type="button" class="btn sm" id="pPlate" style="background:var(--coral)">🔺 대시보드 알림판 인쇄</button>
+      <a class="btn sm" style="background:#2F6FD6" href="https://www.coupang.com/vp/products/8626482812?vendorItemId=92033809085" target="_blank" rel="noopener">🛡 투명 보호필름 구매</a>
+      <div class="hint">프린터가 없으면 인쇄 창에서 「PDF로 저장」 후 편의점 · 사무실에서 뽑으세요.</div>
+    </div>
+
+    <div class="card">
+      <div class="step"><b>5</b> 앱에서 연락 받기</div>
+      <div class="hint" style="font-size:14px;color:var(--ink)">연락이 오면 앱으로 알림이 옵니다. <b id="dApp"></b> 앱을 설치하고 <b>「계정이 있어요 · 로그인」</b>에서 닉네임 <b id="dNick"></b>과 비밀번호로 로그인하세요.</div>
+      <div class="store" id="dStore"></div>
+      <a class="btn line" id="dWeb" style="margin-top:10px;display:block;text-align:center">웹에서 내 차 보기 ›</a>
+    </div>
+  </div>
+
+  <div class="foot">위브앱솔루션 · 가림콜(garimcall.com) · 바로카(baroka.kr)<br>문의: 카카오톡 「위브앱솔루션」</div>
+</main>
+
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = (id) => document.getElementById(id);
+const APPS = {
+  garim:  { name: '가림콜', price: '차량 이용권 2,500원(한 번)', connect: 'https://aliascall.com/aliascall_connect.html?t=', web: 'aliascall_my_account.html',
+            android: 'https://play.google.com/store/apps/details?id=com.weaveapp.aliascall', ios: '' },
+  baroka: { name: '바로카', price: '차 등록 2,500원(한 번)', connect: 'https://baroka.kr/connect.html?t=', web: 'https://baroka.kr/my.html',
+            android: 'https://play.google.com/store/apps/details?id=com.weaveapp.baroka', ios: 'https://apps.apple.com/kr/app/id6830146038' },
+};
+let app = 'garim', photo = null, me = null;
+const SRC = (new URLSearchParams(location.search).get('src') || new URLSearchParams(location.search).get('ref') || '').slice(0, 40);
+
+const plateKey = (s) => String(s || '').replace(/[^0-9A-Za-z가-힣]/g, '');
+const plateOk = (s) => /^([가-힣]{2})?[0-9]{2,3}[가-힣][0-9]{4}$/.test(plateKey(s));
+const plateNice = (s) => { const m = plateKey(s).match(/^([가-힣]{2})?([0-9]{2,3}[가-힣])([0-9]{4})$/); return m ? (m[1] || '') + m[2] + ' ' + m[3] : s; };
+const fmt = (d) => { d = new Date(d); return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일'; };
+const nickEmail = (n) => encodeURIComponent(n.trim().toLowerCase().replace(/[^a-z0-9가-힣]/g, '')) + '@guest.aliascall.internal';
+
+document.querySelectorAll('.app').forEach((b) => b.addEventListener('click', () => {
+  app = b.dataset.app; document.querySelectorAll('.app').forEach((x) => x.classList.toggle('on', x === b));
+}));
+$('plate').addEventListener('input', () => { $('plateErr').textContent = ''; });
+$('photo').addEventListener('change', (e) => {
+  photo = e.target.files && e.target.files[0] || null;
+  const p = $('photoPrev'); if (photo) { p.src = URL.createObjectURL(photo); p.style.display = 'block'; } else p.style.display = 'none';
+});
+
+/* 이미 로그인한 분은 그 계정으로 */
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session || !session.user || session.user.is_anonymous) return;
+  let nick = '';
+  try { const { data } = await sb.from('profiles').select('nickname').eq('id', session.user.id).maybeSingle(); nick = (data && data.nickname) || ''; } catch (e) {}
+  me = { id: session.user.id, nick };
+  $('acctBox').hidden = true; $('whoBox').hidden = false;
+  $('whoBox').innerHTML = '<b>' + (nick ? esc(nick) + '님' : '로그인한 계정') + '</b>으로 등록합니다. <a href="#" id="logout">다른 계정으로</a>';
+  $('logout').onclick = async (e) => { e.preventDefault(); await sb.auth.signOut(); location.reload(); };
+})();
+function esc(s){ return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
+
+const ERR = {
+  used_account: '이 계정은 이미 무료 쿠폰을 쓰셨어요. 앱에서 이용권으로 등록해 주세요.',
+  used_plate: '이 차번호는 이미 무료 쿠폰을 받았어요. 앱에서 이용권으로 등록해 주세요.',
+  bad_plate: '차번호를 번호판 모양으로 적어 주세요. (예: 12가 3456)',
+  login: '로그인이 풀렸어요. 다시 눌러 주세요.',
+};
+
+async function account(){
+  if (me) return true;
+  const nick = $('nick').value.trim(), pw = $('pw').value;
+  $('acctErr').textContent = '';
+  if (nick.length < 2) { $('acctErr').textContent = '닉네임을 2자 이상 적어 주세요.'; return false; }
+  if (pw.length < 6) { $('acctErr').textContent = '비밀번호를 6자 이상 적어 주세요.'; return false; }
+  const email = nickEmail(nick);
+  const su = await sb.auth.signUp({ email, password: pw, options: { data: { app: app === 'baroka' ? 'baroka' : 'garim' } } });
+  if (!su.error && su.data && su.data.user) {
+    if (!su.data.session) { const li = await sb.auth.signInWithPassword({ email, password: pw }); if (li.error) { $('acctErr').textContent = '계정을 만들지 못했어요. 잠시 뒤 다시 눌러 주세요.'; return false; } }
+    try { await sb.from('profiles').insert({ id: su.data.user.id, nickname: nick, country_code: 'KR', preferred_lang: 'ko', is_guest: true }); } catch (e) {}
+    me = { id: su.data.user.id, nick }; return true;
+  }
+  const m = String(su.error && su.error.message || '').toLowerCase();
+  if (m.includes('already')) {
+    const li = await sb.auth.signInWithPassword({ email, password: pw });
+    if (!li.error) { me = { id: li.data.user.id, nick }; return true; }
+    $('acctErr').textContent = '이미 있는 닉네임이에요. 내 계정이면 비밀번호를 확인하고, 아니면 다른 닉네임을 적어 주세요.'; return false;
+  }
+  $('acctErr').textContent = '계정을 만들지 못했어요. ' + (su.error && su.error.message || ''); return false;
+}
+
+$('go').addEventListener('click', async () => {
+  const plate = $('plate').value.trim();
+  $('goErr').textContent = '';
+  if (!plateOk(plate)) { $('plateErr').textContent = ERR.bad_plate; $('plate').focus(); return; }
+  if (!$('agree').checked) { $('goErr').textContent = '동의에 체크해 주세요.'; return; }
+  const btn = $('go'); btn.disabled = true; btn.textContent = '등록하는 중…';
+  try {
+    if (!(await account())) return;
+    const ck = await sb.rpc('car_coupon_check', { p_plate: plate });
+    if (ck.error) throw ck.error;
+    if (ck.data !== 'ok') { $('goErr').textContent = ERR[ck.data] || ck.data; return; }
+    const c = await sb.rpc('create_registration_full', {
+      p_category: 'vehicle', p_country_code: 'KR', p_title: (me.nick || '') + '님의 차', p_description: null,
+      p_search_key: plateNice(plate), p_guest_password: null,
+      p_detail: { plate_number: plateNice(plate), make: null, color: null } });
+    if (c.error) throw c.error;
+    const reg = c.data;
+    const cp = await sb.rpc('car_coupon_claim', { p_reg: reg.id, p_app: app, p_source: SRC || null });
+    if (cp.error || !cp.data || !cp.data.ok) {
+      try { await sb.from('registrations').delete().eq('id', reg.id); } catch (e) {}
+      $('goErr').textContent = ERR[cp.data && cp.data.error] || ('등록하지 못했어요. ' + ((cp.error && cp.error.message) || '')); return;
+    }
+    if (photo) {   // 확인용 사진 — 공개하지 않음
+      try {
+        const path = reg.id + '/' + Date.now() + '-car.jpg';
+        const up = await sb.storage.from('aliascall-media').upload(path, photo);
+        if (!up.error) await sb.from('media_files').insert({ registration_id: reg.id, media_type: 'photo', storage_path: path, is_public: false });
+      } catch (e) { console.warn('[car] 사진 올리기 실패(등록은 됨)', e); }
+    }
+    showDone(reg, cp.data, plate);
+  } catch (e) {
+    console.error(e); $('goErr').textContent = '등록하지 못했어요. ' + (e.message || e);
+  } finally { btn.disabled = false; btn.textContent = '🎁 1개월 무료로 등록하기'; }
+});
+
+function showDone(reg, cp, plate){
+  const A = APPS[app];
+  $('form').hidden = true; $('done').hidden = false; window.scrollTo(0, 0);
+  $('dPlate').textContent = plateNice(plate);
+  $('dFull').textContent = fmt(cp.full_until); $('dMsg').textContent = fmt(cp.msg_until); $('dPrice').textContent = A.price;
+  $('dApp').textContent = A.name; $('dNick').textContent = '「' + (me.nick || '') + '」';
+  $('dStore').innerHTML = '<a class="btn sm" style="background:#1F8A83" href="' + A.android + '" target="_blank" rel="noopener">▶ 안드로이드 앱 받기</a>' +
+    (A.ios ? '<a class="btn sm" style="background:#123F3D" href="' + A.ios + '" target="_blank" rel="noopener">📱 아이폰 앱 받기</a>'
+           : '<div class="hint" style="flex:1 1 140px;align-self:center">📱 아이폰: App Store에서 「' + A.name + '」 검색</div>');
+  $('dWeb').href = A.web;
+  const link = A.connect + reg.qr_code_token;
+  $('pSticker').onclick = () => { const u = window.QRSticker && QRSticker.make(link); if (u) QRSticker.print(u); };
+  $('pPlate').onclick = () => { if (window.ParkingPlate) ParkingPlate.print({ token: reg.qr_code_token }); };
+}
+</script>
+</body>
+</html>
