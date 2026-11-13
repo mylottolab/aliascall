@@ -49,6 +49,12 @@ iframe[hidden]{display:none}
 #sum .c.tot{background:var(--acc-soft);border-color:transparent}
 #sum .cap{font-size:11.5px;color:var(--sub);margin:6px 2px 0}
 iframe.withsum{top:118px;height:calc(100% - 118px)}
+#mbar{position:absolute;left:0;right:0;top:0;height:52px;display:flex;align-items:center;gap:12px;padding:0 max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left));background:var(--bg);border-bottom:1px solid var(--line);overflow-x:auto;white-space:nowrap;font-size:13px}
+#mbar[hidden]{display:none}
+#mbar .mbs{color:var(--sub)}
+#mbar button{margin-left:auto;background:#1D6F42;color:#fff;border-color:#1D6F42;font-weight:800}
+#mbar button[disabled]{opacity:.45}
+iframe.withmb{top:52px;height:calc(100% - 52px)}
 .panel{position:absolute;inset:0;overflow:auto;padding:18px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
 .panel[hidden]{display:none}
 .wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
@@ -88,6 +94,10 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     { id:'stats', name:'📊 매출 · 통계', c:'#7c5cf0', subs:[
       { id:'st_ac', name:'가림 · 바로카 통계', url: AC + 'aliascall_admin_stats.html' },
       { id:'st_bu', name:'부름 · 누름 · 바로너 통계', url: BU + 'burum_admin_stats.html' } ]},
+    /* 🔴 2026-11-13 가입자 · 이용권 현황 — 두 서버 화면을 열면 다섯 앱을 한 엑셀로 받을 수 있습니다 */
+    { id:'members', name:'👥 가입자 · 이용권', c:'#1D6F42', subs:[
+      { id:'mb_ac', name:'가림 · 바로카', url: AC + 'aliascall_admin_members.html' },
+      { id:'mb_bu', name:'부름 · 누름 · 바로너', url: BU + 'burum_admin_members.html' } ]},
     { id:'burum', name:'🟢 부름 · 누름 · 바로너', c:'var(--bu)', subs:[
       { id:'bu_admin', name:'회원 · 운영', url: BU + 'alias_admin.html' },
       { id:'bu_stats', name:'일일 통계', url: BU + 'burum_admin_stats.html' },
@@ -211,6 +221,18 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     } else {
       [].forEach.call(stage.querySelectorAll('iframe'), function(x){ x.classList.remove('withsum'); });
     }
+    var mb = $('mbar');
+    if (t.id === 'members') {
+      if (!mb) { mb = document.createElement('div'); mb.id = 'mbar'; stage.appendChild(mb); paintMem(); }
+      mb.hidden = false;
+      /* 두 화면을 모두 열어 둡니다(숨긴 쪽도 표를 보내오게) */
+      t.subs.forEach(function(s){
+        var ex = null; for (var k in frames) if (frames[k].dataset.url === s.url) ex = frames[k];
+        if (!ex) { ex = document.createElement('iframe'); ex.src = s.url; ex.dataset.url = s.url; ex.title = s.id; ex.hidden = true; stage.appendChild(ex); frames[s.id] = ex; }
+        ex.classList.add('withmb');
+      });
+      f.classList.add('withmb');
+    } else { if (mb) mb.hidden = true; [].forEach.call(stage.querySelectorAll('iframe'), function(x){ x.classList.remove('withmb'); }); }
   }
 
   /* 🔴 2026-11-09 다섯 앱 매출 한 줄 — 두 통계 화면이 계산한 앱별 합계를 받아 모아 보여 줍니다(postMessage) */
@@ -236,6 +258,40 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     var d = e.data || {}; if ((d.type !== 'weave_rev' && d.type !== 'weave_su') || (d.src !== 'ac' && d.src !== 'bu')) return;
     if ((d.src === 'ac') !== (e.origin === 'https://aliascall.com')) return;
     (d.type === 'weave_rev' ? REV : SUP)[d.src] = { from: d.from, to: d.to, apps: Array.isArray(d.apps) ? d.apps : [] }; paintSum();
+  });
+
+  /* 🔴 2026-11-13 가입자 · 이용권 — 두 서버 화면이 보낸 표를 모아 다섯 앱 한 엑셀로 */
+  var MEMD = { ac: null, bu: null };
+  function paintMem(){
+    var box = $('mbar'); if (!box) return;
+    var st = function(k, n){ var d = MEMD[k]; return '<span class="mbs">' + n + ': ' + (d ? '가입 ' + d.mem.length.toLocaleString() + '명 · 결제 ' + d.pay.length.toLocaleString() + '건' : '<i>로그인하면 채워집니다</i>') + '</span>'; };
+    box.innerHTML = '<b>다섯 앱 합치기</b>' + st('ac', '가림 · 바로카') + st('bu', '부름 · 누름 · 바로너') +
+      '<button type="button" class="tbtn" id="mbXl"' + (MEMD.ac || MEMD.bu ? '' : ' disabled') + '>⬇ 다섯 앱 한 엑셀로 받기</button>';
+    $('mbXl').onclick = memXlsx;
+  }
+  function memXlsx(){
+    var go = function(){
+      var cat = function(key){ return [].concat(MEMD.ac ? MEMD.ac[key] : [], MEMD.bu ? MEMD.bu[key] : []); };
+      var by = function(k){ return function(a, b){ return String(b[k]).localeCompare(String(a[k])); }; };
+      var mem = cat('mem').sort(by('가입일시')), pay = cat('pay').sort(by('결제일시'));
+      var sh = function(rows){ var ws = XLSX.utils.json_to_sheet(rows); if (rows.length) ws['!cols'] = Object.keys(rows[0]).map(function(k){ return { wch: Math.min(40, Math.max(k.length * 2 + 2, 12)) }; }); return ws; };
+      /* 앱별 요약 */
+      var sum = {}; mem.forEach(function(r){ var a = String(r['앱']).replace('(추정)', ''); sum[a] = sum[a] || { '앱': a, '가입자': 0, '이용권 산 사람': 0, '결제 건수': 0, '매출(원)': 0, '환불 건수': 0 }; sum[a]['가입자']++; if (r['결제 건수'] > 0) sum[a]['이용권 산 사람']++; });
+      pay.forEach(function(r){ var a = r['앱']; sum[a] = sum[a] || { '앱': a, '가입자': 0, '이용권 산 사람': 0, '결제 건수': 0, '매출(원)': 0, '환불 건수': 0 }; if (r['상태'] === '환불') sum[a]['환불 건수']++; else { sum[a]['결제 건수']++; if (r['통화'] === 'KRW') sum[a]['매출(원)'] += Number(r['금액']) || 0; } });
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, sh(Object.keys(sum).sort(function(a, b){ return ((ORDER.indexOf(a) + 1) || 99) - ((ORDER.indexOf(b) + 1) || 99); }).map(function(k){ return sum[k]; })), '앱별 요약');
+      XLSX.utils.book_append_sheet(wb, sh(mem), '가입자');
+      XLSX.utils.book_append_sheet(wb, sh(pay), '이용권 구매');
+      var d = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10).replace(/-/g, '');
+      XLSX.writeFile(wb, 'weave_5apps_members_purchases_' + d + '.xlsx');
+    };
+    if (window.XLSX) return go();
+    var sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; sc.onload = go; document.head.appendChild(sc);
+  }
+  window.addEventListener('message', function(e){
+    var d = e.data || {}; if (d.type !== 'weave_mem') return;
+    if (!((d.src === 'ac' && e.origin === 'https://aliascall.com') || (d.src === 'bu' && e.origin === 'https://burum.kr'))) return;
+    MEMD[d.src] = { mem: Array.isArray(d.mem) ? d.mem : [], pay: Array.isArray(d.pay) ? d.pay : [] }; paintMem();
   });
 
   TABS.forEach(function(t){

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>가림 · 바로카 가입자 · 이용권 현황</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{ --bg:#F4F6F8; --card:#FFFFFF; --ink:#16212E; --soft:#5A6878; --line:#DDE3EA; --acc:#1F6F6B; --tint:#EEF3FA; --bad:#B4412F; --ok:#1F8A4C; }
+*{ box-sizing:border-box; } [hidden]{ display:none !important; }
+body{ margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif; }
+header{ background:var(--acc); color:#fff; padding:14px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+header h1{ margin:0; font-size:18px; }
+header .who{ margin-left:auto; font-size:12.5px; opacity:.85; }
+header button{ background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:8px; padding:7px 12px; font-size:12.5px; cursor:pointer; }
+main{ max-width:1300px; margin:0 auto; padding:16px 16px 60px; }
+.tabs{ display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+.tabs button{ border:1px solid var(--line); background:var(--card); border-radius:10px; padding:10px 18px; font-size:14.5px; font-weight:800; cursor:pointer; color:var(--ink); }
+.tabs button.on{ background:var(--acc); color:#fff; border-color:var(--acc); }
+.bar{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+.bar label{ font-size:13px; color:var(--soft); display:flex; align-items:center; gap:6px; }
+.bar input,.bar select{ border:1px solid var(--line); border-radius:8px; padding:7px 8px; font:inherit; font-size:13px; background:#fff; }
+.bar input[type=search]{ width:150px; }
+.bar .go{ background:var(--ink); color:#fff; border:none; border-radius:8px; padding:8px 14px; font-weight:700; font-size:13px; cursor:pointer; }
+.bar .xl{ margin-left:auto; background:#1D6F42; color:#fff; border:none; border-radius:8px; padding:9px 14px; font-weight:800; font-size:13px; cursor:pointer; }
+.bar .xl2{ background:#fff; color:#1D6F42; border:1px solid #1D6F42; border-radius:8px; padding:8px 12px; font-weight:700; font-size:12.5px; cursor:pointer; }
+.cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; margin-bottom:14px; }
+.card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; }
+.card .k{ font-size:12.5px; color:var(--soft); font-weight:700; }
+.card .v{ font-size:22px; font-weight:800; margin-top:4px; }
+.card .s{ font-size:12px; color:var(--soft); margin-top:4px; line-height:1.5; }
+.tw{ background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:auto; max-height:70vh; }
+table{ border-collapse:collapse; width:100%; font-size:12.8px; }
+th{ position:sticky; top:0; background:var(--tint); text-align:center; padding:9px 8px; border-bottom:1px solid var(--line); white-space:nowrap; z-index:1; }
+td{ padding:8px; border-bottom:1px solid var(--line); text-align:center; white-space:nowrap; }
+td.l{ text-align:left; white-space:normal; min-width:160px; }
+td.n{ text-align:right; font-variant-numeric:tabular-nums; }
+tr:hover td{ background:#FAFBFD; }
+.tag{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:11.5px; font-weight:800; }
+.t-ok{ background:#E3F4EA; color:var(--ok); } .t-no{ background:#F1F3F5; color:var(--soft); } .t-end{ background:#FBEAE6; color:var(--bad); }
+.msg{ padding:30px; color:var(--soft); text-align:center; }
+.err{ display:none; background:#FBEAE6; color:var(--bad); border-radius:10px; padding:10px 14px; margin-bottom:12px; font-size:13px; }
+.foot{ font-size:12px; color:var(--soft); margin-top:10px; line-height:1.6; }
+#login{ position:fixed; inset:0; background:rgba(22,33,46,.55); display:none; align-items:center; justify-content:center; z-index:10; }
+#login .box{ background:#fff; border-radius:16px; padding:22px; width:min(360px,92vw); display:flex; flex-direction:column; gap:10px; }
+#login input{ border:1px solid var(--line); border-radius:8px; padding:10px; font:inherit; }
+#login button{ background:var(--acc); color:#fff; border:none; border-radius:8px; padding:11px; font-weight:800; cursor:pointer; }
+#login .err{ margin:0; }
+</style>
+</head>
+<body>
+<div id="login"><div class="box">
+  <b style="font-size:17px">가림 · 바로카 가입자 · 이용권 현황</b>
+  <div style="font-size:13px;color:var(--soft)">가림 관리자 계정으로 로그인해 주세요(관리자 화면과 같은 계정).</div>
+  <input id="lEmail" type="email" placeholder="관리자 이메일" autocomplete="username">
+  <input id="lPw" type="password" placeholder="비밀번호" autocomplete="current-password">
+  <button type="button" id="lGo">로그인</button>
+  <div class="err" id="loginErr"></div>
+</div></div>
+
+<header>
+  <h1>👥 가림 · 바로카 · 가입자 · 이용권 현황</h1>
+  <span class="who" id="who"></span>
+  <button type="button" id="reload">↻ 다시 읽기</button>
+  <button type="button" id="logout">로그아웃</button>
+</header>
+
+<main>
+  <div class="err" id="err"></div>
+  <div class="tabs"><button type="button" data-t="mem" class="on">👤 가입자 현황</button><button type="button" data-t="pay">🎫 이용권 구매 현황</button></div>
+
+  <div class="bar">
+    <label>앱 <select id="fApp"><option value="">전체</option></select></label>
+    <label><span id="fDateLab">가입일</span> <input type="date" id="fFrom"> ~ <input type="date" id="fTo"></label>
+    <label>닉네임 · 아이디 <input type="search" id="fQ" placeholder="찾기"></label>
+    <label id="fPaidWrap"><input type="checkbox" id="fPaid"> 이용권 산 사람만</label>
+    <label id="fRefWrap" hidden><input type="checkbox" id="fRef"> 환불 포함</label>
+    <button type="button" class="xl" id="xl">⬇ 엑셀 받기 (지금 보이는 목록)</button>
+    <button type="button" class="xl2" id="xlAll">⬇ 가입자 + 구매 한 파일로</button>
+  </div>
+
+  <div class="cards" id="cards"></div>
+  <div class="tw"><table id="tbl"><thead></thead><tbody><tr><td class="msg">불러오는 중…</td></tr></tbody></table></div>
+  <div class="foot">
+    · 한국 시간 기준 · 금액은 결제 완료 건만(환불은 따로 셉니다) · 원화가 아닌 결제(페이팔 등)는 「기타 통화」 칸에 적습니다.<br>
+    · 앱 칸의 「(추정)」은 가입 기록이 없던 옛 회원이라 남은 흔적으로 판단한 것입니다.<br>
+    · 유효기간 — 긴급 이용권 · 보안회선은 끝나는 날, 차량 이용권(가림콜 · 바로카)은 기간 없이 차 1대, 무료쿠폰은 전화+문자 / 문자 끝나는 날입니다.
+  </div>
+</main>
+
+<script>
+const SRC = 'ac';
+const APPS = {"garim": "가림", "baroka": "바로카"};
+const el = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const kst = (t) => { if (!t) return ''; const d = new Date(t); if (isNaN(d)) return ''; return new Date(d.getTime() + 9 * 3600e3).toISOString().slice(0, 16).replace('T', ' '); };
+const day = (t) => kst(t).slice(0, 10);
+const won = (n) => Number(n || 0).toLocaleString('ko-KR') + '원';
+const now = Date.now();
+const live = (t) => t && new Date(t).getTime() > now;
+function loginId(r){
+  if (r.anon && !r.login) return '(가입 없이 시작)';
+  const e = String(r.login || ''); if (!e) return '';
+  const at = e.indexOf('@'); const loc = at > 0 ? e.slice(0, at) : e;
+  if (/%[0-9A-F]{2}/i.test(loc) || /\.internal$/.test(e)) { try { return decodeURIComponent(loc); } catch (x) { return loc; } }
+  return e;
+}
+function appName(a){ const q = String(a || '').endsWith('?'); const k = String(a || '').replace(/\?$/, ''); return (APPS[k] || k || '?') + (q ? '(추정)' : ''); }
+function amt(n, cur){ cur = (cur || 'KRW').trim(); return cur === 'KRW' ? won(n) : (Number(n) / 100).toFixed(2) + ' ' + cur; }
+const METHOD = { google_play: 'Google Play', app_store: 'App Store', kg_inicis: '웹 카드', inicis_card: '웹 카드', web: '웹 카드', toss: '웹 카드', paypal: 'PayPal', bank_transfer: '무통장입금', admin: '관리자 지급' };
+
+/* ─────────── 서버마다 다른 부분 ─────────── */
+
+const SKU_NAME = { ac_plan_emergency_12m: '긴급 이용권 12개월', ac_plan_emergency_pro_12m: 'Pro 긴급 이용권 12개월',
+  ac_plan_basic_3m: '일반 3개월', ac_plan_basic_6m: '일반 6개월', ac_plan_basic_12m: '일반 12개월',
+  ac_plan_premium_3m: '프리미엄 3개월', ac_plan_premium_6m: '프리미엄 6개월', ac_plan_premium_12m: '프리미엄 12개월',
+  ac_usage_1gb_3m: '추가 사용량 1GB', garim_car_reg: '가림콜 차량 이용권', garim_car_change: '가림콜 차량 번호 변경',
+  baroka_reg: '바로카 차 등록', baroka_change: '바로카 번호 변경', baroka_g20: '바로카 갤러리 20칸', baroka_g60: '바로카 갤러리 60칸',
+  ac_pro_starter_1m: '프로 스타터 1개월', ac_pro_starter_6m: '프로 스타터 6개월', ac_pro_starter_12m: '프로 스타터 12개월',
+  ac_pro_business_1m: '프로 비즈니스 1개월', ac_pro_business_6m: '프로 비즈니스 6개월', ac_pro_business_12m: '프로 비즈니스 12개월',
+  ac_pro_enterprise_1m: '프로 엔터프라이즈 1개월', ac_pro_enterprise_6m: '프로 엔터프라이즈 6개월', ac_pro_enterprise_12m: '프로 엔터프라이즈 12개월',
+  ac_listing_1m: '업체 목록 게재 1개월', ac_listing_6m: '업체 목록 게재 6개월', ac_listing_12m: '업체 목록 게재 12개월',
+  ac_num_keep: '회선번호 유지', ac_num_transfer: '회선번호 명의 이전',
+  subscription: '긴급 이용권', hotline: '보안회선' };
+const TIER = { hotline_1to1: '일반(2인)', hotline_everybody: '에브리바디(2인)', economy_4: '이코노미(4인)', premium_4: '프리미엄(4인)' };
+function NAMEP(p){
+  if (!p) return '';
+  if (SKU_NAME[p]) return SKU_NAME[p];
+  let s = String(p);
+  let m = s.match(/^ac_num_(\d)_(basic|good)$/); if (m) return '회선번호 ' + m[1] + '자리' + (m[2] === 'good' ? ' (좋은 번호)' : '');
+  s = s.replace(/^subscription/, '긴급 이용권').replace(/^hotline/, '보안회선');
+  s = s.replace(/(hotline_1to1|hotline_everybody|economy_4|premium_4)(_secure)?/, (m, a, b) => TIER[a] + (b ? ' Secure' : ''));
+  return s.replace(/_(\d+)m$/, ' $1개월');
+}
+const PNAME_M = (p) => NAMEP(p);
+const PNAME = (r) => NAMEP(r.product);
+const PAPP = (r) => /^baroka/.test(String(r.product || '')) ? '바로카' : '가림';
+function PUNTIL(r){
+  if (r.until) return day(r.until);
+  const p = String(r.product || '');
+  if (/_(reg)$/.test(p)) return '기간 없음 (차 1대)';
+  if (/^ac_num_(keep|\d)/.test(p)) return '기간 없음';
+  if (/_(change)$/.test(p)) return '— (번호 변경 1회)';
+  if (/^baroka_g/.test(p)) return '기간 없음';
+  return '';
+}
+function VALID(r){
+  const a = [], c = r.coupon || {};
+  if (r.emergency_until) a.push('긴급 이용권 ~' + day(r.emergency_until));
+  if (r.line_until) a.push('보안회선 ~' + day(r.line_until) + (r.lines_live ? ' (사용 중 ' + r.lines_live + '개)' : ''));
+  if (r.cars_paid) a.push('차량 이용권 ' + r.cars_paid + '대 (기간 없음)');
+  if (c.full_until) a.push('무료쿠폰 전화+문자 ~' + day(c.full_until) + ' · 문자 ~' + day(c.msg_until));
+  const on = live(r.emergency_until) || r.lines_live > 0 || r.cars_paid > 0 || live(c.msg_until);
+  return { text: a.join(' / '), state: on ? '사용 중' : a.length ? '끝남' : '없음' };
+}
+
+
+/* ─────────── 공통 ─────────── */
+let MEM = [], PAY = [], tab = 'mem', loaded = false;
+Object.keys(APPS).forEach((k) => { const o = document.createElement('option'); o.value = APPS[k]; o.textContent = APPS[k]; el('fApp').appendChild(o); });
+
+function memRow(r){
+  const v = VALID(r);
+  return {
+    '가입일시': kst(r.joined), '앱': appName(r.app), '닉네임': r.nick || '', '아이디': loginId(r),
+    '가입 방식': r.anon ? '가입 없이 시작' : '아이디 가입',
+    '구매한 이용권': (r.products || []).map((p) => PNAME_M(p, r)).filter(Boolean).join(', '),
+    '결제 건수': r.pay_n || 0, '구매 금액(원)': Number(r.pay_krw || 0), '기타 통화': r.pay_other || '',
+    '환불 건수': r.refund_n || 0, '유효기간': v.text, '지금 상태': v.state, '마지막 접속': kst(r.last_in),
+  };
+}
+function payRow(r){
+  return {
+    '결제일시': kst(r.at), '앱': PAPP(r), '닉네임': r.nick || '', '아이디': loginId(r), '이용권': PNAME(r),
+    '결제 방법': METHOD[r.method] || r.method || '', '금액': (r.currency || 'KRW') === 'KRW' ? Number(r.amount || 0) : Number(r.amount || 0) / 100,
+    '통화': r.currency || 'KRW', '상태': r.status === 'refunded' ? '환불' : '완료', '유효기간(끝나는 날)': PUNTIL(r), '가입일': day(r.joined),
+  };
+}
+function filtered(){
+  const app = el('fApp').value, q = el('fQ').value.trim().toLowerCase(), f = el('fFrom').value, t = el('fTo').value;
+  const inRange = (d) => (!f || d >= f) && (!t || d <= t);
+  if (tab === 'mem') {
+    return MEM.map((r) => ({ r, x: memRow(r) })).filter(({ r, x }) =>
+      (!app || x['앱'].replace('(추정)', '') === app) && (!el('fPaid').checked || r.pay_n > 0) &&
+      inRange(day(r.joined)) && (!q || (x['닉네임'] + ' ' + x['아이디']).toLowerCase().includes(q)));
+  }
+  return PAY.map((r) => ({ r, x: payRow(r) })).filter(({ r, x }) =>
+    (!app || x['앱'] === app) && (el('fRef').checked || r.status !== 'refunded') &&
+    inRange(day(r.at)) && (!q || (x['닉네임'] + ' ' + x['아이디']).toLowerCase().includes(q)));
+}
+function paint(){
+  el('fDateLab').textContent = tab === 'mem' ? '가입일' : '결제일';
+  el('fPaidWrap').hidden = tab !== 'mem'; el('fRefWrap').hidden = tab !== 'pay';
+  if (!loaded) return;
+  const rows = filtered();
+  /* 카드 — 앱별 */
+  const by = {};
+  rows.forEach(({ r, x }) => { const a = x['앱'].replace('(추정)', ''); by[a] = by[a] || { n: 0, paid: 0, krw: 0, today: 0, ref: 0 };
+    const b = by[a]; b.n++;
+    if (tab === 'mem') { if (r.pay_n > 0) b.paid++; b.krw += Number(r.pay_krw || 0); if (day(r.joined) === day(new Date())) b.today++; }
+    else { if (r.status === 'refunded') b.ref++; else if (x['통화'] === 'KRW') b.krw += x['금액']; if (day(r.at) === day(new Date())) b.today++; } });
+  const names = Object.values(APPS).filter((a, i, s) => s.indexOf(a) === i).concat(Object.keys(by).filter((a) => Object.values(APPS).indexOf(a) < 0));
+  let tn = 0, tp = 0, tk = 0, tt = 0; Object.values(by).forEach((b) => { tn += b.n; tp += b.paid; tk += b.krw; tt += b.today; });
+  const card = (k, b) => tab === 'mem'
+    ? '<div class="card"><div class="k">' + esc(k) + '</div><div class="v">' + b.n.toLocaleString() + '명</div><div class="s">이용권 산 사람 ' + b.paid + '명 · 구매 ' + won(b.krw) + '<br>오늘 가입 ' + b.today + '명</div></div>'
+    : '<div class="card"><div class="k">' + esc(k) + '</div><div class="v">' + won(b.krw) + '</div><div class="s">결제 ' + (b.n - b.ref) + '건' + (b.ref ? ' · 환불 ' + b.ref + '건' : '') + '<br>오늘 ' + b.today + '건</div></div>';
+  el('cards').innerHTML = card('합계', { n: tn, paid: tp, krw: tk, today: tt, ref: Object.values(by).reduce((a, b) => a + b.ref, 0) }) +
+    names.map((a) => card(a, by[a] || { n: 0, paid: 0, krw: 0, today: 0, ref: 0 })).join('');
+  /* 표 */
+  const head = rows.length ? Object.keys(rows[0].x) : Object.keys(tab === 'mem' ? memRow({}) : payRow({}));
+  el('tbl').tHead.innerHTML = '<tr>' + head.map((h) => '<th>' + esc(h) + '</th>').join('') + '</tr>';
+  const CUT = 1500;
+  el('tbl').tBodies[0].innerHTML = rows.length ? rows.slice(0, CUT).map(({ x }) => '<tr>' + head.map((h) => {
+      const v = x[h];
+      if (h === '지금 상태') return '<td><span class="tag ' + (v === '사용 중' ? 't-ok' : v === '끝남' ? 't-end' : 't-no') + '">' + esc(v) + '</span></td>';
+      if (h === '상태') return '<td><span class="tag ' + (v === '완료' ? 't-ok' : 't-end') + '">' + esc(v) + '</span></td>';
+      if (h === '구매 금액(원)') return '<td class="n">' + (v ? won(v) : '') + '</td>';
+      if (h === '금액') return '<td class="n">' + esc(x['통화'] === 'KRW' ? won(v) : v.toFixed(2)) + '</td>';
+      if (h === '구매한 이용권' || h === '유효기간' || h === '이용권') return '<td class="l">' + esc(v) + '</td>';
+      return '<td>' + esc(v) + '</td>'; }).join('') + '</tr>').join('') +
+      (rows.length > CUT ? '<tr><td colspan="' + head.length + '" class="msg">화면에는 앞의 ' + CUT + '줄만 보입니다. 전체 ' + rows.length + '줄은 엑셀로 받으세요.</td></tr>' : '')
+    : '<tr><td colspan="' + head.length + '" class="msg">조건에 맞는 ' + (tab === 'mem' ? '가입자가' : '결제가') + ' 없습니다.</td></tr>';
+}
+function sheet(rows){ const ws = XLSX.utils.json_to_sheet(rows);
+  if (rows.length) ws['!cols'] = Object.keys(rows[0]).map((k) => ({ wch: Math.min(40, Math.max(k.length * 2 + 2, ...rows.slice(0, 300).map((r) => String(r[k] == null ? '' : r[k]).length + 2))) }));
+  return ws; }
+function stamp(){ return day(new Date()).replace(/-/g, ''); }
+el('xl').onclick = () => {
+  if (!loaded || !window.XLSX) return alertBox('엑셀 도구를 아직 읽지 못했습니다. 잠시 뒤 다시 눌러 주세요.');
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, sheet(filtered().map((o) => o.x)), tab === 'mem' ? '가입자' : '이용권 구매');
+  XLSX.writeFile(wb, 'garim_baroka' + (tab === 'mem' ? '_members_' : '_purchases_') + stamp() + '.xlsx');
+};
+el('xlAll').onclick = () => {
+  if (!loaded || !window.XLSX) return alertBox('엑셀 도구를 아직 읽지 못했습니다. 잠시 뒤 다시 눌러 주세요.');
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, sheet(MEM.map(memRow)), '가입자');
+  XLSX.utils.book_append_sheet(wb, sheet(PAY.map(payRow)), '이용권 구매');
+  XLSX.writeFile(wb, 'garim_baroka' + '_members_purchases_' + stamp() + '.xlsx');
+};
+function alertBox(t){ el('err').textContent = t; el('err').style.display = t ? 'block' : 'none'; }
+document.querySelectorAll('.tabs button').forEach((b) => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === b)); tab = b.dataset.t; paint(); });
+['fApp', 'fFrom', 'fTo', 'fPaid', 'fRef'].forEach((id) => el(id).addEventListener('change', paint));
+el('fQ').addEventListener('input', paint);
+
+async function load(){
+  alertBox(''); loaded = false; el('tbl').tBodies[0].innerHTML = '<tr><td class="msg">불러오는 중… (회원이 많으면 몇 초 걸립니다)</td></tr>';
+  const [m, p] = await Promise.all([SB().rpc('admin_member_report'), SB().rpc('admin_purchase_report', { p_from: null, p_to: null })]);
+  const e = m.error || p.error;
+  if (e) {
+    const t = e.message || String(e);
+    alertBox(/not_admin/.test(t) ? '관리자 권한이 없는 계정입니다.' : /admin_(member|purchase)_report/.test(t) ? '서버에 조회 기능이 아직 없습니다. 5_admin_members.sql 을 SQL Editor 에서 한 번 돌려 주세요.' : '불러오지 못했습니다: ' + t);
+    el('tbl').tBodies[0].innerHTML = ''; return;
+  }
+  MEM = m.data || []; PAY = p.data || []; loaded = true; paint();
+  /* 🔴 종합관리자(위브앱 통합 관리)에게 표를 넘겨 다섯 앱을 한 파일로 받을 수 있게 합니다 */
+  try { if (parent !== window) parent.postMessage({ type: 'weave_mem', src: SRC, mem: MEM.map(memRow), pay: PAY.map(payRow) }, 'https://aliascall.com'); } catch (x) {}
+}
+el('reload').onclick = load;
+
+const sb = window.supabase.createClient("https://qmwaraittiurkynszjts.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y", { auth: { storageKey: 'aliascall-admin-auth' } });
+const SB = () => sb;
+async function START(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { el('login').style.display = 'flex'; return; }
+  const { data: ok, error } = await sb.rpc('is_global_admin');
+  if (error || ok !== true) { await sb.auth.signOut(); el('login').style.display = 'flex'; el('loginErr').textContent = '관리자 권한이 없는 계정입니다.'; el('loginErr').style.display = 'block'; return; }
+  el('login').style.display = 'none'; el('who').textContent = session.user.email || ''; load();
+}
+el('lGo').addEventListener('click', async () => {
+  el('loginErr').style.display = 'none';
+  const { error } = await sb.auth.signInWithPassword({ email: el('lEmail').value.trim(), password: el('lPw').value });
+  if (error) { el('loginErr').textContent = '로그인 실패: ' + error.message; el('loginErr').style.display = 'block'; return; }
+  START();
+});
+el('lPw').addEventListener('keydown', (e) => { if (e.key === 'Enter') el('lGo').click(); });
+el('logout').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+START();
+
+</script>
+</body>
+</html>
