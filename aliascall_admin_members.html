@@ -69,19 +69,21 @@ tr:hover td{ background:#FAFBFD; }
 
 <main>
   <div class="err" id="err"></div>
-  <div class="tabs"><button type="button" data-t="mem" class="on">👤 가입자 현황</button><button type="button" data-t="pay">🎫 이용권 구매 현황</button></div>
+  <div class="tabs"><button type="button" data-t="mem" class="on">👤 가입자 현황</button><button type="button" data-t="pay">🎫 이용권 구매 현황</button><button type="button" data-t="car">🚗 차량 등록 현황</button></div>
 
   <div class="bar">
     <label>앱 <select id="fApp"><option value="">전체</option></select></label>
     <label><span id="fDateLab">가입일</span> <input type="date" id="fFrom"> ~ <input type="date" id="fTo"></label>
     <label>닉네임 · 아이디 <input type="search" id="fQ" placeholder="찾기"></label>
-    <label id="fPaidWrap"><input type="checkbox" id="fPaid"> 이용권 산 사람만</label>
+    <label id="fPaidWrap"><input type="checkbox" id="fPaid"> <span id="fPaidLab">이용권 산 사람만</span></label>
+    <button type="button" class="xl2" id="fToday">오늘만</button>
     <label id="fRefWrap" hidden><input type="checkbox" id="fRef"> 환불 포함</label>
     <button type="button" class="xl" id="xl">⬇ 엑셀 받기 (지금 보이는 목록)</button>
-    <button type="button" class="xl2" id="xlAll">⬇ 가입자 + 구매 한 파일로</button>
+    <button type="button" class="xl2" id="xlAll">⬇ 전체를 한 파일로 (표마다 시트)</button>
   </div>
 
   <div class="cards" id="cards"></div>
+  <div class="tw" id="daySum" hidden style="margin-bottom:14px;max-height:260px"></div>
   <div class="tw"><table id="tbl"><thead></thead><tbody><tr><td class="msg">불러오는 중…</td></tr></tbody></table></div>
   <div class="foot">
     · 한국 시간 기준 · 금액은 결제 완료 건만(환불은 따로 셉니다) · 원화가 아닌 결제(페이팔 등)는 「기타 통화」 칸에 적습니다.<br>
@@ -134,6 +136,23 @@ function NAMEP(p){
   s = s.replace(/(hotline_1to1|hotline_everybody|economy_4|premium_4)(_secure)?/, (m, a, b) => TIER[a] + (b ? ' Secure' : ''));
   return s.replace(/_(\d+)m$/, ' $1개월');
 }
+
+const MODE = { full: '전화 + 문자', message_only: '문자만', blocked: '끊김' };
+const PAYSRC = { app_store: 'App Store', google_play: 'Google Play', inicis_card: '웹 카드', kg_inicis: '웹 카드' };
+function CARROW(r){
+  const pay = r.paid ? '있음 (' + (NAMEP(r.pay_product) || (r.pay_source === 'grant' ? '관리자 지급' : '차량 이용권')) + (PAYSRC[r.pay_method] ? ' · ' + PAYSRC[r.pay_method] : '') + ')' : '없음';
+  const other = [];
+  if (live(r.emergency_until)) other.push('긴급 이용권 ~' + day(r.emergency_until));
+  if (r.line_live) other.push('보안회선 사용 중');
+  return {
+    '등록일시': kst(r.at), '앱': appName(r.app), '닉네임': r.nick || (r.login ? loginId(r) : ''), '아이디': r.login ? loginId(r) : '',
+    '차번호': r.plate || '', '이용권 구매': r.id ? pay : '',
+    '무료쿠폰': r.full_until ? '전화+문자 ~' + day(r.full_until) + ' · 문자 ~' + day(r.msg_until) + (r.coupon_source ? ' (경로 ' + r.coupon_source + ')' : '') : '',
+    '다른 이용권': other.join(' / '),
+    '지금 연결': r.status === 'active' ? (MODE[r.mode] || r.mode || '') : (r.id ? '삭제됨' : ''),
+    '이용권 산 날': r.paid_at ? kst(r.paid_at) : '',
+  };
+}
 const PNAME_M = (p) => NAMEP(p);
 const PNAME = (r) => NAMEP(r.product);
 const PAPP = (r) => /^baroka/.test(String(r.product || '')) ? '바로카' : '가림';
@@ -158,7 +177,8 @@ function VALID(r){
 
 
 /* ─────────── 공통 ─────────── */
-let MEM = [], PAY = [], tab = 'mem', loaded = false;
+let MEM = [], PAY = [], CAR = [], tab = 'mem', loaded = false;
+const HAS_CAR = typeof CARROW === 'function';
 Object.keys(APPS).forEach((k) => { const o = document.createElement('option'); o.value = APPS[k]; o.textContent = APPS[k]; el('fApp').appendChild(o); });
 
 function memRow(r){
@@ -186,15 +206,23 @@ function filtered(){
       (!app || x['앱'].replace('(추정)', '') === app) && (!el('fPaid').checked || r.pay_n > 0) &&
       inRange(day(r.joined)) && (!q || (x['닉네임'] + ' ' + x['아이디']).toLowerCase().includes(q)));
   }
+  if (tab === 'car') {
+    return CAR.map((r) => ({ r, x: CARROW(r) })).filter(({ r, x }) =>
+      (!app || x['앱'].replace('(추정)', '') === app) && (!el('fPaid').checked || r.paid) &&
+      inRange(day(r.at)) && (!q || (x['닉네임'] + ' ' + x['아이디'] + ' ' + x['차번호']).toLowerCase().includes(q)));
+  }
   return PAY.map((r) => ({ r, x: payRow(r) })).filter(({ r, x }) =>
     (!app || x['앱'] === app) && (el('fRef').checked || r.status !== 'refunded') &&
     inRange(day(r.at)) && (!q || (x['닉네임'] + ' ' + x['아이디']).toLowerCase().includes(q)));
 }
 function paint(){
-  el('fDateLab').textContent = tab === 'mem' ? '가입일' : '결제일';
-  el('fPaidWrap').hidden = tab !== 'mem'; el('fRefWrap').hidden = tab !== 'pay';
+  el('fDateLab').textContent = tab === 'mem' ? '가입일' : tab === 'car' ? '등록일' : '결제일';
+  el('fPaidWrap').hidden = tab === 'pay'; el('fRefWrap').hidden = tab !== 'pay';
+  el('fPaidLab').textContent = tab === 'car' ? '이용권 산 차만' : '이용권 산 사람만';
+  el('daySum').hidden = tab !== 'car';
   if (!loaded) return;
   const rows = filtered();
+  if (tab === 'car') return paintCar(rows);
   /* 카드 — 앱별 */
   const by = {};
   rows.forEach(({ r, x }) => { const a = x['앱'].replace('(추정)', ''); by[a] = by[a] || { n: 0, paid: 0, krw: 0, today: 0, ref: 0 };
@@ -223,6 +251,33 @@ function paint(){
       (rows.length > CUT ? '<tr><td colspan="' + head.length + '" class="msg">화면에는 앞의 ' + CUT + '줄만 보입니다. 전체 ' + rows.length + '줄은 엑셀로 받으세요.</td></tr>' : '')
     : '<tr><td colspan="' + head.length + '" class="msg">조건에 맞는 ' + (tab === 'mem' ? '가입자가' : '결제가') + ' 없습니다.</td></tr>';
 }
+function carDays(rows){
+  const m = {};
+  rows.forEach(({ r, x }) => { const d = day(r.at), a = x['앱'].replace('(추정)', ''), k = d + '|' + a;
+    m[k] = m[k] || { '날짜': d, '앱': a, '등록 대수': 0, '이용권 산 차': 0, '무료쿠폰 차': 0, '아무것도 없는 차': 0, '삭제된 차': 0 };
+    const o = m[k]; o['등록 대수']++; if (r.paid) o['이용권 산 차']++; else if (r.full_until) o['무료쿠폰 차']++; else o['아무것도 없는 차']++; if (r.status !== 'active') o['삭제된 차']++; });
+  return Object.values(m).sort((a, b) => b['날짜'].localeCompare(a['날짜']) || a['앱'].localeCompare(b['앱']));
+}
+function paintCar(rows){
+  const by = {}, today = day(new Date());
+  rows.forEach(({ r, x }) => { const a = x['앱'].replace('(추정)', ''); by[a] = by[a] || { n: 0, paid: 0, cp: 0, t: 0 };
+    by[a].n++; if (r.paid) by[a].paid++; else if (r.full_until) by[a].cp++; if (day(r.at) === today) by[a].t++; });
+  const tot = { n: 0, paid: 0, cp: 0, t: 0 }; Object.values(by).forEach((b) => { tot.n += b.n; tot.paid += b.paid; tot.cp += b.cp; tot.t += b.t; });
+  const card = (k, b) => '<div class="card"><div class="k">' + esc(k) + '</div><div class="v">' + b.n.toLocaleString() + '대</div><div class="s">이용권 ' + b.paid + ' · 무료쿠폰 ' + b.cp + ' · 없음 ' + (b.n - b.paid - b.cp) + '<br>오늘 등록 ' + b.t + '대</div></div>';
+  el('cards').innerHTML = card('차량 합계', tot) + Object.values(APPS).map((a) => card(a, by[a] || { n: 0, paid: 0, cp: 0, t: 0 })).join('');
+  const ds = carDays(rows), dh = ['날짜', '앱', '등록 대수', '이용권 산 차', '무료쿠폰 차', '아무것도 없는 차', '삭제된 차'];
+  el('daySum').innerHTML = '<table><thead><tr>' + dh.map((h) => '<th>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>' +
+    (ds.length ? ds.map((o) => '<tr' + (o['날짜'] === today ? ' style="font-weight:800"' : '') + '>' + dh.map((h) => '<td>' + esc(o[h]) + '</td>').join('') + '</tr>').join('') : '<tr><td colspan="7" class="msg">이 기간에 등록된 차가 없습니다.</td></tr>') + '</tbody></table>';
+  const head = Object.keys(CARROW({}));
+  el('tbl').tHead.innerHTML = '<tr>' + head.map((h) => '<th>' + esc(h) + '</th>').join('') + '</tr>';
+  el('tbl').tBodies[0].innerHTML = rows.length ? rows.slice(0, 1500).map(({ x }) => '<tr>' + head.map((h) => {
+      const v = x[h];
+      if (h === '이용권 구매') return '<td><span class="tag ' + (/^있음/.test(v) ? 't-ok' : 't-no') + '">' + esc(v) + '</span></td>';
+      if (h === '지금 연결') return '<td><span class="tag ' + (v === '전화 + 문자' ? 't-ok' : v === '문자만' ? 't-no' : 't-end') + '">' + esc(v) + '</span></td>';
+      if (h === '무료쿠폰' || h === '다른 이용권') return '<td class="l">' + esc(v) + '</td>';
+      return '<td>' + esc(v) + '</td>'; }).join('') + '</tr>').join('')
+    : '<tr><td colspan="' + head.length + '" class="msg">조건에 맞는 차가 없습니다.</td></tr>';
+}
 function sheet(rows){ const ws = XLSX.utils.json_to_sheet(rows);
   if (rows.length) ws['!cols'] = Object.keys(rows[0]).map((k) => ({ wch: Math.min(40, Math.max(k.length * 2 + 2, ...rows.slice(0, 300).map((r) => String(r[k] == null ? '' : r[k]).length + 2))) }));
   return ws; }
@@ -230,14 +285,17 @@ function stamp(){ return day(new Date()).replace(/-/g, ''); }
 el('xl').onclick = () => {
   if (!loaded || !window.XLSX) return alertBox('엑셀 도구를 아직 읽지 못했습니다. 잠시 뒤 다시 눌러 주세요.');
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, sheet(filtered().map((o) => o.x)), tab === 'mem' ? '가입자' : '이용권 구매');
-  XLSX.writeFile(wb, 'garim_baroka' + (tab === 'mem' ? '_members_' : '_purchases_') + stamp() + '.xlsx');
+  const fr = filtered();
+  if (tab === 'car') XLSX.utils.book_append_sheet(wb, sheet(carDays(fr)), '날짜별 요약');
+  XLSX.utils.book_append_sheet(wb, sheet(fr.map((o) => o.x)), tab === 'mem' ? '가입자' : tab === 'car' ? '차량 등록' : '이용권 구매');
+  XLSX.writeFile(wb, 'garim_baroka' + (tab === 'mem' ? '_members_' : tab === 'car' ? '_cars_' : '_purchases_') + stamp() + '.xlsx');
 };
 el('xlAll').onclick = () => {
   if (!loaded || !window.XLSX) return alertBox('엑셀 도구를 아직 읽지 못했습니다. 잠시 뒤 다시 눌러 주세요.');
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, sheet(MEM.map(memRow)), '가입자');
   XLSX.utils.book_append_sheet(wb, sheet(PAY.map(payRow)), '이용권 구매');
+  if (HAS_CAR) XLSX.utils.book_append_sheet(wb, sheet(CAR.map(CARROW)), '차량 등록');
   XLSX.writeFile(wb, 'garim_baroka' + '_members_purchases_' + stamp() + '.xlsx');
 };
 function alertBox(t){ el('err').textContent = t; el('err').style.display = t ? 'block' : 'none'; }
@@ -245,10 +303,13 @@ document.querySelectorAll('.tabs button').forEach((b) => b.onclick = () => {
   document.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === b)); tab = b.dataset.t; paint(); });
 ['fApp', 'fFrom', 'fTo', 'fPaid', 'fRef'].forEach((id) => el(id).addEventListener('change', paint));
 el('fQ').addEventListener('input', paint);
+el('fToday').onclick = () => { el('fFrom').value = el('fTo').value = day(new Date()); paint(); };
 
 async function load(){
   alertBox(''); loaded = false; el('tbl').tBodies[0].innerHTML = '<tr><td class="msg">불러오는 중… (회원이 많으면 몇 초 걸립니다)</td></tr>';
-  const [m, p] = await Promise.all([SB().rpc('admin_member_report'), SB().rpc('admin_purchase_report', { p_from: null, p_to: null })]);
+  const [m, p, c] = await Promise.all([SB().rpc('admin_member_report'), SB().rpc('admin_purchase_report', { p_from: null, p_to: null }),
+    HAS_CAR ? SB().rpc('admin_car_report', { p_from: null, p_to: null }) : Promise.resolve({ data: [] })]);
+  if (c.error) { CAR = []; setTimeout(() => alertBox(/admin_car_report/.test(c.error.message || '') ? '차량 등록 현황은 6_admin_cars.sql 을 SQL Editor 에서 한 번 돌리면 보입니다.' : '차량 등록 현황을 읽지 못했습니다: ' + (c.error.message || c.error)), 0); } else CAR = c.data || [];
   const e = m.error || p.error;
   if (e) {
     const t = e.message || String(e);
@@ -257,7 +318,7 @@ async function load(){
   }
   MEM = m.data || []; PAY = p.data || []; loaded = true; paint();
   /* 🔴 종합관리자(위브앱 통합 관리)에게 표를 넘겨 다섯 앱을 한 파일로 받을 수 있게 합니다 */
-  try { if (parent !== window) parent.postMessage({ type: 'weave_mem', src: SRC, mem: MEM.map(memRow), pay: PAY.map(payRow) }, 'https://aliascall.com'); } catch (x) {}
+  try { if (parent !== window) parent.postMessage({ type: 'weave_mem', src: SRC, mem: MEM.map(memRow), pay: PAY.map(payRow), car: HAS_CAR ? CAR.map(CARROW) : [] }, 'https://aliascall.com'); } catch (x) {}
 }
 el('reload').onclick = load;
 

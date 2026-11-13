@@ -282,6 +282,7 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
       XLSX.utils.book_append_sheet(wb, sh(Object.keys(sum).sort(function(a, b){ return ((ORDER.indexOf(a) + 1) || 99) - ((ORDER.indexOf(b) + 1) || 99); }).map(function(k){ return sum[k]; })), '앱별 요약');
       XLSX.utils.book_append_sheet(wb, sh(mem), '가입자');
       XLSX.utils.book_append_sheet(wb, sh(pay), '이용권 구매');
+      var car = cat('car').sort(by('등록일시')); if (car.length) XLSX.utils.book_append_sheet(wb, sh(car), '차량 등록 (가림·바로카)');
       var d = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10).replace(/-/g, '');
       XLSX.writeFile(wb, 'weave_5apps_members_purchases_' + d + '.xlsx');
     };
@@ -291,7 +292,7 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
   window.addEventListener('message', function(e){
     var d = e.data || {}; if (d.type !== 'weave_mem') return;
     if (!((d.src === 'ac' && e.origin === 'https://aliascall.com') || (d.src === 'bu' && e.origin === 'https://burum.kr'))) return;
-    MEMD[d.src] = { mem: Array.isArray(d.mem) ? d.mem : [], pay: Array.isArray(d.pay) ? d.pay : [] }; paintMem();
+    MEMD[d.src] = { mem: Array.isArray(d.mem) ? d.mem : [], pay: Array.isArray(d.pay) ? d.pay : [], car: Array.isArray(d.car) ? d.car : [] }; paintMem();
   });
 
   TABS.forEach(function(t){
