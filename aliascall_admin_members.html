@@ -164,7 +164,7 @@ Object.keys(APPS).forEach((k) => { const o = document.createElement('option'); o
 function memRow(r){
   const v = VALID(r);
   return {
-    '가입일시': kst(r.joined), '앱': appName(r.app), '닉네임': r.nick || '', '아이디': loginId(r),
+    '가입일시': kst(r.joined), '앱': appName(r.app), '닉네임': r.nick || (r.anon ? '' : loginId(r)), '아이디': loginId(r),
     '가입 방식': r.anon ? '가입 없이 시작' : '아이디 가입',
     '구매한 이용권': (r.products || []).map((p) => PNAME_M(p, r)).filter(Boolean).join(', '),
     '결제 건수': r.pay_n || 0, '구매 금액(원)': Number(r.pay_krw || 0), '기타 통화': r.pay_other || '',
@@ -173,7 +173,7 @@ function memRow(r){
 }
 function payRow(r){
   return {
-    '결제일시': kst(r.at), '앱': PAPP(r), '닉네임': r.nick || '', '아이디': loginId(r), '이용권': PNAME(r),
+    '결제일시': kst(r.at), '앱': PAPP(r), '닉네임': r.nick || (r.login ? loginId(r) : ''), '아이디': loginId(r), '이용권': PNAME(r),
     '결제 방법': METHOD[r.method] || r.method || '', '금액': (r.currency || 'KRW') === 'KRW' ? Number(r.amount || 0) : Number(r.amount || 0) / 100,
     '통화': r.currency || 'KRW', '상태': r.status === 'refunded' ? '환불' : '완료', '유효기간(끝나는 날)': PUNTIL(r), '가입일': day(r.joined),
   };
