@@ -112,7 +112,7 @@ section{ margin-bottom:38px; scroll-margin-top:90px; }
     <button class="back-btn" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="뒤로가기" data-i18n-aria="backAria">←</button>
     <a href="index.html" class="brand-home-link">
       <div class="brand-mark">A</div>
-      <div class="brand-name">Alias<em>call</em></div>
+      <div class="brand-name"><span class="ac-brand">가림<em>콜</em></span></div>
     </a>
   </div>
   <button type="button" class="lang-toggle" id="langToggleBtn" data-i18n="langToggle" data-i18n-aria="langAria" aria-label="언어 바꾸기">EN</button>
@@ -796,5 +796,6 @@ document.getElementById('langToggleBtn').addEventListener('click', () => {
 });
 </script>
 <script src="aliascall_brandhome.js?v=20261101"></script>
+<script src="aliascall_brand.js?v=20261113a"></script>
 </body>
 </html>

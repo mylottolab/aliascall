@@ -479,7 +479,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
   <button type="button" class="chats-btn" id="chatsBtn" onclick="window.AliasSD && AliasSD.openLines()"><span aria-hidden="true">💬</span><span data-i18n="chatsBtn">대화방</span></button>
   <!-- ⚠ 2026-08-28: 로고를 누르면 첫 화면으로 돌아갑니다.
        모바일에서 작은 "‹ 홈"을 누르기 어렵다는 지적을 반영했습니다. -->
-  <button type="button" class="hero-brand" id="brandHome" data-i18n-aria="backHomeAria" aria-label="첫 화면으로">Alias<em>call</em></button>
+  <button type="button" class="hero-brand" id="brandHome" data-i18n-aria="backHomeAria" aria-label="첫 화면으로"><span class="ac-brand">가림<em>콜</em></span></button>
   <!-- 2026-08-27 신설: 브랜드 밑 한 줄 설명 -->
   <div class="hero-tagline" data-i18n="heroTagline">양방향 모두 번호 노출 없는 안전한 통신</div>
 </div>
@@ -1936,6 +1936,7 @@ function applyLang(lang){
   try { if (window.AliasSD) setTimeout(function(){ AliasSD.repaint(); }, 0); } catch (e) {}
   localStorage.setItem('aliascall_lang', lang);
   document.documentElement.lang = lang;
+  try { if (window.acBrand) window.acBrand(); } catch (e) {}
 
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     const key = el.dataset.i18n;
@@ -2055,5 +2056,6 @@ function renderLoginStatus(){
   if (session) { try { watchWaitStrip(); } catch (e) { console.warn('[home] 대기 문의 띠 실패', e); } }
 })();
 </script>
+<script src="aliascall_brand.js?v=20261113a"></script>
 </body>
 </html>
