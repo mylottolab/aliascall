@@ -98,6 +98,10 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     { id:'members', name:'👥 가입자 · 이용권', c:'#1D6F42', subs:[
       { id:'mb_ac', name:'가림 · 바로카', url: AC + 'aliascall_admin_members.html' },
       { id:'mb_bu', name:'부름 · 누름 · 바로너', url: BU + 'burum_admin_members.html' } ]},
+    /* 🔴 2026-11-15 고객문의 — 카카오 채널 대신 앱 안 고객센터(support.html)로 받은 문의. 두 서버 화면이 대기 건수를 보내옵니다 */
+    { id:'support', name:'💬 고객문의', c:'#C2410C', subs:[
+      { id:'sp_ac', name:'가림 · 바로카', url: AC + 'aliascall_admin_support.html' },
+      { id:'sp_bu', name:'부름 · 누름 · 바로너', url: BU + 'burum_admin_support.html' } ]},
     { id:'burum', name:'🟢 부름 · 누름 · 바로너', c:'var(--bu)', subs:[
       { id:'bu_admin', name:'회원 · 운영', url: BU + 'alias_admin.html' },
       { id:'bu_stats', name:'일일 통계', url: BU + 'burum_admin_stats.html' },
@@ -149,7 +153,8 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
           '<a href="https://appstoreconnect.apple.com" target="_blank" rel="noopener">App Store Connect <span>심사 · 리뷰 · 매출 ›</span></a>' +
           '<a href="https://magic.codemagic.io/apps" target="_blank" rel="noopener">Codemagic <span>아이폰 빌드 ›</span></a></div></div>' +
         '<div class="card"><h3>💬 손님 문의 · 홍보</h3><div class="links">' +
-          '<a href="https://business.kakao.com/" target="_blank" rel="noopener">카카오 비즈니스 · 채널 채팅 <span>1:1 문의 ›</span></a>' +
+          '<a href="#" data-go="support|sp_ac">💬 고객문의 · 가림 · 바로카 <span>앱 안 고객센터 ›</span></a>' +
+          '<a href="#" data-go="support|sp_bu">💬 고객문의 · 부름 · 누름 · 바로너 <span>앱 안 고객센터 ›</span></a>' +
           '<a href="https://studio.youtube.com" target="_blank" rel="noopener">YouTube Studio <span>댓글 · 조회수 ›</span></a>' +
           '<a href="https://blog.naver.com/weveapp" target="_blank" rel="noopener">네이버 블로그 <span>weveapp ›</span></a>' +
           '<a href="https://www.instagram.com/weveapp_kr/" target="_blank" rel="noopener">인스타그램 <span>@weveapp_kr ›</span></a>' +
@@ -169,7 +174,7 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
       '</div></div>';
     p.addEventListener('click', function(e){
       var b = e.target.closest('[data-go]'); if (!b) return;
-      var x = b.dataset.go.split('|'); show(x[0], x[1]);
+      e.preventDefault(); var x = b.dataset.go.split('|'); show(x[0], x[1]);
     });
     return p;
   }
@@ -289,6 +294,14 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     if (window.XLSX) return go();
     var sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; sc.onload = go; document.head.appendChild(sc);
   }
+  /* 🔴 2026-11-15 고객문의 대기 건수 → 큰 탭 이름 옆 숫자 */
+  var SUPN = { ac: 0, bu: 0 };
+  window.addEventListener('message', function(e){
+    var d = e.data || {}; if (d.type !== 'weave_sup') return;
+    if (!((d.src === 'ac' && e.origin === 'https://aliascall.com') || (d.src === 'bu' && e.origin === 'https://burum.kr'))) return;
+    SUPN[d.src] = +d.open || 0; var n = SUPN.ac + SUPN.bu;
+    var b = $('main').querySelector('[data-id="support"]'); if (b) b.textContent = '💬 고객문의' + (n ? ' (' + n + ')' : '');
+  });
   window.addEventListener('message', function(e){
     var d = e.data || {}; if (d.type !== 'weave_mem') return;
     if (!((d.src === 'ac' && e.origin === 'https://aliascall.com') || (d.src === 'bu' && e.origin === 'https://burum.kr'))) return;
@@ -316,6 +329,13 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
   var last = load();
   if (last && last.subOf) cur.subOf = last.subOf;
   show(last ? last.main : 'home', last ? last.sub : null);
+  /* 고객문의 두 화면을 미리 숨겨 열어 둡니다(대기 건수를 받으려고) */
+  setTimeout(function(){
+    tab('support').subs.forEach(function(s){
+      for (var k in frames) if (frames[k].dataset.url === s.url) return;
+      var f = document.createElement('iframe'); f.src = s.url; f.dataset.url = s.url; f.title = s.id; f.hidden = true; $('stage').appendChild(f); frames[s.id] = f;
+    });
+  }, 1500);
 })();
 </script>
 </body>

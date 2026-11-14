@@ -84,7 +84,7 @@
   ].join('\n');
 
   var AC_D = '8자리 가림 번호 · 차 · 물건 · 반려동물<br>QR 긴급연락 · 1회용 임시연락처';
-  var INFO = '📺 사용법 영상: 유튜브 <b>@weveapp</b> · 인스타 · X · 틱톡 &nbsp;|&nbsp; 💛 문의: 카카오톡 <b>「위브앱솔루션」</b>';
+  var INFO = '📺 사용법 영상: 유튜브 <b>@weveapp</b> · 인스타 · X · 틱톡 &nbsp;|&nbsp; 💬 문의: 앱 안 <b>고객센터</b>';
   var BU_D = '번호 대신 닉네임 · 부름번호로 전화 · 메신저<br>+ 누름(부모님 1:1 핫라인) 포함';
 
   function poster(o){
@@ -121,7 +121,7 @@
   function cards(o){
     var one = '<div class="pp-card"><div class="tx"><div><div class="k">부름 · 누름 · 가림 · 바로너 · 바로카</div><div class="h">내 번호는 숨기고<br>연락은 그대로</div></div>' +
       '<div><div class="cl">앱 설치 후 "추천 대리점"에</div><div class="cc">' + esc(o.code) + '</div>' +
-      (o.store ? '<div class="st">' + esc(o.store) + ' 추천</div>' : '') + '<div class="vi">사용법 영상 유튜브 @weveapp<br>문의 카카오톡 「위브앱솔루션」</div></div></div>' +
+      (o.store ? '<div class="st">' + esc(o.store) + ' 추천</div>' : '') + '<div class="vi">사용법 영상 유튜브 @weveapp<br>문의 앱 안 💬 고객센터</div></div></div>' +
       '<div class="q"><img src="' + o.qBu + '" alt="">부름</div><div class="q"><img src="' + o.qAc + '" alt="">가림</div></div>';
     var s = ''; for (var i = 0; i < 10; i++) s += one;
     return '<div class="pp-page"><div class="pp-cards">' + s + '</div><div class="pp-cut">✂ 점선을 따라 잘라 쓰세요 · 같은 안내문 10장</div></div>';

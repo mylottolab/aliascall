@@ -428,7 +428,7 @@ function dash(d){
     PartnerPrint.open(b.dataset.print, { code: p.code, store });
   });
   el('shareBtn').onclick = async () => {
-    const text = '번호 노출 없는 안전한 연락 앱\n부름(누름): ' + bu + '\n가림: ' + ac + '\n바로너: ' + bn + '\n바로카: ' + bk + '\n가입할 때 대리점 코드 ' + p.code + ' 를 넣어 주세요.\n사용법 영상: 유튜브 @weveapp · 문의: 카카오톡 「위브앱솔루션」';
+    const text = '번호 노출 없는 안전한 연락 앱\n부름(누름): ' + bu + '\n가림: ' + ac + '\n바로너: ' + bn + '\n바로카: ' + bk + '\n가입할 때 대리점 코드 ' + p.code + ' 를 넣어 주세요.\n사용법 영상: 유튜브 @weveapp · 문의: 각 앱의 💬 고객센터';
     if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { return; } }
     try { await navigator.clipboard.writeText(text); toast('문구를 복사했습니다. 카카오톡이나 문자에 붙여 넣으세요.'); } catch (e) { prompt('복사해서 보내세요', text); }
   };
