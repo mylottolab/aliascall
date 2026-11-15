@@ -46,7 +46,9 @@ body{ margin:0; background:#E9EEEC; font-family:system-ui,-apple-system,'Apple S
 <script>
 (function(){
   var Q = new URLSearchParams(location.search), c = (Q.get('c') || '').toUpperCase(), b = Q.get('b') || c, n = Q.get('n') || b || '우리 가게';
-  var url = c ? 'https://aliascall.com/dangol.html?c=' + encodeURIComponent(c) : 'https://aliascall.com/dangol.html?b=' + encodeURIComponent(b);
+  var DG = /(^|\.)dangol\.org$/.test(location.hostname);
+  var url = c ? (DG ? 'https://dangol.org/?c=' : 'https://aliascall.com/dangol.html?c=') + encodeURIComponent(c) : 'https://aliascall.com/dangol.html?b=' + encodeURIComponent(b);
+  if (DG) document.querySelector('.foot').innerHTML = '영업시간 · 주차 · 예약 · 단체 문의 무엇이든<br><b>단골창구</b> dangol.org · 번호를 드러내지 않는 안심 연락';
   if (c) { var cc = document.createElement('div'); cc.style.cssText = 'margin-top:4mm;font-size:13pt;font-weight:800;letter-spacing:2px;color:#3E5654'; cc.textContent = '가게 코드 ' + c; document.querySelector('.qr').after(cc); }
   document.getElementById('name').textContent = n;
   document.title = n + ' 단골창구 QR 포스터';

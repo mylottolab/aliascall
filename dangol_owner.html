@@ -59,6 +59,8 @@ var URL0 = 'https://qmwaraittiurkynszjts.supabase.co';
 var KEY0 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y';
 var sb = window.sb = window.supabase.createClient(URL0, KEY0);   // aliascall_push.js 가 전역 sb 를 씁니다(앱 알림 등록 · 알림 눌러 들어오기)
 var A = document.getElementById('app'), Q = new URLSearchParams(location.search);
+var DGHOST = /(^|\.)dangol\.org$/.test(location.hostname);   // 🏪 단골창구 독립 사이트 · 앱(dangol.org) — 같은 파일을 aliascall.com 과 함께 씁니다
+var BRAND = DGHOST ? '단골창구' : '가림콜';
 var ME = null, DESKS = [], DK = null, TAB = Q.get('t') ? 'inbox' : 'inbox', THS = [], CUR = Q.get('t'), poll = null, FAQ = null;
 var CATS = ['음식점', '카페 · 디저트', '미용 · 뷰티', '학원 · 교육', '병원 · 약국', '상점', '생활 서비스', '숙박', '기타'];
 function $(id){ return document.getElementById(id); }
@@ -76,8 +78,11 @@ async function boot(){
   var s = (await sb.auth.getSession()).data.session;
   ME = s && s.user;
   if (!ME) {
-    A.innerHTML = shell('가림콜 계정으로 열고 답장합니다.') + '<div class="card"><b class="h">먼저 가림콜에 로그인해 주세요</b><p>가림콜 앱이나 aliascall.com 에서 로그인한 뒤 이 화면을 다시 여시면 됩니다. 계정이 없으면 닉네임 · 비밀번호로 30초면 만듭니다.</p>' +
-      '<a class="btn" href="aliascall_my_account.html">로그인 · 가입하기</a></div>';
+    A.innerHTML = DGHOST
+      ? shell('사장님 계정으로 열고 답장합니다.') + '<div class="card"><b class="h">먼저 로그인해 주세요</b><p>계정이 없으면 <b>닉네임 · 비밀번호</b>만 정하면 30초면 만들어져요. 전화번호 · 사업자등록증은 필요 없어요.</p>' +
+        '<a class="btn" href="login.html">로그인 · 가입하기</a></div>'
+      : shell('가림콜 계정으로 열고 답장합니다.') + '<div class="card"><b class="h">먼저 가림콜에 로그인해 주세요</b><p>가림콜 앱이나 aliascall.com 에서 로그인한 뒤 이 화면을 다시 여시면 됩니다. 계정이 없으면 닉네임 · 비밀번호로 30초면 만듭니다.</p>' +
+        '<a class="btn" href="aliascall_my_account.html">로그인 · 가입하기</a></div>';
     return;
   }
   try { DESKS = await rpc('dg_owner_desks'); } catch (e) { A.innerHTML = shell('') + '<div class="card"><b class="h">' + esc(em(e)) + '</b></div>'; return; }
@@ -117,10 +122,10 @@ function openForm(){
    앱 안: 구글 · 애플 결제만(garim_dangol_1y · 애플 garim_dangol_1y_nr) → aliascall-google-verify
    웹: 국내카드(이니시스) → aliascall-web-pay → 이 화면으로 돌아옴(?webpaid=)
    어느 단골창구에 넣을지는 usageKind 'dangol' · usageTargetId(단골창구 번호)로 보냅니다. */
-var SKU = 'garim_dangol_1y', PAYK = 'dg_pay_desk';
+var SKU = DGHOST ? 'dangol_1y' : 'garim_dangol_1y', PAYK = 'dg_pay_desk';   // 단골창구 앱: 구글 dangol_1y · 애플 dangol_1y_nr
 async function payYear(d, btn){
   if (d.status === 'suspended') return toast('멈춘 단골창구는 연장할 수 없어요. 💬 고객센터로 문의해 주세요.');
-  if (window.ACStore && ACStore.oldApp && ACStore.oldApp()) return toast('가림콜 앱을 최신으로 업데이트한 뒤 다시 눌러 주세요.');
+  if (window.ACStore && ACStore.oldApp && ACStore.oldApp()) return toast(BRAND + ' 앱을 최신으로 업데이트한 뒤 다시 눌러 주세요.');
   try { localStorage.setItem(PAYK, d.id); } catch (e) {}
   btn.disabled = true; btn.textContent = '결제 창을 여는 중…';
   var reset = function(){ btn.disabled = false; btn.textContent = '1년 연장 · 9,900원'; };
@@ -155,7 +160,7 @@ window.ACStore && (ACStore.onDone = paid);   // 결제 도중 앱이 꺼졌다 �
 
 /* ── 가게 화면 ─────────────────────────────────────────── */
 function main(){
-  var d = DK, live = d.live, link = 'https://aliascall.com/dangol.html?c=' + d.code;
+  var d = DK, live = d.live, link = (DGHOST ? 'https://dangol.org/?c=' : 'https://aliascall.com/dangol.html?c=') + d.code;
   var st = d.status === 'suspended' ? '<span class="st bad">멈춤 — 신고 확인 중</span>' : live ? '<span class="st live">운영 중</span>' : '<span class="st off">쉬는 중 — 기간이 끝났어요</span>';
   var h = shell(esc(d.name) + ' · ' + (d.verified ? '✅ 확인됨' : '확인 전')) +
     (DESKS.length > 1 ? '<select id="pick">' + DESKS.map(function(x){ return '<option value="' + x.id + '"' + (x.id === d.id ? ' selected' : '') + '>' + esc(x.name) + (x.unread ? ' (' + x.unread + ')' : '') + '</option>'; }).join('') + '</select>' : '') +
@@ -194,7 +199,7 @@ function paintInbox(){
       '<div class="qr">' + QUICK.map(function(q, i){ return '<button type="button" data-q="' + i + '">' + esc(q) + '</button>'; }).join('') + '</div>' +
       '<textarea id="rep" maxlength="2000" placeholder="답장 쓰기 — 손님 화면에 그대로 보여요. 계좌번호 · 링크는 손님 화면에 경고가 함께 떠요."></textarea>' +
       '<div class="row"><button class="btn" id="send" type="button">답장 보내기</button><button class="btn g" id="sendx" type="button">답장하고 끝내기</button></div>' +
-      '<p style="font-size:13px">손님은 가입하지 않은 분이라 휴대폰 알림이 가지 않아요. 손님이 단골창구를 다시 열면 답장이 보입니다.</p></div>';
+      '<p style="font-size:13px">「단골창구」 앱에서 답장 알림을 켠 손님에게는 알림이 가요. 그 밖의 손님은 단골창구를 다시 열면 답장이 보입니다.</p></div>';
     var ms = $('ms'); ms.scrollTop = ms.scrollHeight;
     $('bk').onclick = function(){ CUR = null; paintInbox(); };
     p.querySelectorAll('[data-q]').forEach(function(b){ b.onclick = function(){ var r = $('rep'); r.value = (r.value ? r.value + ' ' : '') + QUICK[Number(b.dataset.q)]; r.focus(); }; });
@@ -205,14 +210,34 @@ function paintInbox(){
   var open = THS.filter(function(x){ return x.status !== 'closed'; }), done = THS.filter(function(x){ return x.status === 'closed'; });
   var row = function(x){ var last = x.msgs[x.msgs.length - 1] || {};
     return '<button type="button" class="th' + (x.unread ? ' new' : '') + '" data-t="' + x.id + '"><b>' + esc(x.name) + (x.unread ? '<span class="dot">' + x.unread + '</span>' : '') + (x.status === 'answered' ? ' <span class="st live">답함</span>' : '') + '</b><span>' + esc((last.o ? '↳ ' : '') + (last.b || '')) + '</span><span>' + when(x.updated_at) + '</span></button>'; };
-  p.innerHTML = '<div class="card"><b class="h">💬 손님 문의 ' + open.length + '건</b>' + (open.length ? open.map(row).join('') : '<p>아직 문의가 없어요. QR 포스터를 계산대에 붙여 보세요!</p>') + '</div>' +
+  p.innerHTML = '<div id="pushBox"></div><div class="card"><b class="h">💬 손님 문의 ' + open.length + '건</b>' + (open.length ? open.map(row).join('') : '<p>아직 문의가 없어요. QR 포스터를 계산대에 붙여 보세요!</p>') + '</div>' +
     (done.length ? '<details class="card"><summary style="font-weight:800;cursor:pointer">끝난 문의 ' + done.length + '건</summary>' + done.map(row).join('') + '</details>' : '');
   p.querySelectorAll('[data-t]').forEach(function(b){ b.onclick = function(){ CUR = b.dataset.t; paintInbox(); }; });
+  pushBox();
+}
+/* 🔔 2026-11-15 새 문의 알림 — 앱 안이면 [알림 받기](허락 · 폰 주소 등록), 웹이면 앱 안내.
+   가림콜 앱은 첫 화면에서 이미 등록하므로, 허락이 있으면 아무것도 보이지 않습니다. */
+async function pushBox(){
+  var bx = $('pushBox'); if (!bx) return;
+  var nat = typeof aliascallIsNativeApp === 'function' && aliascallIsNativeApp();
+  if (!nat) {
+    bx.innerHTML = DGHOST ? '<div class="card" style="background:var(--warnbg);border-color:transparent"><p style="color:var(--warn)">🔔 새 문의가 오면 바로 알림을 받으려면 휴대폰에 <b>「단골창구」 앱</b>을 깔고 같은 닉네임으로 로그인하세요.</p></div>' : '';
+    return;
+  }
+  try {
+    var P = _nativePush(); if (!P) return;
+    var perm = await P.checkPermissions();
+    if (perm && perm.receive === 'granted') { if (typeof aliascallAutoRegisterPush === 'function') aliascallAutoRegisterPush(sb); bx.innerHTML = ''; return; }
+    bx.innerHTML = '<div class="card" style="background:var(--warnbg);border-color:transparent"><p style="color:var(--warn)">🔔 알림을 켜면 손님 문의가 오는 순간 휴대폰이 알려 드려요.</p><button class="btn c" id="pushGo" type="button">새 문의 알림 받기</button></div>';
+    $('pushGo').onclick = async function(){ this.disabled = true; var ok = await _subscribeCore(sb); if (ok) { toast('알림을 켰어요. 🔔'); bx.innerHTML = ''; } else this.disabled = false; };
+  } catch (e) {}
 }
 async function reply(t, close){
   var b = $('rep').value.trim(); if (!b) { $('rep').focus(); return; }
   $('send').disabled = $('sendx').disabled = true;
   try { var r = await rpc('dg_owner_reply', { p_thread: t.id, p_body: b, p_close: close }); if (!r.ok) throw r; toast(close ? '답장하고 끝냈어요.' : '답장했어요.');
+    /* 🔔 단골창구 앱에서 「답장 알림」을 켠 손님에게 알림 (11_dangol_guest_push.sql · dangol-notify) */
+    try { var ss = (await sb.auth.getSession()).data.session; if (ss) fetch(URL0 + '/functions/v1/dangol-notify', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY0, Authorization: 'Bearer ' + ss.access_token }, body: JSON.stringify({ reply: t.id }) }).catch(function(){}); } catch (x) {}
     THS = await rpc('dg_owner_threads', { p_desk: DK.id }); if (close) CUR = null; paintInbox(); }
   catch (e) { toast(em(e)); $('send').disabled = $('sendx').disabled = false; }
 }
