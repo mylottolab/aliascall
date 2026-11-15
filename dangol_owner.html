@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우리 가게 단골창구</title>
+<!-- 🏪 2026-11-15 단골창구 — 사장님 화면 (가림콜 계정). 열기 · 꾸미기(사진 · 소개 · 자주 묻는 질문) · 손님 문의 답장 · QR 포스터.
+     서버: 가림 서버 9_dangol_desk.sql. 손님 화면: dangol.html?c=코드. 새 문의 알림: dangol-notify 함수 → 이 화면 ?t=대화번호. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="aliascall_push.js"></script>
+<style>
+:root{ --bg:#F2F5F4; --card:#fff; --ink:#12302E; --sub:#4E6462; --line:#DCE3DE; --teal:#123F3D; --teal2:#1F6F6B; --coral:#E8734A; --tint:#E4EFEE; --red:#B4232A; --ok:#1F7A4C; --warnbg:#FFF2D9; --warn:#8A4B00; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#111816; --card:#1A2422; --ink:#E6EEEC; --sub:#9DB0AD; --line:#2C3A37; --tint:#1E3532; --red:#FF8A8A; --ok:#7FD6A6; --warnbg:#3A2E14; --warn:#F2C46B; color-scheme:dark; } }
+:root[data-theme="dark"]{ --bg:#111816; --card:#1A2422; --ink:#E6EEEC; --sub:#9DB0AD; --line:#2C3A37; --tint:#1E3532; --red:#FF8A8A; --ok:#7FD6A6; --warnbg:#3A2E14; --warn:#F2C46B; color-scheme:dark; }
+*{ box-sizing:border-box; } [hidden]{ display:none !important; }
+body{ margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif; font-size:16px; line-height:1.6; word-break:keep-all; }
+.w{ max-width:640px; margin:0 auto; padding:max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 50px max(16px, env(safe-area-inset-left)); display:flex; flex-direction:column; gap:14px; }
+.hero{ background:linear-gradient(135deg,var(--teal),var(--teal2)); color:#fff; border-radius:22px; padding:18px; display:flex; gap:12px; align-items:flex-start; }
+.hero a{ color:#fff; text-decoration:none; font-size:24px; font-weight:800; line-height:1; padding-top:2px; }
+.hero h1{ margin:0; font-size:22px; line-height:1.3; } .hero p{ margin:4px 0 0; font-size:14.5px; opacity:.93; }
+.tag{ display:inline-block; background:var(--coral); color:#fff; font-weight:800; font-size:12.5px; border-radius:20px; padding:2px 10px; margin-bottom:6px; }
+.card{ background:var(--card); border:1.5px solid var(--line); border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:10px; min-width:0; }
+.card b.h{ font-size:17.5px; } .card p{ margin:0; color:var(--sub); font-size:14.5px; }
+.btn{ display:flex; align-items:center; justify-content:center; gap:6px; border:none; border-radius:14px; padding:13px; font:inherit; font-weight:800; font-size:15.5px; text-decoration:none; cursor:pointer; background:var(--teal); color:#fff; }
+.btn.c{ background:var(--coral); } .btn.g{ background:var(--tint); color:var(--ink); } .btn:disabled{ opacity:.55; }
+.row{ display:flex; gap:8px; flex-wrap:wrap; } .row > *{ flex:1; min-width:120px; }
+label{ font-size:13.5px; font-weight:800; color:var(--sub); }
+input, textarea, select{ width:100%; min-width:0; border:1.5px solid var(--line); background:var(--bg); color:var(--ink); border-radius:12px; padding:11px 12px; font:inherit; font-size:15px; }
+textarea{ min-height:80px; resize:vertical; }
+.tabs{ display:flex; gap:6px; } .tabs button{ flex:1; border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:12px; padding:10px; font:inherit; font-weight:800; cursor:pointer; }
+.tabs button.on{ background:var(--teal); color:#fff; border-color:var(--teal); }
+.st{ display:inline-block; font-size:12.5px; font-weight:800; border-radius:20px; padding:2px 10px; }
+.st.live{ background:#E3F4EA; color:var(--ok); } .st.off{ background:var(--warnbg); color:var(--warn); } .st.bad{ background:#FDE7E7; color:var(--red); }
+.code{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:24px; font-weight:800; letter-spacing:3px; }
+.th{ display:flex; flex-direction:column; gap:2px; text-align:left; border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:14px; padding:11px 13px; font:inherit; cursor:pointer; }
+.th.new{ border-color:var(--red); } .th b{ font-size:15.5px; } .th span{ font-size:13.5px; color:var(--sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dot{ background:var(--red); color:#fff; border-radius:20px; font-size:12px; padding:0 7px; margin-left:4px; }
+.msgs{ display:flex; flex-direction:column; gap:8px; max-height:52vh; overflow:auto; }
+.m{ border-radius:14px; padding:9px 13px; max-width:90%; font-size:15px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.m small{ display:block; font-size:12px; color:var(--sub); font-weight:700; white-space:normal; }
+.m.g{ align-self:flex-start; background:var(--tint); } .m.o{ align-self:flex-end; background:#E3F4EA; color:#12302E; }
+.qr{ display:flex; flex-wrap:wrap; gap:6px; } .qr button{ border:1px dashed var(--line); background:var(--card); color:var(--ink); border-radius:10px; padding:6px 10px; font:inherit; font-size:13px; cursor:pointer; }
+.photo{ width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:14px; background:var(--tint); display:block; max-width:100%; }
+.faqrow{ border:1.5px solid var(--line); border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:6px; }
+.x{ align-self:flex-end; background:none; border:none; color:var(--sub); font:inherit; font-size:13px; cursor:pointer; }
+.toast{ position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); background:#12302E; color:#fff; padding:11px 16px; border-radius:12px; font-size:15px; max-width:calc(100% - 32px); opacity:0; transition:.25s; pointer-events:none; z-index:9; }
+.toast.on{ opacity:1; }
+</style>
+</head>
+<body>
+<div class="w" id="app"><p>불러오는 중…</p></div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+(function(){
+'use strict';
+var URL0 = 'https://qmwaraittiurkynszjts.supabase.co';
+var KEY0 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y';
+var sb = window.sb = window.supabase.createClient(URL0, KEY0);   // aliascall_push.js 가 전역 sb 를 씁니다(앱 알림 등록 · 알림 눌러 들어오기)
+var A = document.getElementById('app'), Q = new URLSearchParams(location.search);
+var ME = null, DESKS = [], DK = null, TAB = Q.get('t') ? 'inbox' : 'inbox', THS = [], CUR = Q.get('t'), poll = null, FAQ = null;
+var CATS = ['음식점', '카페 · 디저트', '미용 · 뷰티', '학원 · 교육', '병원 · 약국', '상점', '생활 서비스', '숙박', '기타'];
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+function toast(t){ var e = $('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function(){ e.classList.remove('on'); }, 3000); }
+function when(t){ var d = new Date(t); var k = new Date(d.getTime() + 9 * 3600e3); return (k.getUTCMonth() + 1) + '/' + k.getUTCDate() + ' ' + String(k.getUTCHours()).padStart(2, '0') + ':' + String(k.getUTCMinutes()).padStart(2, '0'); }
+function day(t){ var k = new Date(new Date(t).getTime() + 9 * 3600e3); return k.getUTCFullYear() + '년 ' + (k.getUTCMonth() + 1) + '월 ' + k.getUTCDate() + '일'; }
+function photoUrl(p){ return p ? URL0 + '/storage/v1/object/public/dangol/' + p.split('/').map(encodeURIComponent).join('/') : ''; }
+async function rpc(fn, a){ var r = await sb.rpc(fn, a || {}); if (r.error) throw r.error; return r.data; }
+var ERR = { no_name: '가게 이름을 적어 주세요.', too_many_desks: '단골창구는 한 계정에 3곳까지 열 수 있어요.', not_mine: '내 가게가 아니에요.', photo: '사진을 다시 올려 주세요.', length: '답장은 2,000자까지예요.' };
+function em(e){ var c = (e && (e.error || e.message)) || ''; return ERR[c] || (/dg_|function|schema/.test(c) ? '단골창구 서버를 준비 중입니다(관리자: 9_dangol_desk.sql).' : '잠시 문제가 있었어요: ' + c); }
+var shell = function(sub){ return '<div class="hero"><a href="javascript:history.length>1?history.back():location.replace(\'index.html\')" aria-label="뒤로">←</a><div><span class="tag">🏪 단골창구</span><h1>우리 가게 단골창구</h1><p>' + sub + '</p></div></div>'; };
+
+async function boot(){
+  var s = (await sb.auth.getSession()).data.session;
+  ME = s && s.user;
+  if (!ME) {
+    A.innerHTML = shell('가림콜 계정으로 열고 답장합니다.') + '<div class="card"><b class="h">먼저 가림콜에 로그인해 주세요</b><p>가림콜 앱이나 aliascall.com 에서 로그인한 뒤 이 화면을 다시 여시면 됩니다. 계정이 없으면 닉네임 · 비밀번호로 30초면 만듭니다.</p>' +
+      '<a class="btn" href="aliascall_my_account.html">로그인 · 가입하기</a></div>';
+    return;
+  }
+  try { DESKS = await rpc('dg_owner_desks'); } catch (e) { A.innerHTML = shell('') + '<div class="card"><b class="h">' + esc(em(e)) + '</b></div>'; return; }
+  if (!DESKS.length) return openForm();
+  DK = DESKS.filter(function(d){ return d.id === (Q.get('d') || ''); })[0] || DESKS[0];
+  if (CUR) { try { var ts = await rpc('dg_owner_threads', { p_desk: DK.id }); if (!ts.some(function(t){ return t.id === CUR; })) { for (var i = 0; i < DESKS.length; i++) { var t2 = await rpc('dg_owner_threads', { p_desk: DESKS[i].id }); if (t2.some(function(t){ return t.id === CUR; })) { DK = DESKS[i]; break; } } } } catch (e) {} }
+  main();
+}
+
+/* ── 처음 열기 ─────────────────────────────────────────── */
+function openForm(){
+  A.innerHTML = shell('사진과 소개만 올리면 바로 열립니다. 사업자등록증은 필요 없어요.') +
+    '<div class="card"><b class="h">우리 가게 단골창구 열기</b>' +
+    '<p>손님이 가게 QR을 찍으면 이 가게 화면이 열리고, 자주 묻는 질문이 먼저 답하고, 그래도 궁금하면 사장님께 묻습니다. <b>사장님 전화번호는 손님에게 보이지 않아요.</b></p>' +
+    '<label>가게 이름 *</label><input id="fn" maxlength="30" placeholder="예) 행복칼국수">' +
+    '<label>업종</label><select id="fc">' + CATS.map(function(c){ return '<option>' + c + '</option>'; }).join('') + '</select>' +
+    '<label>한 줄 소개</label><textarea id="fi" maxlength="400" placeholder="예) 동네 30년 칼국수 집입니다. 직접 반죽한 면을 씁니다."></textarea>' +
+    '<div class="row"><div><label>영업시간</label><input id="fh" maxlength="80" placeholder="예) 11:00~21:00 (월 휴무)"></div><div><label>지역</label><input id="fr" maxlength="40" placeholder="예) 수원 권선구"></div></div>' +
+    '<p>💳 <b>개설료 1년 9,900원</b> — 지금 열면 <b>30일 무료</b>로 먼저 써 보실 수 있어요.</p>' +
+    '<button class="btn c" id="fgo" type="button">단골창구 열기 (30일 무료)</button></div>';
+  $('fgo').onclick = async function(){
+    this.disabled = true;
+    try {
+      var r = await rpc('dg_open', { p_name: $('fn').value, p_category: $('fc').value, p_intro: $('fi').value, p_hours: $('fh').value, p_region: $('fr').value });
+      if (!r.ok) throw r; toast('단골창구를 열었어요! 사진과 자주 묻는 질문을 넣어 보세요.'); TAB = 'set'; Q.set('d', r.id); boot();
+    } catch (e) { toast(em(e)); this.disabled = false; }
+  };
+}
+
+/* ── 가게 화면 ─────────────────────────────────────────── */
+function main(){
+  var d = DK, live = d.live, link = 'https://aliascall.com/dangol.html?c=' + d.code;
+  var st = d.status === 'suspended' ? '<span class="st bad">멈춤 — 신고 확인 중</span>' : live ? '<span class="st live">운영 중</span>' : '<span class="st off">쉬는 중 — 기간이 끝났어요</span>';
+  var h = shell(esc(d.name) + ' · ' + (d.verified ? '✅ 확인됨' : '확인 전')) +
+    (DESKS.length > 1 ? '<select id="pick">' + DESKS.map(function(x){ return '<option value="' + x.id + '"' + (x.id === d.id ? ' selected' : '') + '>' + esc(x.name) + (x.unread ? ' (' + x.unread + ')' : '') + '</option>'; }).join('') + '</select>' : '') +
+    '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">' + st + '<span style="font-size:14px;color:var(--sub)">' + day(d.until) + '까지</span></div>' +
+      '<div>가게 코드 <span class="code">' + esc(d.code) + '</span></div>' +
+      '<div class="row"><a class="btn" target="_blank" rel="noopener" href="dangol_poster.html?c=' + encodeURIComponent(d.code) + '&n=' + encodeURIComponent(d.name) + '">🖨 QR 포스터</a><button class="btn g" id="cp" type="button">주소 복사</button><a class="btn g" target="_blank" rel="noopener" href="' + link + '">손님 화면 보기</a></div>' +
+      '<button class="btn c" id="ext" type="button">1년 연장 · 9,900원</button></div>' +
+    '<div class="tabs"><button type="button" data-tab="inbox"' + (TAB === 'inbox' ? ' class="on"' : '') + '>💬 손님 문의' + (d.unread ? ' <span class="dot">' + d.unread + '</span>' : '') + '</button><button type="button" data-tab="set"' + (TAB === 'set' ? ' class="on"' : '') + '>🛠 가게 꾸미기</button></div>' +
+    '<div id="pane"></div>';
+  A.innerHTML = h;
+  if ($('pick')) $('pick').onchange = function(){ DK = DESKS.filter(function(x){ return x.id === $('pick').value; })[0]; CUR = null; FAQ = null; main(); };
+  $('cp').onclick = function(){ (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function(){ toast('주소를 복사했어요: ' + link); }, function(){ toast(link); }); };
+  $('ext').onclick = function(){ toast('결제 연결을 준비 중이에요. 지금은 💬 고객센터로 「단골창구 연장」을 남겨 주시면 넣어 드립니다.'); };
+  A.querySelectorAll('[data-tab]').forEach(function(b){ b.onclick = function(){ TAB = b.dataset.tab; main(); }; });
+  if (TAB === 'set') settings(); else inbox();
+}
+
+/* ── 손님 문의 ─────────────────────────────────────────── */
+var QUICK = ['네, 가능합니다.', '죄송하지만 지금은 어렵습니다.', '확인해 보고 바로 알려 드릴게요.', '방문해 주시면 자세히 안내해 드릴게요.', '고맙습니다. 또 찾아 주세요!'];
+async function inbox(){
+  if (poll) clearInterval(poll);
+  try { THS = await rpc('dg_owner_threads', { p_desk: DK.id }); } catch (e) { $('pane').innerHTML = '<div class="card"><b class="h">' + esc(em(e)) + '</b></div>'; return; }
+  paintInbox();
+  poll = setInterval(async function(){
+    if (document.hidden || TAB !== 'inbox') return;
+    var typing = $('rep') && $('rep').value.trim();
+    try { THS = await rpc('dg_owner_threads', { p_desk: DK.id }); if (!typing) paintInbox(); } catch (e) {}
+  }, 20000);
+}
+function paintInbox(){
+  var p = $('pane'); if (!p) return;
+  var t = THS.filter(function(x){ return x.id === CUR; })[0];
+  if (t) {
+    p.innerHTML = '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><b class="h">' + esc(t.name) + '</b><button class="btn g" id="bk" type="button" style="padding:6px 12px">← 목록</button></div>' +
+      '<div class="msgs" id="ms">' + t.msgs.map(function(m){ return '<div class="m ' + (m.o ? 'o' : 'g') + '"><small>' + (m.o ? '나(사장님)' : esc(t.name)) + ' · ' + when(m.t) + '</small>' + esc(m.b) + '</div>'; }).join('') + '</div>' +
+      '<div class="qr">' + QUICK.map(function(q, i){ return '<button type="button" data-q="' + i + '">' + esc(q) + '</button>'; }).join('') + '</div>' +
+      '<textarea id="rep" maxlength="2000" placeholder="답장 쓰기 — 손님 화면에 그대로 보여요. 계좌번호 · 링크는 손님 화면에 경고가 함께 떠요."></textarea>' +
+      '<div class="row"><button class="btn" id="send" type="button">답장 보내기</button><button class="btn g" id="sendx" type="button">답장하고 끝내기</button></div>' +
+      '<p style="font-size:13px">손님은 가입하지 않은 분이라 휴대폰 알림이 가지 않아요. 손님이 단골창구를 다시 열면 답장이 보입니다.</p></div>';
+    var ms = $('ms'); ms.scrollTop = ms.scrollHeight;
+    $('bk').onclick = function(){ CUR = null; paintInbox(); };
+    p.querySelectorAll('[data-q]').forEach(function(b){ b.onclick = function(){ var r = $('rep'); r.value = (r.value ? r.value + ' ' : '') + QUICK[Number(b.dataset.q)]; r.focus(); }; });
+    $('send').onclick = function(){ reply(t, false); }; $('sendx').onclick = function(){ reply(t, true); };
+    if (t.unread) rpc('dg_owner_set', { p_thread: t.id, p_status: 'seen' }).then(function(){ t.unread = 0; }).catch(function(){});
+    return;
+  }
+  var open = THS.filter(function(x){ return x.status !== 'closed'; }), done = THS.filter(function(x){ return x.status === 'closed'; });
+  var row = function(x){ var last = x.msgs[x.msgs.length - 1] || {};
+    return '<button type="button" class="th' + (x.unread ? ' new' : '') + '" data-t="' + x.id + '"><b>' + esc(x.name) + (x.unread ? '<span class="dot">' + x.unread + '</span>' : '') + (x.status === 'answered' ? ' <span class="st live">답함</span>' : '') + '</b><span>' + esc((last.o ? '↳ ' : '') + (last.b || '')) + '</span><span>' + when(x.updated_at) + '</span></button>'; };
+  p.innerHTML = '<div class="card"><b class="h">💬 손님 문의 ' + open.length + '건</b>' + (open.length ? open.map(row).join('') : '<p>아직 문의가 없어요. QR 포스터를 계산대에 붙여 보세요!</p>') + '</div>' +
+    (done.length ? '<details class="card"><summary style="font-weight:800;cursor:pointer">끝난 문의 ' + done.length + '건</summary>' + done.map(row).join('') + '</details>' : '');
+  p.querySelectorAll('[data-t]').forEach(function(b){ b.onclick = function(){ CUR = b.dataset.t; paintInbox(); }; });
+}
+async function reply(t, close){
+  var b = $('rep').value.trim(); if (!b) { $('rep').focus(); return; }
+  $('send').disabled = $('sendx').disabled = true;
+  try { var r = await rpc('dg_owner_reply', { p_thread: t.id, p_body: b, p_close: close }); if (!r.ok) throw r; toast(close ? '답장하고 끝냈어요.' : '답장했어요.');
+    THS = await rpc('dg_owner_threads', { p_desk: DK.id }); if (close) CUR = null; paintInbox(); }
+  catch (e) { toast(em(e)); $('send').disabled = $('sendx').disabled = false; }
+}
+
+/* ── 가게 꾸미기 ───────────────────────────────────────── */
+var PHOTO = undefined;
+function settings(){
+  if (poll) clearInterval(poll);
+  var d = DK; if (FAQ === null) FAQ = (d.items || []).slice(); if (PHOTO === undefined) PHOTO = d.photo || '';
+  var rows = FAQ.length ? FAQ : [{ q: '영업시간이 어떻게 되나요?', a: '' }, { q: '주차할 수 있나요?', a: '' }, { q: '예약은 어떻게 하나요?', a: '' }];
+  $('pane').innerHTML = '<div class="card"><b class="h">📷 가게 사진</b>' + (PHOTO ? '<img class="photo" src="' + esc(photoUrl(PHOTO)) + '" alt="가게 사진">' : '<p>가게 앞 · 간판 · 대표 메뉴 사진을 올리면 손님이 믿고 물어봐요.</p>') +
+      '<input type="file" id="ph" accept="image/*"></div>' +
+    '<div class="card"><b class="h">🏪 가게 소개</b><label>가게 이름 *</label><input id="sn" maxlength="30">' +
+      '<label>업종</label><select id="sc">' + CATS.map(function(c){ return '<option' + (c === d.category ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select>' +
+      '<label>소개</label><textarea id="si" maxlength="400"></textarea>' +
+      '<div class="row"><div><label>영업시간</label><input id="sh" maxlength="80"></div><div><label>지역</label><input id="sr" maxlength="40"></div></div></div>' +
+    '<div class="card"><b class="h">🙋 자주 묻는 질문</b><p>손님이 묻기 전에 먼저 보는 답이에요. 같은 질문에 여러 번 답하지 않으셔도 됩니다. (30개까지)</p>' +
+      '<label>인사말 (선택)</label><textarea id="sg" maxlength="200" style="min-height:60px" placeholder="예) 어서 오세요! 궁금한 점은 아래에서 먼저 찾아보세요."></textarea>' +
+      '<div id="fr" style="display:flex;flex-direction:column;gap:8px"></div><button class="btn g" id="fadd" type="button">＋ 질문 더하기</button></div>' +
+    '<button class="btn c" id="save" type="button">저장하기</button>' +
+    '<button class="btn g" id="closeDesk" type="button" style="font-size:14px">이 단골창구 닫기</button>';
+  $('sn').value = d.name || ''; $('si').value = d.intro || ''; $('sh').value = d.hours || ''; $('sr').value = d.region || ''; $('sg').value = d.greeting || '';
+  var fr = $('fr');
+  rows.forEach(function(r, i){
+    var x = document.createElement('div'); x.className = 'faqrow';
+    x.innerHTML = '<input data-k="q" maxlength="80" placeholder="질문"><textarea data-k="a" maxlength="600" style="min-height:60px" placeholder="답 (예: 매일 11시~21시, 월요일 휴무)"></textarea><button type="button" class="x" data-del="' + i + '">✕ 지우기</button>';
+    x.querySelector('[data-k=q]').value = r.q || ''; x.querySelector('[data-k=a]').value = r.a || ''; fr.appendChild(x);
+  });
+  fr.querySelectorAll('[data-del]').forEach(function(b){ b.onclick = function(){ FAQ = readFaq(); FAQ.splice(Number(b.dataset.del), 1); keep(); settings(); }; });
+  $('fadd').onclick = function(){ FAQ = readFaq(); if (FAQ.length < 30) FAQ.push({ q: '', a: '' }); keep(); settings(); };
+  $('ph').onchange = upload;
+  $('save').onclick = save;
+  $('closeDesk').onclick = function(){
+    var b = this; if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = '정말 닫을까요? 한 번 더 누르면 닫혀요 (남은 기간은 돌려드리지 않아요)'; return; }
+    rpc('dg_owner_close_desk', { p_desk: d.id }).then(function(){ toast('단골창구를 닫았어요.'); location.replace('dangol_owner.html'); });
+  };
+}
+function readFaq(){ return Array.prototype.map.call(document.querySelectorAll('#fr .faqrow'), function(x){ return { q: x.querySelector('[data-k=q]').value.trim(), a: x.querySelector('[data-k=a]').value.trim() }; }); }
+function keep(){ DK.name = $('sn').value; DK.category = $('sc').value; DK.intro = $('si').value; DK.hours = $('sh').value; DK.region = $('sr').value; DK.greeting = $('sg').value; }
+async function upload(){
+  var f = this.files && this.files[0]; if (!f) return;
+  toast('사진을 올리는 중…');
+  try {
+    var img = await new Promise(function(res, rej){ var i = new Image(); i.onload = function(){ res(i); }; i.onerror = rej; i.src = URL.createObjectURL(f); });
+    var s = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+    c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    var blob = await new Promise(function(res){ c.toBlob(res, 'image/jpeg', 0.85); });
+    var path = ME.id + '/' + DK.id + '-' + Date.now() + '.jpg';
+    var up = await sb.storage.from('dangol').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+    if (up.error) throw up.error;
+    keep(); FAQ = readFaq(); PHOTO = path; settings(); toast('사진을 올렸어요. [저장하기]를 눌러 주세요.');
+  } catch (e) { toast('사진을 올리지 못했어요: ' + (e.message || e)); }
+}
+async function save(){
+  keep(); FAQ = readFaq();
+  var b = $('save'); b.disabled = true;
+  try {
+    var r = await rpc('dg_update', { p_desk: DK.id, p_name: DK.name, p_category: DK.category, p_intro: DK.intro, p_hours: DK.hours, p_region: DK.region,
+      p_photo: PHOTO || null, p_greeting: DK.greeting, p_items: FAQ.filter(function(x){ return x.q && x.a; }) });
+    if (!r.ok) throw r;
+    toast('저장했어요. 자주 묻는 질문 ' + r.count + '개가 손님 화면에 보여요.');
+    DESKS = await rpc('dg_owner_desks'); DK = DESKS.filter(function(x){ return x.id === DK.id; })[0] || DESKS[0]; FAQ = null; PHOTO = undefined; main();
+  } catch (e) { toast(em(e)); b.disabled = false; }
+}
+
+boot().catch(function(e){ A.innerHTML = '<div class="card"><b class="h">' + esc(em(e)) + '</b></div>'; });
+})();
+</script>
+</body>
+</html>

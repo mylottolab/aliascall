@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>단골창구 QR 포스터</title>
-<!-- 🏪 2026-11-15 단골창구 — 계산대 · 출입문에 붙이는 A4 포스터. dangol_poster.html?b=<가게 주소>&n=<가게 이름>
+<!-- 🏪 2026-11-15 단골창구 — 계산대 · 출입문에 붙이는 A4 포스터. dangol_poster.html?c=<가게 코드>&n=<가게 이름> (업무용 프로 업체는 ?b=<업체 주소>)
      QR은 aliascall.com/dangol.html?b=… (→ 그 가게 단골창구)로 갑니다. PC에서 [인쇄] → A4 · 「배경 그래픽」 켜기. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
@@ -45,8 +45,9 @@ body{ margin:0; background:#E9EEEC; font-family:system-ui,-apple-system,'Apple S
 </div>
 <script>
 (function(){
-  var Q = new URLSearchParams(location.search), b = Q.get('b') || '', n = Q.get('n') || b || '우리 가게';
-  var url = 'https://aliascall.com/dangol.html?b=' + encodeURIComponent(b);
+  var Q = new URLSearchParams(location.search), c = (Q.get('c') || '').toUpperCase(), b = Q.get('b') || c, n = Q.get('n') || b || '우리 가게';
+  var url = c ? 'https://aliascall.com/dangol.html?c=' + encodeURIComponent(c) : 'https://aliascall.com/dangol.html?b=' + encodeURIComponent(b);
+  if (c) { var cc = document.createElement('div'); cc.style.cssText = 'margin-top:4mm;font-size:13pt;font-weight:800;letter-spacing:2px;color:#3E5654'; cc.textContent = '가게 코드 ' + c; document.querySelector('.qr').after(cc); }
   document.getElementById('name').textContent = n;
   document.title = n + ' 단골창구 QR 포스터';
   if (!b) { document.querySelector('.say').textContent = '가게 주소가 없습니다. 「업체 공개 등록」 화면에서 다시 열어 주세요.'; }

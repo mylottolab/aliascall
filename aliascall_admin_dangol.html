@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>단골창구 관리</title>
+<!-- 🏪 2026-11-15 종합관리자 · 단골창구 관리 — 가게 목록 · 신고 · 멈춤/재개 · 「확인됨」 표시 · 기간 넣기 (9_dangol_desk.sql) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{ --bg:#F4F6F8; --card:#fff; --ink:#16212E; --soft:#5A6878; --line:#DDE3EA; --acc:#C2410C; --bad:#B4412F; --ok:#1F8A4C; }
+*{ box-sizing:border-box; } [hidden]{ display:none !important; }
+body{ margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; font-size:14px; }
+header{ background:var(--acc); color:#fff; padding:12px 18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+header h1{ margin:0; font-size:17px; } header .who{ margin-left:auto; font-size:12.5px; opacity:.85; }
+header button{ background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:8px; padding:6px 11px; font-size:12.5px; cursor:pointer; }
+main{ max-width:1300px; margin:0 auto; padding:14px; }
+.bar{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center; }
+.bar button{ border:1px solid var(--line); background:#fff; border-radius:999px; padding:7px 13px; font-weight:800; cursor:pointer; }
+.bar button.on{ background:var(--acc); color:#fff; border-color:var(--acc); }
+.bar input{ border:1px solid var(--line); border-radius:8px; padding:7px 9px; font:inherit; }
+.tbl{ overflow:auto; background:#fff; border:1px solid var(--line); border-radius:12px; }
+table{ border-collapse:collapse; width:100%; min-width:980px; } th,td{ padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; } th{ background:#FFF4EC; font-size:12.5px; }
+.tag{ display:inline-block; border-radius:20px; padding:1px 8px; font-size:11.5px; font-weight:800; }
+.t-active{ background:#E3F4EA; color:var(--ok); } .t-suspended{ background:#FBEAE6; color:var(--bad); } .t-closed{ background:#EEF1F4; color:var(--soft); } .t-off{ background:#FFF3D6; color:#9A6400; }
+td button{ border:1px solid var(--line); background:#fff; border-radius:8px; padding:5px 9px; font-size:12px; cursor:pointer; margin:2px 0; }
+.rep{ font-size:12px; color:var(--bad); } .small{ font-size:12px; color:var(--soft); }
+.err{ display:none; background:#FBEAE6; color:var(--bad); border-radius:10px; padding:10px 14px; margin-bottom:12px; }
+#login{ position:fixed; inset:0; background:rgba(22,33,46,.55); display:none; align-items:center; justify-content:center; z-index:10; }
+#login .box{ background:#fff; border-radius:16px; padding:22px; width:min(360px,92vw); display:flex; flex-direction:column; gap:10px; }
+#login input{ border:1px solid var(--line); border-radius:8px; padding:10px; font:inherit; } #login button{ background:var(--acc); color:#fff; border:none; border-radius:8px; padding:11px; font-weight:800; cursor:pointer; }
+:root{ --teal-tint:#FFF4EC; }
+</style>
+</head>
+<body>
+<div id="login"><div class="box"><b style="font-size:17px">단골창구 관리</b><div style="font-size:13px;color:var(--soft)">가림 관리자 계정으로 로그인해 주세요(관리자 화면과 같은 계정).</div>
+  <input id="lEmail" type="email" placeholder="관리자 이메일" autocomplete="username">
+  <input id="lPw" type="password" placeholder="비밀번호" autocomplete="current-password">
+  <button type="button" id="lGo">로그인</button><div class="err" id="loginErr"></div></div></div>
+<header><h1>🏪 단골창구 관리</h1><span class="who" id="who"></span><button type="button" id="reload">새로 고침</button><button type="button" id="logout">로그아웃</button></header>
+<main>
+<div class="err" id="err"></div>
+<div class="bar"><button type="button" class="on" data-f="rep">🚩 신고 들어온 곳</button><button type="button" data-f="active">운영 중</button><button type="button" data-f="suspended">멈춤</button><button type="button" data-f="">전체</button>
+<input id="q" placeholder="가게 · 코드 · 아이디 찾기"><span class="small" id="cnt"></span></div>
+<div class="tbl"><table><thead><tr><th>가게</th><th>상태</th><th>기간</th><th>사장님</th><th>문의</th><th>신고</th><th>할 일</th></tr></thead><tbody id="tb"><tr><td colspan="7">불러오는 중…</td></tr></tbody></table></div>
+<p class="small">· 신고가 들어오면 손님 화면 내용과 신고 사유를 보고 [멈춤]을 누르세요. 멈추면 손님 화면에 「지금은 문의를 받을 수 없는 가게」로 나옵니다.<br>· [확인됨 표시]는 사업자 · 가게를 따로 확인한 곳에만 붙이세요(손님 화면에 ✅ 확인됨). 없으면 작게 「확인 전」으로 보입니다.<br>· [+1년]은 결제를 따로 받았거나 보상할 때 기간을 넣습니다.</p>
+</main>
+<script>
+let SB = null, ME = null, ALL = [], F = 'rep';
+const el = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const kst = (t) => t ? new Date(new Date(t).getTime() + 9 * 3600e3).toISOString().slice(0, 10) : '';
+function loginId(r){ const e = String(r.login || ''); const loc = e.split('@')[0]; try { return decodeURIComponent(loc); } catch (x) { return loc; } }
+function alertBox(t){ el('err').textContent = t; el('err').style.display = t ? 'block' : 'none'; }
+async function load(){
+  alertBox('');
+  const r = await SB().rpc('admin_dg_list');
+  if (r.error) { alertBox(/not_admin/.test(r.error.message) ? '관리자 권한이 없는 계정입니다.' : /admin_dg|function/.test(r.error.message) ? '서버에 단골창구가 아직 없습니다. 9_dangol_desk.sql 을 돌려 주세요.' : r.error.message); return; }
+  ALL = r.data || []; paint();
+  try { if (parent !== window) parent.postMessage({ type: 'weave_dg', reports: ALL.filter((d) => d.reports > 0 && d.status === 'active').length }, 'https://aliascall.com'); } catch (x) {}
+}
+function paint(){
+  const q = el('q').value.trim().toLowerCase();
+  const rows = ALL.filter((d) => (F === 'rep' ? d.reports > 0 : !F || d.status === F) && (!q || (d.name + ' ' + d.code + ' ' + loginId(d) + ' ' + (d.nick || '')).toLowerCase().includes(q)));
+  el('cnt').textContent = rows.length + '곳';
+  el('tb').innerHTML = rows.length ? rows.map((d) => {
+    const off = d.status === 'active' && new Date(d.until) < new Date();
+    return '<tr><td><b>' + esc(d.name) + '</b> ' + (d.verified ? '✅' : '') + '<br><span class="small">' + esc(d.category || '') + ' · 코드 ' + esc(d.code) + ' · ' + kst(d.created_at) + ' 개설</span><br>' +
+      '<a class="small" target="_blank" rel="noopener" href="https://aliascall.com/dangol.html?c=' + esc(d.code) + '">손님 화면 ›</a></td>' +
+      '<td><span class="tag t-' + (off ? 'off' : d.status) + '">' + (off ? '기간 끝' : { active: '운영', suspended: '멈춤', closed: '닫음' }[d.status]) + '</span></td>' +
+      '<td>' + kst(d.until) + '</td><td>' + esc(loginId(d)) + (d.nick ? '<br><span class="small">' + esc(d.nick) + '</span>' : '') + '</td><td>' + d.threads + '</td>' +
+      '<td>' + (d.reports ? '<b class="rep">' + d.reports + '건</b>' + (d.report_list || []).map((x) => '<div class="rep">· ' + esc(x.reason) + (x.note ? ' — ' + esc(x.note) : '') + ' <span class="small">' + kst(x.at) + '</span></div>').join('') : '-') + '</td>' +
+      '<td>' + (d.status === 'suspended' ? '<button data-a="active" data-id="' + d.id + '">재개</button>' : '<button data-a="suspended" data-id="' + d.id + '">⛔ 멈춤</button>') +
+      '<br><button data-v="' + (d.verified ? '0' : '1') + '" data-id="' + d.id + '">' + (d.verified ? '확인 표시 빼기' : '✅ 확인됨 표시') + '</button><br><button data-m="12" data-id="' + d.id + '">+1년</button></td></tr>';
+  }).join('') : '<tr><td colspan="7" class="small">' + (F === 'rep' ? '신고 들어온 가게가 없습니다. 👍' : '없습니다.') + '</td></tr>';
+}
+async function act(id, st, ver, months){
+  const r = await SB().rpc('admin_dg_set', { p_desk: id, p_status: st, p_verified: ver, p_months: months, p_note: null });
+  if (r.error) return alertBox(r.error.message); load();
+}
+el('tb').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; const id = b.dataset.id;
+  if (b.dataset.a) act(id, b.dataset.a, null, null); else if (b.dataset.v) act(id, null, b.dataset.v === '1', null); else if (b.dataset.m) act(id, null, null, 12); });
+document.querySelectorAll('.bar [data-f]').forEach((b) => b.onclick = () => { document.querySelectorAll('.bar [data-f]').forEach((x) => x.classList.toggle('on', x === b)); F = b.dataset.f; paint(); });
+el('q').oninput = paint; el('reload').onclick = load;
+
+const FN_URL = "https://qmwaraittiurkynszjts.supabase.co", ANON_KEY = () => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const sb = window.supabase.createClient(FN_URL, ANON_KEY(), { auth: { storageKey: 'aliascall-admin-auth' } });
+SB = () => sb;
+async function START(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { el('login').style.display = 'flex'; return; }
+  const { data: ok, error } = await sb.rpc('is_global_admin');
+  if (error || ok !== true) { await sb.auth.signOut(); el('login').style.display = 'flex'; el('loginErr').textContent = '관리자 권한이 없는 계정입니다.'; el('loginErr').style.display = 'block'; return; }
+  ME = session.user; el('login').style.display = 'none'; el('who').textContent = session.user.email || ''; load();
+}
+el('lGo').addEventListener('click', async () => {
+  el('loginErr').style.display = 'none';
+  const { error } = await sb.auth.signInWithPassword({ email: el('lEmail').value.trim(), password: el('lPw').value });
+  if (error) { el('loginErr').textContent = '로그인 실패: ' + error.message; el('loginErr').style.display = 'block'; return; }
+  START();
+});
+el('lPw').addEventListener('keydown', (e) => { if (e.key === 'Enter') el('lGo').click(); });
+el('logout').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+START();
+
+</script>
+</body>
+</html>

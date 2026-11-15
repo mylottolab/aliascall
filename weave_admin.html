@@ -101,7 +101,8 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     /* 🔴 2026-11-15 고객문의 — 카카오 채널 대신 앱 안 고객센터(support.html)로 받은 문의. 두 서버 화면이 대기 건수를 보내옵니다 */
     { id:'support', name:'💬 고객문의', c:'#C2410C', subs:[
       { id:'sp_ac', name:'가림 · 바로카', url: AC + 'aliascall_admin_support.html' },
-      { id:'sp_bu', name:'부름 · 누름 · 바로너', url: BU + 'burum_admin_support.html' } ]},
+      { id:'sp_bu', name:'부름 · 누름 · 바로너', url: BU + 'burum_admin_support.html' },
+      { id:'sp_dg', name:'🏪 단골창구', url: AC + 'aliascall_admin_dangol.html' } ]},
     { id:'burum', name:'🟢 부름 · 누름 · 바로너', c:'var(--bu)', subs:[
       { id:'bu_admin', name:'회원 · 운영', url: BU + 'alias_admin.html' },
       { id:'bu_stats', name:'일일 통계', url: BU + 'burum_admin_stats.html' },
@@ -155,6 +156,7 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
         '<div class="card"><h3>💬 손님 문의 · 홍보</h3><div class="links">' +
           '<a href="#" data-go="support|sp_ac">💬 고객문의 · 가림 · 바로카 <span>앱 안 고객센터 ›</span></a>' +
           '<a href="#" data-go="support|sp_bu">💬 고객문의 · 부름 · 누름 · 바로너 <span>앱 안 고객센터 ›</span></a>' +
+          '<a href="#" data-go="support|sp_dg">🏪 단골창구 관리 <span>신고 · 멈춤 · 확인됨 ›</span></a>' +
           '<a href="https://studio.youtube.com" target="_blank" rel="noopener">YouTube Studio <span>댓글 · 조회수 ›</span></a>' +
           '<a href="https://blog.naver.com/weveapp" target="_blank" rel="noopener">네이버 블로그 <span>weveapp ›</span></a>' +
           '<a href="https://www.instagram.com/weveapp_kr/" target="_blank" rel="noopener">인스타그램 <span>@weveapp_kr ›</span></a>' +
@@ -295,11 +297,14 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     var sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; sc.onload = go; document.head.appendChild(sc);
   }
   /* 🔴 2026-11-15 고객문의 대기 건수 → 큰 탭 이름 옆 숫자 */
-  var SUPN = { ac: 0, bu: 0 };
+  var SUPN = { ac: 0, bu: 0, dg: 0 };
   window.addEventListener('message', function(e){
-    var d = e.data || {}; if (d.type !== 'weave_sup') return;
+    var d = e.data || {};
+    if (d.type === 'weave_dg' && e.origin === 'https://aliascall.com') { SUPN.dg = +d.reports || 0; }   /* 🏪 단골창구 신고 건수 */
+    else { if (d.type !== 'weave_sup') return;
     if (!((d.src === 'ac' && e.origin === 'https://aliascall.com') || (d.src === 'bu' && e.origin === 'https://burum.kr'))) return;
-    SUPN[d.src] = +d.open || 0; var n = SUPN.ac + SUPN.bu;
+    SUPN[d.src] = +d.open || 0; }
+    var n = SUPN.ac + SUPN.bu + SUPN.dg;
     var b = $('main').querySelector('[data-id="support"]'); if (b) b.textContent = '💬 고객문의' + (n ? ' (' + n + ')' : '');
   });
   window.addEventListener('message', function(e){
