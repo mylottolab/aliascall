@@ -292,6 +292,74 @@ function render(){
   auto.appendChild(asw);
   c3.appendChild(auto);
   wrap.appendChild(c3);
+  renderDangol(wrap);   // 🏪 2026-11-15 단골창구
+}
+
+/* 🏪 2026-11-15 단골창구 꾸미기 — 인사말 · 자주 묻는 질문 · 계산대 QR 포스터 (8_dangol.sql) */
+const DG_SAMPLE = [
+  ['영업시간이 어떻게 되나요?', '예) 매일 11:00~21:00, 월요일 휴무입니다.'],
+  ['주차할 수 있나요?', '예) 건물 뒤 공영주차장 1시간 무료(영수증 지참).'],
+  ['예약은 어떻게 하나요?', '예) 이 단골창구로 날짜 · 인원을 남겨 주시면 확인해 드립니다.'],
+];
+let dgItems = null, dgGreeting = '';
+async function renderDangol(wrap){
+  const c4 = document.createElement('div');
+  c4.className = 'card';
+  c4.id = 'dgCard';
+  c4.innerHTML = '<h2>4. 🏪 단골창구 꾸미기</h2>' +
+    '<div class="hint" style="margin-bottom:10px">손님이 가게 QR을 찍으면 <b>「' + (biz.name || '우리 가게') + ' 단골창구」</b>가 열립니다. ' +
+    '여기 적은 <b>자주 묻는 질문</b>이 먼저 보여서, 같은 질문에 여러 번 답하지 않으셔도 됩니다. 해결이 안 되면 손님이 [사장님께 묻기]로 상담방을 엽니다.</div>' +
+    '<div id="dgBody">불러오는 중…</div>';
+  wrap.appendChild(c4);
+  if (dgItems === null) {
+    try {
+      const { data } = await sb.rpc('dg_my_faq', { p_subscription_id: subId });
+      if (data && data.ok) { dgItems = data.items || []; dgGreeting = data.greeting || ''; }
+      else { dgItems = []; }
+    } catch (e) { document.getElementById('dgBody').textContent = '단골창구 기능을 준비 중입니다. 잠시 후 다시 열어 주세요.'; return; }
+  }
+  paintDangol();
+}
+function paintDangol(){
+  const body = document.getElementById('dgBody'); if (!body) return;
+  const rows = dgItems.length ? dgItems : DG_SAMPLE.map((x) => ({ q: x[0], a: '', ph: x[1] }));
+  body.innerHTML = '<label style="font-size:12.5px;font-weight:700">인사말 (선택)</label>' +
+    '<textarea id="dgGreet" maxlength="200" style="min-height:60px" placeholder="예) 어서 오세요! 궁금한 점은 아래에서 먼저 찾아보시고, 없으면 편하게 물어보세요."></textarea>' +
+    '<div style="font-size:12.5px;font-weight:700;margin:12px 0 6px">자주 묻는 질문 (30개까지)</div><div id="dgRows"></div>' +
+    '<button type="button" class="btn ghost" id="dgAdd" style="margin-top:8px">＋ 질문 더하기</button>' +
+    '<button type="button" class="btn" id="dgSave" style="margin-top:10px">단골창구 저장</button><div class="msg" id="dgMsg"></div>' +
+    (biz.slug ? '<a class="btn ghost" style="margin-top:10px;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="dangol_poster.html?b=' + encodeURIComponent(biz.slug) + '&n=' + encodeURIComponent(biz.name || '') + '">🖨 계산대 QR 포스터 만들기 (A4)</a>' : '');
+  document.getElementById('dgGreet').value = dgGreeting;
+  const box = document.getElementById('dgRows');
+  rows.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.style.cssText = 'border:1px solid var(--line);border-radius:11px;padding:10px;margin-bottom:8px';
+    d.innerHTML = '<input type="text" maxlength="80" data-k="q" placeholder="질문"><textarea maxlength="600" data-k="a" style="min-height:64px;margin-top:6px"></textarea>' +
+      '<button type="button" data-del="' + i + '" style="margin-top:6px;border:none;background:none;color:var(--ink-soft);font-size:12px;cursor:pointer">✕ 지우기</button>';
+    d.querySelector('[data-k=q]').value = r.q || '';
+    const ta = d.querySelector('[data-k=a]'); ta.value = r.a || ''; ta.placeholder = r.ph || '답';
+    box.appendChild(d);
+  });
+  box.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => { dgItems = readDangol(); dgItems.splice(Number(b.dataset.del), 1); paintDangol(); }));
+  document.getElementById('dgAdd').addEventListener('click', () => { dgItems = readDangol(); if (dgItems.length >= 30) return; dgItems.push({ q: '', a: '' }); paintDangol(); });
+  document.getElementById('dgSave').addEventListener('click', saveDangol);
+}
+function readDangol(){
+  dgGreeting = (document.getElementById('dgGreet') || {}).value || '';
+  return Array.from(document.querySelectorAll('#dgRows > div')).map((d) => ({ q: d.querySelector('[data-k=q]').value.trim(), a: d.querySelector('[data-k=a]').value.trim() }));
+}
+async function saveDangol(){
+  const btn = document.getElementById('dgSave'), msg = document.getElementById('dgMsg');
+  dgItems = readDangol();
+  const items = dgItems.filter((x) => x.q && x.a);
+  btn.disabled = true;
+  try {
+    const { data, error } = await sb.rpc('dg_set_faq', { p_subscription_id: subId, p_items: items, p_greeting: dgGreeting });
+    if (error) throw error;
+    if (!data.ok) throw new Error(data.error);
+    msg.className = 'msg ok'; msg.textContent = '✓ 저장했습니다. 질문 ' + data.count + '개가 단골창구에 보입니다.';
+  } catch (e) { msg.className = 'msg err'; msg.textContent = '저장하지 못했습니다: ' + (e.message || e); }
+  btn.disabled = false;
 }
 
 function reasonText(chk){

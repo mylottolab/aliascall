@@ -50,6 +50,20 @@ h1,h2{ font-family:'Space Grotesk',sans-serif; margin:0; }
 .state{ text-align:center; padding:50px 20px; color:var(--ink-soft); font-size:13px; line-height:1.9; }
 .state a{ color:var(--teal-deep); font-weight:700; }
 
+.dg-tag{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:800; background:var(--coral-tint); color:#B4492A; border-radius:20px; padding:4px 11px; margin-left:6px; }
+.faq{ background:#fff; border-radius:16px; padding:18px; margin-bottom:14px; }
+.faq h2{ font-size:16px; margin-bottom:4px; }
+.faq .greet{ font-size:13.5px; color:var(--ink-soft); line-height:1.7; margin:0 0 12px; white-space:pre-wrap; }
+.faq .srch{ display:flex; gap:7px; margin-bottom:10px; }
+.faq .srch input{ flex:1; min-width:0; border:1.5px solid var(--line); border-radius:11px; padding:11px 12px; font-size:14px; font-family:inherit; }
+.faq details{ border:1px solid var(--line); border-radius:12px; margin-top:7px; overflow:hidden; }
+.faq details[open]{ border-color:var(--teal); }
+.faq summary{ list-style:none; cursor:pointer; padding:12px 14px; font-weight:700; font-size:14px; }
+.faq summary::-webkit-details-marker{ display:none; }
+.faq summary::before{ content:'Q '; color:var(--coral); font-weight:800; }
+.faq .ans{ padding:0 14px 13px; font-size:13.5px; line-height:1.75; white-space:pre-wrap; color:var(--ink); }
+.faq .none{ font-size:13px; color:var(--ink-soft); padding:10px 2px; }
+.faq .toask{ display:block; width:100%; margin-top:12px; border:none; border-radius:11px; padding:13px; background:var(--teal-tint); color:var(--teal-deep); font-weight:800; font-size:14px; font-family:inherit; cursor:pointer; }
 .done{ text-align:center; padding:22px 16px; }
 .done .ic{ font-size:38px; }
 .done h2{ font-size:18px; margin:10px 0 6px; }
@@ -65,7 +79,7 @@ footer a{ color:var(--teal-deep); }
 <div class="topbar">
   <a class="logo" href="index.html"><span class="ac-brand">가림<em>콜</em></span></a>
   <span class="spacer"></span>
-  <a class="dir" href="aliascall_directory.html">업체 목록 ›</a>
+  <a class="dir" href="aliascall_directory.html">🏪 단골창구 찾기 ›</a>
 </div>
 
 <div class="wrap" id="wrap">
@@ -101,6 +115,59 @@ function slugFromUrl(){
   return m ? decodeURIComponent(m[1]) : '';
 }
 
+/* 🏪 2026-11-15 단골창구 — 자주 묻는 질문 칸 · 낱말로 찾기(두 글자씩 겹치는 정도) */
+function dgGrams(t){
+  const out = {}; String(t || '').toLowerCase().replace(/[^0-9a-z가-힣]+/g, ' ').split(' ').forEach((w) => {
+    if (w.length === 1) out[w] = 1; for (let i = 0; i < w.length - 1; i++) out[w.substr(i, 2)] = 1; });
+  return out;
+}
+const DG_STOP = ['어떻','떻게','하나','나요','해요','하는','어요','세요','니다','궁금','있나','는데','되나','있어','알려','주세','문의'];
+async function renderFaq(wrap, slug){
+  const { data, error } = await sb.rpc('dg_get_faq', { p_slug: slug });
+  if (error) throw error;
+  const items = (data && data.items) || [];
+  if (!items.length && !(data && data.greeting)) return;
+  const box = document.createElement('div');
+  box.className = 'faq';
+  box.innerHTML = '<h2>🙋 자주 묻는 질문</h2>' + (data.greeting ? '<p class="greet"></p>' : '') +
+    (items.length > 3 ? '<div class="srch"><input id="dgQ" type="search" placeholder="예) 주차 · 예약 · 영업시간" aria-label="찾을 말"></div>' : '') +
+    '<div id="dgList"></div><button class="toask" type="button" id="dgAsk">💬 찾는 답이 없어요 — 사장님께 묻기</button>';
+  if (data.greeting) box.querySelector('.greet').textContent = data.greeting;
+  wrap.appendChild(box);
+  const list = box.querySelector('#dgList');
+  const prep = items.map((it) => ({ q: it.q, a: it.a, gq: dgGrams(it.q), ga: dgGrams(it.a) }));
+  function paint(rows, q){
+    list.innerHTML = '';
+    if (!rows.length) { const n = document.createElement('div'); n.className = 'none'; n.textContent = '「' + q + '」에 맞는 답을 찾지 못했어요. 아래에서 사장님께 물어보세요.'; list.appendChild(n); return; }
+    rows.forEach((it, i) => {
+      const d = document.createElement('details'); if (q && i === 0) d.open = true;
+      const sm = document.createElement('summary'); sm.textContent = it.q;
+      const an = document.createElement('div'); an.className = 'ans'; an.textContent = it.a;
+      d.appendChild(sm); d.appendChild(an); list.appendChild(d);
+    });
+  }
+  paint(prep, '');
+  const qi = box.querySelector('#dgQ');
+  if (qi) qi.addEventListener('input', () => {
+    const q = qi.value.trim();
+    if (q.length < 2) { paint(prep, ''); return; }
+    const g = dgGrams(q), ONE = '가이은는을를에도좀요곳뭐왜것거';
+    const keys = Object.keys(g).filter((k) => k.length > 1 && DG_STOP.indexOf(k) < 0);
+    const ones = Object.keys(g).filter((k) => k.length === 1 && ONE.indexOf(k) < 0);
+    if (!keys.length && !ones.length) { paint(prep, ''); return; }
+    const n0 = Math.max(1, keys.length + ones.length);
+    const sc = prep.map((it) => ({ it, s: (keys.reduce((n, k) => n + (it.gq[k] ? 3 : it.ga[k] ? 1 : 0), 0) +
+                                       ones.reduce((n, k) => n + (it.q.indexOf(k) >= 0 ? 3 : it.a.indexOf(k) >= 0 ? 1 : 0), 0)) / n0 }))
+      .filter((x) => x.s >= 0.5).sort((a, b) => b.s - a.s).map((x) => x.it);
+    paint(sc, q);
+  });
+  box.querySelector('#dgAsk').addEventListener('click', () => {
+    const a = document.getElementById('askBox'); if (!a) return;
+    a.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const ni = document.getElementById('nickInput'); if (ni && !ni.value) setTimeout(() => ni.focus(), 400);
+  });
+}
+
 async function init(){
   const wrap = document.getElementById('wrap');
   const slug = slugFromUrl();
@@ -127,9 +194,9 @@ async function init(){
     return;
   }
 
-  document.getElementById('pageTitle').textContent = biz.business_name + ' — Aliascall';
+  document.getElementById('pageTitle').textContent = biz.business_name + ' 단골창구';
   document.getElementById('pageDesc').setAttribute('content',
-    biz.business_name + ' · 번호를 주고받지 않고 문의하실 수 있습니다.');
+    biz.business_name + ' 단골창구 · 전화번호 없이 바로 물어보세요.');
 
   wrap.innerHTML = '';
 
@@ -140,6 +207,11 @@ async function init(){
   cat.className = 'biz-cat';
   cat.textContent = esc(biz.category_label);
   card.appendChild(cat);
+  /* 🏪 2026-11-15 단골창구 */
+  const dgt = document.createElement('span');
+  dgt.className = 'dg-tag';
+  dgt.textContent = '🏪 단골창구';
+  card.appendChild(dgt);
 
   const nm = document.createElement('h1');
   nm.className = 'biz-name';
@@ -184,6 +256,9 @@ async function init(){
   }
   wrap.appendChild(card);
 
+  /* 🏪 2026-11-15 단골창구 — 가게가 적은 자주 묻는 질문 (8_dangol.sql). 없으면 칸을 만들지 않습니다. */
+  try { await renderFaq(wrap, slug); } catch (e) { console.warn('[dangol] 자주 묻는 질문 없음', e); }
+
   // ── 문의하기 ──
   // ⛔ 예약 폼·주문서·결제는 절대 넣지 않습니다(변호사 확인 완료).
   //   여기가 하는 일은 "대화창을 열어주는 것"까지입니다.
@@ -200,7 +275,7 @@ async function init(){
   ask.className = 'ask';
   ask.id = 'askBox';
   ask.innerHTML =
-    '<h2>💬 상담 요청</h2>' +
+    '<h2>💬 사장님께 묻기</h2>' +
     (prevRoom ? '<a class="again" href="' + prevRoom + '">💬 지난 상담방으로 바로 가기 ›</a>' : '') +
     '<p>전화번호를 주고받지 않습니다. 별명만 남기시면 상담방이 열려 문자로 상담하실 수 있습니다. 통화는 업체가 상담방에서 정합니다.</p>' +
     '<input type="text" id="nickInput" maxlength="20" placeholder="사용하실 별명" ' +

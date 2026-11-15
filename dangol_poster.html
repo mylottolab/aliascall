@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>단골창구 QR 포스터</title>
+<!-- 🏪 2026-11-15 단골창구 — 계산대 · 출입문에 붙이는 A4 포스터. dangol_poster.html?b=<가게 주소>&n=<가게 이름>
+     QR은 aliascall.com/dangol.html?b=… (→ 그 가게 단골창구)로 갑니다. PC에서 [인쇄] → A4 · 「배경 그래픽」 켜기. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+@page{ size:A4; margin:0; }
+*{ box-sizing:border-box; }
+body{ margin:0; background:#E9EEEC; font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif; color:#12302E; word-break:keep-all; }
+.bar{ max-width:210mm; margin:14px auto; display:flex; gap:8px; padding:0 12px; }
+.bar button{ flex:1; border:none; border-radius:12px; padding:13px; font:inherit; font-weight:800; font-size:15px; cursor:pointer; background:#123F3D; color:#fff; }
+.bar button.ghost{ background:#fff; color:#123F3D; }
+.tip{ max-width:210mm; margin:0 auto 12px; padding:0 14px; font-size:13px; color:#3E5654; line-height:1.7; }
+.page{ width:210mm; height:297mm; margin:0 auto 20px; background:#fff; position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:center; padding:20mm 18mm 16mm; }
+.page::before{ content:''; position:absolute; inset:0 0 auto 0; height:62mm; background:linear-gradient(135deg,#123F3D,#1F6F6B); }
+.top{ position:relative; text-align:center; color:#fff; }
+.top .tag{ display:inline-block; background:#E8734A; color:#fff; font-weight:900; font-size:15pt; border-radius:30px; padding:2.5mm 7mm; letter-spacing:1px; }
+.top h1{ margin:5mm 0 0; font-size:34pt; line-height:1.15; font-weight:900; }
+.qr{ position:relative; margin-top:14mm; background:#fff; padding:7mm; border-radius:8mm; box-shadow:0 3mm 10mm rgba(18,63,61,.18); border:1.2mm solid #123F3D; }
+.qr #qr{ width:92mm; height:92mm; }
+.qr #qr img, .qr #qr canvas{ width:92mm !important; height:92mm !important; }
+.say{ margin-top:10mm; font-size:24pt; font-weight:900; text-align:center; line-height:1.35; }
+.say b{ color:#E8734A; }
+.pts{ margin-top:8mm; display:flex; gap:5mm; width:100%; }
+.pts div{ flex:1; background:#E4EFEE; border-radius:5mm; padding:5mm 3mm; text-align:center; font-size:13pt; font-weight:800; line-height:1.4; }
+.pts span{ display:block; font-size:22pt; margin-bottom:1.5mm; }
+.foot{ margin-top:auto; font-size:10.5pt; color:#3E5654; text-align:center; line-height:1.6; }
+.foot b{ color:#123F3D; }
+@media print{ body{ background:#fff; } .bar,.tip{ display:none; } .page{ margin:0; box-shadow:none; } }
+</style>
+</head>
+<body>
+<div class="bar"><button type="button" id="print">🖨 인쇄하기 (A4)</button><button type="button" class="ghost" id="copy">주소 복사</button></div>
+<p class="tip">PC에서 인쇄하면 가장 깨끗합니다. 인쇄 창에서 <b>용지 A4 · 여백 없음 · 「배경 그래픽」 켜기</b>를 고르세요. 휴대폰에서는 [인쇄 → PDF로 저장] 뒤 가까운 인쇄소에 맡기셔도 됩니다.</p>
+<div class="page">
+  <div class="top"><span class="tag">🏪 단골창구</span><h1 id="name">우리 가게</h1></div>
+  <div class="qr"><div id="qr"></div></div>
+  <div class="say">휴대폰 카메라로 찍고<br><b>사장님께 바로 물어보세요</b></div>
+  <div class="pts"><div><span>📵</span>전화번호<br>없이</div><div><span>📲</span>앱 설치<br>없이</div><div><span>🙋</span>자주 묻는 질문<br>바로 답</div></div>
+  <div class="foot">영업시간 · 주차 · 예약 · 단체 문의 무엇이든<br><b>단골창구</b> by 가림콜 · 번호를 드러내지 않는 안심 연락</div>
+</div>
+<script>
+(function(){
+  var Q = new URLSearchParams(location.search), b = Q.get('b') || '', n = Q.get('n') || b || '우리 가게';
+  var url = 'https://aliascall.com/dangol.html?b=' + encodeURIComponent(b);
+  document.getElementById('name').textContent = n;
+  document.title = n + ' 단골창구 QR 포스터';
+  if (!b) { document.querySelector('.say').textContent = '가게 주소가 없습니다. 「업체 공개 등록」 화면에서 다시 열어 주세요.'; }
+  try { new QRCode(document.getElementById('qr'), { text: url, width: 600, height: 600, correctLevel: QRCode.CorrectLevel.M }); } catch (e) {}
+  document.getElementById('print').onclick = function(){ window.print(); };
+  document.getElementById('copy').onclick = function(){
+    var t = this; (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function(){ t.textContent = '복사됨 ✓'; }, function(){ prompt('주소', url); });
+  };
+})();
+</script>
+</body>
+</html>
