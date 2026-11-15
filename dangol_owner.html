@@ -8,6 +8,8 @@
      서버: 가림 서버 9_dangol_desk.sql. 손님 화면: dangol.html?c=코드. 새 문의 알림: dangol-notify 함수 → 이 화면 ?t=대화번호. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="aliascall_push.js"></script>
+<script src="aliascall_store.js"></script>
+<script src="aliascall_web_pay.js"></script>
 <style>
 :root{ --bg:#F2F5F4; --card:#fff; --ink:#12302E; --sub:#4E6462; --line:#DCE3DE; --teal:#123F3D; --teal2:#1F6F6B; --coral:#E8734A; --tint:#E4EFEE; --red:#B4232A; --ok:#1F7A4C; --warnbg:#FFF2D9; --warn:#8A4B00; }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#111816; --card:#1A2422; --ink:#E6EEEC; --sub:#9DB0AD; --line:#2C3A37; --tint:#1E3532; --red:#FF8A8A; --ok:#7FD6A6; --warnbg:#3A2E14; --warn:#F2C46B; color-scheme:dark; } }
@@ -80,7 +82,13 @@ async function boot(){
   }
   try { DESKS = await rpc('dg_owner_desks'); } catch (e) { A.innerHTML = shell('') + '<div class="card"><b class="h">' + esc(em(e)) + '</b></div>'; return; }
   if (!DESKS.length) return openForm();
-  DK = DESKS.filter(function(d){ return d.id === (Q.get('d') || ''); })[0] || DESKS[0];
+  DK = null; var wp = Q.get('webpaid'), pk = null; try { pk = localStorage.getItem(PAYK); } catch (e) {}
+  b0: if (wp !== null && (Q.get('sku') || SKU) === SKU) {   // 💳 웹 결제창에서 돌아옴
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    if (wp === '1') { try { localStorage.removeItem(PAYK); } catch (e) {} DK = DESKS.filter(function(d){ return d.id === pk; })[0] || DESKS[0]; setTimeout(function(){ toast('1년 연장됐어요! ' + day(DK.until) + '까지 열려 있어요.'); }, 300); break b0; }
+    setTimeout(function(){ toast(Q.get('msg') || '결제를 마치지 못했어요.'); }, 300);
+  }
+  if (!DK) DK = DESKS.filter(function(d){ return d.id === (Q.get('d') || pk || ''); })[0] || DESKS[0];
   if (CUR) { try { var ts = await rpc('dg_owner_threads', { p_desk: DK.id }); if (!ts.some(function(t){ return t.id === CUR; })) { for (var i = 0; i < DESKS.length; i++) { var t2 = await rpc('dg_owner_threads', { p_desk: DESKS[i].id }); if (t2.some(function(t){ return t.id === CUR; })) { DK = DESKS[i]; break; } } } } catch (e) {} }
   main();
 }
@@ -105,6 +113,46 @@ function openForm(){
   };
 }
 
+/* ── 💳 개설료 1년 9,900원 (2026-11-15) ──────────────────────
+   앱 안: 구글 · 애플 결제만(garim_dangol_1y · 애플 garim_dangol_1y_nr) → aliascall-google-verify
+   웹: 국내카드(이니시스) → aliascall-web-pay → 이 화면으로 돌아옴(?webpaid=)
+   어느 단골창구에 넣을지는 usageKind 'dangol' · usageTargetId(단골창구 번호)로 보냅니다. */
+var SKU = 'garim_dangol_1y', PAYK = 'dg_pay_desk';
+async function payYear(d, btn){
+  if (d.status === 'suspended') return toast('멈춘 단골창구는 연장할 수 없어요. 💬 고객센터로 문의해 주세요.');
+  if (window.ACStore && ACStore.oldApp && ACStore.oldApp()) return toast('가림콜 앱을 최신으로 업데이트한 뒤 다시 눌러 주세요.');
+  try { localStorage.setItem(PAYK, d.id); } catch (e) {}
+  btn.disabled = true; btn.textContent = '결제 창을 여는 중…';
+  var reset = function(){ btn.disabled = false; btn.textContent = '1년 연장 · 9,900원'; };
+  if (window.ACStore && ACStore.inApp()) {
+    ACStore.onDone = paid;
+    await ACStore.buy(SKU, { usageKind: 'dangol', usageTargetId: d.id });
+    setTimeout(function(){ if (btn.disabled) btn.textContent = '결제를 확인하는 중…'; }, 1500);
+    return;
+  }
+  if (!window.ACWeb) { reset(); return toast('결제 창을 열지 못했어요. 새로 고친 뒤 다시 눌러 주세요.'); }
+  var ok = await ACWeb.inicis(sb, SKU, { usageKind: 'dangol', usageTargetId: d.id },
+    { buyername: (ME && ME.user_metadata && ME.user_metadata.nickname) || '회원', buyertel: '', buyeremail: (ME && ME.email) || '' });
+  if (!ok) reset();
+}
+async function paid(r){
+  r = r || {};
+  if (r.ok && (r.kind === 'dangol' || r.sku === SKU)) {
+    try { DESKS = await rpc('dg_owner_desks'); } catch (e) {}
+    var id = null; try { id = localStorage.getItem(PAYK); localStorage.removeItem(PAYK); } catch (e) {}
+    DK = DESKS.filter(function(x){ return x.id === (id || (DK && DK.id)); })[0] || DESKS[0];
+    if (DK) main();
+    toast('1년 연장됐어요! ' + (DK ? day(DK.until) + '까지 열려 있어요.' : ''));
+    return;
+  }
+  if (DK) main();
+  if (r.canceled) return toast('결제를 취소했어요.');
+  if (r.pending) return toast('결제가 아직 끝나지 않았어요. 끝나면 자동으로 연장돼요.');
+  if (r.ok) return;
+  toast('결제를 마치지 못했어요. ' + (r.error || ''));
+}
+window.ACStore && (ACStore.onDone = paid);   // 결제 도중 앱이 꺼졌다 켜져도 여기서 마무리
+
 /* ── 가게 화면 ─────────────────────────────────────────── */
 function main(){
   var d = DK, live = d.live, link = 'https://aliascall.com/dangol.html?c=' + d.code;
@@ -120,7 +168,7 @@ function main(){
   A.innerHTML = h;
   if ($('pick')) $('pick').onchange = function(){ DK = DESKS.filter(function(x){ return x.id === $('pick').value; })[0]; CUR = null; FAQ = null; main(); };
   $('cp').onclick = function(){ (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function(){ toast('주소를 복사했어요: ' + link); }, function(){ toast(link); }); };
-  $('ext').onclick = function(){ toast('결제 연결을 준비 중이에요. 지금은 💬 고객센터로 「단골창구 연장」을 남겨 주시면 넣어 드립니다.'); };
+  $('ext').onclick = function(){ payYear(d, this); };
   A.querySelectorAll('[data-tab]').forEach(function(b){ b.onclick = function(){ TAB = b.dataset.tab; main(); }; });
   if (TAB === 'set') settings(); else inbox();
 }
