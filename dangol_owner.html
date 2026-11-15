@@ -70,7 +70,7 @@ function when(t){ var d = new Date(t); var k = new Date(d.getTime() + 9 * 3600e3
 function day(t){ var k = new Date(new Date(t).getTime() + 9 * 3600e3); return k.getUTCFullYear() + '년 ' + (k.getUTCMonth() + 1) + '월 ' + k.getUTCDate() + '일'; }
 function photoUrl(p){ return p ? URL0 + '/storage/v1/object/public/dangol/' + p.split('/').map(encodeURIComponent).join('/') : ''; }
 async function rpc(fn, a){ var r = await sb.rpc(fn, a || {}); if (r.error) throw r.error; return r.data; }
-var ERR = { no_name: '가게 이름을 적어 주세요.', too_many_desks: '단골창구는 한 계정에 3곳까지 열 수 있어요.', not_mine: '내 가게가 아니에요.', photo: '사진을 다시 올려 주세요.', length: '답장은 2,000자까지예요.' };
+var ERR = { no_address: '가게 주소를 넣어 주세요.', no_name: '가게 이름을 적어 주세요.', too_many_desks: '단골창구는 한 계정에 3곳까지 열 수 있어요.', not_mine: '내 가게가 아니에요.', photo: '사진을 다시 올려 주세요.', length: '답장은 2,000자까지예요.' };
 function em(e){ var c = (e && (e.error || e.message)) || ''; return ERR[c] || (/dg_|function|schema/.test(c) ? '단골창구 서버를 준비 중입니다(관리자: 9_dangol_desk.sql).' : '잠시 문제가 있었어요: ' + c); }
 var shell = function(sub){ return '<div class="hero"><a href="javascript:history.length>1?history.back():location.replace(\'index.html\')" aria-label="뒤로">←</a><div><span class="tag">🏪 단골창구</span><h1>우리 가게 단골창구</h1><p>' + sub + '</p></div></div>'; };
 
@@ -98,6 +98,38 @@ async function boot(){
   main();
 }
 
+/* ── 📍 가게 주소 (2026-11-15 · 12_dangol_address.sql) ─────────────────
+   손님이 내비에 찍고 찾아오고, 같은 상호를 구분하도록 주소를 받습니다(필수 · 언제든 고칠 수 있음).
+   [주소 찾기] = 카카오(다음) 우편번호 서비스를 화면 안에 펼칩니다. 못 찾으면 직접 적어도 됩니다. */
+function addrBlock(p, a, dt){
+  return '<label>가게 주소 * <span style="font-weight:600">(손님이 내비 · 지도로 찾아와요)</span></label>' +
+    '<div class="row"><input id="' + p + 'a" maxlength="120" placeholder="[주소 찾기]를 눌러 고르세요" value="' + esc(a || '') + '" style="flex:3"><button class="btn g" id="' + p + 'q" type="button" style="flex:1;padding:10px">주소 찾기</button></div>' +
+    '<div id="' + p + 'w" hidden style="height:420px;border:1.5px solid var(--line);border-radius:12px;overflow:hidden"></div>' +
+    '<input id="' + p + 'd" maxlength="60" placeholder="상세 주소 (예: 1층 · 102호)" value="' + esc(dt || '') + '">';
+}
+var postP = null;
+function loadPost(){
+  if (window.daum && daum.Postcode) return Promise.resolve();
+  if (postP) return postP;
+  postP = new Promise(function(res, rej){ var sc = document.createElement('script'); sc.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'; sc.onload = res; sc.onerror = function(e){ postP = null; rej(e); }; document.head.appendChild(sc); });
+  return postP;
+}
+function addrWire(p, regionId){
+  $(p + 'q').onclick = async function(){
+    var w = $(p + 'w');
+    if (!w.hidden) { w.hidden = true; return; }
+    try { await loadPost(); } catch (e) { toast('주소 찾기를 열지 못했어요. 주소를 직접 적어 주세요.'); $(p + 'a').focus(); return; }
+    w.hidden = false; w.innerHTML = '';
+    new daum.Postcode({ width: '100%', height: '100%',
+      oncomplete: function(x){
+        $(p + 'a').value = x.roadAddress || x.jibunAddress || x.address || '';
+        if (regionId && $(regionId) && !$(regionId).value.trim()) $(regionId).value = ((x.sido || '') + ' ' + (x.sigungu || '')).trim();
+        w.hidden = true; $(p + 'd').focus();
+      } }).embed(w);
+    w.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+}
+
 /* ── 처음 열기 ─────────────────────────────────────────── */
 function openForm(){
   A.innerHTML = shell('사진과 소개만 올리면 바로 열립니다. 사업자등록증은 필요 없어요.') +
@@ -105,14 +137,18 @@ function openForm(){
     '<p>손님이 가게 QR을 찍으면 이 가게 화면이 열리고, 자주 묻는 질문이 먼저 답하고, 그래도 궁금하면 사장님께 묻습니다. <b>사장님 전화번호는 손님에게 보이지 않아요.</b></p>' +
     '<label>가게 이름 *</label><input id="fn" maxlength="30" placeholder="예) 행복칼국수">' +
     '<label>업종</label><select id="fc">' + CATS.map(function(c){ return '<option>' + c + '</option>'; }).join('') + '</select>' +
+    addrBlock('fa', '', '') +
     '<label>한 줄 소개</label><textarea id="fi" maxlength="400" placeholder="예) 동네 30년 칼국수 집입니다. 직접 반죽한 면을 씁니다."></textarea>' +
     '<div class="row"><div><label>영업시간</label><input id="fh" maxlength="80" placeholder="예) 11:00~21:00 (월 휴무)"></div><div><label>지역</label><input id="fr" maxlength="40" placeholder="예) 수원 권선구"></div></div>' +
     '<p>💳 <b>개설료 1년 9,900원</b> — 지금 열면 <b>30일 무료</b>로 먼저 써 보실 수 있어요.</p>' +
     '<button class="btn c" id="fgo" type="button">단골창구 열기 (30일 무료)</button></div>';
+  addrWire('fa', 'fr');
   $('fgo').onclick = async function(){
+    if ($('faa').value.trim().length < 5) { toast('가게 주소를 넣어 주세요. 손님이 찾아오는 데 필요해요.'); $('faa').focus(); return; }
     this.disabled = true;
     try {
-      var r = await rpc('dg_open', { p_name: $('fn').value, p_category: $('fc').value, p_intro: $('fi').value, p_hours: $('fh').value, p_region: $('fr').value });
+      var r = await rpc('dg_open', { p_name: $('fn').value, p_category: $('fc').value, p_intro: $('fi').value, p_hours: $('fh').value, p_region: $('fr').value,
+        p_address: $('faa').value.trim(), p_address_detail: $('fad').value.trim() });
       if (!r.ok) throw r; toast('단골창구를 열었어요! 사진과 자주 묻는 질문을 넣어 보세요.'); TAB = 'set'; Q.set('d', r.id); boot();
     } catch (e) { toast(em(e)); this.disabled = false; }
   };
@@ -168,6 +204,7 @@ function main(){
       '<div>가게 코드 <span class="code">' + esc(d.code) + '</span></div>' +
       '<div class="row"><a class="btn" target="_blank" rel="noopener" href="dangol_poster.html?c=' + encodeURIComponent(d.code) + '&n=' + encodeURIComponent(d.name) + '">🖨 QR 포스터</a><button class="btn g" id="cp" type="button">주소 복사</button><a class="btn g" target="_blank" rel="noopener" href="' + link + '">손님 화면 보기</a></div>' +
       '<button class="btn c" id="ext" type="button">1년 연장 · 9,900원</button></div>' +
+    (d.address ? '' : '<div class="card" style="background:var(--warnbg);border-color:transparent"><p style="color:var(--warn)">📍 <b>가게 주소를 넣어 주세요.</b> 손님이 내비로 찾아오고, 같은 이름의 가게와 구분돼요. 「🛠 가게 꾸미기」에서 넣을 수 있어요.</p></div>') +
     '<div class="tabs"><button type="button" data-tab="inbox"' + (TAB === 'inbox' ? ' class="on"' : '') + '>💬 손님 문의' + (d.unread ? ' <span class="dot">' + d.unread + '</span>' : '') + '</button><button type="button" data-tab="set"' + (TAB === 'set' ? ' class="on"' : '') + '>🛠 가게 꾸미기</button></div>' +
     '<div id="pane"></div>';
   A.innerHTML = h;
@@ -252,6 +289,7 @@ function settings(){
       '<input type="file" id="ph" accept="image/*"></div>' +
     '<div class="card"><b class="h">🏪 가게 소개</b><label>가게 이름 *</label><input id="sn" maxlength="30">' +
       '<label>업종</label><select id="sc">' + CATS.map(function(c){ return '<option' + (c === d.category ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select>' +
+      addrBlock('sa', d.address, d.address_detail) +
       '<label>소개</label><textarea id="si" maxlength="400"></textarea>' +
       '<div class="row"><div><label>영업시간</label><input id="sh" maxlength="80"></div><div><label>지역</label><input id="sr" maxlength="40"></div></div></div>' +
     '<div class="card"><b class="h">🙋 자주 묻는 질문</b><p>손님이 묻기 전에 먼저 보는 답이에요. 같은 질문에 여러 번 답하지 않으셔도 됩니다. (30개까지)</p>' +
@@ -260,6 +298,7 @@ function settings(){
     '<button class="btn c" id="save" type="button">저장하기</button>' +
     '<button class="btn g" id="closeDesk" type="button" style="font-size:14px">이 단골창구 닫기</button>';
   $('sn').value = d.name || ''; $('si').value = d.intro || ''; $('sh').value = d.hours || ''; $('sr').value = d.region || ''; $('sg').value = d.greeting || '';
+  addrWire('sa', 'sr');
   var fr = $('fr');
   rows.forEach(function(r, i){
     var x = document.createElement('div'); x.className = 'faqrow';
@@ -276,7 +315,7 @@ function settings(){
   };
 }
 function readFaq(){ return Array.prototype.map.call(document.querySelectorAll('#fr .faqrow'), function(x){ return { q: x.querySelector('[data-k=q]').value.trim(), a: x.querySelector('[data-k=a]').value.trim() }; }); }
-function keep(){ DK.name = $('sn').value; DK.category = $('sc').value; DK.intro = $('si').value; DK.hours = $('sh').value; DK.region = $('sr').value; DK.greeting = $('sg').value; }
+function keep(){ DK.name = $('sn').value; DK.category = $('sc').value; DK.intro = $('si').value; DK.hours = $('sh').value; DK.region = $('sr').value; DK.greeting = $('sg').value; DK.address = $('saa').value; DK.address_detail = $('sad').value; }
 async function upload(){
   var f = this.files && this.files[0]; if (!f) return;
   toast('사진을 올리는 중…');
@@ -293,8 +332,11 @@ async function upload(){
 }
 async function save(){
   keep(); FAQ = readFaq();
+  if (String(DK.address || '').trim().length < 5) { toast('가게 주소를 넣어 주세요. 손님이 찾아오는 데 필요해요.'); $('saa').focus(); return; }
   var b = $('save'); b.disabled = true;
   try {
+    var ra = await rpc('dg_set_address', { p_desk: DK.id, p_address: String(DK.address).trim(), p_address_detail: String(DK.address_detail || '').trim() });
+    if (!ra.ok) throw ra;
     var r = await rpc('dg_update', { p_desk: DK.id, p_name: DK.name, p_category: DK.category, p_intro: DK.intro, p_hours: DK.hours, p_region: DK.region,
       p_photo: PHOTO || null, p_greeting: DK.greeting, p_items: FAQ.filter(function(x){ return x.q && x.a; }) });
     if (!r.ok) throw r;

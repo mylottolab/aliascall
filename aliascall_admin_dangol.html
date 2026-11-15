@@ -61,11 +61,11 @@ async function load(){
 }
 function paint(){
   const q = el('q').value.trim().toLowerCase();
-  const rows = ALL.filter((d) => (F === 'rep' ? d.reports > 0 : !F || d.status === F) && (!q || (d.name + ' ' + d.code + ' ' + loginId(d) + ' ' + (d.nick || '')).toLowerCase().includes(q)));
+  const rows = ALL.filter((d) => (F === 'rep' ? d.reports > 0 : !F || d.status === F) && (!q || (d.name + ' ' + d.code + ' ' + loginId(d) + ' ' + (d.nick || '') + ' ' + (d.address || '')).toLowerCase().includes(q)));
   el('cnt').textContent = rows.length + '곳';
   el('tb').innerHTML = rows.length ? rows.map((d) => {
     const off = d.status === 'active' && new Date(d.until) < new Date();
-    return '<tr><td><b>' + esc(d.name) + '</b> ' + (d.verified ? '✅' : '') + '<br><span class="small">' + esc(d.category || '') + ' · 코드 ' + esc(d.code) + ' · ' + kst(d.created_at) + ' 개설</span><br>' +
+    return '<tr><td><b>' + esc(d.name) + '</b> ' + (d.verified ? '✅' : '') + '<br><span class="small">' + esc(d.category || '') + ' · 코드 ' + esc(d.code) + ' · ' + kst(d.created_at) + ' 개설</span><br>' + (d.address ? '<span class="small">📍 ' + esc(d.address) + (d.address_detail ? ' ' + esc(d.address_detail) : '') + '</span><br>' : '<span class="small" style="color:var(--bad)">📍 주소 없음</span><br>') +
       '<a class="small" target="_blank" rel="noopener" href="https://aliascall.com/dangol.html?c=' + esc(d.code) + '">손님 화면 ›</a></td>' +
       '<td><span class="tag t-' + (off ? 'off' : d.status) + '">' + (off ? '기간 끝' : { active: '운영', suspended: '멈춤', closed: '닫음' }[d.status]) + '</span></td>' +
       '<td>' + kst(d.until) + '</td><td>' + esc(loginId(d)) + (d.nick ? '<br><span class="small">' + esc(d.nick) + '</span>' : '') + '</td><td>' + d.threads + '</td>' +
