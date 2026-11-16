@@ -141,7 +141,8 @@ function openForm(){
     '<label>한 줄 소개</label><textarea id="fi" maxlength="400" placeholder="예) 동네 30년 칼국수 집입니다. 직접 반죽한 면을 씁니다."></textarea>' +
     '<div class="row"><div><label>영업시간</label><input id="fh" maxlength="80" placeholder="예) 11:00~21:00 (월 휴무)"></div><div><label>지역</label><input id="fr" maxlength="40" placeholder="예) 수원 권선구"></div></div>' +
     '<p>💳 <b>개설료 1년 9,900원</b> — 지금 열면 <b>30일 무료</b>로 먼저 써 보실 수 있어요.</p>' +
-    '<button class="btn c" id="fgo" type="button">단골창구 열기 (30일 무료)</button></div>';
+    '<button class="btn c" id="fgo" type="button">단골창구 열기 (30일 무료)</button></div>' + acctFoot();
+  wireOut();
   addrWire('fa', 'fr');
   $('fgo').onclick = async function(){
     if ($('faa').value.trim().length < 5) { toast('가게 주소를 넣어 주세요. 손님이 찾아오는 데 필요해요.'); $('faa').focus(); return; }
@@ -195,6 +196,21 @@ async function paid(r){
 window.ACStore && (ACStore.onDone = paid);   // 결제 도중 앱이 꺼졌다 켜져도 여기서 마무리
 
 /* ── 가게 화면 ─────────────────────────────────────────── */
+/* 👤 2026-11-16 로그아웃 — 화면 맨 아래 「○○ 로그인 중 · 로그아웃」 (dangol.org 만. 가림콜에서는 가림콜 내 계정에서 로그아웃) */
+function acctFoot(){
+  if (!DGHOST || !ME) return '';
+  var nick = (ME.user_metadata && ME.user_metadata.nickname) || ''; if (!nick) { try { nick = decodeURIComponent(String(ME.email || '').split('@')[0]); } catch (e) {} }
+  return '<p style="text-align:center;font-size:13.5px;color:var(--sub);margin:6px 0 0">👤 <b>' + esc(nick) + '</b> 로그인 중 · <button type="button" id="logout" style="background:none;border:none;color:var(--teal2,#1F6F6B);font:inherit;font-weight:800;text-decoration:underline;cursor:pointer;padding:0">로그아웃</button></p>';
+}
+function wireOut(){
+  var b = $('logout'); if (!b) return;
+  b.onclick = async function(){
+    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = '한 번 더 누르면 로그아웃'; setTimeout(function(){ b.dataset.sure = ''; b.textContent = '로그아웃'; }, 4000); return; }
+    if (poll) clearInterval(poll);
+    try { await sb.auth.signOut(); } catch (e) {}
+    location.replace('index.html');
+  };
+}
 function main(){
   var d = DK, live = d.live, link = (DGHOST ? 'https://dangol.org/?c=' : 'https://aliascall.com/dangol.html?c=') + d.code;
   var st = d.status === 'suspended' ? '<span class="st bad">멈춤 — 신고 확인 중</span>' : live ? '<span class="st live">운영 중</span>' : '<span class="st off">쉬는 중 — 기간이 끝났어요</span>';
@@ -206,8 +222,9 @@ function main(){
       '<button class="btn c" id="ext" type="button">1년 연장 · 9,900원</button></div>' +
     (d.address ? '' : '<div class="card" style="background:var(--warnbg);border-color:transparent"><p style="color:var(--warn)">📍 <b>가게 주소를 넣어 주세요.</b> 손님이 내비로 찾아오고, 같은 이름의 가게와 구분돼요. 「🛠 가게 꾸미기」에서 넣을 수 있어요.</p></div>') +
     '<div class="tabs"><button type="button" data-tab="inbox"' + (TAB === 'inbox' ? ' class="on"' : '') + '>💬 손님 문의' + (d.unread ? ' <span class="dot">' + d.unread + '</span>' : '') + '</button><button type="button" data-tab="set"' + (TAB === 'set' ? ' class="on"' : '') + '>🛠 가게 꾸미기</button></div>' +
-    '<div id="pane"></div>';
+    '<div id="pane"></div>' + acctFoot();
   A.innerHTML = h;
+  wireOut();
   if ($('pick')) $('pick').onchange = function(){ DK = DESKS.filter(function(x){ return x.id === $('pick').value; })[0]; CUR = null; FAQ = null; main(); };
   $('cp').onclick = function(){ (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function(){ toast('주소를 복사했어요: ' + link); }, function(){ toast(link); }); };
   $('ext').onclick = function(){ payYear(d, this); };
