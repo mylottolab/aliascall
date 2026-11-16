@@ -70,7 +70,7 @@ function when(t){ var d = new Date(t); var k = new Date(d.getTime() + 9 * 3600e3
 function day(t){ var k = new Date(new Date(t).getTime() + 9 * 3600e3); return k.getUTCFullYear() + '년 ' + (k.getUTCMonth() + 1) + '월 ' + k.getUTCDate() + '일'; }
 function photoUrl(p){ return p ? URL0 + '/storage/v1/object/public/dangol/' + p.split('/').map(encodeURIComponent).join('/') : ''; }
 async function rpc(fn, a){ var r = await sb.rpc(fn, a || {}); if (r.error) throw r.error; return r.data; }
-var ERR = { no_address: '가게 주소를 넣어 주세요.', no_name: '가게 이름을 적어 주세요.', too_many_desks: '단골창구는 한 계정에 3곳까지 열 수 있어요.', not_mine: '내 가게가 아니에요.', photo: '사진을 다시 올려 주세요.', length: '답장은 2,000자까지예요.' };
+var ERR = { need_hours: '「영업시간 밖 자동 안내」를 켜려면 여는 시각 · 닫는 시각을 넣어 주세요.', bad_time: '시각을 다시 확인해 주세요.', no_address: '가게 주소를 넣어 주세요.', no_name: '가게 이름을 적어 주세요.', too_many_desks: '단골창구는 한 계정에 3곳까지 열 수 있어요.', not_mine: '내 가게가 아니에요.', photo: '사진을 다시 올려 주세요.', length: '답장은 2,000자까지예요.' };
 function em(e){ var c = (e && (e.error || e.message)) || ''; return ERR[c] || (/dg_|function|schema/.test(c) ? '단골창구 서버를 준비 중입니다(관리자: 9_dangol_desk.sql).' : '잠시 문제가 있었어요: ' + c); }
 var shell = function(sub){ return '<div class="hero"><a href="javascript:history.length>1?history.back():location.replace(\'index.html\')" aria-label="뒤로">←</a><div><span class="tag">🏪 단골창구</span><h1>우리 가게 단골창구</h1><p>' + sub + '</p></div></div>'; };
 
@@ -226,6 +226,9 @@ function main(){
       '<div>가게 코드 <span class="code">' + esc(d.code) + '</span></div>' +
       '<div class="row"><a class="btn" target="_blank" rel="noopener" href="dangol_poster.html?c=' + encodeURIComponent(d.code) + '&n=' + encodeURIComponent(d.name) + '">🖨 QR 포스터</a><button class="btn g" id="cp" type="button">주소 복사</button><a class="btn g" target="_blank" rel="noopener" href="' + link + '">손님 화면 보기</a></div>' +
       '<button class="btn c" id="ext" type="button">1년 연장 · 9,900원</button></div>' +
+    '<div class="card" style="gap:8px">' + (d.notice ? '<p style="color:var(--ink)">📢 공지: <b>' + esc(d.notice) + '</b></p>' : '<p>📢 공지가 없어요. 「🛠 가게 꾸미기」에서 한 줄 넣을 수 있어요.</p>') +
+      (d.away ? '<p>🌙 지금은 영업시간 밖이라 손님에게 자동 안내가 나가요.</p>' : '') +
+      '<button class="btn ' + (d.busy ? 'c' : 'g') + '" id="busy" type="button">' + (d.busy ? '🔕 지금 바쁨 — 켜짐 (누르면 끔)' : '🔔 지금 바쁨 켜기 — 손님에게 자동 안내') + '</button></div>' +
     (d.address ? '' : '<div class="card" style="background:var(--warnbg);border-color:transparent"><p style="color:var(--warn)">📍 <b>가게 주소를 넣어 주세요.</b> 손님이 내비로 찾아오고, 같은 이름의 가게와 구분돼요. 「🛠 가게 꾸미기」에서 넣을 수 있어요.</p></div>') +
     '<div class="tabs"><button type="button" data-tab="inbox"' + (TAB === 'inbox' ? ' class="on"' : '') + '>💬 손님 문의' + (d.unread ? ' <span class="dot">' + d.unread + '</span>' : '') + '</button><button type="button" data-tab="set"' + (TAB === 'set' ? ' class="on"' : '') + '>🛠 가게 꾸미기</button></div>' +
     '<div id="pane"></div>' + acctFoot();
@@ -234,6 +237,9 @@ function main(){
   if ($('pick')) $('pick').onchange = function(){ DK = DESKS.filter(function(x){ return x.id === $('pick').value; })[0]; CUR = null; FAQ = null; main(); };
   $('cp').onclick = function(){ (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function(){ toast('주소를 복사했어요: ' + link); }, function(){ toast(link); }); };
   $('ext').onclick = function(){ payYear(d, this); };
+  $('busy').onclick = async function(){ this.disabled = true;
+    try { var r = await rpc('dg_set_busy', { p_desk: d.id, p_busy: !d.busy }); if (!r.ok) throw r; d.busy = r.busy; toast(d.busy ? '「지금 바쁨」을 켰어요. 손님이 물으면 자동으로 안내해요.' : '「지금 바쁨」을 껐어요.'); main(); }
+    catch (e) { toast(em(e)); this.disabled = false; } };
   A.querySelectorAll('[data-tab]').forEach(function(b){ b.onclick = function(){ TAB = b.dataset.tab; main(); }; });
   if (TAB === 'set') settings(); else inbox();
 }
@@ -315,6 +321,15 @@ function settings(){
       addrBlock('sa', d.address, d.address_detail) +
       '<label>소개</label><textarea id="si" maxlength="400"></textarea>' +
       '<div class="row"><div><label>영업시간</label><input id="sh" maxlength="80"></div><div><label>지역</label><input id="sr" maxlength="40"></div></div></div>' +
+    '<div class="card"><b class="h">📢 가게 공지 · ⏰ 자동 답장</b>' +
+      '<label>가게 공지 한 줄 (손님 화면 맨 위 · 비우면 안 보여요)</label><input id="xn" maxlength="100" placeholder="예) 오늘 재료 소진으로 6시 마감합니다">' +
+      '<label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="xb" style="width:auto"> 🔕 <b>지금 바쁨</b> — 손님이 물으면 자동으로 안내해요</label>' +
+      '<textarea id="xbm" maxlength="200" style="min-height:56px" placeholder="(비우면) 지금 손님이 많아 답이 조금 늦을 수 있어요. 문의는 잘 받았어요. 곧 답해 드릴게요!"></textarea>' +
+      '<label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="xh" style="width:auto"> 🌙 <b>영업시간 밖</b>에는 자동으로 안내해요</label>' +
+      '<div class="row"><div><label>여는 시각</label><input id="xo" type="time"></div><div><label>닫는 시각</label><input id="xc" type="time"></div></div>' +
+      '<label>쉬는 요일</label><div class="row" id="xd" style="gap:6px">' + ['일','월','화','수','목','금','토'].map(function(n, i){ return '<label style="flex:none;display:flex;gap:4px;align-items:center;color:var(--ink);font-weight:700"><input type="checkbox" value="' + i + '" style="width:auto">' + n + '</label>'; }).join('') + '</div>' +
+      '<textarea id="xom" maxlength="200" style="min-height:56px" placeholder="(비우면) 지금은 영업시간이 아니에요 (11:00~21:00). 문의는 잘 받았고, 영업시간에 답해 드릴게요."></textarea>' +
+      '<p style="font-size:13px">자동 안내는 같은 손님에게 3시간에 한 번만 나가요. 문의는 그대로 받은편지함에 남으니 나중에 답해 주세요.</p></div>' +
     '<div class="card"><b class="h">🙋 자주 묻는 질문</b><p>손님이 묻기 전에 먼저 보는 답이에요. 같은 질문에 여러 번 답하지 않으셔도 됩니다. (30개까지)</p>' +
       '<label>인사말 (선택)</label><textarea id="sg" maxlength="200" style="min-height:60px" placeholder="예) 어서 오세요! 궁금한 점은 아래에서 먼저 찾아보세요."></textarea>' +
       '<div id="fr" style="display:flex;flex-direction:column;gap:8px"></div><button class="btn g" id="fadd" type="button">＋ 질문 더하기</button></div>' +
@@ -322,6 +337,9 @@ function settings(){
     '<button class="btn g" id="closeDesk" type="button" style="font-size:14px">이 단골창구 닫기</button>';
   $('sn').value = d.name || ''; $('si').value = d.intro || ''; $('sh').value = d.hours || ''; $('sr').value = d.region || ''; $('sg').value = d.greeting || '';
   addrWire('sa', 'sr');
+  $('xn').value = d.notice || ''; $('xb').checked = !!d.busy; $('xbm').value = d.busy_msg || ''; $('xh').checked = !!d.hours_on;
+  $('xo').value = d.open_time || ''; $('xc').value = d.close_time || ''; $('xom').value = d.off_msg || '';
+  (d.off_days || []).forEach(function(i){ var c = $('xd').querySelector('input[value="' + i + '"]'); if (c) c.checked = true; });
   var fr = $('fr');
   rows.forEach(function(r, i){
     var x = document.createElement('div'); x.className = 'faqrow';
@@ -338,7 +356,9 @@ function settings(){
   };
 }
 function readFaq(){ return Array.prototype.map.call(document.querySelectorAll('#fr .faqrow'), function(x){ return { q: x.querySelector('[data-k=q]').value.trim(), a: x.querySelector('[data-k=a]').value.trim() }; }); }
-function keep(){ DK.name = $('sn').value; DK.category = $('sc').value; DK.intro = $('si').value; DK.hours = $('sh').value; DK.region = $('sr').value; DK.greeting = $('sg').value; DK.address = $('saa').value; DK.address_detail = $('sad').value; }
+function keep(){ DK.name = $('sn').value; DK.category = $('sc').value; DK.intro = $('si').value; DK.hours = $('sh').value; DK.region = $('sr').value; DK.greeting = $('sg').value; DK.address = $('saa').value; DK.address_detail = $('sad').value;
+  DK.notice = $('xn').value; DK.busy = $('xb').checked; DK.busy_msg = $('xbm').value; DK.hours_on = $('xh').checked; DK.open_time = $('xo').value; DK.close_time = $('xc').value; DK.off_msg = $('xom').value;
+  DK.off_days = [].map.call($('xd').querySelectorAll('input:checked'), function(c){ return +c.value; }); }
 async function upload(){
   var f = this.files && this.files[0]; if (!f) return;
   toast('사진을 올리는 중…');
@@ -363,6 +383,10 @@ async function save(){
     var r = await rpc('dg_update', { p_desk: DK.id, p_name: DK.name, p_category: DK.category, p_intro: DK.intro, p_hours: DK.hours, p_region: DK.region,
       p_photo: PHOTO || null, p_greeting: DK.greeting, p_items: FAQ.filter(function(x){ return x.q && x.a; }) });
     if (!r.ok) throw r;
+    if (DK.hours_on && (!DK.open_time || !DK.close_time)) throw { error: 'need_hours' };
+    var rx = await rpc('dg_set_extras', { p_desk: DK.id, p_notice: DK.notice || null, p_busy: !!DK.busy, p_busy_msg: DK.busy_msg || null,
+      p_hours_on: !!DK.hours_on, p_open: DK.open_time || null, p_close: DK.close_time || null, p_off: DK.off_days || [], p_off_msg: DK.off_msg || null });
+    if (!rx.ok) throw rx;
     toast('저장했어요. 자주 묻는 질문 ' + r.count + '개가 손님 화면에 보여요.');
     DESKS = await rpc('dg_owner_desks'); DK = DESKS.filter(function(x){ return x.id === DK.id; })[0] || DESKS[0]; FAQ = null; PHOTO = undefined; main();
   } catch (e) { toast(em(e)); b.disabled = false; }
