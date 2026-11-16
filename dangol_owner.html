@@ -192,7 +192,12 @@ async function paid(r){
   if (r.canceled) return toast('결제를 취소했어요.');
   if (r.pending) return toast('결제가 아직 끝나지 않았어요. 끝나면 자동으로 연장돼요.');
   if (r.ok) return;
-  toast('결제를 마치지 못했어요. ' + (r.error || ''));
+  var why = String(r.error || '');
+  if (/[{}]|permission|HTTP|androidpublisher|token|apple/i.test(why)) {   // 서버 · 스토어 속 사정은 보이지 않게
+    try { console.warn('[dangol pay]', why); } catch (e) {}
+    why = '결제 확인이 늦어지고 있어요. 다시 결제하지 마시고 잠시 뒤 앱을 다시 열어 주세요. 확인되지 않은 결제는 자동으로 취소돼요.';
+  }
+  toast('결제를 마치지 못했어요. ' + why);
 }
 window.ACStore && (ACStore.onDone = paid);   // 결제 도중 앱이 꺼졌다 켜져도 여기서 마무리
 
