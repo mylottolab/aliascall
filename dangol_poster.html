@@ -30,7 +30,9 @@ body{ margin:0; background:#E9EEEC; font-family:system-ui,-apple-system,'Apple S
 .pts span{ display:block; font-size:22pt; margin-bottom:1.5mm; }
 .foot{ margin-top:auto; font-size:10.5pt; color:#3E5654; text-align:center; line-height:1.6; }
 .foot b{ color:#123F3D; }
-@media print{ body{ background:#fff; } .bar,.tip{ display:none; } .page{ margin:0; box-shadow:none; } }
+/* 📱 2026-11-16 휴대폰 — A4(210mm) 포스터를 화면 폭에 맞춰 줄여서 보여 줍니다(인쇄는 그대로 A4) */
+@media screen{ html,body{ overflow-x:hidden; } .page{ zoom:var(--z,1); } }
+@media print{ body{ background:#fff; } .bar,.tip{ display:none; } .page{ margin:0; box-shadow:none; zoom:1 !important; } }
 </style>
 </head>
 <body>
@@ -54,6 +56,8 @@ body{ margin:0; background:#E9EEEC; font-family:system-ui,-apple-system,'Apple S
   document.title = n + ' 단골창구 QR 포스터';
   if (!b) { document.querySelector('.say').textContent = '가게 주소가 없습니다. 「업체 공개 등록」 화면에서 다시 열어 주세요.'; }
   try { new QRCode(document.getElementById('qr'), { text: url, width: 600, height: 600, correctLevel: QRCode.CorrectLevel.M }); } catch (e) {}
+  function fit(){ var pg = document.querySelector('.page'); pg.style.zoom = 1; var w = pg.getBoundingClientRect().width, z = Math.min(1, (window.innerWidth - 24) / w); document.documentElement.style.setProperty('--z', z.toFixed(3)); pg.style.zoom = ''; }
+  fit(); window.addEventListener('resize', fit);
   document.getElementById('print').onclick = function(){ window.print(); };
   document.getElementById('copy').onclick = function(){
     var t = this; (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function(){ t.textContent = '복사됨 ✓'; }, function(){ prompt('주소', url); });
