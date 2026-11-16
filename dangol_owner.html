@@ -262,7 +262,10 @@ function paintInbox(){
   var t = THS.filter(function(x){ return x.id === CUR; })[0];
   if (t) {
     p.innerHTML = '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><b class="h">' + esc(t.name) + '</b><button class="btn g" id="bk" type="button" style="padding:6px 12px">← 목록</button></div>' +
-      '<div class="msgs" id="ms">' + t.msgs.map(function(m){ return '<div class="m ' + (m.o ? 'o' : 'g') + '"><small>' + (m.o ? '나(사장님)' : esc(t.name)) + ' · ' + when(m.t) + '</small>' + esc(m.b) + '</div>'; }).join('') + '</div>' +
+      '<div class="msgs" id="ms">' + t.msgs.map(function(m){ var fx = !m.o && /[A-Za-z]{3,}/.test(m.b) && !/[가-힣]/.test(m.b);   /* 🌐 2026-11-17 외국인 손님 글 → 파파고로 번역 */
+        return '<div class="m ' + (m.o ? 'o' : 'g') + '"><small>' + (m.o ? '나(사장님)' : esc(t.name)) + ' · ' + when(m.t) + '</small>' + esc(m.b) +
+          (fx ? '<a href="https://papago.naver.com/?sk=auto&tk=ko&st=' + encodeURIComponent(m.b) + '" target="_blank" rel="noopener" style="display:block;margin-top:4px;font-size:13px;font-weight:800">🌐 파파고로 번역해 보기</a>' : '') + '</div>'; }).join('') + '</div>' +
+      (t.msgs.some(function(m){ return !m.o && /[A-Za-z]{3,}/.test(m.b) && !/[가-힣]/.test(m.b); }) ? '<p style="font-size:13px">🌐 외국인 손님이에요. 답장은 한국어로 써도 되지만, 파파고에서 영어로 바꿔 붙여 넣으면 더 잘 통해요.</p>' : '') +
       '<div class="qr">' + QUICK.map(function(q, i){ return '<button type="button" data-q="' + i + '">' + esc(q) + '</button>'; }).join('') + '</div>' +
       '<textarea id="rep" maxlength="2000" placeholder="답장 쓰기 — 손님 화면에 그대로 보여요. 계좌번호 · 링크는 손님 화면에 경고가 함께 떠요."></textarea>' +
       '<div class="row"><button class="btn" id="send" type="button">답장 보내기</button><button class="btn g" id="sendx" type="button">답장하고 끝내기</button></div>' +
