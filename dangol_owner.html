@@ -627,10 +627,16 @@ boot().catch(function(e){ A.innerHTML = '<div class="card"><b class="h">' + esc(
   function paint(){ var d = dark(); b.textContent = d ? '☀️' : '🌙'; b.title = b.ariaLabel = d ? '주간 모드로' : '야간 모드로'; }
   b.onclick = function(){ var t = dark() ? 'light' : 'dark'; R.setAttribute('data-theme', t); try { localStorage.setItem('dg_theme', t); } catch (e) {} paint(); };
   paint(); var top = document.querySelector('.top');
+  /* ✕ 2026-11-17 닫기 — 한 휴대폰으로 손님 · 사장님을 오가므로, 언제든 첫 화면(사장님 / 고객님 고르기)으로 */
+  var cl = document.createElement('a'); cl.id = 'dgClose';
+  cl.textContent = window.__dgEN ? '✕ Close' : '✕ 닫기';
+  cl.style.cssText = b.style.cssText + ';width:auto;padding:0 14px;font-size:14px;font-weight:800;text-decoration:none;margin-right:auto';
+  cl.href = /(^|\.)dangol\.org$/.test(location.hostname) ? 'index.html' : 'javascript:void 0';
+  if (!/(^|\.)dangol\.org$/.test(location.hostname)) cl.onclick = function(e){ e.preventDefault(); if (history.length > 1) history.back(); else location.replace('index.html'); };
   if (top) { b.style.marginLeft = 'auto'; top.appendChild(b); }
   else { var bar = document.createElement('div');   /* 위쪽 띠가 없는 화면: 맨 위 오른쪽에 한 줄 */
-    bar.style.cssText = 'max-width:640px;margin:0 auto -6px;padding:max(10px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));display:flex;justify-content:flex-end';
-    b.style.width = b.style.height = '34px'; b.style.fontSize = '16px'; bar.appendChild(b); document.body.insertBefore(bar, document.body.firstChild); }
+    bar.style.cssText = 'max-width:640px;margin:0 auto -6px;padding:max(10px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));display:flex;justify-content:flex-end;align-items:center';
+    b.style.width = b.style.height = '34px'; b.style.fontSize = '16px'; cl.style.height = '34px'; bar.appendChild(cl); bar.appendChild(b); document.body.insertBefore(bar, document.body.firstChild); }
 })();
 </script>
 </body>
