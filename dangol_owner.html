@@ -11,6 +11,7 @@
 <script src="aliascall_push.js"></script>
 <script src="aliascall_store.js"></script>
 <script src="aliascall_web_pay.js"></script>
+<script src="dangol_call.js"></script>
 <style>
 :root{ --bg:#F2F5F4; --card:#fff; --ink:#12302E; --sub:#4E6462; --line:#DCE3DE; --teal:#123F3D; --teal2:#1F6F6B; --coral:#E8734A; --tint:#E4EFEE; --red:#B4232A; --ok:#1F7A4C; --warnbg:#FFF2D9; --warn:#8A4B00; }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#111816; --card:#1A2422; --ink:#E6EEEC; --sub:#9DB0AD; --line:#2C3A37; --tint:#1E3532; --red:#FF8A8A; --ok:#7FD6A6; --warnbg:#3A2E14; --warn:#F2C46B; color-scheme:dark; } }
@@ -42,6 +43,11 @@ textarea{ min-height:80px; resize:vertical; }
 .m{ border-radius:14px; padding:9px 13px; max-width:90%; font-size:15px; white-space:pre-wrap; overflow-wrap:anywhere; }
 .m small{ display:block; font-size:12px; color:var(--sub); font-weight:700; white-space:normal; }
 .m.g{ align-self:flex-start; background:var(--tint); } .m.o{ align-self:flex-end; background:#E3F4EA; color:#12302E; }
+/* 📷 📞 2026-11-17 사진 · 동영상 · 통화 · 요금제 */
+.m .mm{ display:block; max-width:min(260px,70vw); max-height:320px; border-radius:10px; margin-top:4px; background:var(--line); object-fit:cover; }
+.m.call{ align-self:center; background:transparent; font-size:13px; color:var(--sub); font-weight:700; padding:2px 8px; }
+.pl{ border:1.5px solid var(--line); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:6px; } .pl.cur{ border-color:var(--teal2); background:var(--tint); }
+.pl b{ font-size:16.5px; } .pl .q{ font-size:13.5px; color:var(--ink); font-weight:700; } .pbadge{ display:inline-block; background:var(--teal2); color:#fff; font-size:12px; font-weight:800; border-radius:20px; padding:1px 9px; margin-left:6px; }
 .qr{ display:flex; flex-wrap:wrap; gap:6px; } .qr button{ border:1px dashed var(--line); background:var(--card); color:var(--ink); border-radius:10px; padding:6px 10px; font:inherit; font-size:13px; cursor:pointer; }
 .photo{ width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:14px; background:var(--tint); display:block; max-width:100%; }
 .faqrow{ border:1.5px solid var(--line); border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:6px; }
@@ -89,9 +95,9 @@ async function boot(){
   try { DESKS = await rpc('dg_owner_desks'); } catch (e) { A.innerHTML = shell('') + '<div class="card"><b class="h">' + esc(em(e)) + '</b></div>'; return; }
   if (!DESKS.length) return openForm();
   DK = null; var wp = Q.get('webpaid'), pk = null; try { pk = localStorage.getItem(PAYK); } catch (e) {}
-  b0: if (wp !== null && (Q.get('sku') || SKU) === SKU) {   // 💳 웹 결제창에서 돌아옴
+  b0: if (wp !== null && /dangol/.test(Q.get('sku') || SKU)) {   // 💳 웹 결제창에서 돌아옴 (기본형 · 실용형 · 프리미엄형)
     try { history.replaceState(null, '', location.pathname); } catch (e) {}
-    if (wp === '1') { try { localStorage.removeItem(PAYK); } catch (e) {} DK = DESKS.filter(function(d){ return d.id === pk; })[0] || DESKS[0]; setTimeout(function(){ toast('1년 연장됐어요! ' + day(DK.until) + '까지 열려 있어요.'); }, 300); break b0; }
+    if (wp === '1') { try { localStorage.removeItem(PAYK); } catch (e) {} DK = DESKS.filter(function(d){ return d.id === pk; })[0] || DESKS[0]; setTimeout(function(){ toast(planName(DK.plan) + ' · 결제가 끝났어요! ' + day(DK.until) + '까지 열려 있어요.'); }, 300); break b0; }
     setTimeout(function(){ toast(Q.get('msg') || '결제를 마치지 못했어요.'); }, 300);
   }
   if (!DK) DK = DESKS.filter(function(d){ return d.id === (Q.get('d') || pk || ''); })[0] || DESKS[0];
@@ -162,31 +168,63 @@ function openForm(){
    웹: 국내카드(이니시스) → aliascall-web-pay → 이 화면으로 돌아옴(?webpaid=)
    어느 단골창구에 넣을지는 usageKind 'dangol' · usageTargetId(단골창구 번호)로 보냅니다. */
 var SKU = DGHOST ? 'dangol_1y' : 'garim_dangol_1y', PAYK = 'dg_pay_desk';   // 단골창구 앱: 구글 dangol_1y · 애플 dangol_1y_nr
-async function payYear(d, btn){
+/* 💳 2026-11-17 요금제 3단계 (22_dangol_plans.sql) — 기본형 9,900 · 실용형 19,800 · 프리미엄형 33,000 (1년 · 자동 결제 없음)
+   중간에 올리면 남은 기간의 값을 새 요금제 날짜로 바꿔 더해 줍니다(서버 dg_grant_plan · 미리 보기 dg_plan_quote). */
+var PLANS = {
+  basic:   { n: '기본형',     p: '9,900원',  f: '글 문의 · 답장 · 공지 · 자동 안내' },
+  plus:    { n: '실용형',     p: '19,800원', f: '기본형 + 📷 사진 · 🎬 짧은 동영상(30초) 주고받기 + 📞 번호 없는 음성 통화' },
+  premium: { n: '프리미엄형', p: '33,000원', f: '실용형 + 🎥 영상 통화' }
+};
+function skuOf(plan){ var b = DGHOST ? 'dangol' : 'garim_dangol'; return plan === 'basic' ? b + '_1y' : b + '_' + plan + '_1y'; }
+function planName(p){ return (PLANS[p] || PLANS.basic).n; }
+async function planSheet(d){
+  var box = $('planBox'); if (!box) return;
+  if (!box.hidden) { box.hidden = true; return; }
+  box.hidden = false; box.innerHTML = '<p>요금제를 불러오는 중…</p>';
+  var cur = d.live ? (d.plan || 'basic') : 'basic', qs = {};
+  for (var k in PLANS) { try { qs[k] = await rpc('dg_plan_quote', { p_desk: d.id, p_plan: k }); } catch (e) { qs[k] = null; } }
+  box.innerHTML = '<b class="h">💳 요금제 · 연장 <span style="font-size:13px;font-weight:700;color:var(--sub)">1년 · 자동 결제 없음</span></b>' +
+    Object.keys(PLANS).map(function(k){ var P = PLANS[k], q = qs[k] || {}, line = '';
+      if (q.ok) {
+        if (!d.live) line = '오늘부터 1년 — ' + day(q.until) + '까지';
+        else if (k === cur) line = '지금 쓰는 요금제 · 1년 늘어나 ' + day(q.until) + '까지';
+        else if (q.upgrade) line = '남은 ' + q.rem_days + '일(' + planName(cur) + ')을 ' + planName(k) + ' ' + q.bonus_days + '일로 바꿔 더해 드려요 → ' + day(q.until) + '까지';
+        else line = '지금 ' + planName(cur) + '이 남아 있어요. 사면 산 값만큼 ' + planName(cur) + ' ' + q.bonus_days + '일이 더해져요 → ' + day(q.until) + '까지';
+      }
+      return '<div class="pl' + (d.live && k === cur ? ' cur' : '') + '"><div><b>' + P.n + '</b>' + (d.live && k === cur ? '<span class="pbadge">지금</span>' : '') + ' <span style="float:right;font-weight:800">' + P.p + '</span></div>' +
+        '<p>' + P.f + '</p>' + (line ? '<p class="q">' + esc(line) + '</p>' : '') +
+        '<button class="btn' + (k === cur ? '' : ' c') + '" type="button" data-buy="' + k + '">' + (d.live && k === cur ? '1년 연장' : (d.live && PLANS[k] && q.upgrade ? P.n + '으로 올리기' : P.n + ' 1년')) + ' · ' + P.p + '</button></div>';
+    }).join('') +
+    '<p style="font-size:13px">실용형 · 프리미엄형의 사진 · 동영상과 통화는 문의한 손님과 사장님만 볼 수 있어요. 통화는 인터넷으로 연결돼 서로 전화번호가 보이지 않아요.</p>';
+  box.querySelectorAll('[data-buy]').forEach(function(b){ b.onclick = function(){ payYear(d, b, b.dataset.buy); }; });
+}
+async function payYear(d, btn, plan){
+  plan = plan || 'basic';
+  var sku = skuOf(plan), label = btn.textContent;
   if (d.status === 'suspended') return toast('멈춘 단골창구는 연장할 수 없어요. 💬 고객센터로 문의해 주세요.');
   if (window.ACStore && ACStore.oldApp && ACStore.oldApp()) return toast(BRAND + ' 앱을 최신으로 업데이트한 뒤 다시 눌러 주세요.');
   try { localStorage.setItem(PAYK, d.id); } catch (e) {}
   btn.disabled = true; btn.textContent = '결제 창을 여는 중…';
-  var reset = function(){ btn.disabled = false; btn.textContent = '1년 연장 · 9,900원'; };
+  var reset = function(){ btn.disabled = false; btn.textContent = label; };
   if (window.ACStore && ACStore.inApp()) {
     ACStore.onDone = paid;
-    await ACStore.buy(SKU, { usageKind: 'dangol', usageTargetId: d.id });
+    await ACStore.buy(sku, { usageKind: 'dangol', usageTargetId: d.id });
     setTimeout(function(){ if (btn.disabled) btn.textContent = '결제를 확인하는 중…'; }, 1500);
     return;
   }
   if (!window.ACWeb) { reset(); return toast('결제 창을 열지 못했어요. 새로 고친 뒤 다시 눌러 주세요.'); }
-  var ok = await ACWeb.inicis(sb, SKU, { usageKind: 'dangol', usageTargetId: d.id },
+  var ok = await ACWeb.inicis(sb, sku, { usageKind: 'dangol', usageTargetId: d.id },
     { buyername: (ME && ME.user_metadata && ME.user_metadata.nickname) || '회원', buyertel: '', buyeremail: (ME && ME.email) || '' });
   if (!ok) reset();
 }
 async function paid(r){
   r = r || {};
-  if (r.ok && (r.kind === 'dangol' || r.sku === SKU)) {
+  if (r.ok && (r.kind === 'dangol' || /dangol/.test(String(r.sku || '')))) {
     try { DESKS = await rpc('dg_owner_desks'); } catch (e) {}
     var id = null; try { id = localStorage.getItem(PAYK); localStorage.removeItem(PAYK); } catch (e) {}
     DK = DESKS.filter(function(x){ return x.id === (id || (DK && DK.id)); })[0] || DESKS[0];
     if (DK) main();
-    toast('1년 연장됐어요! ' + (DK ? day(DK.until) + '까지 열려 있어요.' : ''));
+    toast((DK && DK.plan && DK.plan !== 'basic' ? planName(DK.plan) + ' · ' : '') + '결제가 끝났어요! ' + (DK ? day(DK.until) + '까지 열려 있어요.' : '') + (r.bonusDays ? ' (남은 기간 ' + r.bonusDays + '일을 더해 드렸어요)' : ''));
     return;
   }
   if (DK) main();
@@ -226,7 +264,11 @@ function main(){
     '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">' + st + '<span style="font-size:14px;color:var(--sub)">' + day(d.until) + '까지</span></div>' +
       '<div>가게 코드 <span class="code">' + esc(d.code) + '</span></div>' +
       '<div class="row"><a class="btn" target="_blank" rel="noopener" href="dangol_poster.html?c=' + encodeURIComponent(d.code) + '&n=' + encodeURIComponent(d.name) + '">🖨 QR 포스터</a><button class="btn g" id="cp" type="button">주소 복사</button><a class="btn g" target="_blank" rel="noopener" href="' + link + '">손님 화면 보기</a></div>' +
-      '<button class="btn c" id="ext" type="button">1년 연장 · 9,900원</button></div>' +
+      '<div style="font-size:14.5px">요금제 <b>' + planName(live ? d.plan : 'basic') + '</b>' + (live && d.plan !== 'basic' ? ' — ' + esc(PLANS[d.plan].f.replace(/^[^+]*\+ /, '')) : '') + '</div>' +
+      '<button class="btn c" id="ext" type="button">💳 요금제 · 연장' + (live && d.plan === 'basic' ? ' (사진 · 통화 추가)' : '') + '</button>' +
+      '<div id="planBox" class="card" hidden style="padding:12px;border-style:dashed"></div>' +
+      (live && d.plan !== 'basic' ? '<button class="btn ' + (d.call_on ? 'g' : 'c') + '" id="callOn" type="button">' + (d.call_on ? '📞 손님 통화 받기 — 켜짐 (누르면 끔)' : '📵 손님 통화 받기 — 꺼짐 (누르면 켬)') + '</button>' +
+        '<p style="font-size:13px">' + (d.call_on ? '손님 화면에 「' + (d.plan === 'premium' ? '음성 · 영상 통화' : '음성 통화') + '」 단추가 보여요. 영업시간 밖에는 자동으로 숨겨져요.' : '통화 단추가 손님에게 보이지 않아요. 글 · 사진 문의는 그대로 받아요.') + '</p>' : '') + '</div>' +
     '<div class="card" style="gap:8px">' + (d.notice ? '<p style="color:var(--ink)">📢 공지: <b>' + esc(d.notice) + '</b></p>' : '<p>📢 공지가 없어요. 「🛠 가게 꾸미기」에서 한 줄 넣을 수 있어요.</p>') +
       (d.away ? '<p>🌙 지금은 영업시간 밖이라 손님에게 자동 안내가 나가요.</p>' : '') +
       '<button class="btn ' + (d.busy ? 'c' : 'g') + '" id="busy" type="button">' + (d.busy ? '🔕 지금 바쁨 — 켜짐 (누르면 끔)' : '🔔 지금 바쁨 켜기 — 손님에게 자동 안내') + '</button></div>' +
@@ -237,7 +279,11 @@ function main(){
   wireOut();
   if ($('pick')) $('pick').onchange = function(){ DK = DESKS.filter(function(x){ return x.id === $('pick').value; })[0]; CUR = null; FAQ = null; main(); };
   $('cp').onclick = function(){ (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function(){ toast('주소를 복사했어요: ' + link); }, function(){ toast(link); }); };
-  $('ext').onclick = function(){ payYear(d, this); };
+  $('ext').onclick = function(){ planSheet(d); };
+  if ($('callOn')) $('callOn').onclick = async function(){ this.disabled = true;
+    try { var r = await rpc('dg_set_call', { p_desk: d.id, p_on: !d.call_on }); if (!r.ok) throw r; d.call_on = r.call_on; toast(d.call_on ? '손님 통화를 받아요. 📞' : '손님 통화 받기를 껐어요.'); main(); }
+    catch (e) { toast(em(e)); this.disabled = false; } };
+  ringStart();
   $('busy').onclick = async function(){ this.disabled = true;
     try { var r = await rpc('dg_set_busy', { p_desk: d.id, p_busy: !d.busy }); if (!r.ok) throw r; d.busy = r.busy; toast(d.busy ? '「지금 바쁨」을 켰어요. 손님이 물으면 자동으로 안내해요.' : '「지금 바쁨」을 껐어요.'); main(); }
     catch (e) { toast(em(e)); this.disabled = false; } };
@@ -257,26 +303,34 @@ async function inbox(){
     try { THS = await rpc('dg_owner_threads', { p_desk: DK.id }); if (!typing) paintInbox(); } catch (e) {}
   }, 20000);
 }
-function paintInbox(){
+function paintInbox(force){
   var p = $('pane'); if (!p) return;
   var t = THS.filter(function(x){ return x.id === CUR; })[0];
   if (t) {
+    var sig = t.id + ':' + t.msgs.length + ':' + t.status;   /* 같으면 다시 그리지 않음(보던 동영상 · 쓰던 글이 끊기지 않게) */
+    if (force !== true && p.dataset.sig === sig && $('ms')) return;
+    p.dataset.sig = sig;
     p.innerHTML = '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><b class="h">' + esc(t.name) + '</b><button class="btn g" id="bk" type="button" style="padding:6px 12px">← 목록</button></div>' +
-      '<div class="msgs" id="ms">' + t.msgs.map(function(m){ var fx = !m.o && /[A-Za-z]{3,}/.test(m.b) && !/[가-힣]/.test(m.b);   /* 🌐 2026-11-17 외국인 손님 글 → 파파고로 번역 */
-        return '<div class="m ' + (m.o ? 'o' : 'g') + '"><small>' + (m.o ? '나(사장님)' : esc(t.name)) + ' · ' + when(m.t) + '</small>' + esc(m.b) +
+      '<div class="msgs" id="ms">' + t.msgs.map(function(m){ var fx = !m.u && !m.o && /[A-Za-z]{3,}/.test(m.b) && !/[가-힣]/.test(m.b);   /* 🌐 2026-11-17 외국인 손님 글 → 파파고로 번역 */
+        if (m.k === 'call') return '<div class="m call">' + esc(m.b) + ' · ' + when(m.t) + '</div>';
+        return '<div class="m ' + (m.o ? 'o' : 'g') + '"><small>' + (m.o ? '나(사장님)' : esc(t.name)) + ' · ' + when(m.t) + '</small>' + (m.u ? mediaTag(m) : esc(m.b)) +
           (fx ? '<a href="https://papago.naver.com/?sk=auto&tk=ko&st=' + encodeURIComponent(m.b) + '" target="_blank" rel="noopener" style="display:block;margin-top:4px;font-size:13px;font-weight:800">🌐 파파고로 번역해 보기</a>' : '') + '</div>'; }).join('') + '</div>' +
       (t.msgs.some(function(m){ return !m.o && /[A-Za-z]{3,}/.test(m.b) && !/[가-힣]/.test(m.b); }) ? '<p style="font-size:13px">🌐 외국인 손님이에요. 답장은 한국어로 써도 되지만, 파파고에서 영어로 바꿔 붙여 넣으면 더 잘 통해요.</p>' : '') +
       '<div class="qr">' + QUICK.map(function(q, i){ return '<button type="button" data-q="' + i + '">' + esc(q) + '</button>'; }).join('') + '</div>' +
       '<textarea id="rep" maxlength="2000" placeholder="답장 쓰기 — 손님 화면에 그대로 보여요. 계좌번호 · 링크는 손님 화면에 경고가 함께 떠요."></textarea>' +
       '<div class="row"><button class="btn" id="send" type="button">답장 보내기</button><button class="btn g" id="sendx" type="button">답장하고 끝내기</button></div>' +
+      (DK.media ? '<button class="btn g" id="opick" type="button">📷 사진 · 동영상 보내기</button><input type="file" id="ofile" accept="image/*,video/*" hidden>' : '') +
       '<p style="font-size:13px">「단골창구」 앱에서 답장 알림을 켠 손님에게는 알림이 가요. 그 밖의 손님은 단골창구를 다시 열면 답장이 보입니다.</p></div>';
     var ms = $('ms'); ms.scrollTop = ms.scrollHeight;
     $('bk').onclick = function(){ CUR = null; paintInbox(); };
     p.querySelectorAll('[data-q]').forEach(function(b){ b.onclick = function(){ var r = $('rep'); r.value = (r.value ? r.value + ' ' : '') + QUICK[Number(b.dataset.q)]; r.focus(); }; });
     $('send').onclick = function(){ reply(t, false); }; $('sendx').onclick = function(){ reply(t, true); };
+    if ($('opick')) { $('opick').onclick = function(){ $('ofile').click(); }; $('ofile').onchange = function(){ var f = this.files && this.files[0]; this.value = ''; if (f) ownerMedia(t, f); }; }
+    fillMedia($('ms'), t.id);
     if (t.unread) rpc('dg_owner_set', { p_thread: t.id, p_status: 'seen' }).then(function(){ t.unread = 0; }).catch(function(){});
     return;
   }
+  p.dataset.sig = '';
   var open = THS.filter(function(x){ return x.status !== 'closed'; }), done = THS.filter(function(x){ return x.status === 'closed'; });
   var row = function(x){ var last = x.msgs[x.msgs.length - 1] || {};
     return '<button type="button" class="th' + (x.unread ? ' new' : '') + '" data-t="' + x.id + '"><b>' + esc(x.name) + (x.unread ? '<span class="dot">' + x.unread + '</span>' : '') + (x.status === 'answered' ? ' <span class="st live">답함</span>' : '') + '</b><span>' + esc((last.o ? '↳ ' : '') + (last.b || '')) + '</span><span>' + when(x.updated_at) + '</span></button>'; };
@@ -302,13 +356,77 @@ async function pushBox(){
     $('pushGo').onclick = async function(){ this.disabled = true; var ok = await _subscribeCore(sb); if (ok) { toast('알림을 켰어요. 🔔'); bx.innerHTML = ''; } else this.disabled = false; };
   } catch (e) {}
 }
+/* ── 📷 사진 · 동영상 (실용형 · 프리미엄형) ── */
+var MURL = {};
+function mediaTag(m){
+  return m.k === 'video' ? '<video class="mm" data-p="' + esc(m.u) + '" controls playsinline preload="metadata"></video>'
+                         : '<a data-a="' + esc(m.u) + '" target="_blank" rel="noopener"><img class="mm" data-p="' + esc(m.u) + '" alt="사진"></a>';
+}
+async function mediaFn(body){
+  var ss = (await sb.auth.getSession()).data.session;
+  var r = await fetch(URL0 + '/functions/v1/dangol-media', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY0, Authorization: 'Bearer ' + (ss ? ss.access_token : KEY0) }, body: JSON.stringify(body) });
+  return r.json().catch(function(){ return {}; });
+}
+async function fillMedia(box, thread){
+  if (!box) return; var els = box.querySelectorAll('[data-p]'); if (!els.length) return;
+  var need = Array.prototype.some.call(els, function(e){ return !MURL[e.dataset.p] || MURL[e.dataset.p].at < Date.now() - 50 * 60e3; });
+  if (need) { try { var r = await mediaFn({ act: 'view', thread: thread }); if (r && r.urls) Object.keys(r.urls).forEach(function(k){ MURL[k] = { u: r.urls[k], at: Date.now() }; }); } catch (e) {} }
+  els.forEach(function(e){ var x = MURL[e.dataset.p]; if (x && e.getAttribute('src') !== x.u) e.src = x.u; });
+  box.querySelectorAll('[data-a]').forEach(function(a){ var x = MURL[a.dataset.a]; if (x) a.href = x.u; });
+}
+async function ownerMedia(t, f){
+  var vid = /^video\//.test(f.type), btn = $('opick'), secs = null, blob = f, ext = 'jpg';
+  try {
+    if (vid) {
+      secs = await new Promise(function(res){ var v = document.createElement('video'), u = URL.createObjectURL(f); v.preload = 'metadata'; v.onloadedmetadata = function(){ URL.revokeObjectURL(u); res(v.duration || 0); }; v.onerror = function(){ res(0); }; v.src = u; });
+      if (secs > 31) return toast('동영상은 30초까지 보낼 수 있어요.');
+      if (f.size > 30 * 1024 * 1024) return toast('동영상이 너무 커요(30MB까지).');
+      ext = /quicktime/.test(f.type) ? 'mov' : /webm/.test(f.type) ? 'webm' : 'mp4';
+    } else {
+      var img = await new Promise(function(res, rej){ var i = new Image(); i.onload = function(){ res(i); }; i.onerror = rej; i.src = URL.createObjectURL(f); });
+      var k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      blob = await new Promise(function(res){ c.toBlob(res, 'image/jpeg', 0.85); });
+    }
+    btn.disabled = true; btn.textContent = '보내는 중…';
+    var tk = await mediaFn({ act: 'up', kind: vid ? 'video' : 'photo', ext: ext, thread: t.id });
+    if (!tk || !tk.ok) throw { error: tk && tk.error };
+    var up = await sb.storage.from('dangol_chat').uploadToSignedUrl(tk.path, tk.token, blob, { contentType: vid ? (f.type || 'video/mp4') : 'image/jpeg' });
+    if (up.error) throw up.error;
+    var r = await rpc('dg_owner_media', { p_thread: t.id, p_path: tk.path, p_secs: secs ? Math.round(secs) : null });
+    if (!r.ok) throw r;
+    try { var ss = (await sb.auth.getSession()).data.session; if (ss) fetch(URL0 + '/functions/v1/dangol-notify', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY0, Authorization: 'Bearer ' + ss.access_token }, body: JSON.stringify({ reply: t.id }) }).catch(function(){}); } catch (x) {}
+    toast('보냈어요.');
+    THS = await rpc('dg_owner_threads', { p_desk: DK.id }); paintInbox(true);
+  } catch (e) { toast(e && e.error === 'plan' ? '사진 · 동영상은 실용형부터 쓸 수 있어요.' : '보내지 못했어요. 다시 해 주세요.'); if (btn) { btn.disabled = false; btn.textContent = '📷 사진 · 동영상 보내기'; } }
+}
+/* ── 📞 손님 전화 받기 ── 화면이 열려 있으면 4초마다 「울리는 전화」를 봅니다. 앱이 닫혀 있으면 알림(dangol-notify)으로 깨웁니다. */
+var ringT = null, ringOn = false, ringSeen = {};
+function ringStart(){
+  if (ringT) return;
+  var tick = async function(){
+    if (ringOn || document.hidden) return;
+    var ds = DESKS.filter(function(x){ return x.live && x.plan && x.plan !== 'basic'; });
+    for (var i = 0; i < ds.length; i++) {
+      var r = null; try { r = await rpc('dg_owner_ring', { p_desk: ds[i].id }); } catch (e) {}
+      if (r && r.call && !ringSeen[r.call] && window.DGCall) {
+        ringSeen[r.call] = 1; ringOn = true;
+        DGCall.owner({ sb: sb, url: URL0, key: KEY0, rpc: rpc, toast: toast, call: r.call, desk: ds[i].id, video: !!r.video, who: r.name + ' · ' + ds[i].name, maxMin: 30,
+          onEnd: function(){ ringOn = false; setTimeout(async function(){ try { THS = await rpc('dg_owner_threads', { p_desk: DK.id }); if (TAB === 'inbox') paintInbox(true); } catch (e) {} }, 1200); } });
+        return;
+      }
+    }
+  };
+  tick(); ringT = setInterval(tick, 4000);
+}
+
 async function reply(t, close){
   var b = $('rep').value.trim(); if (!b) { $('rep').focus(); return; }
   $('send').disabled = $('sendx').disabled = true;
   try { var r = await rpc('dg_owner_reply', { p_thread: t.id, p_body: b, p_close: close }); if (!r.ok) throw r; toast(close ? '답장하고 끝냈어요.' : '답장했어요.');
     /* 🔔 단골창구 앱에서 「답장 알림」을 켠 손님에게 알림 (11_dangol_guest_push.sql · dangol-notify) */
     try { var ss = (await sb.auth.getSession()).data.session; if (ss) fetch(URL0 + '/functions/v1/dangol-notify', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY0, Authorization: 'Bearer ' + ss.access_token }, body: JSON.stringify({ reply: t.id }) }).catch(function(){}); } catch (x) {}
-    THS = await rpc('dg_owner_threads', { p_desk: DK.id }); if (close) CUR = null; paintInbox(); }
+    THS = await rpc('dg_owner_threads', { p_desk: DK.id }); if (close) CUR = null; paintInbox(true); }
   catch (e) { toast(em(e)); $('send').disabled = $('sendx').disabled = false; }
 }
 
