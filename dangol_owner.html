@@ -349,7 +349,7 @@ function paintInbox(force){
       '<div class="qr">' + QUICK.map(function(q, i){ return '<button type="button" data-q="' + i + '">' + esc(q) + '</button>'; }).join('') + '</div>' +
       '<textarea id="rep" maxlength="2000" placeholder="답장 쓰기 — 손님 화면에 그대로 보여요. 계좌번호 · 링크는 손님 화면에 경고가 함께 떠요."></textarea>' +
       '<div class="row"><button class="btn" id="send" type="button">답장 보내기</button><button class="btn g" id="sendx" type="button">답장하고 끝내기</button></div>' +
-      (DK.media ? '<button class="btn g" id="opick" type="button">📷 사진 · 동영상 보내기</button><input type="file" id="ofile" accept="image/*,video/*" hidden>' : '') +
+      (DK.media ? '<button class="btn g" id="opick" type="button">📷 사진 · 동영상 보내기</button><input type="file" id="ofile" accept="' + (window.DGCall && DGCall.oldIOSApp() ? 'image/*' : 'image/*,video/*') + '" hidden>' : '') +
       '<p style="font-size:13px">「단골창구」 앱에서 답장 알림을 켠 손님에게는 알림이 가요. 그 밖의 손님은 단골창구를 다시 열면 답장이 보입니다.</p></div>';
     var ms = $('ms'); ms.scrollTop = ms.scrollHeight;
     $('bk').onclick = function(){ CUR = null; paintInbox(); };
@@ -441,8 +441,9 @@ function ringStart(){
       var r = null; try { r = await rpc('dg_owner_ring', { p_desk: ds[i].id }); } catch (e) {}
       if (r && r.call && !ringSeen[r.call] && window.DGCall) {
         ringSeen[r.call] = 1; ringOn = true;
-        DGCall.owner({ sb: sb, url: URL0, key: KEY0, rpc: rpc, toast: toast, call: r.call, desk: ds[i].id, video: !!r.video, who: r.name + ' · ' + ds[i].name, maxMin: 30,
+        var eng = DGCall.owner({ sb: sb, url: URL0, key: KEY0, rpc: rpc, toast: toast, call: r.call, desk: ds[i].id, video: !!r.video, who: r.name + ' · ' + ds[i].name, maxMin: 30,
           onEnd: function(){ ringOn = false; setTimeout(async function(){ try { THS = await rpc('dg_owner_threads', { p_desk: DK.id }); if (TAB === 'inbox') paintInbox(true); } catch (e) {} }, 1200); } });
+        if (!eng) ringOn = false;   // 옛 아이폰 앱: 받지 못하고 안내만
         return;
       }
     }
