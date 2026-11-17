@@ -47,6 +47,7 @@ textarea{ min-height:80px; resize:vertical; }
 .m .mm{ display:block; max-width:min(260px,70vw); max-height:320px; border-radius:10px; margin-top:4px; background:var(--line); object-fit:cover; }
 .m.call{ align-self:center; background:transparent; font-size:13px; color:var(--sub); font-weight:700; padding:2px 8px; }
 .pl{ border:1.5px solid var(--line); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:6px; } .pl.cur{ border-color:var(--teal2); background:var(--tint); }
+.use{ display:flex; flex-direction:column; gap:6px; font-size:14px; } .use .r{ display:flex; justify-content:space-between; gap:8px; } .use .bar{ height:8px; border-radius:6px; background:var(--line); overflow:hidden; } .use .bar i{ display:block; height:100%; background:var(--teal2); } .use .bar i.hi{ background:var(--coral); }
 .pl b{ font-size:16.5px; } .pl .q{ font-size:13.5px; color:var(--ink); font-weight:700; } .pbadge{ display:inline-block; background:var(--teal2); color:#fff; font-size:12px; font-weight:800; border-radius:20px; padding:1px 9px; margin-left:6px; }
 .qr{ display:flex; flex-wrap:wrap; gap:6px; } .qr button{ border:1px dashed var(--line); background:var(--card); color:var(--ink); border-radius:10px; padding:6px 10px; font:inherit; font-size:13px; cursor:pointer; }
 .photo{ width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:14px; background:var(--tint); display:block; max-width:100%; }
@@ -97,7 +98,7 @@ async function boot(){
   DK = null; var wp = Q.get('webpaid'), pk = null; try { pk = localStorage.getItem(PAYK); } catch (e) {}
   b0: if (wp !== null && /dangol/.test(Q.get('sku') || SKU)) {   // 💳 웹 결제창에서 돌아옴 (기본형 · 실용형 · 프리미엄형)
     try { history.replaceState(null, '', location.pathname); } catch (e) {}
-    if (wp === '1') { try { localStorage.removeItem(PAYK); } catch (e) {} DK = DESKS.filter(function(d){ return d.id === pk; })[0] || DESKS[0]; setTimeout(function(){ toast(planName(DK.plan) + ' · 결제가 끝났어요! ' + day(DK.until) + '까지 열려 있어요.'); }, 300); break b0; }
+    if (wp === '1') { try { localStorage.removeItem(PAYK); } catch (e) {} DK = DESKS.filter(function(d){ return d.id === pk; })[0] || DESKS[0]; var ad = /_(voice|video|store)_/.test(Q.get('sku') || ''); setTimeout(function(){ toast(ad ? '추가 구입이 들어갔어요! 이번 달 사용량에 더해졌어요.' : planName(DK.plan) + ' · 결제가 끝났어요! ' + day(DK.until) + '까지 열려 있어요.'); }, 300); break b0; }
     setTimeout(function(){ toast(Q.get('msg') || '결제를 마치지 못했어요.'); }, 300);
   }
   if (!DK) DK = DESKS.filter(function(d){ return d.id === (Q.get('d') || pk || ''); })[0] || DESKS[0];
@@ -175,6 +176,33 @@ var PLANS = {
   plus:    { n: '실용형',     p: '19,800원', f: '기본형 + 📷 사진 · 🎬 짧은 동영상(30초) 주고받기 + 📞 번호 없는 음성 통화' },
   premium: { n: '프리미엄형', p: '33,000원', f: '실용형 + 🎥 영상 통화' }
 };
+/* 2026-11-17 한 달 기본 사용량 · 추가 구입 (22_dangol_plans.sql) */
+var ADDONS = {
+  voice300: { n: '📞 음성 통화 +300분', p: '3,300원', f: '이번 달 말까지', sku: 'voice_300', need: 'plus' },
+  video100: { n: '🎥 영상 통화 +100분', p: '3,300원', f: '이번 달 말까지 · 프리미엄형', sku: 'video_100', need: 'premium' },
+  store1g:  { n: '💾 사진 · 동영상 보관 +1GB', p: '1,100원', f: '지금 요금제가 끝나는 날까지', sku: 'store_1g', need: 'plus' }
+};
+function gb(b){ return (Number(b || 0) / 1073741824).toFixed(1).replace(/\.0$/, ''); }
+function useBox(d){
+  var u = d.usage; if (!u || !d.live || d.plan === 'basic') return '';
+  var row = function(lab, used, lim, unit){ var r = lim ? Math.min(1, used / lim) : 0;
+    return '<div class="r"><span>' + lab + '</span><b>' + used + ' / ' + lim + unit + '</b></div><div class="bar"><i class="' + (r >= 0.8 ? 'hi' : '') + '" style="width:' + Math.round(r * 100) + '%"></i></div>'; };
+  var warn = (u.voice_lim && u.voice_used >= u.voice_lim) || (u.video_lim && u.video_used >= u.video_lim) ? '다 쓴 통화는 손님 화면에서 단추가 숨겨져요(글 · 사진 문의는 그대로).'
+           : (u.voice_lim && u.voice_used >= u.voice_lim * 0.8) || (u.video_lim && u.video_used >= u.video_lim * 0.8) || (u.bytes_quota && u.bytes_used >= u.bytes_quota * 0.8) ? '곧 한도에 닿아요. 모자라면 추가 구입을 해 주세요.' : '';
+  return '<div class="use"><b style="font-size:14.5px">이번 달 사용량</b>' +
+    row('📞 음성 통화', u.voice_used, u.voice_lim, '분') + (u.video_lim ? row('🎥 영상 통화', u.video_used, u.video_lim, '분') : '') +
+    '<div class="r"><span>💾 사진 · 동영상 보관</span><b>' + gb(u.bytes_used) + ' / ' + gb(u.bytes_quota) + 'GB</b></div><div class="bar"><i class="' + (u.bytes_quota && u.bytes_used >= u.bytes_quota * 0.8 ? 'hi' : '') + '" style="width:' + Math.round(Math.min(1, u.bytes_quota ? u.bytes_used / u.bytes_quota : 0) * 100) + '%"></i></div>' +
+    (warn ? '<p style="color:var(--warn);font-weight:700">⚠ ' + warn + '</p>' : '') +
+    '<button class="btn g" id="addon" type="button">➕ 추가 구입</button><div id="addBox" class="card" hidden style="padding:12px;border-style:dashed"></div></div>';
+}
+function addonSheet(d){
+  var box = $('addBox'); if (!box) return; if (!box.hidden) { box.hidden = true; return; } box.hidden = false;
+  box.innerHTML = '<b class="h">➕ 추가 구입 <span style="font-size:13px;font-weight:700;color:var(--sub)">여러 번 살 수 있어요</span></b>' +
+    Object.keys(ADDONS).filter(function(k){ return ADDONS[k].need === 'plus' || d.plan === 'premium'; }).map(function(k){ var A = ADDONS[k];
+      return '<div class="pl"><div><b>' + A.n + '</b> <span style="float:right;font-weight:800">' + A.p + '</span></div><p>' + A.f + '</p><button class="btn c" type="button" data-add="' + k + '">' + A.n.replace(/^\S+ /, '') + ' · ' + A.p + '</button></div>'; }).join('') +
+    '<p style="font-size:13px">한 달 기본: 음성 600분' + (d.plan === 'premium' ? ' · 영상 100분 · 보관 6GB' : ' · 보관 3GB') + '. 통화 분은 매달 1일에 새로 시작해요(남은 분은 넘어가지 않아요).</p>';
+  box.querySelectorAll('[data-add]').forEach(function(b){ b.onclick = function(){ payYear(d, b, null, b.dataset.add); }; });
+}
 function skuOf(plan){ var b = DGHOST ? 'dangol' : 'garim_dangol'; return plan === 'basic' ? b + '_1y' : b + '_' + plan + '_1y'; }
 function planName(p){ return (PLANS[p] || PLANS.basic).n; }
 async function planSheet(d){
@@ -198,9 +226,9 @@ async function planSheet(d){
     '<p style="font-size:13px">실용형 · 프리미엄형의 사진 · 동영상과 통화는 문의한 손님과 사장님만 볼 수 있어요. 통화는 인터넷으로 연결돼 서로 전화번호가 보이지 않아요.</p>';
   box.querySelectorAll('[data-buy]').forEach(function(b){ b.onclick = function(){ payYear(d, b, b.dataset.buy); }; });
 }
-async function payYear(d, btn, plan){
+async function payYear(d, btn, plan, addon){
   plan = plan || 'basic';
-  var sku = skuOf(plan), label = btn.textContent;
+  var sku = addon ? (DGHOST ? 'dangol_' : 'garim_dangol_') + ADDONS[addon].sku : skuOf(plan), label = btn.textContent;
   if (d.status === 'suspended') return toast('멈춘 단골창구는 연장할 수 없어요. 💬 고객센터로 문의해 주세요.');
   if (window.ACStore && ACStore.oldApp && ACStore.oldApp()) return toast(BRAND + ' 앱을 최신으로 업데이트한 뒤 다시 눌러 주세요.');
   try { localStorage.setItem(PAYK, d.id); } catch (e) {}
@@ -224,6 +252,7 @@ async function paid(r){
     var id = null; try { id = localStorage.getItem(PAYK); localStorage.removeItem(PAYK); } catch (e) {}
     DK = DESKS.filter(function(x){ return x.id === (id || (DK && DK.id)); })[0] || DESKS[0];
     if (DK) main();
+    if (r.addon) return toast('추가 구입이 들어갔어요! ' + (ADDONS[r.addon] ? ADDONS[r.addon].n : ''));
     toast((DK && DK.plan && DK.plan !== 'basic' ? planName(DK.plan) + ' · ' : '') + '결제가 끝났어요! ' + (DK ? day(DK.until) + '까지 열려 있어요.' : '') + (r.bonusDays ? ' (남은 기간 ' + r.bonusDays + '일을 더해 드렸어요)' : ''));
     return;
   }
@@ -266,7 +295,7 @@ function main(){
       '<div class="row"><a class="btn" target="_blank" rel="noopener" href="dangol_poster.html?c=' + encodeURIComponent(d.code) + '&n=' + encodeURIComponent(d.name) + '">🖨 QR 포스터</a><button class="btn g" id="cp" type="button">주소 복사</button><a class="btn g" target="_blank" rel="noopener" href="' + link + '">손님 화면 보기</a></div>' +
       '<div style="font-size:14.5px">요금제 <b>' + planName(live ? d.plan : 'basic') + '</b>' + (live && d.plan !== 'basic' ? ' — ' + esc(PLANS[d.plan].f.replace(/^[^+]*\+ /, '')) : '') + '</div>' +
       '<button class="btn c" id="ext" type="button">💳 요금제 · 연장' + (live && d.plan === 'basic' ? ' (사진 · 통화 추가)' : '') + '</button>' +
-      '<div id="planBox" class="card" hidden style="padding:12px;border-style:dashed"></div>' +
+      '<div id="planBox" class="card" hidden style="padding:12px;border-style:dashed"></div>' + useBox(d) +
       (live && d.plan !== 'basic' ? '<button class="btn ' + (d.call_on ? 'g' : 'c') + '" id="callOn" type="button">' + (d.call_on ? '📞 손님 통화 받기 — 켜짐 (누르면 끔)' : '📵 손님 통화 받기 — 꺼짐 (누르면 켬)') + '</button>' +
         '<p style="font-size:13px">' + (d.call_on ? '손님 화면에 「' + (d.plan === 'premium' ? '음성 · 영상 통화' : '음성 통화') + '」 단추가 보여요. 영업시간 밖에는 자동으로 숨겨져요.' : '통화 단추가 손님에게 보이지 않아요. 글 · 사진 문의는 그대로 받아요.') + '</p>' : '') + '</div>' +
     '<div class="card" style="gap:8px">' + (d.notice ? '<p style="color:var(--ink)">📢 공지: <b>' + esc(d.notice) + '</b></p>' : '<p>📢 공지가 없어요. 「🛠 가게 꾸미기」에서 한 줄 넣을 수 있어요.</p>') +
@@ -280,6 +309,7 @@ function main(){
   if ($('pick')) $('pick').onchange = function(){ DK = DESKS.filter(function(x){ return x.id === $('pick').value; })[0]; CUR = null; FAQ = null; main(); };
   $('cp').onclick = function(){ (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function(){ toast('주소를 복사했어요: ' + link); }, function(){ toast(link); }); };
   $('ext').onclick = function(){ planSheet(d); };
+  if ($('addon')) $('addon').onclick = function(){ addonSheet(d); };
   if ($('callOn')) $('callOn').onclick = async function(){ this.disabled = true;
     try { var r = await rpc('dg_set_call', { p_desk: d.id, p_on: !d.call_on }); if (!r.ok) throw r; d.call_on = r.call_on; toast(d.call_on ? '손님 통화를 받아요. 📞' : '손님 통화 받기를 껐어요.'); main(); }
     catch (e) { toast(em(e)); this.disabled = false; } };
@@ -398,7 +428,7 @@ async function ownerMedia(t, f){
     try { var ss = (await sb.auth.getSession()).data.session; if (ss) fetch(URL0 + '/functions/v1/dangol-notify', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY0, Authorization: 'Bearer ' + ss.access_token }, body: JSON.stringify({ reply: t.id }) }).catch(function(){}); } catch (x) {}
     toast('보냈어요.');
     THS = await rpc('dg_owner_threads', { p_desk: DK.id }); paintInbox(true);
-  } catch (e) { toast(e && e.error === 'plan' ? '사진 · 동영상은 실용형부터 쓸 수 있어요.' : '보내지 못했어요. 다시 해 주세요.'); if (btn) { btn.disabled = false; btn.textContent = '📷 사진 · 동영상 보내기'; } }
+  } catch (e) { toast(e && e.error === 'plan' ? '사진 · 동영상은 실용형부터 쓸 수 있어요.' : e && e.error === 'full' ? '보관함이 가득 찼어요. 「➕ 추가 구입」에서 보관 +1GB 를 사 주세요.' : '보내지 못했어요. 다시 해 주세요.'); if (btn) { btn.disabled = false; btn.textContent = '📷 사진 · 동영상 보내기'; } }
 }
 /* ── 📞 손님 전화 받기 ── 화면이 열려 있으면 4초마다 「울리는 전화」를 봅니다. 앱이 닫혀 있으면 알림(dangol-notify)으로 깨웁니다. */
 var ringT = null, ringOn = false, ringSeen = {};
