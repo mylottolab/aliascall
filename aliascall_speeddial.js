@@ -303,12 +303,36 @@
     wrap.addEventListener('click', function(e){ if (e.target === wrap) closeBig(); });
     wrap.querySelector('.sd-x').onclick = function(){ closeBig(); };
     big = { wrap: wrap, box: wrap.querySelector('[data-sd-bigbox]') };
+    /* 🔴 2026-11-19 큰 번호판 네 가지 모양(다이얼 · 네모 · 동그라미 · 섞기) + 효과음 — padstyle.js (와파 · 부름과 같은 파일)
+       숫자는 늘 원래 단추를 누르는 것으로 넣으므로 0으로 시작 금지 · 8자리 · 꾸욱 단축회선 규칙은 그대로입니다. */
+    if (window.PadStyle) {
+      var bx = big.box;
+      big.ps = PadStyle.attach({
+        key: 'aliascall_padstyle', watch: bx, holdMs: 500, size: 'min(320px,82vw)',
+        digits: function(){ var o = {}; bx.querySelectorAll('[data-sd-k]').forEach(function(b){ o[b.dataset.sdK] = b; }); var z = bx.querySelector('[data-sd-zero]'); if (z) o['0'] = z; return o; },
+        bar: function(){ return { parent: bx.parentNode, before: bx }; },
+        rotaryAt: function(){ return { parent: bx, before: bx.querySelector('.sd-row0') }; },
+        hide: function(){ return [bx.querySelector('.sd-pad'), bx.querySelector('[data-sd-zero]')]; },
+        center: function(){ return en() ? ['Aliascall', 'Line number', ''] : ['가림콜', '회선번호', '']; },
+        colors: { plate:'#E8734A', rim:'#B4532F', base:'#FFF6EA', ink:'#16302E', stop:'#C9CED3', on:'#E8734A', onInk:'#fff' },
+        text: { ko: { hold: ' · 꾸욱 누르면 단축회선' }, en: { hold: ' · hold for Quick Lines' } },
+        css: '#sdBig .ps-bar{padding:0 46px}#sdBig .ps-bar,#sdBig .ps-snd{color:#fff}#sdBig .ps-rot p{color:#fff}' +
+             '#sdBig .sd-pad [data-sd-zero]{min-height:min(13vh,84px);border-radius:16px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#8ED6CF;font:800 36px "Space Grotesk",sans-serif;cursor:pointer}' +
+             '#sdBig .ps-round .sd-pad,#sdBig .ps-round .sd-row0{gap:10px 14px}' +
+             '#sdBig .ps-round .sd-k,#sdBig .ps-round [data-sd-zero]{border-radius:50%;aspect-ratio:1;width:min(100%,100px);min-height:0;justify-self:center;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:2px;padding:6px}' +
+             '#sdBig .ps-round .sd-k .nm{font-size:11px;-webkit-line-clamp:1;flex:0 1 auto;max-width:100%}' +
+             '#sdBig .ps-round .sd-row0 [data-sd-del2],#sdBig .ps-round .sd-row0 .call{align-self:center}',
+        defaults: { mode: 'square', key: 'dtmf', rot: true },
+        lang: function(){ return en() ? 'en' : 'ko'; }
+      });
+    }
     return big;
   }
   var bigOpen = false;
   function openBig(){
     var b = bigEls();
     paint(b.box);
+    if (b.ps) b.ps.reshuffle();   // 섞기면 열 때마다 새로 섞음
     b.wrap.classList.add('show');
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ b.wrap.classList.add('up'); }); });
     document.documentElement.style.overflow = 'hidden';
