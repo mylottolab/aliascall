@@ -88,6 +88,7 @@
     '.ps-snd button.on{background:var(--ps-on);border-color:var(--ps-on);color:var(--ps-on-ink)}' +
     '.ps-hide{display:none !important}' +
     '.ps-rot{display:flex;flex-direction:column;align-items:center;gap:4px;margin:4px auto 2px}' +
+    '.ps-rot{touch-action:none;overscroll-behavior:contain}' +
     '.ps-rot svg{width:var(--ps-size,min(300px,80vw));height:auto;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab;display:block}' +
     '.ps-rot svg text{pointer-events:none;font-family:system-ui,-apple-system,sans-serif}' +
     '.ps-rot p{margin:0;font-size:11.5px;opacity:.7;text-align:center;line-height:1.5;max-width:330px;word-break:keep-all}' +
@@ -171,7 +172,12 @@
     }
     svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
     /* 아이폰 — 다이얼 위에서는 화면이 끌려 올라가지 않게 */
-    svg.addEventListener('touchstart', function(e){ if (drag || busy) e.preventDefault(); }, { passive: false });
+    svg.addEventListener('touchstart', function(e){
+      if (drag || busy) { e.preventDefault(); return; }
+      var t0 = e.touches && e.touches[0]; if (!t0) return;
+      var p = sp(t0);   // 구멍 위를 누르면 처음부터 화면이 따라 움직이지 않게(아이폰)
+      if (Math.hypot(p[0] - CX, p[1] - CX) > RR - HR - 16 && Math.hypot(p[0] - CX, p[1] - CX) < RR + HR + 16) e.preventDefault();
+    }, { passive: false });
     svg.addEventListener('touchmove', function(e){ if (drag) e.preventDefault(); }, { passive: false });
     /* 포인터 이벤트가 없는 옛 웹뷰 — 손가락 이벤트로 같은 일을 */
     if (!window.PointerEvent) {
