@@ -68,6 +68,9 @@
     '#sdSheet .gchip b{font-family:"Space Grotesk",sans-serif;font-size:22px;letter-spacing:.06em}' +
     '#sdSheet .gchip small{font-size:12px;font-weight:800;color:#B4410C}' +
     '#sdSheet .gfoot{font-size:11.5px;color:#5b6f6d;line-height:1.6;margin-top:10px}' +
+    /* 🔴 2026-11-19 — 번호판 판(바탕보다 진하게) */
+    '.sd-panel{background:rgba(0,0,0,.26);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:8px}' +
+    '.sd-big .sd-panel{padding:12px;border-radius:22px}' +
     /* 🔴 2026-11-01 — 첫 화면 작은 번호판을 누르면 큰 번호판이 튀어나옴 */
     '.sd-box[data-sd-pop] .sd-num,.sd-box[data-sd-pop] .sd-pad,.sd-box[data-sd-pop] .sd-row0{cursor:zoom-in}' +
     '#sdBig{position:fixed;inset:0;z-index:8000;display:none;align-items:flex-end;justify-content:center;background:rgba(4,22,20,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}' +
@@ -187,6 +190,7 @@
          (window.acHeld && acHeld() ? '' : '<button type="button" data-sd-good class="sd-good">' + esc(t.good) + '</button>' +
            '<a href="aliascall_numbers.html" style="background:none;border:1px solid rgba(255,255,255,.3);color:#cfe7e4;font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 11px;text-decoration:none;white-space:nowrap">' + esc(t.myNum) + '</a>') +
          '<button type="button" data-sd-edit class="' + (editing ? 'on' : '') + '">' + esc(editing ? t.done : t.edit) + '</button></span></div>';
+    h += '<div class="sd-panel">';   // 🔴 2026-11-19 번호 칸 · 번호판 · 0줄을 한 판으로 묶어 위아래와 구분
     h += '<div class="sd-num"><span class="v' + (dial ? '' : ' ph') + '" data-sd-v>' + esc(dial ? fmtNum(dial) : t.ph) + '</span>' +
          (dial ? '<button type="button" data-sd-del aria-label="' + esc(t.del) + '">⌫</button>' : '') + '</div>';
     h += '<div class="sd-pad">';
@@ -198,7 +202,8 @@
     }
     h += '</div>';
     h += '<div class="sd-row0"><button type="button" data-sd-del2>⌫ ' + esc(t.del) + '</button><button type="button" class="z" data-sd-zero>0</button>' +
-         '<button type="button" class="call" data-sd-call' + (dial.length >= 4 ? '' : ' disabled') + '>' + esc(t.call) + '</button></div>';
+         '<button type="button" class="call" data-sd-call' + (dial.length >= 4 ? '' : ' disabled') + '>' + esc(t.call) + '</button></div>'
+    h += '</div>';
     h += '<div class="sd-go">' +
       '<a href="aliascall_contacts.html?tab=line&amp;from=msg"><span>📇</span>' + esc(t.all) + '</a>' +
       '<a href="aliascall_contacts.html?tab=emergency&amp;from=msg"><span>🚨</span>' + esc(t.emg) + '</a>' +
@@ -311,7 +316,7 @@
         key: 'aliascall_padstyle', watch: bx, holdMs: 500, size: 'min(320px,82vw)',
         digits: function(){ var o = {}; bx.querySelectorAll('[data-sd-k]').forEach(function(b){ o[b.dataset.sdK] = b; }); var z = bx.querySelector('[data-sd-zero]'); if (z) o['0'] = z; return o; },
         bar: function(){ return { parent: bx.parentNode, before: bx }; },
-        rotaryAt: function(){ return { parent: bx, before: bx.querySelector('.sd-row0') }; },
+        rotaryAt: function(){ var r0 = bx.querySelector('.sd-row0'); return { parent: r0 ? r0.parentNode : bx, before: r0 }; },
         hide: function(){ return [bx.querySelector('.sd-pad'), bx.querySelector('[data-sd-zero]')]; },
         center: function(){ return en() ? ['Aliascall', 'Line number', ''] : ['가림콜', '회선번호', '']; },
         colors: { plate:'#E8734A', rim:'#B4532F', base:'#FFF6EA', ink:'#16302E', stop:'#C9CED3', on:'#E8734A', onInk:'#fff' },
@@ -354,7 +359,7 @@
     if (box._sdPop) return; box._sdPop = true;
     function hit(e){
       if (editing || !e.target || !e.target.closest) return null;
-      return e.target.closest('.sd-num,.sd-pad,.sd-row0');
+      return e.target.closest('.sd-panel,.sd-num,.sd-pad,.sd-row0');
     }
     ['pointerdown', 'mousedown', 'touchstart'].forEach(function(ev){
       box.addEventListener(ev, function(e){ if (hit(e)) e.stopPropagation(); }, true);
