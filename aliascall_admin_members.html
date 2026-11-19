@@ -131,7 +131,8 @@ function NAMEP(p){
   if (!p) return '';
   if (SKU_NAME[p]) return SKU_NAME[p];
   let s = String(p);
-  let m = s.match(/^ac_num_(\d)_(basic|good)$/); if (m) return '회선번호 ' + m[1] + '자리' + (m[2] === 'good' ? ' (좋은 번호)' : '');
+  if (s === 'ac_num_4_basic') return '좋은 번호 ★5'; if (s === 'ac_num_5_basic') return '좋은 번호 ★4'; if (s === 'ac_num_7_basic') return '좋은 번호 ★3';   // 🔴 2026-11-19 10자리
+  let m = s.match(/^ac_num_(\d)_(basic|good)$/); if (m) return '회선번호 ' + m[1] + '자리(예전)' + (m[2] === 'good' ? ' (좋은 번호)' : '');
   s = s.replace(/^subscription/, '긴급 이용권').replace(/^hotline/, '보안회선');
   s = s.replace(/(hotline_1to1|hotline_everybody|economy_4|premium_4)(_secure)?/, (m, a, b) => TIER[a] + (b ? ' Secure' : ''));
   return s.replace(/_(\d+)m$/, ' $1개월');

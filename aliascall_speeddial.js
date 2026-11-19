@@ -48,7 +48,7 @@
     '#sdSheet .none{padding:16px 4px;font-size:13px;color:#5b6f6d;line-height:1.6}' +
     /* 🔴 2026-11-01 — 회선번호 숫자판: 짧게 = 번호 누르기 · 길게 = 단축회선 */
     '.sd-num{display:flex;align-items:center;gap:6px;min-height:46px;margin:0 0 6px;padding:4px 6px 4px 12px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.18)}' +
-    '.sd-num .v{flex:1;min-width:0;font-family:"Space Grotesk",sans-serif;font-size:24px;font-weight:700;letter-spacing:.08em;color:#fff;white-space:nowrap;overflow:hidden}' +
+    '.sd-num .v{flex:1;min-width:0;font-family:"Space Grotesk",sans-serif;font-size:22px;font-weight:700;letter-spacing:.03em;color:#fff;white-space:nowrap;overflow:hidden}' +
     '.sd-num .v.ph{font-family:inherit;font-size:12.5px;font-weight:600;letter-spacing:0;color:rgba(255,255,255,.6);white-space:normal;line-height:1.35}' +
     '.sd-num button{flex:0 0 auto;min-width:44px;min-height:38px;border-radius:10px;border:none;background:rgba(255,255,255,.14);color:#fff;font-size:18px;cursor:pointer}' +
     '.sd-row0{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}' +
@@ -65,7 +65,7 @@
     '#sdSheet .gtabs button.on{background:#16302E;border-color:#16302E;color:#fff}' +
     '#sdSheet .gchips{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}' +
     '#sdSheet .gchip{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 6px;border-radius:12px;border:1.5px solid #F2C46B;background:#fff8ea;font-family:inherit;cursor:pointer;color:#16302E}' +
-    '#sdSheet .gchip b{font-family:"Space Grotesk",sans-serif;font-size:22px;letter-spacing:.06em}' +
+    '#sdSheet .gchip b{font-family:"Space Grotesk",sans-serif;font-size:18px;letter-spacing:.02em;white-space:nowrap}' +
     '#sdSheet .gchip small{font-size:12px;font-weight:800;color:#B4410C}' +
     '#sdSheet .gfoot{font-size:11.5px;color:#5b6f6d;line-height:1.6;margin-top:10px}' +
     /* 🔴 2026-11-19 — 번호판 판(바탕보다 진하게) */
@@ -84,7 +84,7 @@
     '.sd-big .sd-head{padding:0 50px 10px 2px}' +
     '.sd-big .sd-head .sd-t{font-size:16px}' +
     '.sd-big .sd-num{min-height:70px;margin-bottom:10px;padding:6px 8px 6px 16px}' +
-    '.sd-big .sd-num .v{font-size:38px}' +
+    '.sd-big .sd-num .v{font-size:clamp(26px,8.2vw,36px);letter-spacing:.02em}' +
     '.sd-big .sd-num .v.ph{font-size:15px}' +
     '.sd-big .sd-num button{min-width:58px;min-height:52px;font-size:24px}' +
     '.sd-big .sd-pad,.sd-big .sd-row0{gap:10px}' +
@@ -106,7 +106,7 @@
           pick:'번 단축회선에 넣을 회선을 고르세요', pickSub:'누르면 그 회선 대화방이 바로 열려 통화 · 메시지를 할 수 있습니다. 이 폰에만 저장됩니다.',
           inSlot:'번에 있음', clear:'이 칸 비우기', cancel:'닫기', loading:'회선을 읽는 중…', noLines:'아직 회선이 없습니다. 회선을 먼저 만들거나 초대를 받아 들어가 주세요.',
           login:'로그인하면 회선을 단축회선에 넣을 수 있습니다.', goneAsk:'이 회선은 끝났거나 이 폰에서 찾을 수 없습니다. 다른 회선으로 바꿀까요?',
-          ph:'번호를 누르고 [연결] · 숫자를 길게 누르면 단축회선', del:'지움', call:'📞 연결', short:'회선번호는 4~8자리예요.', noZero:'회선번호는 0으로 시작하지 않아요.',
+          ph:'번호를 누르고 [연결] · 숫자를 길게 누르면 단축회선', del:'지움', call:'📞 연결', short:'번호는 10자리예요.', noZero:'회선번호는 0으로 시작하지 않아요.',
           none:'없는 회선번호예요. 번호를 다시 확인해 주세요.', resting:'지금 쉬고 있는 회선번호예요(회선 기간이 끝남).',
           secure:'🔒 암호화 회선이라 번호만으로는 대화를 열 수 없어요. 회선 주인에게 초대 링크를 받아 주세요.', fail:'연결하지 못했어요. 잠시 뒤 다시 해 주세요.',
           off:'번호로 연락을 받지 않는 번호예요.', myNum:'📞 내 번호', good:'💎 좋은번호', self:'내 번호예요.', busy:'지금은 연결 요청이 많아요. 잠시 뒤 다시 해 주세요.' },
@@ -115,7 +115,7 @@
           pick:': choose a line', pickSub:'Tap it later to open that line’s chat right away for calls and messages. Saved on this phone only.',
           inSlot:' in use', clear:'Clear this slot', cancel:'Close', loading:'Loading your lines…', noLines:'You have no lines yet. Open a line or join one by invitation first.',
           login:'Log in to add lines to Quick Lines.', goneAsk:'This line has ended or cannot be found on this phone. Choose another line?',
-          ph:'Dial a number, then [Connect] · hold a digit for Quick Lines', del:'Del', call:'📞 Connect', short:'Line numbers have 4–8 digits.', noZero:'Line numbers never start with 0.',
+          ph:'Dial a number, then [Connect] · hold a digit for Quick Lines', del:'Del', call:'📞 Connect', short:'Numbers have 10 digits.', noZero:'Line numbers never start with 0.',
           none:'No such line number. Please check it.', resting:'This line number is resting (the line has ended).',
           secure:'🔒 This is an encrypted line — a number alone cannot open its chat. Ask the owner for an invitation link.', fail:'Could not connect. Please try again.',
           off:'This number does not take contacts.', myNum:'📞 My number', good:'💎 Special', self:'That is your own number.', busy:'Too many requests right now. Please try again later.' }
@@ -202,7 +202,7 @@
     }
     h += '</div>';
     h += '<div class="sd-row0"><button type="button" data-sd-del2>⌫ ' + esc(t.del) + '</button><button type="button" class="z" data-sd-zero>0</button>' +
-         '<button type="button" class="call" data-sd-call' + (dial.length >= 4 ? '' : ' disabled') + '>' + esc(t.call) + '</button></div>'
+         '<button type="button" class="call" data-sd-call' + (dial.length === 10 ? '' : ' disabled') + '>' + esc(t.call) + '</button></div>'
     h += '</div>';
     h += '<div class="sd-go">' +
       '<a href="aliascall_contacts.html?tab=line&amp;from=msg"><span>📇</span>' + esc(t.all) + '</a>' +
@@ -223,11 +223,12 @@
 
   /* ── 🔴 2026-11-01 회선번호 누르기 ── */
   var dial = '';
-  function fmtNum(n){ return n.length === 7 ? n.slice(0, 3) + ' ' + n.slice(3) : n.length === 8 ? n.slice(0, 4) + ' ' + n.slice(4) : n; }
+  /* 🔴 2026-11-19 번호는 10자리 4-3-3 (부름과 같은 모양) — 누르는 동안에도 4829-051-3… 처럼 끊어 보임 */
+  function fmtNum(n){ return n.length <= 4 ? n : n.length <= 7 ? n.slice(0, 4) + '-' + n.slice(4) : n.slice(0, 4) + '-' + n.slice(4, 7) + '-' + n.slice(7); }
   function press(d){
     if (editing) return;
     if (!dial && d === 0) { flash(T().noZero); return; }
-    if (dial.length >= 8) return;
+    if (dial.length >= 10) return;
     dial += String(d);
     try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {}
     paintAll();
@@ -266,7 +267,7 @@
   }
   async function connect(){
     var t = T(), n = dial;
-    if (n.length < 4) { flash(t.short); return; }
+    if (n.length !== 10) { flash(t.short); return; }
     var sb = window.sb;
     if (!sb) { flash(t.fail); return; }
     try {
@@ -309,7 +310,7 @@
     wrap.querySelector('.sd-x').onclick = function(){ closeBig(); };
     big = { wrap: wrap, box: wrap.querySelector('[data-sd-bigbox]') };
     /* 🔴 2026-11-19 큰 번호판 네 가지 모양(다이얼 · 네모 · 동그라미 · 섞기) + 효과음 — padstyle.js (와파 · 부름과 같은 파일)
-       숫자는 늘 원래 단추를 누르는 것으로 넣으므로 0으로 시작 금지 · 8자리 · 꾸욱 단축회선 규칙은 그대로입니다. */
+       숫자는 늘 원래 단추를 누르는 것으로 넣으므로 0으로 시작 금지 · 10자리 · 꾸욱 단축회선 규칙은 그대로입니다. */
     if (window.PadStyle) {
       var bx = big.box;
       big.ps = PadStyle.attach({
@@ -428,7 +429,7 @@
 
 
   /* ── 🔴 2026-11-01 💎 좋은번호 — 번호판에서 바로 골라 사기(부름의 "좋은 번호"처럼) ── */
-  var goodLen = 4;
+  var goodLen = 5;   // 🔴 2026-11-19 자릿수 대신 등급(★5 · ★4 · ★3)
   function won(n){ return (n || 0).toLocaleString('ko-KR') + (en() ? ' KRW' : '원'); }
   async function openGood(){
     var e = sheetEls(), en2 = en();
@@ -436,16 +437,16 @@
     var sub = en2 ? 'Easy-to-remember numbers nobody owns yet. Tap one to buy it — use it for 1:1 chats or a line.'
                   : '외우기 쉬운 번호 중 아직 주인 없는 것들이에요. 누르면 바로 살 수 있어요. 산 번호는 나에게(1:1) 또는 회선에 붙여 씁니다.';
     function frame(body){
-      var tabs = '<div class="gtabs">' + [4, 5, 6, 7, 8].map(function(n){ return '<button type="button" data-gl="' + n + '" class="' + (n === goodLen ? 'on' : '') + '">' + n + (en2 ? '-digit' : '자리') + '</button>'; }).join('') + '</div>';
+      var tabs = '<div class="gtabs">' + [5, 4, 3].map(function(n){ return '<button type="button" data-gl="' + n + '" class="' + (n === goodLen ? 'on' : '') + '">★' + n + ' ' + (en2 ? ['', '', '', 'Silver', 'Gold', 'Premium'][n] : ['', '', '', '실버', '골드', '프리미엄'][n]) + '</button>'; }).join('') + '</div>';
       e.sh.innerHTML = '<h3>' + esc(ttl) + '</h3><div class="sub">' + esc(sub) + '</div>' + tabs + body +
-        '<div class="gfoot">' + esc(en2 ? 'Regular / special: 4-digit 110,000 / 220,000 · 5-digit 55,000 / 110,000 · 6-digit 33,000 / 66,000 · 7-digit 11,000 / 22,000 · 8-digit free / 11,000 KRW. Refund within 7 days if nobody has used it yet.'
-                                       : '기본 / 좋은 번호 — 4자리 110,000 / 220,000 · 5자리 55,000 / 110,000 · 6자리 33,000 / 66,000 · 7자리 11,000 / 22,000 · 8자리 무료 / 11,000원. 산 지 7일 안이고 아무도 그 번호로 연결하지 않았으면 전액 환불.') + '</div>' +
+        '<div class="gfoot">' + esc(en2 ? 'All numbers have 10 digits (4-3-3). ★5 110,000 · ★4 55,000 · ★3 11,000 KRW · a regular number is free (one per line / account). Refund within 7 days if nobody has used it yet.'
+                                       : '번호는 모두 10자리(4-3-3)예요. ★5 110,000 · ★4 55,000 · ★3 11,000원 · 일반 번호는 회선마다 · 계정마다 하나 무료. 산 지 7일 안이고 아무도 그 번호로 연결하지 않았으면 전액 환불.') + '</div>' +
         '<div class="row"><button type="button" data-gmore>' + esc(en2 ? 'Other numbers' : '다른 번호 보기') + '</button>' +
         '<button type="button" data-gwant>' + esc(en2 ? 'Find my own number' : '원하는 번호 찾기') + '</button>' +
         '<button type="button" data-close>' + esc(T().cancel) + '</button></div>';
       e.sh.querySelectorAll('[data-gl]').forEach(function(b){ b.onclick = function(){ goodLen = +b.dataset.gl; paintGood(); }; });
       e.sh.querySelector('[data-gmore]').onclick = paintGood;
-      e.sh.querySelector('[data-gwant]').onclick = function(){ location.href = 'aliascall_numbers.html?len=' + goodLen + '#buyCard'; };
+      e.sh.querySelector('[data-gwant]').onclick = function(){ location.href = 'aliascall_numbers.html?star=' + goodLen + '#buyCard'; };
       e.sh.querySelector('[data-close]').onclick = closeSheet;
     }
     async function paintGood(){
@@ -458,7 +459,7 @@
       } catch (er) { frame('<div class="none">' + esc(en2 ? 'Could not load. Please try again.' : '불러오지 못했어요. 잠시 뒤 다시 해 주세요.') + '</div>'); return; }
       frame(list.length
         ? '<div class="gchips">' + list.map(function(g){ return '<button type="button" class="gchip" data-gn="' + esc(g.number) + '"><b>' + esc(fmtNum(String(g.number))) + '</b><small>' + esc(won(g.price)) + '</small></button>'; }).join('') + '</div>'
-        : '<div class="none">' + esc(en2 ? 'All special numbers of this length are sold.' : '이 자릿수의 좋은 번호가 모두 팔렸어요.') + '</div>');
+        : '<div class="none">' + esc(en2 ? 'No special numbers of this grade right now. Tap Other numbers.' : '지금은 이 등급의 번호가 없어요. [다른 번호 보기]를 눌러 주세요.') + '</div>');
       e.sh.querySelectorAll('[data-gn]').forEach(function(b){ b.onclick = function(){ location.href = 'aliascall_numbers.html?want=' + encodeURIComponent(b.dataset.gn) + '#buyCard'; }; });
     }
     e.bg.style.display = e.sh.style.display = 'block';

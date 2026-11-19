@@ -55,14 +55,14 @@ async function load(){
   if (r.error || !d.ok) { el('deny').style.display = 'block'; el('app').style.display = 'none'; return; }
   el('app').style.display = 'block';
   el('refunds').innerHTML = d.refunds.length ? '<table><tr><th>번호</th><th>상품 · 금액</th><th>손님</th><th>결제</th><th>신청</th><th>상태</th><th></th></tr>' + d.refunds.map((x) =>
-    '<tr><td class="num">' + esc(x.number) + '</td><td>' + esc(x.sku) + '<br>' + won(x.price) + '</td><td>' + esc(x.who) + '</td><td>' + esc(x.method) + '<br><small style="word-break:break-all">' + esc((x.ext || '').slice(0, 40)) + '</small></td>' +
+    '<tr><td class="num">' + esc(String(x.number).length === 10 ? x.number.slice(0, 4) + '-' + x.number.slice(4, 7) + '-' + x.number.slice(7) : x.number) + '</td>'<td>' + esc(x.sku) + '<br>' + won(x.price) + '</td><td>' + esc(x.who) + '</td><td>' + esc(x.method) + '<br><small style="word-break:break-all">' + esc((x.ext || '').slice(0, 40)) + '</small></td>' +
     '<td>' + day(x.created_at) + '</td><td class="st-' + esc(x.status) + '">' + esc(ST[x.status] || x.status) + (x.note ? '<br><small>' + esc(x.note) + '</small>' : '') + '</td>' +
     '<td>' + (x.status === 'requested' ? '<button class="ok" data-ok="' + esc(x.id) + '">환불 완료</button> <button data-no="' + esc(x.id) + '">거절</button>' : '') + '</td></tr>').join('') + '</table>'
     : '<p class="muted">신청이 없습니다.</p>';
   el('sales').innerHTML = d.sales.length ? '<table><tr><th>상품</th><th>건수</th><th>금액</th></tr>' + d.sales.map((x) => '<tr><td>' + esc(x.sku) + '</td><td>' + x.n + '</td><td>' + won(x.won) + '</td></tr>').join('') + '</table>' : '<p class="muted">아직 판매가 없습니다.</p>';
   const ks = Object.keys(d.counts || {}).sort();
-  el('counts').innerHTML = ks.length ? '<table><tr><th>자릿수 · 등급 · 받은 방법</th><th>개수</th></tr>' + ks.map((k) => { const p = k.split('_'); return '<tr><td>' + p[0] + '자리 · ' + (p[1] === 'good' ? '좋은 번호' : '기본') + ' · ' + ({ free:'무료', purchase:'구매', transfer:'이전', admin:'관리자' }[p[2]] || p[2]) + '</td><td>' + d.counts[k] + '</td></tr>'; }).join('') + '</table>' : '<p class="muted">아직 없습니다.</p>';
-  el('xfers').innerHTML = d.transfers.length ? '<table><tr><th>번호</th><th>상태</th><th>신청</th><th>완료</th></tr>' + d.transfers.map((x) => '<tr><td class="num">' + esc(x.number) + '</td><td>' + esc(ST[x.status] || x.status) + '</td><td>' + day(x.created_at) + '</td><td>' + day(x.done_at) + '</td></tr>').join('') + '</table>' : '<p class="muted">없습니다.</p>';
+  el('counts').innerHTML = ks.length ? '<table><tr><th>등급 · 받은 방법</th><th>개수</th></tr>' + ks.map((k) => { const p = k.split('_'); const g = p[0].replace('star', ''); return '<tr><td>' + (g === 'N' ? '일반' : '★' + g) + ' · ' + ({ free:'무료', purchase:'구매', transfer:'이전', admin:'관리자' }[p[1]] || p[1]) + '</td><td>' + d.counts[k] + '</td></tr>'; }).join('') + '</table>' : '<p class="muted">아직 없습니다.</p>';
+  el('xfers').innerHTML = d.transfers.length ? '<table><tr><th>번호</th><th>상태</th><th>신청</th><th>완료</th></tr>' + d.transfers.map((x) => '<tr><td class="num">' + esc(String(x.number).length === 10 ? x.number.slice(0, 4) + '-' + x.number.slice(4, 7) + '-' + x.number.slice(7) : x.number) + '</td>'<td>' + esc(ST[x.status] || x.status) + '</td><td>' + day(x.created_at) + '</td><td>' + day(x.done_at) + '</td></tr>').join('') + '</table>' : '<p class="muted">없습니다.</p>';
 }
 document.addEventListener('click', async (e) => {
   const ok = e.target.closest('[data-ok]'), no = e.target.closest('[data-no]');
