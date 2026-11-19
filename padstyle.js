@@ -40,6 +40,15 @@
     if (ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
     return ac;
   }
+  /* 🔴 2026-11-19 아이폰 — 소리는 손가락을 '뗄 때'(touchend · click) 한 번 깨워야 납니다. 누를 때(pointerdown)만으로는 잠긴 채라
+     첫 손가락에서 소리 장치를 깨우고 아주 짧은 무음을 한 번 틀어 둡니다. 그 뒤로는 누르는 순간 바로 소리가 납니다. */
+  var unlocked = false;
+  function unlock(){
+    if (unlocked) return; var c = ctx(); if (!c) return;
+    try { var b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); } catch (e) {}
+    if (c.state === 'running') { unlocked = true; ['touchend', 'click', 'pointerup', 'keydown'].forEach(function(t){ document.removeEventListener(t, unlock, true); }); }
+  }
+  ['touchend', 'click', 'pointerup', 'keydown'].forEach(function(t){ document.addEventListener(t, unlock, true); });
   function env(g, t, a, peak, dur){ g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + dur); }
   function tone(type, f, t, dur, peak, a){ var o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.value = f; o.connect(g); g.connect(out); env(g, t, a || .004, peak, dur); o.start(t); o.stop(t + dur + .03); }
   function hiss(t, dur, peak, freq, q, type){
