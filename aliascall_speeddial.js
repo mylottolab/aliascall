@@ -56,6 +56,11 @@
     '.sd-row0 .z{font-family:"Space Grotesk",sans-serif;font-size:21px;color:#8ED6CF}' +
     '.sd-row0 .call{background:#2E9E6B;border-color:#2E9E6B;font-size:15px}' +
     '.sd-row0 .call:disabled{opacity:.45}' +
+    '.sd-acts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}' +
+    '.sd-acts button{min-height:50px;border-radius:12px;font-family:inherit;font-weight:800;cursor:pointer;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:15px;white-space:nowrap;padding:0 4px}' +
+    '.sd-acts .del{display:none}.sd-acts .v{background:#2E9E6B;border-color:#2E9E6B}.sd-acts .vv{background:#2F6FB8;border-color:#2F6FB8}.sd-acts .m{background:#8FE3B0;border-color:#8FE3B0;color:#0E1621}' +
+    '.sd-acts .call:disabled{opacity:.45}' +
+    '.ps-rotary .sd-acts{grid-template-columns:repeat(4,1fr)}.ps-rotary .sd-acts .del{display:block}' +
     '.sd-k{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}' +
     /* 🔴 2026-11-01 — 💎 좋은번호 */
     '.sd-head{flex-wrap:wrap;gap:6px}' +
@@ -95,6 +100,7 @@
     '.sd-big .sd-row0 button{min-height:min(13vh,84px);border-radius:16px;font-size:19px}' +
     '.sd-big .sd-row0 .z{font-size:36px}' +
     '.sd-big .sd-row0 .call{font-size:20px}' +
+    '.sd-big .sd-acts{gap:10px;margin-top:10px}.sd-big .sd-acts button{min-height:min(11vh,72px);border-radius:16px;font-size:clamp(15px,4.4vw,19px)}' +
     '.sd-big .sd-go{gap:8px;margin-top:10px}' +
     '.sd-big .sd-go a{min-height:56px;font-size:12.5px}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -106,7 +112,7 @@
           pick:'번 단축회선에 넣을 회선을 고르세요', pickSub:'누르면 그 회선 대화방이 바로 열려 통화 · 메시지를 할 수 있습니다. 이 폰에만 저장됩니다.',
           inSlot:'번에 있음', clear:'이 칸 비우기', cancel:'닫기', loading:'회선을 읽는 중…', noLines:'아직 회선이 없습니다. 회선을 먼저 만들거나 초대를 받아 들어가 주세요.',
           login:'로그인하면 회선을 단축회선에 넣을 수 있습니다.', goneAsk:'이 회선은 끝났거나 이 폰에서 찾을 수 없습니다. 다른 회선으로 바꿀까요?',
-          ph:'번호를 누르고 [연결] · 숫자를 길게 누르면 단축회선', del:'지움', call:'📞 연결', short:'번호는 10자리예요.', noZero:'회선번호는 0으로 시작하지 않아요.',
+          ph:'번호를 누르고 [음성] · [영상] · [문자] · 숫자를 길게 누르면 단축회선', del:'지움', call:'📞 연결', voice:'📞 음성', video:'🎥 영상', text:'💬 문자', short:'번호는 10자리예요.', noZero:'회선번호는 0으로 시작하지 않아요.',
           none:'없는 회선번호예요. 번호를 다시 확인해 주세요.', resting:'지금 쉬고 있는 회선번호예요(회선 기간이 끝남).',
           secure:'🔒 암호화 회선이라 번호만으로는 대화를 열 수 없어요. 회선 주인에게 초대 링크를 받아 주세요.', fail:'연결하지 못했어요. 잠시 뒤 다시 해 주세요.',
           off:'번호로 연락을 받지 않는 번호예요.', myNum:'📞 내 번호', good:'💎 좋은번호', self:'내 번호예요.', busy:'지금은 연결 요청이 많아요. 잠시 뒤 다시 해 주세요.' },
@@ -115,7 +121,7 @@
           pick:': choose a line', pickSub:'Tap it later to open that line’s chat right away for calls and messages. Saved on this phone only.',
           inSlot:' in use', clear:'Clear this slot', cancel:'Close', loading:'Loading your lines…', noLines:'You have no lines yet. Open a line or join one by invitation first.',
           login:'Log in to add lines to Quick Lines.', goneAsk:'This line has ended or cannot be found on this phone. Choose another line?',
-          ph:'Dial a number, then [Connect] · hold a digit for Quick Lines', del:'Del', call:'📞 Connect', short:'Numbers have 10 digits.', noZero:'Line numbers never start with 0.',
+          ph:'Dial a number, then Voice · Video · Text · hold a digit for Quick Lines', del:'Del', call:'📞 Connect', voice:'📞 Voice', video:'🎥 Video', text:'💬 Text', short:'Numbers have 10 digits.', noZero:'Line numbers never start with 0.',
           none:'No such line number. Please check it.', resting:'This line number is resting (the line has ended).',
           secure:'🔒 This is an encrypted line — a number alone cannot open its chat. Ask the owner for an invitation link.', fail:'Could not connect. Please try again.',
           off:'This number does not take contacts.', myNum:'📞 My number', good:'💎 Special', self:'That is your own number.', busy:'Too many requests right now. Please try again later.' }
@@ -201,8 +207,13 @@
       h += '<button type="button" class="sd-k' + (x ? '' : ' empty') + (gone ? ' gone' : '') + '" data-sd-k="' + d + '"><span class="d">' + d + '</span><span class="nm">' + esc(gone ? (nm + ' · ' + t.gone) : nm) + '</span></button>';
     }
     h += '</div>';
-    h += '<div class="sd-row0"><button type="button" data-sd-del2>⌫ ' + esc(t.del) + '</button><button type="button" class="z" data-sd-zero>0</button>' +
-         '<button type="button" class="call" data-sd-call' + (dial.length === 10 ? '' : ' disabled') + '>' + esc(t.call) + '</button></div>'
+    /* 🔴 2026-11-19 [연결] 하나 → [음성] [영상] [문자] — 가림콜도 부름처럼 셋 다 됩니다. 다이얼 모양일 때는 [지움 · 음성 · 영상 · 문자] 한 줄 */
+    var off = dial.length === 10 ? '' : ' disabled';
+    h += '<div class="sd-row0"><button type="button" data-sd-del2>⌫ ' + esc(t.del) + '</button><button type="button" class="z" data-sd-zero>0</button></div>';
+    h += '<div class="sd-acts"><button type="button" class="del" data-sd-del3>⌫ ' + esc(t.del) + '</button>' +
+         '<button type="button" class="call v" data-sd-call="voice"' + off + '>' + esc(t.voice) + '</button>' +
+         '<button type="button" class="call vv" data-sd-call="video"' + off + '>' + esc(t.video) + '</button>' +
+         '<button type="button" class="call m" data-sd-call="text"' + off + '>' + esc(t.text) + '</button></div>';
     h += '</div>';
     h += '<div class="sd-go">' +
       '<a href="aliascall_contacts.html?tab=line&amp;from=msg"><span>📇</span>' + esc(t.all) + '</a>' +
@@ -218,7 +229,8 @@
     box.querySelector('[data-sd-zero]').onclick = function(){ press(0); };
     box.querySelector('[data-sd-del2]').onclick = function(){ dial = dial.slice(0, -1); paintAll(); };
     var dl = box.querySelector('[data-sd-del]'); if (dl) dl.onclick = function(){ dial = dial.slice(0, -1); paintAll(); };
-    box.querySelector('[data-sd-call]').onclick = connect;
+    var d3 = box.querySelector('[data-sd-del3]'); if (d3) d3.onclick = function(){ dial = dial.slice(0, -1); paintAll(); };
+    box.querySelectorAll('[data-sd-call]').forEach(function(b){ b.onclick = function(){ connect(b.dataset.sdCall); }; });
   }
 
   /* ── 🔴 2026-11-01 회선번호 누르기 ── */
@@ -265,8 +277,9 @@
       return id;
     } catch (e) { return ''; }
   }
-  async function connect(){
+  async function connect(mode){
     var t = T(), n = dial;
+    var go = '&go=' + (/^(voice|video|text)$/.test(mode || '') ? mode : 'text');   // 🔴 2026-11-19 대화방에 들어가면 바로 이 일로
     if (n.length !== 10) { flash(t.short); return; }
     var sb = window.sb;
     if (!sb) { flash(t.fail); return; }
@@ -288,13 +301,13 @@
           raw.unshift({ hotlineId: d.hotline, title: '1:1 · #' + n, isOwner: false, token: d.token, lastVisitedAt: new Date().toISOString() });
           localStorage.setItem('aliascall_my_lines', JSON.stringify(raw.slice(0, 30)));
         } catch (e) {}
-        location.href = ((d.auto || d.again) ? 'aliascall_hotline_room.html?t=' : 'aliascall_hotline_join.html?via=number&t=') + encodeURIComponent(d.token);   // 전에 연결한 방이면 바로 대화방(승인 전이면 대화방이 기다림 화면을 보여 줌)
+        location.href = ((d.auto || d.again) ? 'aliascall_hotline_room.html?t=' : 'aliascall_hotline_join.html?via=number&t=') + encodeURIComponent(d.token) + go;   // 전에 연결한 방이면 바로 대화방(승인 전이면 대화방이 기다림 화면을 보여 줌)
         return;
       }
       dial = ''; paintAll();
-      if (o.mine && o.hotline) { location.href = 'aliascall_hotline_room.html?hotline=' + encodeURIComponent(o.hotline) + '&from=dial'; return; }
+      if (o.mine && o.hotline) { location.href = 'aliascall_hotline_room.html?hotline=' + encodeURIComponent(o.hotline) + '&from=dial' + go; return; }
       if (o.secure || !o.token) { alert(t.secure); return; }
-      location.href = 'aliascall_hotline_join.html?t=' + encodeURIComponent(o.token) + '&via=number';
+      location.href = 'aliascall_hotline_join.html?t=' + encodeURIComponent(o.token) + '&via=number' + go;
     } catch (e) { console.warn('[speeddial] 번호 연결 실패', e); flash(t.fail); }
   }
 
@@ -317,8 +330,8 @@
         key: 'aliascall_padstyle', watch: bx, holdMs: 500, size: 'min(320px,82vw)',
         digits: function(){ var o = {}; bx.querySelectorAll('[data-sd-k]').forEach(function(b){ o[b.dataset.sdK] = b; }); var z = bx.querySelector('[data-sd-zero]'); if (z) o['0'] = z; return o; },
         bar: function(){ return { parent: bx.parentNode, before: bx }; },
-        rotaryAt: function(){ var r0 = bx.querySelector('.sd-row0'); return { parent: r0 ? r0.parentNode : bx, before: r0 }; },
-        hide: function(){ return [bx.querySelector('.sd-pad'), bx.querySelector('[data-sd-zero]')]; },
+        rotaryAt: function(){ var a = bx.querySelector('.sd-acts'); return { parent: a ? a.parentNode : bx, before: a }; },
+        hide: function(){ return [bx.querySelector('.sd-pad'), bx.querySelector('.sd-row0')]; },
         center: function(){ return en() ? ['Aliascall', 'Line number', ''] : ['가림콜', '회선번호', '']; },
         colors: { plate:'#E8734A', rim:'#B4532F', base:'#FFF6EA', ink:'#16302E', stop:'#C9CED3', on:'#E8734A', onInk:'#fff' },
         text: { ko: { hold: ' · 꾸욱 누르면 단축회선' }, en: { hold: ' · hold for Quick Lines' } },
@@ -360,7 +373,7 @@
     if (box._sdPop) return; box._sdPop = true;
     function hit(e){
       if (editing || !e.target || !e.target.closest) return null;
-      return e.target.closest('.sd-panel,.sd-num,.sd-pad,.sd-row0');
+      return e.target.closest('.sd-panel,.sd-num,.sd-pad,.sd-row0,.sd-acts');
     }
     ['pointerdown', 'mousedown', 'touchstart'].forEach(function(ev){
       box.addEventListener(ev, function(e){ if (hit(e)) e.stopPropagation(); }, true);

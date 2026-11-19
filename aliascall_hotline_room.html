@@ -1597,6 +1597,17 @@ async function init(){
     subscribeChat();
     markAsRead(); // 2026-08-22 신설: 방에 들어온 시점 = 여기까지 다 읽은 것으로 처리
     startReadSync(); // 2026-08-27 신설: 읽음 표시 보정 시작
+    /* 🔴 2026-11-19 번호판 [음성 · 영상 · 문자]로 들어왔으면 바로 그 일로 (&go=voice | video | text) */
+    (function(){
+      const go = (new URLSearchParams(window.location.search)).get('go');
+      if (!/^(voice|video|text)$/.test(go || '')) return;
+      try { const u = new URL(window.location.href); u.searchParams.delete('go'); history.replaceState(null, '', u.pathname + u.search + u.hash); } catch (e) {}
+      setTimeout(() => {
+        if (go === 'voice') { const b = document.getElementById('navVoice'); if (b) b.click(); }
+        else if (go === 'video') { const b = document.getElementById('navVideo'); if (b) b.click(); }
+        else { const i = document.getElementById('chatInput'); if (i) i.focus(); }
+      }, 700);
+    })();
   } catch (e) {
     console.error('[hotline-room] 초기화 실패', e);
     document.getElementById('errorMsg').textContent = T('errLoadFail');
