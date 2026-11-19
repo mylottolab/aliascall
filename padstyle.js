@@ -94,7 +94,7 @@
     '.ps-rot .ps-del{appearance:none;-webkit-appearance:none;margin:2px 0 0;cursor:pointer;font:inherit;font-size:14px;font-weight:800;padding:9px 18px;border-radius:999px;background:rgba(128,128,128,.14);border:1px solid rgba(128,128,128,.38);color:inherit}';
 
   /* ── 다이얼 ───────────────────────────────────────────── */
-  var CX = 150, RR = 104, HR = 21, STOP = 60;
+  var CX = 150, RR = 104, HR = 21, STOP = 60, HOLD_PAD = 300;   // 다이얼에서는 꾸욱을 0.3초 더 길게(살짝 긴 탭이 단축다이얼로 가지 않게)
   function need(i){ return 30 * (i + 2); }             // 1 → 60° … 0 → 330° (옛날 전화와 같은 순서)
   function ang(i){ return STOP - need(i); }
   function pt(a, r){ var q = a * Math.PI / 180; return [CX + r * Math.cos(q), CX + r * Math.sin(q)]; }
@@ -128,6 +128,7 @@
       if (P.sound() && Math.floor((r + 15) / 30) !== Math.floor((rot + 15) / 30) && r > 20) (r > rot ? Sound.ratchet() : Sound.pulse());   // 드르륵 / 되돌아갈 때 딸깍
       rot = r; g.setAttribute('transform', 'rotate(' + r.toFixed(2) + ' 150 150)');
     }
+    function setRot(r){ rot = r; g.setAttribute('transform', 'rotate(' + r.toFixed(2) + ' 150 150)'); }
     function anim(from, to, speed, done){
       var t0 = null, dur = Math.abs(to - from) / speed * 1000;
       function step(ts){ if (t0 === null) t0 = ts; var k = Math.min(1, (ts - t0) / (dur || 1));
@@ -138,33 +139,49 @@
     function nextQ(){ if (busy || !q.length) return; var i = q.shift(); busy = true; anim(0, need(i), 650, function(){ P.digit(DIG[i]); back(); }); }
     function sp(e){ var r = svg.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 300, (e.clientY - r.top) / r.height * 300]; }
     function ao(p){ return Math.atan2(p[1] - CX, p[0] - CX) * 180 / Math.PI; }
-    svg.addEventListener('pointerdown', function(e){
+    function down(e){
       var p = sp(e), hit = -1;
-      DIG.forEach(function(d, i){ var h = pt(ang(i), RR); if (Math.hypot(p[0] - h[0], p[1] - h[1]) < HR + 8) hit = i; });
+      DIG.forEach(function(d, i){ var h = pt(ang(i), RR); if (Math.hypot(p[0] - h[0], p[1] - h[1]) < HR + 14) hit = i; });
       if (hit < 0) return;
       e.preventDefault();
       if (busy) { q.push(hit); return; }
       drag = { i: hit, last: ao(p), acc: 0, moved: false, t: Date.now() };
-      P.holdStart(DIG[hit]);
+      var me = drag; drag.ht = setTimeout(function(){ if (drag === me && !me.moved) { me.held = true; P.holdStart(DIG[me.i]); } }, HOLD_PAD);
       try { svg.setPointerCapture(e.pointerId); } catch (er) {}
-    });
-    svg.addEventListener('pointermove', function(e){
+    }
+    function move(e){
       if (!drag) return;
       var a2 = ao(sp(e)), d = a2 - drag.last; if (d > 180) d -= 360; if (d < -180) d += 360;
       drag.last = a2; drag.acc = Math.max(0, Math.min(need(drag.i), drag.acc + d));
-      if (drag.acc > 6 && !drag.moved) { drag.moved = true; P.holdCancel(DIG[drag.i]); }
+      if (drag.acc > 12 && !drag.moved) { drag.moved = true; clearTimeout(drag.ht); if (drag.held) P.holdCancel(DIG[drag.i]); }
       if (drag.moved) set(drag.acc);
-    });
+    }
+    svg.addEventListener('pointerdown', down); svg.addEventListener('pointermove', move);
     function up(){
       if (!drag) return; var g2 = drag; drag = null;
+      clearTimeout(g2.ht);
       if (!g2.moved) {
-        if (P.holdMs && Date.now() - g2.t >= P.holdMs) { P.holdEnd(DIG[g2.i]); return; }   // 꾸욱 = 앱이 단축다이얼을 이미 했음
-        P.holdCancel(DIG[g2.i]); q.push(g2.i); nextQ(); return;
+        if (g2.held && P.holdMs && Date.now() - g2.t >= P.holdMs + HOLD_PAD) { P.holdEnd(DIG[g2.i]); return; }   // 꾸욱 = 앱이 단축다이얼을 이미 했음
+        if (g2.held) P.holdCancel(DIG[g2.i]);
+        q.push(g2.i); nextQ(); return;
       }
-      if (g2.acc >= need(g2.i) - 8) P.digit(DIG[g2.i]);
+      if (g2.acc >= need(g2.i) - 10) P.digit(DIG[g2.i]);
+      else if (g2.acc < 30) { setRot(0); q.push(g2.i); nextQ(); return; }   // 손가락이 살짝 밀린 탭 — 톡 누른 것으로
       back();
     }
     svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
+    /* 아이폰 — 다이얼 위에서는 화면이 끌려 올라가지 않게 */
+    svg.addEventListener('touchstart', function(e){ if (drag || busy) e.preventDefault(); }, { passive: false });
+    svg.addEventListener('touchmove', function(e){ if (drag) e.preventDefault(); }, { passive: false });
+    /* 포인터 이벤트가 없는 옛 웹뷰 — 손가락 이벤트로 같은 일을 */
+    if (!window.PointerEvent) {
+      var tw = function(fn){ return function(e){ var t = (e.changedTouches || [])[0]; if (!t) return; fn({ clientX: t.clientX, clientY: t.clientY, pointerId: 0, preventDefault: function(){ e.preventDefault(); } }); }; };
+      var hs = { down: down, move: move };
+      svg.addEventListener('touchstart', tw(function(ev){ hs.down(ev); }), { passive: false });
+      svg.addEventListener('touchmove', tw(function(ev){ hs.move(ev); }), { passive: false });
+      svg.addEventListener('touchend', tw(function(){ up(); }));
+      svg.addEventListener('touchcancel', tw(function(){ up(); }));
+    }
     return {
       el: wrap,
       paint: function(t, center){
