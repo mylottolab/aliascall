@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>가림콜 전체 기능 소개</title>
+<style>
+:root{--acc:#1f6f6b;--bg:#f5f7f7;--card:#fff;--fg:#1d2a2b;--mut:#5f7473;--line:#e1e9e8;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1716;--card:#18221f;--fg:#e6efed;--mut:#9fb1ae;--line:#2a3734;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;line-height:1.55;-webkit-text-size-adjust:100%}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 10px;background:var(--acc);color:#fff}
+.top button{background:rgba(255,255,255,.18);border:0;color:#fff;font-size:18px;width:38px;height:38px;border-radius:10px}
+.top b{font-size:17px;flex:1}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 28px)}
+h1{margin:4px 0 2px;font-size:28px}
+h1 small{font-size:14px;color:var(--mut);font-weight:500;margin-left:8px}
+.lead{background:var(--card);border-left:4px solid var(--acc);border-radius:0 12px 12px 0;padding:12px 14px;margin:12px 0}
+.dl{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;background:var(--acc);color:#fff;font-weight:800;font-size:16px;text-decoration:none;margin:6px 0 4px}
+.dl-n{font-size:12.5px;color:var(--mut);text-align:center;margin:0 0 14px}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.toc a{font-size:13px;padding:6px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--fg);text-decoration:none}
+section{background:var(--card);border-radius:14px;padding:4px 14px 6px;margin:14px 0;scroll-margin-top:70px}
+h2{font-size:17px;color:var(--acc);margin:12px 0 4px;display:flex;align-items:center;gap:8px}
+h2 small{font-size:11.5px;color:var(--mut);font-weight:600;background:var(--bg);border-radius:999px;padding:1px 8px}
+.it{padding:10px 0;border-top:1px solid var(--line)}
+.it:first-of-type{border-top:0}
+.it b{display:block;font-size:15px}
+.it p{margin:2px 0 0;font-size:14px;color:var(--mut)}
+.foot{font-size:12px;color:var(--mut);text-align:center;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="top"><button type="button" onclick="history.length>1?history.back():location.href='index.html'" aria-label="뒤로">‹</button><b>전체 기능 소개</b></div>
+<div class="wrap">
+<h1>가림콜<small>Aliascall</small></h1>
+<p class="lead">양쪽 모두 전화번호가 드러나지 않는 연락 앱입니다. 크게 안심비상연락(QR 긴급등록) · 1회용 임시연락처 · 안심보안회선(우리끼리·업무·프로) 세 부분입니다. 전화번호는 수집하지 않고 위치추적 기능은 없습니다.</p>
+<a class="dl" href="https://wafa.kr/features/garimcall_features.pdf" target="_blank" rel="noopener" onclick="if(window.Capacitor){location.href=this.href;return false}">⬇ PDF로 내려받기</a>
+<p class="dl-n">앱에서는 브라우저가 열리며 PDF를 보여 드려요. 그 화면에서 저장 · 공유하세요.</p>
+<nav class="toc"><a href="#s0">가입 · 계정</a><a href="#s1">안심비상연락 (QR 긴급등록)</a><a href="#s2">찾습니다 게시판</a><a href="#s3">1회용 임시연락처</a><a href="#s4">안심보안회선 (우리끼리 · 일상 업무용)</a><a href="#s5">회선 대화방 기능</a><a href="#s6">프로 비즈니스 · 업체</a><a href="#s7">이용권 · 기타</a></nav>
+<section id="s0"><h2>가입 · 계정<small>4</small></h2><div class="it"><b>닉네임 가입</b><p>닉네임과 비밀번호만, 실명·전화번호 없음</p></div><div class="it"><b>My Page · 내 계정</b><p>체험·이용권 기간, 등록물, 소통함, 알림 설정</p></div><div class="it"><b>한국어 · English · 테마</b><p>언어 전환, 화면 테마</p></div><div class="it"><b>계정 삭제</b><p>회원 탈퇴</p></div></section><section id="s1"><h2>안심비상연락 (QR 긴급등록)<small>13</small></h2><div class="it"><b>카테고리별 등록</b><p>차량 · 분실·도난 우려 물품 · 아동·치매 어르신·장애우 · 반려동물 · 부재중 연락 · 기타 물품·사건</p></div><div class="it"><b>고유 QR 태그</b><p>등록하면 그 대상만의 QR 생성</p></div><div class="it"><b>QR 인쇄</b><p>3×3 · 4.5×4.5 · 5.5×5.5 · 6×6cm 크기로 A4에 배치, 무료 인쇄·PDF 저장</p></div><div class="it"><b>비문(코무늬) 등록</b><p>반려동물 코 사진을 비공개로 보관해 발견 때 보호자가 직접 대조, 촬영법 안내</p></div><div class="it"><b>안심 콘텐츠 (목소리 녹음)</b><p>아동·어르신 등록에 보호자 목소리 녹음 첨부</p></div><div class="it"><b>차량 번호판 인식</b><p>차량 등록·찾기에서 번호판 사진으로 차량번호 읽기</p></div><div class="it"><b>찾기 · QR 스캔</b><p>발견자가 QR을 찍거나 번호·이름을 문자·음성으로 검색, 앱 설치 필요 없음</p></div><div class="it"><b>5가지 연락 방법</b><p>채팅 · 음성 · 영상 · 문자 남기기 · 사진, 진행 중 바로 전환</p></div><div class="it"><b>대화 이력 보관</b><p>채팅·사진 14일(아동·어르신·장애우·반려동물 30일), 같은 QR로 다시 들어오면 이어서 보임</p></div><div class="it"><b>답장 알림 (발견자)</b><p>발견자가 허용하면 소유자 답장 때 폰 알림</p></div><div class="it"><b>수신 대기</b><p>걸려오는 연결 요청을 기다리는 화면, 배너와 알림음</p></div><div class="it"><b>소통함</b><p>진행 중·지난 소통 보기, 늦게 본 메시지에 답장</p></div><div class="it"><b>통화·문자 알림음 · 긴급 알림(푸시)</b><p>화면을 열어 둔 때의 소리와, 화면을 닫아도 오는 폰 알림</p></div></section><section id="s2"><h2>찾습니다 게시판<small>7</small></h2><div class="it"><b>글쓰기</b><p>등록한 아이·어르신·반려동물·물건을 골라 언제·어디서·특징을 적어 게시 (무료)</p></div><div class="it"><b>찾는 중 · 발견됨</b><p>찾으면 \[✅ 찾았어요\]로 발견됨 탭으로 이동, 글 내리기</p></div><div class="it"><b>공유하기</b><p>글마다 고유 주소, 카톡·문자로 사진·제목 미리보기와 함께 공유</p></div><div class="it"><b>국가·분류 찾아보기</b><p>아동·노인 / 반려동물 / 분실물 / 기타, 사진 넘겨보기·크게 보기</p></div><div class="it"><b>제보하기 · 지금 연결하기</b><p>목격자가 번호 노출 없이 문자·음성·영상으로 바로 연결</p></div><div class="it"><b>게시글번호 · 신고하기</b><p>6자리 글 번호, 부적절한 글 신고</p></div><div class="it"><b>비상시 결제 없이 등록</b><p>무료 체험을 이미 썼어도 급할 때 결제를 건너뛰고 등록</p></div></section><section id="s3"><h2>1회용 임시연락처<small>4</small></h2><div class="it"><b>발급</b><p>이름과 기한(1·3·7·30일), 한 사람·여러 사람을 정해 링크·QR·명함 만들기</p></div><div class="it"><b>명함 인쇄</b><p>A4 한 장에 10장·15장, 코드를 aliascall.com/c 에 넣어 접속</p></div><div class="it"><b>앱 없이 문자</b><p>받는 분은 앱 설치 없이 바로 문자</p></div><div class="it"><b>지금 끊기 · 자동 종료</b><p>정한 날 자동으로 끊김, 언제든 바로 끊기</p></div></section><section id="s4"><h2>안심보안회선 (우리끼리 · 일상 업무용)<small>10</small></h2><div class="it"><b>일반 이용권 (2인 회선)</b><p>둘이 쓰는 회선, 3개월마다 5GB, 3·6·12개월(기간마다 1개월 더)</p></div><div class="it"><b>프리미엄 이용권 (4인 회선)</b><p>최대 4명, 3개월마다 20GB</p></div><div class="it"><b>우리끼리 · 일상 업무용</b><p>회선 쓰임새 선택 (업무용은 오늘의 질문 같은 가벼운 기능 없음)</p></div><div class="it"><b>암호화 (Secure, E2EE)</b><p>모든 내용을 서버도 못 보게 암호화, 추가 비용 없음, 열쇠는 초대 링크에만</p></div><div class="it"><b>초대 · 대기실 · 승인</b><p>링크·QR로 초대, 상대는 별명을 넣고 대기실에서 기다리고 회선을 연 분이 승인</p></div><div class="it"><b>내보내기</b><p>2인 회선 상대를 바꾸면 새 초대 링크, 이전 대화는 새 상대에게 안 보임</p></div><div class="it"><b>회선 관리</b><p>연장하기, 2인 → 4인 올리기, 이름 붙이기</p></div><div class="it"><b>사용량 · 당겨 쓰기 · 추가 사용량</b><p>회선별 쓴 양·다시 채우는 날, 다음 기간 몹 당겨 쓰기, 사용량 추가</p></div><div class="it"><b>연락처 · 통화기록 · 내 회선</b><p>회선 목록과 통화 기록 보기</p></div><div class="it"><b>단축회선 판</b><p>자주 쓰는 회선을 번호판처럼 바로 열기, 통화기록 바로가기</p></div></section><section id="s5"><h2>회선 대화방 기능<small>16</small></h2><div class="it"><b>문자 · 사진 · 동영상 · 문서</b><p>파일 공유와 이모지 584개(움직이는 것 포함)</p></div><div class="it"><b>음성메시지 · 음성입력</b><p>녹음해 보내기, 말하면 글자로 바꾸는 받아쓰기</p></div><div class="it"><b>답장 · 수정 · 삭제</b><p>특정 메시지에 답장, 보낸 메시지 고치기·지우기</p></div><div class="it"><b>즐겨찾기 · 나만의 메모함</b><p>중요한 메시지 저장, 상대는 못 보는 메모</p></div><div class="it"><b>타이머 메시지</b><p>정한 시간이 지나면 자동으로 사라짐</p></div><div class="it"><b>목표 (D-DAY)</b><p>다가올 날까지 남은 날, 지난 날부터 며칠째인지 채팅 상단에 표시</p></div><div class="it"><b>대화 검색 · 링크 미리보기 · 읽음 표시</b><p>지난 대화 찾기, URL 미리보기 카드, 읽으면 표시</p></div><div class="it"><b>같이 듣기</b><p>유튜브 링크나 음원 파일을 모두가 같은 지점에서 듣기</p></div><div class="it"><b>음성·영상 통화</b><p>최대 4인 다자간 통화, 통화가 시작되면 \[지금 들어가기\]</p></div><div class="it"><b>자리비움 자동응답</b><p>직접 만든 문구가 한 번 자동으로 나감</p></div><div class="it"><b>대화 내보내기</b><p>기간·참가자를 골라 인쇄하거나 PDF 저장</p></div><div class="it"><b>음성사서함</b><p>통화를 걸었는데 아무도 안 들어오면 음성 안내에 따라 메시지를 남겨 대화에 올림 (전문관리 방은 원할 때 남기기)</p></div><div class="it"><b>통화 중 초대</b><p>통화 중 ➕로 이 방 초대 링크를 보내 한 사람 더 (정원 안에서)</p></div><div class="it"><b>보류</b><p>통화 중 ⏸로 보류, 방 안 사람에게 보류 안내와 대기음</p></div><div class="it"><b>통화 중 대기</b><p>내 다른 회선에서 통화가 시작되면 알림, 끊고 받기 · &quot;통화 중&quot; 문자</p></div><div class="it"><b>신고 · 차단</b><p>부적절한 상대 신고와 차단</p></div></section><section id="s6"><h2>프로 비즈니스 · 업체<small>6</small></h2><div class="it"><b>프로 비즈니스</b><p>고객·의뢰인·환자마다 방을 따로 여는 업무 계정 (스타터 방 50·비즈니스 방 100·엔터프라이즈 방 150)</p></div><div class="it"><b>공개 업체 목록 게재</b><p>사업자등록증·자격증 확인 후 공개 목록에 상호 게재 (광고형 프로)</p></div><div class="it"><b>각종 전문업체 문의처</b><p>공개된 업체 목록에서 번호 없이 문의</p></div><div class="it"><b>단골창구</b><p>가게 손님 문의 창구 (단골창구 앱과 같은 서비스)</p></div><div class="it"><b>대화 모아보기</b><p>방을 하나씩 열지 않고 정한 기간(오늘·7일·1개월·3개월·전체)의 대화를 한 화면에서 보기, 인쇄·PDF</p></div><div class="it"><b>부름 연결 카드</b><p>대화에서 부름 연결 카드를 눌러 부름 대화창으로 이어가기</p></div></section><section id="s7"><h2>이용권 · 기타<small>6</small></h2><div class="it"><b>무료 체험 30일</b><p>카드 등록·자동 결제 없이, 한 계정·한 기기 한 번</p></div><div class="it"><b>긴급 이용권</b><p>1년 단위, QR 긴급연락과 임시연락처 계속 사용 (아동·어르신·장애우·반려동물은 이용권 없이도 항상 연결)</p></div><div class="it"><b>전체 상품 보기</b><p>긴급 이용권·회선·프로·게재·추가 사용량 한눈에</p></div><div class="it"><b>사용설명서 2종</b><p>안심비상연락 사용설명서, 안심보안회선 사용설명서</p></div><div class="it"><b>고객센터</b><p>자주 묻는 질문과 1:1 문의</p></div><div class="it"><b>유치대리점</b><p>파트너(대리점) 모집·직원·추천 코드·홍보물 인쇄</p></div></section>
+<a class="dl" href="https://wafa.kr/features/garimcall_features.pdf" target="_blank" rel="noopener" onclick="if(window.Capacitor){location.href=this.href;return false}">⬇ PDF로 내려받기</a>
+<p class="foot">2026년 11월 21일 기준 · 화면과 기능은 앱 업데이트에 따라 바뀔 수 있습니다.<br>위브앱솔루션 · weapps.kr@gmail.com</p>
+</div>
+</body>
+</html>
