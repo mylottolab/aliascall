@@ -75,7 +75,7 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
 <header>
   <div class="top">
     <div class="logo">W</div>
-    <h1>위브앱 통합 관리<small>부름 · 누름 · 가림 · 바로너 · 바로카 · 알림로또 · PaperLotto</small></h1>
+    <h1>위브앱 통합 관리<small>부름 · 누름 · 가림 · 바로너 · 바로카 · 와파 · 단톡방 · 단골창구 · 알림로또 · PaperLotto</small></h1>
     <button class="tbtn" id="reload" type="button" title="지금 탭 새로고침">↻ 새로고침</button>
     <button class="tbtn" id="theme" type="button">🌙</button>
   </div>
@@ -117,6 +117,13 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
       { id:'ac_num', name:'회선번호', url: AC + 'aliascall_admin_numbers.html' } ]},
     { id:'baroka', name:'🚗 바로카', c:'var(--bk)', subs:[
       { id:'bk_admin', name:'바로카 관리(갤러리 신고 · 등록권 · 타일 광고)', url: BK + 'admin.html' } ]},
+    /* 🔴 2026-11-22 새 앱 — 와파(부름 서버) · 단톡방 · 단골창구(에일리어스콜 서버) */
+    { id:'wafa', name:'📶 와파', c:'#1E8C7C', subs:[
+      { id:'wf_admin', name:'가입 · 구독 · 번호 · 결제', url: BU + 'wafa_admin.html' } ]},
+    { id:'dantok', name:'🗨 단톡방', c:'#5B4BD6', subs:[
+      { id:'dt_admin', name:'방 · 신고 · 멈춤', url: AC + 'aliascall_admin_dantok.html' } ]},
+    { id:'dangol', name:'🏪 단골창구', c:'#C2410C', subs:[
+      { id:'dg_admin', name:'가게 · 신고 · 멈춤 · 확인됨', url: AC + 'aliascall_admin_dangol.html' } ]},
     { id:'partner', name:'💼 유치대리점', c:'var(--pt)', subs:[
       { id:'pt_admin', name:'대리점 심사 · 정산', url: AC + 'aliascall_admin_partners.html' } ]},
     /* 🔴 2026-11-09 로또 두 앱 — 따로 봅니다(합산 없음). 각 화면이 스스로 관리자 로그인을 합니다 */
@@ -145,8 +152,8 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
         '<div class="row">' + t.subs.map(function(s){ return '<button class="tbtn" type="button" data-go="' + t.id + '|' + s.id + '">' + s.name + '</button>'; }).join('') + '</div></div>';
     }).join('');
     p.innerHTML = '<div class="wrap">' +
-      '<div class="note">탭을 누르면 각 앱의 관리자 화면이 이 안에 열립니다. <b>처음 한 번은 탭 안에서 관리자 로그인</b>을 해 주세요(가림 · 유치대리점 탭은 한 번, 부름 탭 한 번, 바로카 탭 한 번). 한 번 연 탭은 다른 탭으로 옮겨도 그대로 남아 있습니다.<br>' +
-      '서버는 두 곳입니다 — <b>부름 서버</b>: 부름 · 누름 · 바로너 / <b>에일리어스콜 서버</b>: 가림 · 바로카 · 유치대리점. 알림로또 · PaperLotto는 각자 따로 봅니다(합산하지 않음). 알림로또 매출 화면은 서버가 잠들어 있으면 처음 열 때 30초~1분 걸릴 수 있습니다.</div>' +
+      '<div class="note">탭을 누르면 각 앱의 관리자 화면이 이 안에 열립니다. <b>처음 한 번은 탭 안에서 관리자 로그인</b>을 해 주세요(가림 · 단톡방 · 단골창구 · 유치대리점 탭은 한 번, 부름 · 와파 탭 한 번, 바로카 탭 한 번). 한 번 연 탭은 다른 탭으로 옮겨도 그대로 남아 있습니다.<br>' +
+      '서버는 두 곳입니다 — <b>부름 서버</b>: 부름 · 누름 · 바로너 · 와파 / <b>에일리어스콜 서버</b>: 가림 · 바로카 · 단톡방 · 단골창구 · 유치대리점. 와파 매출은 와파 탭에서 따로 봅니다(위 합계에는 아직 안 들어감). 알림로또 · PaperLotto는 각자 따로 봅니다(합산하지 않음). 알림로또 매출 화면은 서버가 잠들어 있으면 처음 열 때 30초~1분 걸릴 수 있습니다.</div>' +
       '<h2>바로 가기</h2><div class="grid">' + cards + '</div>' +
       '<h2>매일 볼 곳 (밖의 사이트 — 새 창)</h2><div class="grid">' +
         '<div class="card"><h3>📦 스토어</h3><div class="links">' +
@@ -171,6 +178,9 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
           '<a href="https://aliascall.com" target="_blank" rel="noopener">가림 <span>aliascall.com ›</span></a>' +
           '<a href="https://baronu.kr" target="_blank" rel="noopener">바로너 <span>baronu.kr ›</span></a>' +
           '<a href="https://baroka.kr" target="_blank" rel="noopener">바로카 <span>baroka.kr ›</span></a>' +
+          '<a href="https://wafa.kr" target="_blank" rel="noopener">와파 <span>wafa.kr ›</span></a>' +
+          '<a href="https://dantok.kr" target="_blank" rel="noopener">단톡방 <span>dantok.kr ›</span></a>' +
+          '<a href="https://dangol.org" target="_blank" rel="noopener">단골창구 <span>dangol.org ›</span></a>' +
           '<a href="https://mylottolab.github.io/my-lotto-lab/" target="_blank" rel="noopener">알림로또 <span>mylottolab.github.io ›</span></a>' +
           '<a href="https://paperlotto.com" target="_blank" rel="noopener">PaperLotto <span>paperlotto.com ›</span></a></div></div>' +
       '</div></div>';
@@ -306,6 +316,12 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     SUPN[d.src] = +d.open || 0; }
     var n = SUPN.ac + SUPN.bu + SUPN.dg;
     var b = $('main').querySelector('[data-id="support"]'); if (b) b.textContent = '💬 고객문의' + (n ? ' (' + n + ')' : '');
+  });
+  /* 🔴 2026-11-22 단톡방 · 단골창구 신고 건수 → 그 탭 이름 옆 숫자 */
+  window.addEventListener('message', function(e){
+    var d = e.data || {}; if (e.origin !== 'https://aliascall.com') return;
+    var map = { weave_dt: ['dantok', '🗨 단톡방'], weave_dg: ['dangol', '🏪 단골창구'] }; var m = map[d.type]; if (!m) return;
+    var b = $('main').querySelector('[data-id="' + m[0] + '"]'); var n = +d.reports || 0; if (b) b.textContent = m[1] + (n ? ' (' + n + ')' : '');
   });
   window.addEventListener('message', function(e){
     var d = e.data || {}; if (d.type !== 'weave_mem') return;
