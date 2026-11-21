@@ -27,7 +27,7 @@
     '.sd-k.empty .nm{opacity:.45;font-weight:500}' +
     '.sd-k.gone .nm{opacity:.5;text-decoration:line-through}' +
     '.sd-box.edit .sd-k{border-style:dashed;border-color:#E8734A}' +
-    '.sd-go{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}' +
+    '.sd-go{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:6px}' +
     '.sd-go a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;padding:6px 2px;border-radius:12px;text-decoration:none;' +
       'background:rgba(232,115,74,.16);border:1px solid rgba(232,115,74,.5);color:#fff;font-size:11.5px;font-weight:800;text-align:center;line-height:1.25;word-break:keep-all}' +
     '.sd-go a span{font-size:16px}' +
@@ -108,7 +108,7 @@
   function en(){ try { return (localStorage.getItem('aliascall_lang') || '').indexOf('en') === 0; } catch (e) { return false; } }
   var TX = {
     ko: { title:'⚡ 단축회선', edit:'편집', done:'완료', empty:'비어 있음', add:'＋ 넣기', gone:'끝난 회선',
-          all:'회선 전체', emg:'긴급 연락', tmp:'임시 연락', mng:'회선 관리',
+          all:'회선 전체', emg:'긴급 연락', tmp:'임시 연락', mng:'회선 관리', rec:'통화기록',
           pick:'번 단축회선에 넣을 회선을 고르세요', pickSub:'누르면 그 회선 대화방이 바로 열려 통화 · 메시지를 할 수 있습니다. 이 폰에만 저장됩니다.',
           inSlot:'번에 있음', clear:'이 칸 비우기', cancel:'닫기', loading:'회선을 읽는 중…', noLines:'아직 회선이 없습니다. 회선을 먼저 만들거나 초대를 받아 들어가 주세요.',
           login:'로그인하면 회선을 단축회선에 넣을 수 있습니다.', goneAsk:'이 회선은 끝났거나 이 폰에서 찾을 수 없습니다. 다른 회선으로 바꿀까요?',
@@ -117,7 +117,7 @@
           secure:'🔒 암호화 회선이라 번호만으로는 대화를 열 수 없어요. 회선 주인에게 초대 링크를 받아 주세요.', fail:'연결하지 못했어요. 잠시 뒤 다시 해 주세요.',
           off:'번호로 연락을 받지 않는 번호예요.', myNum:'📞 내 번호', good:'💎 좋은번호', self:'내 번호예요.', busy:'지금은 연결 요청이 많아요. 잠시 뒤 다시 해 주세요.' },
     en: { title:'⚡ Quick Lines', edit:'Edit', done:'Done', empty:'Empty', add:'＋ Add', gone:'Ended',
-          all:'All lines', emg:'Emergency', tmp:'Temporary', mng:'Manage lines',
+          all:'All lines', emg:'Emergency', tmp:'Temporary', mng:'Manage lines', rec:'Calls',
           pick:': choose a line', pickSub:'Tap it later to open that line’s chat right away for calls and messages. Saved on this phone only.',
           inSlot:' in use', clear:'Clear this slot', cancel:'Close', loading:'Loading your lines…', noLines:'You have no lines yet. Open a line or join one by invitation first.',
           login:'Log in to add lines to Quick Lines.', goneAsk:'This line has ended or cannot be found on this phone. Choose another line?',
@@ -220,6 +220,7 @@
       '<a href="aliascall_contacts.html?tab=emergency&amp;from=msg"><span>🚨</span>' + esc(t.emg) + '</a>' +
       '<a href="aliascall_contacts.html?tab=temp&amp;from=msg"><span>🎫</span>' + esc(t.tmp) + '</a>' +
       '<a href="aliascall_hotline_manage.html"><span>👥</span>' + esc(t.mng) + '</a>' +
+      '<a href="aliascall_calls.html"><span>🕘</span>' + esc(t.rec || '통화기록') + '</a>' +   // 🔴 2026-11-21 최근 통화
       '</div>';
     box.innerHTML = h;
     box.classList.toggle('edit', editing);
