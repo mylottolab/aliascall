@@ -66,15 +66,30 @@
   /* =====================================================================
      📮 음성사서함
      ===================================================================== */
+  /* 🔴 2026-11-21 전문관리 방(변호사 · 상담 등)은 먼저 들어가 기다리는 쓰임이 많아 저절로 넘기지 않습니다.
+       40초가 지나면 통화 화면에 [📮 음성 메시지 남기고 끊기] 단추만 보여 줍니다(누군가 들어오면 사라짐). */
+  function isPro(){ try { return !!roomIsPro || roomPurpose === 'pro'; } catch (e) { return false; } }
   function vmArm(){
     vmDisarm(); S.vmOff = false;
     S.vmTimer = setTimeout(function(){
       S.vmTimer = null;
       if (!activeCall || connectedCount() > 0 || othersPresent() > 0) return;
+      if (isPro()) { vmButton(true); S.vmWatch = setInterval(function(){ if (!activeCall || connectedCount() > 0 || othersPresent() > 0) vmButton(false); }, 2000); return; }
       vmOffer();
     }, 40000);
   }
-  function vmDisarm(){ if (S.vmTimer) { clearTimeout(S.vmTimer); S.vmTimer = null; } }
+  function vmDisarm(){ if (S.vmTimer) { clearTimeout(S.vmTimer); S.vmTimer = null; } vmButton(false); }
+  function vmButton(on){
+    var b = document.getElementById('acpVmBtn');
+    if (!on) { if (b) b.remove(); if (S.vmWatch) { clearInterval(S.vmWatch); S.vmWatch = null; } return; }
+    if (b) return;
+    var cc = document.querySelector('#stateCall .call-controls'); if (!cc || !cc.parentNode) return;
+    b = document.createElement('button'); b.type = 'button'; b.id = 'acpVmBtn';
+    b.style.cssText = 'display:block;margin:8px auto 0;padding:12px 18px;border:0;border-radius:14px;background:#0F6E68;color:#fff;font:inherit;font-weight:800;font-size:15px';
+    b.textContent = t('📮 음성 메시지 남기고 끊기', '📮 Leave a voice message and hang up');
+    b.onclick = function(){ vmButton(false); vmOffer(); };
+    cc.parentNode.insertBefore(b, cc.nextSibling);
+  }
 
   async function vmOffer(){
     try { await endCall(); } catch (e) {}
