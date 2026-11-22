@@ -10,9 +10,9 @@
    · 기간: 달력(오늘 · 이번 주 · 이번 달 · 올해) / 최근(7일 · 30일 · 365일) / 직접 — 지난 기간과 비교(증감 %)
    · 금액: 총매출(고객이 낸 돈) · 환불 · 수수료(결제수단별 비율) · 순매출(회사에 들어오는 돈)
    · 8개 앱 합계와 로또(알림로또 · PaperLotto) 합계는 따로
-   · 서버 3곳에 각각 관리자로 로그인합니다(가림 · 부름 · PaperLotto). 이 화면에는 비밀번호 · 비밀 키가 없습니다(공개용 anon 키만).
+   · 서버 4곳에 각각 관리자로 연결합니다(가림 · 부름 · PaperLotto 로그인 + 알림로또 관리자 키). 이 화면에는 비밀번호 · 비밀 키가 적혀 있지 않습니다(공개용 anon 키만).
    · 숫자는 각 서버의 weave_sales 함수(관리자만)가 냅니다 — 가림: baroka/sql/28_weave_sales.sql · 부름: wafa/sql/11_weave_sales.sql
-     PaperLotto 는 이미 있는 admin-business-reports(payments) 를 씁니다. 알림로또는 아직 연결 전(기존 화면 링크).
+     PaperLotto 는 admin-business-reports(payments) · 알림로또는 API /api/admin/weave-sales(관리자 키 · 입금포인트 1P=1원, 관리자 지급 · 옛자료 제외).
 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
@@ -195,11 +195,13 @@ var SRV = {
            key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6cmVkbHJudnNzc2ZqeXRhb3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDg1MjgsImV4cCI6MjEwMzk4NDUyOH0.2gTxzr54vRSZzFnyhLSd1Imv3OnwRBQs925CYeXdonI',
            id:'닉네임 또는 이메일' },
   paper: { name:'PaperLotto 서버', apps:'PaperLotto', url:'https://wzrqaozlbfyejsbvnrxk.supabase.co',
-           key:'sb_publishable_3KrYMzwrVlbYr-e9d8UiLA_KgvSs8tC', id:'이메일' }
+           key:'sb_publishable_3KrYMzwrVlbYr-e9d8UiLA_KgvSs8tC', id:'이메일' },
+  /* 알림로또는 Supabase 로그인이 아니라 관리자 키(Render 의 ADMIN_API_KEY — 알림로또 관리자 화면에 넣는 그 키) */
+  allim: { name:'알림로또 서버', apps:'알림로또', url:'https://my-lotto-lab-api.onrender.com', keyed:true, id:'관리자 키' }
 };
 Object.keys(SRV).forEach(function(k){
   var s = SRV[k];
-  s.sb = window.supabase.createClient(s.url, s.key, { auth: { storageKey: 'weave-sales-' + k, persistSession: true, autoRefreshToken: true } });
+  if (!s.keyed) s.sb = window.supabase.createClient(s.url, s.key, { auth: { storageKey: 'weave-sales-' + k, persistSession: true, autoRefreshToken: true } });
   s.state = 'out';   // out · ok · bad
   s.err = '';
 });
@@ -241,12 +243,15 @@ function paintSrv(){
 }
 function paintLogins(){
   var allOk = Object.keys(SRV).every(function(k){ return SRV[k].state === 'ok'; });
-  var one = allOk ? '' : '<div class="card" style="border-color:var(--acc)"><b>세 서버 한 번에</b><span class="cap">세 서버의 아이디 · 비밀번호가 같으면 여기 한 번만 넣으세요. 다르면 오른쪽 칸에 따로 넣습니다.</span>' +
+  var one = allOk ? '' : '<div class="card" style="border-color:var(--acc)"><b>가림 · 부름 · PaperLotto 한 번에</b><span class="cap">아이디 · 비밀번호가 같은 서버는 여기 한 번만 넣으면 됩니다. 다르면 옆 칸에 따로 넣습니다.</span>' +
     '<input type="text" id="u_all" placeholder="이메일(또는 닉네임)" autocomplete="username"><input type="password" id="p_all" placeholder="비밀번호" autocomplete="current-password">' +
     '<button class="btn pri" type="button" id="bAll">한 번에 로그인</button><div class="err" id="eAll"></div></div>';
   $('logins').innerHTML = one + Object.keys(SRV).map(function(k){ var s = SRV[k];
     if (s.state === 'ok') return '<div class="card"><b>' + esc(s.name) + ' ✓</b><span class="cap">' + esc(s.apps) + '</span><span class="cap">' + esc(s.who || '') + '</span>' +
       '<div class="row"><button class="btn" type="button" data-out="' + k + '">로그아웃</button></div></div>';
+    if (s.keyed) return '<div class="card"><b>' + esc(s.name) + '</b><span class="cap">' + esc(s.apps) + ' — 알림로또 관리자 화면에 넣는 관리자 키</span>' +
+      '<input type="password" id="p_' + k + '" placeholder="관리자 키" autocomplete="off">' +
+      '<button class="btn pri" type="button" data-in="' + k + '">연결</button><div class="err">' + esc(s.err) + '</div></div>';
     return '<div class="card"><b>' + esc(s.name) + '</b><span class="cap">' + esc(s.apps) + ' — 관리자 계정</span>' +
       '<input type="text" id="u_' + k + '" placeholder="' + esc(s.id) + '" autocomplete="username">' +
       '<input type="password" id="p_' + k + '" placeholder="비밀번호" autocomplete="current-password">' +
@@ -254,11 +259,17 @@ function paintLogins(){
   }).join('');
   [].forEach.call($('logins').querySelectorAll('[data-in]'), function(b){ b.onclick = function(){ login(b.dataset.in); }; });
   if ($('bAll')) { $('bAll').onclick = loginAll; $('p_all').onkeydown = function(e){ if (e.key === 'Enter') loginAll(); }; }
-  [].forEach.call($('logins').querySelectorAll('[data-out]'), function(b){ b.onclick = async function(){ await SRV[b.dataset.out].sb.auth.signOut(); SRV[b.dataset.out].state = 'out'; ST.loaded = {}; paintSrv(); paintLogins(); load(); }; });
+  [].forEach.call($('logins').querySelectorAll('[data-out]'), function(b){ b.onclick = async function(){ var o = SRV[b.dataset.out]; if (o.keyed) { try { localStorage.removeItem('weave-sales-' + b.dataset.out + '-key'); } catch (e) {} } else await o.sb.auth.signOut(); SRV[b.dataset.out].state = 'out'; ST.loaded = {}; paintSrv(); paintLogins(); load(); }; });
   [].forEach.call($('logins').querySelectorAll('input[type=password]'), function(i){ i.onkeydown = function(e){ if (e.key === 'Enter') login(i.id.slice(2)); }; });
 }
 async function login(k){
-  var s = SRV[k], u = ($('u_' + k).value || '').trim(), pw = $('p_' + k).value || '';
+  var s = SRV[k];
+  if (s.keyed) {
+    var kv = ($('p_' + k).value || '').trim(); if (!kv) { s.err = '관리자 키를 넣어 주세요'; paintLogins(); return; }
+    try { localStorage.setItem('weave-sales-' + k + '-key', kv); } catch (e) {}
+    s.err = ''; ST.loaded = {}; await check(k); paintSrv(); paintLogins(); load(); return;
+  }
+  var u = ($('u_' + k).value || '').trim(), pw = $('p_' + k).value || '';
   if (!u || !pw) { s.err = '아이디와 비밀번호를 넣어 주세요'; paintLogins(); return; }
   var email = (k === 'burum' && u.indexOf('@') < 0) ? encodeURIComponent(u) + '@u.alias.internal' : u;
   var r = await s.sb.auth.signInWithPassword({ email: email, password: pw });
@@ -269,7 +280,7 @@ async function login(k){
 async function loginAll(){
   var u = ($('u_all').value || '').trim(), pw = $('p_all').value || '';
   if (!u || !pw) { $('eAll').textContent = '아이디와 비밀번호를 넣어 주세요'; return; }
-  var res = await Promise.all(Object.keys(SRV).filter(function(k){ return SRV[k].state !== 'ok'; }).map(async function(k){
+  var res = await Promise.all(Object.keys(SRV).filter(function(k){ return SRV[k].state !== 'ok' && !SRV[k].keyed; }).map(async function(k){
     var s = SRV[k], email = (k === 'burum' && u.indexOf('@') < 0) ? encodeURIComponent(u) + '@u.alias.internal' : u;
     if (k !== 'burum' && u.indexOf('@') < 0) return s.name + ' ✗(이메일 필요)';
     var r = await s.sb.auth.signInWithPassword({ email: email, password: pw });
@@ -282,7 +293,9 @@ async function loginAll(){
   load();
 }
 async function check(k){
-  var s = SRV[k]; var r = await s.sb.auth.getSession(); var ses = r.data && r.data.session;
+  var s = SRV[k];
+  if (s.keyed) { var kk = ''; try { kk = localStorage.getItem('weave-sales-' + k + '-key') || ''; } catch (e) {} s.state = kk ? 'ok' : 'out'; s.who = kk ? '관리자 키 연결됨' : ''; return; }
+  var r = await s.sb.auth.getSession(); var ses = r.data && r.data.session;
   if (!ses) { s.state = 'out'; return; }
   s.who = ses.user.email ? decodeURIComponent(ses.user.email.replace('@u.alias.internal', '')) : '';
   s.state = 'ok';
@@ -293,6 +306,15 @@ async function fetchSrv(k, from, to){
   var s = SRV[k];
   if (s.state !== 'ok') return null;
   try {
+    if (k === 'allim') {
+      var key = ''; try { key = localStorage.getItem('weave-sales-allim-key') || ''; } catch (e) {}
+      var ra = await fetch(s.url + '/api/admin/weave-sales?from=' + from + '&to=' + to, { headers: { 'x-admin-key': key } });
+      if (ra.status === 401) { s.state = 'bad'; s.err = '관리자 키가 맞지 않습니다'; return null; }
+      if (ra.status === 404) { s.state = 'bad'; s.err = '알림로또 서버 업데이트(배포) 전입니다'; return null; }
+      if (!ra.ok) { s.state = 'bad'; s.err = '알림로또 서버 오류 ' + ra.status + ' (잠들어 있으면 잠시 뒤 새로고침)'; return null; }
+      var ja = await ra.json();
+      return (ja.rows || []).map(function(x){ return { day: x.day, app: 'allim', product: x.product, channel: x.channel, orders: +x.orders || 0, gross: +x.gross || 0, refunds: +x.refunds || 0, refund: +x.refund || 0 }; });
+    }
     if (k === 'paper') {
       var ses = (await s.sb.auth.getSession()).data.session;
       var r = await fetch(s.url + '/functions/v1/admin-business-reports?report=payments&from=' + from + '&to=' + to, { headers: { Authorization: 'Bearer ' + ses.access_token, apikey: s.key } });
@@ -327,10 +349,10 @@ async function load(){
   paintPer();
   if (ST.loaded.key !== key) {
     $('kpis').innerHTML = '<div class="card kpi"><div class="k">불러오는 중…</div></div>';
-    var out = await Promise.all(['garim', 'burum', 'paper'].map(function(k){ return fetchSrv(k, from, to); }));
+    var out = await Promise.all(['garim', 'burum', 'paper', 'allim'].map(function(k){ return fetchSrv(k, from, to); }));
     if (my !== busy) return;
     ST.rows = [].concat.apply([], out.filter(Boolean));
-    ST.have = { garim: !!out[0], burum: !!out[1], paper: !!out[2], allim: false };
+    ST.have = { garim: !!out[0], burum: !!out[1], paper: !!out[2], allim: !!out[3] };
     ST.loaded = { key: key };
     paintSrv(); if (!$('logins').hidden) paintLogins();
   }
@@ -359,9 +381,8 @@ function paintPer(){
 }
 function missNote(){
   var miss = [];
-  ['garim', 'burum', 'paper'].forEach(function(k){ if (!ST.have || !ST.have[k]) miss.push(SRV[k].name + '(' + SRV[k].apps + ')' + (SRV[k].err ? ' — ' + SRV[k].err : ' — 로그인 필요')); });
-  miss.push('알림로또 — 아직 연결 전(알림로또 탭의 기존 매출 화면에서 확인)');
-  $('miss').hidden = false;
+  ['garim', 'burum', 'paper', 'allim'].forEach(function(k){ if (!ST.have || !ST.have[k]) miss.push(SRV[k].name + '(' + SRV[k].apps + ')' + (SRV[k].err ? ' — ' + SRV[k].err : ' — 로그인 필요')); });
+  $('miss').hidden = !miss.length; if (!miss.length) return;
   $('miss').innerHTML = '합계에 빠진 곳: ' + miss.map(esc).join(' · ');
 }
 function kpi(cls, k, a, b, extra){
@@ -403,7 +424,7 @@ function paint(){
         var have = ST.have && ST.have[a.srv];
         rowsH.push('<tr class="click" data-a="' + a.id + '"><td class="l">' + esc(a.name) + '</td>' + (have
           ? '<td>' + num(c.orders) + '</td><td>' + won(c.gross) + '</td><td>' + won(c.refund) + '</td><td>' + won(c.fee) + '</td><td><b>' + won(c.net) + '</b></td><td>' + won(p.net) + '</td><td>' + delta(c.net, p.net) + '</td>'
-          : '<td colspan="7" class="l muted">' + (a.srv === 'allim' ? '연결 전' : '로그인 필요') + '</td>') + '</tr>');
+          : '<td colspan="7" class="l muted">' + (SRV[a.srv] && SRV[a.srv].err ? esc(SRV[a.srv].err) : '로그인 필요') + '</td>') + '</tr>');
       });
       rowsH.push('<tr class="sum"><td class="l">' + (lot ? '로또 합계' : '8개 앱 합계') + '</td><td>' + num(tc.orders) + '</td><td>' + won(tc.gross) + '</td><td>' + won(tc.refund) + '</td><td>' + won(tc.fee) + '</td><td>' + won(tc.net) + '</td><td>' + won(tp.net) + '</td><td>' + delta(tc.net, tp.net) + '</td></tr>');
     });
