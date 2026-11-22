@@ -1442,6 +1442,48 @@ function recordMyLine(info){
   } catch (e) { console.warn('[my-lines] 기록 실패', e); }
 }
 
+/* 🔴 2026-11-22 — 회선 대화 새 메시지 알림 (개인 · 전문관리 회선 모두)
+   · 보낸 뒤 hotline-notify 를 부르면, 서버가 개설자 · 참가자 폰에 알림(보낸 사람 빼고 · 한 메시지에 한 번만)
+   · 참가자는 앱에서 방에 들어오면 이 폰 알림 주소를 서버에 맡깁니다(로그인 없어도). 개설자는 원래대로(로그인한 앱). */
+function hlNotify(messageId){
+  if (!messageId) return;
+  try {
+    fetch(`${SUPABASE_URL}/functions/v1/hotline-notify`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageId }), keepalive: true,
+    }).catch(() => {});
+  } catch (e) {}
+}
+async function hlPushJoin(){
+  try {
+    if (typeof aliascallIsNativeApp !== 'function' || !aliascallIsNativeApp()) return;
+    const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications;
+    if (!P || !hotlineId || !hotlineAnonId) return;
+    let perm = await P.checkPermissions();
+    if (perm && perm.receive === 'prompt') { try { perm = await P.requestPermissions(); } catch (e) {} }
+    if (!perm || perm.receive !== 'granted') return;
+    let token = '';
+    try { token = localStorage.getItem('aliascall_fcm_token') || ''; } catch (e) {}
+    if (!token) {
+      token = await new Promise((resolve) => {
+        let done = false;
+        const t = setTimeout(() => { if (!done) { done = true; resolve(''); } }, 15000);
+        P.addListener('registration', (x) => { if (!done) { done = true; clearTimeout(t); resolve(x.value || ''); } });
+        P.addListener('registrationError', () => { if (!done) { done = true; clearTimeout(t); resolve(''); } });
+        P.register();
+      });
+      if (token) { try { localStorage.setItem('aliascall_fcm_token', token); } catch (e) {} }
+    }
+    if (!token) return;
+    const caps = (typeof _acCaps === 'function') ? _acCaps() : '';
+    const mark = hotlineId + '|' + hotlineAnonId + '|' + token.slice(-16) + '|' + caps;
+    let last = ''; try { last = localStorage.getItem('aliascall_hl_push_' + hotlineId) || ''; } catch (e) {}
+    const lastAt = Number((last.split('#')[1]) || 0);
+    if (last.split('#')[0] === mark && Date.now() - lastAt < 24 * 3600 * 1000) return;   // 이미 맡겨 둠(하루에 한 번만 다시)
+    const { data } = await sb.rpc('hotline_push_join', { p_hotline: hotlineId, p_member: hotlineAnonId, p_token: token, p_caps: caps, p_lang: (typeof LANG === 'string' ? LANG : 'ko') });
+    if (data === true) { try { localStorage.setItem('aliascall_hl_push_' + hotlineId, mark + '#' + Date.now()); } catch (e) {} }
+  } catch (e) { console.warn('[hotline-push] 알림 등록 실패(다음에 다시)', e); }
+}
+
 async function init(){
   const params = new URLSearchParams(window.location.search);
   const inviteToken = params.get('t');
@@ -1558,6 +1600,7 @@ async function init(){
 
     // 2026-08-25 신설(v50): 개설자 여부와 자리비움 상태는 서버가 내려줌
     isRoomOwner = !!data.isOwner;
+    if (!isRoomOwner) hlPushJoin();   // 🔴 2026-11-22 참가자도 새 메시지 알림(앱일 때)
     roomOrigin = data.origin || 'direct';                 // 2026-08-28(v68)
     renderPendingRequests(data.pendingRequests);          // 2026-08-28(v68)
     if (data.away) {
@@ -2141,6 +2184,7 @@ async function sendChatMessage(){
     //   표시를 나중에 하면 방송 쪽 중복 검사를 통과해 같은 메시지가 두 번 그려집니다.
     //   ("엔터 한 번에 메시지가 두 개" 증상의 원인)
     renderedMsgIds.add(data.messageId);
+    hlNotify(data.messageId);   // 🔴 2026-11-22 방 사람들 폰에 알림
     await appendChatMessage({ id: data.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: 'text', content: payloadText, reply_to_message_id: replyToMessageId, expires_at: data.expiresAt, created_at: data.createdAt });
   } catch (e) {
     console.error('[hotline-room] 메시지 전송 실패', e);
@@ -3171,6 +3215,7 @@ async function uploadAndSendFile(file){
 
     // ⚠ 2026-08-26: 문자 전송과 같은 이유로 표시를 먼저 합니다(중복 렌더 방지).
     renderedMsgIds.add(msgData.messageId);
+    hlNotify(msgData.messageId);   // 🔴 2026-11-22 방 사람들 폰에 알림
     await appendChatMessage({ id: msgData.messageId, sender_anon_id: mySenderAnonId, sender_nickname: myNickname, message_type: fileType, content: uploadData.url, file_name: fileNamePayload, original_mime_type: file.type, created_at: msgData.createdAt });
     showState('stateChat'); updateNavActive('navChat');
   } catch (e) {
