@@ -240,7 +240,11 @@ function paintSrv(){
   if (need && !paintSrv.once) { paintSrv.once = true; $('logins').hidden = false; paintLogins(); }
 }
 function paintLogins(){
-  $('logins').innerHTML = Object.keys(SRV).map(function(k){ var s = SRV[k];
+  var allOk = Object.keys(SRV).every(function(k){ return SRV[k].state === 'ok'; });
+  var one = allOk ? '' : '<div class="card" style="border-color:var(--acc)"><b>세 서버 한 번에</b><span class="cap">세 서버의 아이디 · 비밀번호가 같으면 여기 한 번만 넣으세요. 다르면 오른쪽 칸에 따로 넣습니다.</span>' +
+    '<input type="text" id="u_all" placeholder="이메일(또는 닉네임)" autocomplete="username"><input type="password" id="p_all" placeholder="비밀번호" autocomplete="current-password">' +
+    '<button class="btn pri" type="button" id="bAll">한 번에 로그인</button><div class="err" id="eAll"></div></div>';
+  $('logins').innerHTML = one + Object.keys(SRV).map(function(k){ var s = SRV[k];
     if (s.state === 'ok') return '<div class="card"><b>' + esc(s.name) + ' ✓</b><span class="cap">' + esc(s.apps) + '</span><span class="cap">' + esc(s.who || '') + '</span>' +
       '<div class="row"><button class="btn" type="button" data-out="' + k + '">로그아웃</button></div></div>';
     return '<div class="card"><b>' + esc(s.name) + '</b><span class="cap">' + esc(s.apps) + ' — 관리자 계정</span>' +
@@ -249,6 +253,7 @@ function paintLogins(){
       '<button class="btn pri" type="button" data-in="' + k + '">로그인</button><div class="err">' + esc(s.err) + '</div></div>';
   }).join('');
   [].forEach.call($('logins').querySelectorAll('[data-in]'), function(b){ b.onclick = function(){ login(b.dataset.in); }; });
+  if ($('bAll')) { $('bAll').onclick = loginAll; $('p_all').onkeydown = function(e){ if (e.key === 'Enter') loginAll(); }; }
   [].forEach.call($('logins').querySelectorAll('[data-out]'), function(b){ b.onclick = async function(){ await SRV[b.dataset.out].sb.auth.signOut(); SRV[b.dataset.out].state = 'out'; ST.loaded = {}; paintSrv(); paintLogins(); load(); }; });
   [].forEach.call($('logins').querySelectorAll('input[type=password]'), function(i){ i.onkeydown = function(e){ if (e.key === 'Enter') login(i.id.slice(2)); }; });
 }
@@ -260,6 +265,21 @@ async function login(k){
   if (r.error) { s.err = '로그인 실패: 아이디 · 비밀번호를 확인해 주세요'; paintLogins(); return; }
   s.err = ''; ST.loaded = {}; await check(k); paintSrv(); paintLogins(); load();
   if (Object.keys(SRV).every(function(x){ return SRV[x].state === 'ok'; })) $('logins').hidden = true;
+}
+async function loginAll(){
+  var u = ($('u_all').value || '').trim(), pw = $('p_all').value || '';
+  if (!u || !pw) { $('eAll').textContent = '아이디와 비밀번호를 넣어 주세요'; return; }
+  var res = await Promise.all(Object.keys(SRV).filter(function(k){ return SRV[k].state !== 'ok'; }).map(async function(k){
+    var s = SRV[k], email = (k === 'burum' && u.indexOf('@') < 0) ? encodeURIComponent(u) + '@u.alias.internal' : u;
+    if (k !== 'burum' && u.indexOf('@') < 0) return s.name + ' ✗(이메일 필요)';
+    var r = await s.sb.auth.signInWithPassword({ email: email, password: pw });
+    if (r.error) { s.err = '이 아이디로는 로그인되지 않습니다'; return s.name + ' ✗'; }
+    s.err = ''; await check(k); return s.name + ' ✓';
+  }));
+  ST.loaded = {}; paintSrv(); paintLogins();
+  if ($('eAll')) $('eAll').textContent = res.join(' · ');
+  if (Object.keys(SRV).every(function(x){ return SRV[x].state === 'ok'; })) $('logins').hidden = true;
+  load();
 }
 async function check(k){
   var s = SRV[k]; var r = await s.sb.auth.getSession(); var ses = r.data && r.data.session;
