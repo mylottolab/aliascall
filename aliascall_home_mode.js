@@ -5,7 +5,7 @@
    · 이 폰만 시험: index.html?trydial=1 · 다이얼 아래 [본화면부터 보기로] 로 원래대로
    ===================================================================== */
 (function(){
-  var ALL = 'classic';   // ← 전체 전환 스위치: 'classic' | 'dial'
+  var ALL = 'dial';   // 2026-11-22 개편 — 다이얼 첫 화면(되돌리려면 'classic')   // ← 전체 전환 스위치: 'classic' | 'dial'
   var m = ALL;
   try { if (/[?&]trydial=1/.test(location.search)) localStorage.setItem('aliascall_home_mode', 'dial'); } catch (e) {}
   try { var l = localStorage.getItem('aliascall_home_mode'); if (l === 'dial' || l === 'classic') m = l; } catch (e) {}
