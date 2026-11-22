@@ -113,7 +113,7 @@
           inSlot:'번에 있음', clear:'이 칸 비우기', cancel:'닫기', loading:'회선을 읽는 중…', noLines:'아직 회선이 없습니다. 회선을 먼저 만들거나 초대를 받아 들어가 주세요.',
           login:'로그인하면 회선을 단축회선/단축번호에 넣을 수 있습니다.', goneAsk:'이 회선은 끝났거나 이 폰에서 찾을 수 없습니다. 다른 회선으로 바꿀까요?',
           ph:'번호를 누르고 [음성] · [영상] · [문자] · 숫자를 길게 누르면 단축회선/단축번호', del:'지움', call:'📞 연결', voice:'📞 음성', video:'🎥 영상', text:'💬 문자', short:'번호는 10자리예요.', noZero:'회선번호는 0으로 시작하지 않아요.',
-          none:'없는 회선번호예요. 번호를 다시 확인해 주세요.', resting:'지금 쉬고 있는 회선번호예요(회선 기간이 끝남).',
+          none:'현재 개통되지 않은 회선번호입니다. 번호를 확인해 주세요.', resting:'지금 쉬고 있는 회선번호예요(회선 기간이 끝남).',
           secure:'🔒 암호화 회선이라 번호만으로는 대화를 열 수 없어요. 회선 주인에게 초대 링크를 받아 주세요.', fail:'연결하지 못했어요. 잠시 뒤 다시 해 주세요.',
           off:'번호로 연락을 받지 않는 번호예요.', myNum:'📞 내 번호', good:'💎 좋은번호', self:'내 번호예요.', busy:'지금은 연결 요청이 많아요. 잠시 뒤 다시 해 주세요.' },
     en: { title:'⚡ Quick Lines/Numbers', big:'⤢ Larger', bigHint:'Double-tap = large keypad', edit:'Edit', done:'Done', empty:'Empty', add:'＋ Add', gone:'Ended', numT:'🔢 Or a 10-digit Aliascall number (no line yet)', numPh:'0000-000-000', numName:'Name (optional)', numSave:'Add number', numBad:'Enter all 10 digits',
