@@ -51,7 +51,7 @@
   /* 📞 2026-11-23 가운데를 위아래 반으로(centerCall) — 위 = 전화 걸기 · 아래 = 원래 가운데 */
   '.dh-split .dh-ct{top:60.5%;width:30%;gap:2px}.dh-split .dh-ct b{font-size:clamp(12.5px,3.7vw,16px);line-height:1.2}.dh-split .dh-ct .tap{margin-top:1px;padding:1px 7px;font-size:clamp(9.5px,2.6vw,11.5px)}' +
   '.dh-split .dh-ct .k2{font:900 clamp(15px,4.6vw,20px)/1 "Pretendard",system-ui,sans-serif;color:var(--dh-brand);margin-right:4px}' +
-  '.dh-call{position:absolute;left:50%;top:40.5%;transform:translate(-50%,-50%);pointer-events:none;color:#fff;text-align:center;line-height:1.15;display:flex;flex-direction:column;align-items:center;gap:1px}' +
+  '.dh-call{position:absolute;left:50%;top:41.8%;transform:translate(-50%,-50%);pointer-events:none;color:#fff;text-align:center;line-height:1.15;display:flex;flex-direction:column;align-items:center;gap:1px}' +
   '.dh-call b{font-size:clamp(13.5px,4.1vw,18px);font-weight:900;white-space:nowrap}.dh-call small{font-size:clamp(9.5px,2.6vw,11.5px);opacity:.92;white-space:nowrap}' +
   '.dh-ct .k{font:900 clamp(26px,8vw,36px)/1 "Pretendard",system-ui,sans-serif;color:var(--dh-brand)}' +
   '.dh-hint{text-align:center;font-size:14.5px;color:var(--dh-sub);margin:0;min-height:22px;line-height:1.55}' +
