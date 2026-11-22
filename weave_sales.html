@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>위브앱 매출 센터</title>
+<!--
+ 💰 2026-11-22 신설 — 위브앱솔루션 10개 앱 매출 센터 (weave_admin 의 「매출 센터」 탭)
+   · 기간: 달력(오늘 · 이번 주 · 이번 달 · 올해) / 최근(7일 · 30일 · 365일) / 직접 — 지난 기간과 비교(증감 %)
+   · 금액: 총매출(고객이 낸 돈) · 환불 · 수수료(결제수단별 비율) · 순매출(회사에 들어오는 돈)
+   · 8개 앱 합계와 로또(알림로또 · PaperLotto) 합계는 따로
+   · 서버 3곳에 각각 관리자로 로그인합니다(가림 · 부름 · PaperLotto). 이 화면에는 비밀번호 · 비밀 키가 없습니다(공개용 anon 키만).
+   · 숫자는 각 서버의 weave_sales 함수(관리자만)가 냅니다 — 가림: baroka/sql/28_weave_sales.sql · 부름: wafa/sql/11_weave_sales.sql
+     PaperLotto 는 이미 있는 admin-business-reports(payments) 를 씁니다. 알림로또는 아직 연결 전(기존 화면 링크).
+-->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#f3f4f7;--card:#fff;--ink:#1b1f2a;--sub:#5d6475;--line:#dfe3ea;--acc:#0f766e;--acc-soft:#e3f3f1;--up:#0f7a3d;--down:#c2410c;--bar:#0f766e;--bar2:#b7c3d6;--warn:#fff4e5;--warn-ink:#8a4b00}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11141b;--card:#1a1f29;--ink:#e8ebf2;--sub:#9aa3b5;--line:#2c3342;--acc:#3ec5b5;--acc-soft:#16302e;--up:#4ade80;--down:#fb923c;--bar:#3ec5b5;--bar2:#3a4458;--warn:#3a2a12;--warn-ink:#ffcf8a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#11141b;--card:#1a1f29;--ink:#e8ebf2;--sub:#9aa3b5;--line:#2c3342;--acc:#3ec5b5;--acc-soft:#16302e;--up:#4ade80;--down:#fb923c;--bar:#3ec5b5;--bar2:#3a4458;--warn:#3a2a12;--warn-ink:#ffcf8a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;font-size:14px;word-break:keep-all}
+.wrap{max-width:1180px;margin:0 auto;padding:14px max(16px,env(safe-area-inset-right)) 60px max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:14px}
+h1{font-size:19px;margin:0}
+h2{font-size:15px;margin:0 0 8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:7px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--acc)}
+.btn.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.seg{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.seg .lab{font-size:12px;color:var(--sub);font-weight:800;margin-right:2px}
+input[type=date],input[type=text],input[type=password],input[type=number]{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 8px;font:inherit;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+.cap{font-size:12px;color:var(--sub)}
+.srv{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:700;cursor:pointer}
+.chip i{width:8px;height:8px;border-radius:50%;background:#c4c9d4;display:inline-block}
+.chip.ok i{background:#16a34a}.chip.bad i{background:#dc2626}
+#logins{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+#logins .card{display:flex;flex-direction:column;gap:6px}
+#logins .err{color:var(--down);font-size:12px;min-height:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.kpi .k{font-size:12px;color:var(--sub);font-weight:800}
+.kpi .v{font-size:21px;font-weight:900;margin-top:3px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--sub);margin-top:2px}
+.kpi.main{background:var(--acc-soft);border-color:transparent}
+.up{color:var(--up);font-weight:800}.down{color:var(--down);font-weight:800}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.tabs button{border:none;background:none;color:var(--sub);font:inherit;font-size:14px;font-weight:800;padding:9px 12px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--acc)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-size:12px;color:var(--sub);font-weight:800;background:var(--bg)}
+td.l,th.l{text-align:left}
+tr.sum td{font-weight:900;background:var(--acc-soft)}
+tr.grp td{font-weight:800;color:var(--sub);background:var(--bg);text-align:left}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--acc-soft)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px}
+.note{background:var(--warn);color:var(--warn-ink);border-radius:10px;padding:9px 12px;font-size:12.5px;line-height:1.6}
+.muted{color:var(--sub)}
+#chart svg{display:block;width:100%;height:220px}
+#chart text{fill:var(--sub);font-size:10px}
+.set{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.set label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--sub);font-weight:700}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row" style="justify-content:space-between">
+    <h1>💰 매출 센터</h1>
+    <div class="row">
+      <div class="srv" id="srv"></div>
+      <button class="btn" id="bSet" type="button">⚙ 수수료 · 환율</button>
+      <button class="btn" id="bReload" type="button">↻ 새로고침</button>
+      <button class="btn pri" id="bXl" type="button">⬇ 엑셀</button>
+    </div>
+  </div>
+
+  <div id="logins" hidden></div>
+
+  <div class="card" id="setBox" hidden>
+    <h2>수수료 · 환율 (이 브라우저에 기억)</h2>
+    <div class="set">
+      <label>구글 Play 수수료 %<input type="number" id="fGoogle" step="0.1" min="0" max="100"></label>
+      <label>애플 App Store 수수료 %<input type="number" id="fApple" step="0.1" min="0" max="100"></label>
+      <label>카드결제(PG) 수수료 %<input type="number" id="fPg" step="0.1" min="0" max="100"></label>
+      <label>무통장입금 수수료 %<input type="number" id="fBank" step="0.1" min="0" max="100"></label>
+      <label>달러 환율 (원/1$)<input type="number" id="fUsd" step="1" min="1"></label>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="bSetSave" type="button">저장하고 다시 계산</button><span class="cap">기본: 구글 15% · 애플 15% · 카드 5% · 무통장 0% · 1$ = 1,400원</span></div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="gap:14px">
+      <div class="seg"><span class="lab">달력</span>
+        <button class="btn" data-p="today" type="button">오늘</button><button class="btn" data-p="week" type="button">이번 주</button>
+        <button class="btn" data-p="month" type="button">이번 달</button><button class="btn" data-p="year" type="button">올해</button></div>
+      <div class="seg"><span class="lab">최근</span>
+        <button class="btn" data-p="r1" type="button">어제</button><button class="btn" data-p="r7" type="button">7일</button>
+        <button class="btn" data-p="r30" type="button">30일</button><button class="btn" data-p="r365" type="button">365일</button></div>
+      <div class="seg"><span class="lab">직접</span>
+        <input type="date" id="dFrom"> ~ <input type="date" id="dTo"> <button class="btn" id="bCustom" type="button">보기</button></div>
+    </div>
+    <div class="cap" id="perCap" style="margin-top:8px"></div>
+  </div>
+
+  <div id="miss" class="note" hidden></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="card"><div class="row" style="justify-content:space-between"><h2 id="chartTitle">순매출 흐름</h2><span class="cap" id="chartCap"></span></div><div id="chart"></div></div>
+
+  <div class="card" id="appCard"><h2>앱별 매출</h2><div class="tw"><table id="tApps"></table></div>
+    <div class="cap" style="margin-top:6px">줄을 누르면 그 앱만 봅니다. 증감은 순매출 기준(지난 기간 대비).</div></div>
+
+  <div class="two">
+    <div class="card"><h2>상품별</h2><div class="tw"><table id="tProd"></table></div></div>
+    <div class="card"><h2>결제수단별</h2><div class="tw"><table id="tChan"></table></div></div>
+  </div>
+
+  <div class="card"><h2 id="dayTitle">날짜별</h2><div class="tw"><table id="tDays"></table></div></div>
+
+  <div class="cap" style="line-height:1.7">
+    · 총매출 = 고객이 결제한 금액(완료 + 나중에 환불된 결제) · 환불은 그 결제일에 함께 잡힙니다 · 수수료 = (총매출 − 환불) × 결제수단별 비율 · 순매출 = 총매출 − 환불 − 수수료<br>
+    · 구글 · 애플 수수료는 추정치입니다(실제 정산은 각 스토어 콘솔). 부가세는 빼지 않은 금액입니다 · 날짜는 한국 시간<br>
+    · 앱은 산 상품으로 나눕니다(가림콜 앱에서 산 단골창구 · 바로카 상품은 단골창구 · 바로카로). 와파 구독은 2026-11-22부터 갱신마다 기록(그 전 구독자는 지금 기간 결제 1번을 추정해 넣음)
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){
+'use strict';
+var $ = function(id){ return document.getElementById(id); };
+var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); };
+var won = function(n){ return Math.round(Number(n || 0)).toLocaleString('ko-KR') + '원'; };
+var num = function(n){ return Math.round(Number(n || 0)).toLocaleString('ko-KR'); };
+var store = { get: function(k, d){ try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+              set: function(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+
+/* ── 앱 ── */
+var APPS = [
+  { id:'wafa', name:'와파', srv:'burum' }, { id:'burum', name:'부름', srv:'burum' }, { id:'nureum', name:'누름', srv:'burum' }, { id:'baronu', name:'바로너', srv:'burum' },
+  { id:'garim', name:'가림콜', srv:'garim' }, { id:'baroka', name:'바로카', srv:'garim' }, { id:'dantok', name:'단톡방', srv:'garim' }, { id:'dangol', name:'단골창구', srv:'garim' },
+  { id:'allim', name:'알림로또', srv:'allim', lotto:true }, { id:'paper', name:'PaperLotto', srv:'paper', lotto:true } ];
+var APP = {}; APPS.forEach(function(a){ APP[a.id] = a; });
+var CH = { google:'구글 Play', apple:'애플 App Store', pg:'카드결제(PG)', bank:'무통장입금' };
+
+/* ── 상품 이름 ── */
+var PN = {
+  wafa_1m:'와파 구독 1개월', wafa_3m:'와파 구독 3개월', wafa_6m:'와파 구독 6개월', wafa_12m:'와파 구독 12개월', wafa_addon:'와파 보충권',
+  wafa_number_5:'와파 번호(5)', wafa_number_4:'와파 번호(4)', wafa_number_3:'와파 번호(3)', wafa_number_extra:'와파 번호 하나 더',
+  burum_plan_3m_a:'부름 이용권 3개월', burum_plan_3m:'부름 이용권 3개월', burum_plan_6m:'부름 이용권 6개월', burum_plan_12m:'부름 이용권 12개월',
+  burum_storage_1gb_3m:'부름 추가 저장 1GB', burum_number_silver:'부름번호 실버', burum_number_gold:'부름번호 골드', burum_number_platinum:'부름번호 프리미엄',
+  burum_number_extra:'부름번호 하나 더', burum_number_change:'부름번호 변경', burum_number_keep:'부름번호 1년 유지', burum_number_transfer:'부름번호 명의 이전',
+  sos_1m:'안심 긴급 1개월', sos_12m:'안심 긴급 12개월', baronu_sos_1m:'바로너 안심 긴급 1개월', baronu_sos_12m:'바로너 안심 긴급 12개월',
+  nureum_line_1m:'누름 1개월', nureum_line_12m:'누름 12개월', nureum_voice_300:'누름 음성 300분', nureum_video_100:'누름 영상 100분', nureum_storage_1gb:'누름 저장 1GB',
+  baronu_line_1m:'바로너 1개월', baronu_line_12m:'바로너 12개월', baronu_voice_300:'바로너 음성 300분', baronu_video_100:'바로너 영상 100분', baronu_storage_1gb:'바로너 저장 1GB',
+  ac_plan_emergency_12m:'가림 긴급 12개월', ac_plan_emergency_pro_12m:'가림 긴급 프로 12개월',
+  ac_plan_basic_3m:'회선 기본 3개월', ac_plan_basic_6m:'회선 기본 6개월', ac_plan_basic_12m:'회선 기본 12개월',
+  ac_plan_premium_3m:'회선 프리미엄 3개월', ac_plan_premium_6m:'회선 프리미엄 6개월', ac_plan_premium_12m:'회선 프리미엄 12개월',
+  ac_pro_starter_1m:'전문관리 스타터 1개월', ac_pro_starter_6m:'전문관리 스타터 6개월', ac_pro_starter_12m:'전문관리 스타터 12개월',
+  ac_pro_business_1m:'전문관리 비즈니스 1개월', ac_pro_business_6m:'전문관리 비즈니스 6개월', ac_pro_business_12m:'전문관리 비즈니스 12개월',
+  ac_pro_enterprise_1m:'전문관리 엔터프라이즈 1개월', ac_pro_enterprise_6m:'전문관리 엔터프라이즈 6개월', ac_pro_enterprise_12m:'전문관리 엔터프라이즈 12개월',
+  ac_listing_1m:'업체 게재 1개월', ac_listing_6m:'업체 게재 6개월', ac_listing_12m:'업체 게재 12개월', ac_usage_1gb_3m:'회선 추가 용량 1GB',
+  ac_num_4_basic:'회선번호 4자리', ac_num_4_good:'회선번호 4자리(좋은)', ac_num_5_basic:'회선번호 5자리', ac_num_5_good:'회선번호 5자리(좋은)',
+  ac_num_6_basic:'회선번호 6자리', ac_num_6_good:'회선번호 6자리(좋은)', ac_num_7_basic:'회선번호 7자리', ac_num_7_good:'회선번호 7자리(좋은)',
+  ac_num_8_good:'회선번호 8자리(좋은)', ac_num_keep:'회선번호 유지', ac_num_transfer:'회선번호 명의 이전',
+  baroka_reg:'바로카 등록권', baroka_change:'바로카 변경권', garim_car_reg:'바로카 등록권(가림콜에서)', garim_car_change:'바로카 변경권(가림콜에서)',
+  baroka_g20:'바로카 갤러리 20', baroka_g60:'바로카 명의 이전',
+  dangol_1y:'단골창구 1년', dangol_plus_1y:'단골창구 플러스 1년', dangol_premium_1y:'단골창구 프리미엄 1년',
+  garim_dangol_1y:'단골창구 1년(가림콜에서)', garim_dangol_plus_1y:'단골창구 플러스 1년(가림콜에서)', garim_dangol_premium_1y:'단골창구 프리미엄 1년(가림콜에서)',
+  dangol_voice_300:'단골창구 음성 300분', dangol_video_100:'단골창구 영상 100분', dangol_store_1g:'단골창구 저장 1GB',
+  garim_dangol_voice_300:'단골창구 음성 300분(가림콜에서)', garim_dangol_video_100:'단골창구 영상 100분(가림콜에서)', garim_dangol_store_1g:'단골창구 저장 1GB(가림콜에서)',
+  dantok_room_1y:'단톡방 방 1년', dantok_room_10g:'단톡방 방 저장 10GB', dantok_gal_5g:'단톡방 내 갤러리 5GB', dantok_gal_15g:'단톡방 내 갤러리 15GB'
+};
+var pname = function(p){ return PN[p] || p; };
+
+/* ── 설정(수수료 · 환율) ── */
+var CFG = Object.assign({ google:15, apple:15, pg:5, bank:0, usd:1400 }, store.get('weave_sales_cfg', {}));
+var rate = function(ch){ var v = Number(CFG[ch]); return isFinite(v) ? v / 100 : 0; };
+
+/* ── 서버 ── */
+var SRV = {
+  garim: { name:'가림 서버', apps:'가림콜 · 바로카 · 단톡방 · 단골창구', url:'https://qmwaraittiurkynszjts.supabase.co',
+           key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y',
+           id:'이메일' },
+  burum: { name:'부름 서버', apps:'와파 · 부름 · 누름 · 바로너', url:'https://azredlrnvsssfjytaotb.supabase.co',
+           key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6cmVkbHJudnNzc2ZqeXRhb3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDg1MjgsImV4cCI6MjEwMzk4NDUyOH0.2gTxzr54vRSZzFnyhLSd1Imv3OnwRBQs925CYeXdonI',
+           id:'닉네임 또는 이메일' },
+  paper: { name:'PaperLotto 서버', apps:'PaperLotto', url:'https://wzrqaozlbfyejsbvnrxk.supabase.co',
+           key:'sb_publishable_3KrYMzwrVlbYr-e9d8UiLA_KgvSs8tC', id:'이메일' }
+};
+Object.keys(SRV).forEach(function(k){
+  var s = SRV[k];
+  s.sb = window.supabase.createClient(s.url, s.key, { auth: { storageKey: 'weave-sales-' + k, persistSession: true, autoRefreshToken: true } });
+  s.state = 'out';   // out · ok · bad
+  s.err = '';
+});
+
+/* ── 날짜 (한국 시간) ── */
+var D = {
+  today: function(){ return new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); },
+  p: function(s){ var a = s.split('-'); return new Date(Date.UTC(+a[0], +a[1] - 1, +a[2])); },
+  f: function(d){ return d.toISOString().slice(0, 10); },
+  add: function(s, n){ var d = D.p(s); d.setUTCDate(d.getUTCDate() + n); return D.f(d); },
+  diff: function(a, b){ return Math.round((D.p(b) - D.p(a)) / 864e5); },
+  addM: function(s, n){ var d = D.p(s), day = d.getUTCDate(); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() + n);
+    var last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate(); d.setUTCDate(Math.min(day, last)); return D.f(d); }
+};
+function period(p, cf, ct){
+  var t = D.today(), c, v, lab, cmp;
+  if (p === 'today') { c = [t, t]; v = [D.add(t, -1), D.add(t, -1)]; lab = '오늘'; cmp = '어제'; }
+  else if (p === 'week') { var wd = (D.p(t).getUTCDay() + 6) % 7, m = D.add(t, -wd); c = [m, t]; v = [D.add(m, -7), D.add(t, -7)]; lab = '이번 주(월~오늘)'; cmp = '지난주 같은 기간'; }
+  else if (p === 'month') { var f = t.slice(0, 8) + '01'; c = [f, t]; v = [D.addM(f, -1), D.addM(t, -1)]; lab = '이번 달'; cmp = '지난달 같은 기간'; }
+  else if (p === 'year') { var y = t.slice(0, 4) + '-01-01'; c = [y, t]; v = [D.addM(y, -12), D.addM(t, -12)]; lab = '올해'; cmp = '작년 같은 기간'; }
+  else if (p === 'r1') { var yd = D.add(t, -1); c = [yd, yd]; v = [D.add(t, -2), D.add(t, -2)]; lab = '어제'; cmp = '그제'; }
+  else if (p === 'custom') { c = [cf, ct]; var n = D.diff(cf, ct) + 1; v = [D.add(cf, -n), D.add(cf, -1)]; lab = cf + ' ~ ' + ct; cmp = '바로 앞 ' + n + '일'; }
+  else { var k = { r7:7, r30:30, r365:365 }[p] || 30; c = [D.add(t, -(k - 1)), t]; v = [D.add(t, -(2 * k - 1)), D.add(t, -k)]; lab = '최근 ' + k + '일'; cmp = '그 앞 ' + k + '일'; }
+  return { key:p, cur:c, prev:v, label:lab, cmp:cmp };
+}
+
+/* ── 상태 ── */
+var ST = { per: period(store.get('weave_sales_per', 'month')), tab: store.get('weave_sales_tab', 'all'), rows: [], loaded: {} };
+if (ST.per.key === 'custom' || !APP[ST.tab] && ST.tab !== 'all' && ST.tab !== 'g8' && ST.tab !== 'lotto') { ST.per = period('month'); ST.tab = 'all'; }
+
+/* ── 로그인 ── */
+function paintSrv(){
+  $('srv').innerHTML = Object.keys(SRV).map(function(k){ var s = SRV[k];
+    return '<span class="chip ' + (s.state === 'ok' ? 'ok' : s.state === 'bad' ? 'bad' : '') + '" data-s="' + k + '" title="' + esc(s.apps) + '"><i></i>' + esc(s.name) +
+      (s.state === 'ok' ? '' : s.state === 'bad' ? ' · 확인 필요' : ' · 로그인') + '</span>'; }).join('');
+  [].forEach.call($('srv').querySelectorAll('.chip'), function(c){ c.onclick = function(){ $('logins').hidden = !$('logins').hidden; paintLogins(); }; });
+  var need = Object.keys(SRV).some(function(k){ return SRV[k].state !== 'ok'; });
+  if (need && !paintSrv.once) { paintSrv.once = true; $('logins').hidden = false; paintLogins(); }
+}
+function paintLogins(){
+  $('logins').innerHTML = Object.keys(SRV).map(function(k){ var s = SRV[k];
+    if (s.state === 'ok') return '<div class="card"><b>' + esc(s.name) + ' ✓</b><span class="cap">' + esc(s.apps) + '</span><span class="cap">' + esc(s.who || '') + '</span>' +
+      '<div class="row"><button class="btn" type="button" data-out="' + k + '">로그아웃</button></div></div>';
+    return '<div class="card"><b>' + esc(s.name) + '</b><span class="cap">' + esc(s.apps) + ' — 관리자 계정</span>' +
+      '<input type="text" id="u_' + k + '" placeholder="' + esc(s.id) + '" autocomplete="username">' +
+      '<input type="password" id="p_' + k + '" placeholder="비밀번호" autocomplete="current-password">' +
+      '<button class="btn pri" type="button" data-in="' + k + '">로그인</button><div class="err">' + esc(s.err) + '</div></div>';
+  }).join('');
+  [].forEach.call($('logins').querySelectorAll('[data-in]'), function(b){ b.onclick = function(){ login(b.dataset.in); }; });
+  [].forEach.call($('logins').querySelectorAll('[data-out]'), function(b){ b.onclick = async function(){ await SRV[b.dataset.out].sb.auth.signOut(); SRV[b.dataset.out].state = 'out'; ST.loaded = {}; paintSrv(); paintLogins(); load(); }; });
+  [].forEach.call($('logins').querySelectorAll('input[type=password]'), function(i){ i.onkeydown = function(e){ if (e.key === 'Enter') login(i.id.slice(2)); }; });
+}
+async function login(k){
+  var s = SRV[k], u = ($('u_' + k).value || '').trim(), pw = $('p_' + k).value || '';
+  if (!u || !pw) { s.err = '아이디와 비밀번호를 넣어 주세요'; paintLogins(); return; }
+  var email = (k === 'burum' && u.indexOf('@') < 0) ? encodeURIComponent(u) + '@u.alias.internal' : u;
+  var r = await s.sb.auth.signInWithPassword({ email: email, password: pw });
+  if (r.error) { s.err = '로그인 실패: 아이디 · 비밀번호를 확인해 주세요'; paintLogins(); return; }
+  s.err = ''; ST.loaded = {}; await check(k); paintSrv(); paintLogins(); load();
+  if (Object.keys(SRV).every(function(x){ return SRV[x].state === 'ok'; })) $('logins').hidden = true;
+}
+async function check(k){
+  var s = SRV[k]; var r = await s.sb.auth.getSession(); var ses = r.data && r.data.session;
+  if (!ses) { s.state = 'out'; return; }
+  s.who = ses.user.email ? decodeURIComponent(ses.user.email.replace('@u.alias.internal', '')) : '';
+  s.state = 'ok';
+}
+
+/* ── 불러오기 ── */
+async function fetchSrv(k, from, to){
+  var s = SRV[k];
+  if (s.state !== 'ok') return null;
+  try {
+    if (k === 'paper') {
+      var ses = (await s.sb.auth.getSession()).data.session;
+      var r = await fetch(s.url + '/functions/v1/admin-business-reports?report=payments&from=' + from + '&to=' + to, { headers: { Authorization: 'Bearer ' + ses.access_token, apikey: s.key } });
+      if (r.status === 401 || r.status === 403) { s.state = 'bad'; s.err = 'PaperLotto 관리자 계정이 아닙니다'; return null; }
+      var j = await r.json();
+      return (j.items || []).map(function(it){
+        var st = String(it.status || '').toLowerCase();
+        var okk = ['completed', 'approved', 'paid', 'confirmed', 'done', 'success', 'refunded'].indexOf(st) >= 0;
+        if (!okk) return null;
+        var ml = String(it.method_label || it.method || '').toLowerCase();
+        var ch = it.method === 'bank' ? 'bank' : ml.indexOf('google') >= 0 ? 'google' : (ml.indexOf('app_store') >= 0 || ml.indexOf('apple') >= 0) ? 'apple' : 'pg';
+        var amt = Number(it.amount || 0); if (String(it.currency || 'KRW').toUpperCase() === 'USD') amt = Math.round(amt * CFG.usd);
+        var day = new Date(Date.parse(it.date) + 9 * 3600e3).toISOString().slice(0, 10);
+        var ref = st === 'refunded';
+        return { day: day, app: 'paper', product: it.points ? ('포인트 ' + Number(it.points).toLocaleString('ko-KR') + 'P') : '포인트 충전', channel: ch,
+                 orders: 1, gross: amt, refunds: ref ? 1 : 0, refund: ref ? amt : 0 };
+      }).filter(Boolean);
+    }
+    var res = await s.sb.rpc('weave_sales', { p_from: from, p_to: to, p_usd_krw: CFG.usd });
+    if (res.error) {
+      var m = String(res.error.message || '');
+      s.state = 'bad'; s.err = m.indexOf('not_admin') >= 0 ? '관리자 계정이 아닙니다' : (m.indexOf('weave_sales') >= 0 || res.error.code === 'PGRST202') ? '서버에 매출 함수(SQL)가 아직 없습니다' : ('오류: ' + m.slice(0, 80));
+      return null;
+    }
+    return (res.data && res.data.rows || []).map(function(x){ return { day: x.day, app: x.app, product: x.product, channel: x.channel,
+      orders: +x.orders || 0, gross: +x.gross || 0, refunds: +x.refunds || 0, refund: +x.refund || 0 }; });
+  } catch (e) { s.state = 'bad'; s.err = '불러오기 실패: ' + String(e && e.message || e).slice(0, 80); return null; }
+}
+var busy = 0;
+async function load(){
+  var my = ++busy, P = ST.per, from = P.prev[0], to = P.cur[1], key = from + '|' + to + '|' + CFG.usd;
+  paintPer();
+  if (ST.loaded.key !== key) {
+    $('kpis').innerHTML = '<div class="card kpi"><div class="k">불러오는 중…</div></div>';
+    var out = await Promise.all(['garim', 'burum', 'paper'].map(function(k){ return fetchSrv(k, from, to); }));
+    if (my !== busy) return;
+    ST.rows = [].concat.apply([], out.filter(Boolean));
+    ST.have = { garim: !!out[0], burum: !!out[1], paper: !!out[2], allim: false };
+    ST.loaded = { key: key };
+    paintSrv(); if (!$('logins').hidden) paintLogins();
+  }
+  paint();
+}
+
+/* ── 계산 ── */
+function blank(){ return { orders:0, gross:0, refunds:0, refund:0, fee:0, net:0 }; }
+function addTo(a, r){ a.orders += r.orders; a.gross += r.gross; a.refunds += r.refunds; a.refund += r.refund;
+  var f = Math.max(0, r.gross - r.refund) * rate(r.channel); a.fee += f; a.net += r.gross - r.refund - f; return a; }
+function inRange(r, rg){ return r.day >= rg[0] && r.day <= rg[1]; }
+function scopeOk(r, tab){ if (tab === 'all') return true; if (tab === 'g8') return !APP[r.app].lotto; if (tab === 'lotto') return !!APP[r.app].lotto; return r.app === tab; }
+function sum(rg, tab){ var a = blank(); ST.rows.forEach(function(r){ if (inRange(r, rg) && scopeOk(r, tab)) addTo(a, r); }); return a; }
+function delta(cur, prev){
+  if (!prev) return cur ? '<span class="up">새로 생김</span>' : '<span class="muted">—</span>';
+  var p = (cur - prev) / Math.abs(prev) * 100; var s = (p >= 0 ? '▲ ' : '▼ ') + Math.abs(p).toFixed(1) + '%';
+  return '<span class="' + (p >= 0 ? 'up' : 'down') + '">' + s + '</span>';
+}
+
+/* ── 그리기 ── */
+function paintPer(){
+  var P = ST.per;
+  [].forEach.call(document.querySelectorAll('[data-p]'), function(b){ b.classList.toggle('on', b.dataset.p === P.key); });
+  $('dFrom').value = P.cur[0]; $('dTo').value = P.cur[1];
+  $('perCap').innerHTML = '<b>' + esc(P.label) + '</b> ' + esc(P.cur[0] + ' ~ ' + P.cur[1]) + ' · 비교: ' + esc(P.cmp) + ' (' + esc(P.prev[0] + ' ~ ' + P.prev[1]) + ')';
+}
+function missNote(){
+  var miss = [];
+  ['garim', 'burum', 'paper'].forEach(function(k){ if (!ST.have || !ST.have[k]) miss.push(SRV[k].name + '(' + SRV[k].apps + ')' + (SRV[k].err ? ' — ' + SRV[k].err : ' — 로그인 필요')); });
+  miss.push('알림로또 — 아직 연결 전(알림로또 탭의 기존 매출 화면에서 확인)');
+  $('miss').hidden = false;
+  $('miss').innerHTML = '합계에 빠진 곳: ' + miss.map(esc).join(' · ');
+}
+function kpi(cls, k, a, b, extra){
+  return '<div class="card kpi ' + (cls || '') + '"><div class="k">' + esc(k) + '</div><div class="v">' + won(a.net) + '</div>' +
+    '<div class="s">순매출 · ' + delta(a.net, b.net) + '</div>' +
+    '<div class="s">총 ' + won(a.gross) + ' · ' + num(a.orders) + '건</div>' +
+    '<div class="s">수수료 ' + won(a.fee) + ' · 환불 ' + won(a.refund) + (a.refunds ? ' (' + a.refunds + '건)' : '') + '</div>' + (extra || '') + '</div>';
+}
+function paint(){
+  missNote();
+  var P = ST.per, tab = ST.tab;
+  // KPI
+  var g8c = sum(P.cur, 'g8'), g8p = sum(P.prev, 'g8'), lc = sum(P.cur, 'lotto'), lp = sum(P.prev, 'lotto');
+  var html = kpi('main', '8개 앱 합계', g8c, g8p) + kpi('', '로또 합계 (따로)', lc, lp);
+  if (APP[tab]) html += kpi('main', APP[tab].name, sum(P.cur, tab), sum(P.prev, tab));
+  else {
+    var tc = sum(P.cur, tab === 'lotto' ? 'lotto' : 'g8');
+    html += '<div class="card kpi"><div class="k">총매출 (' + (tab === 'lotto' ? '로또' : '8개 앱') + ')</div><div class="v">' + won(tc.gross) + '</div><div class="s">결제 ' + num(tc.orders) + '건 · 지난 기간 ' + won((tab === 'lotto' ? lp : g8p).gross) + '</div></div>';
+    html += '<div class="card kpi"><div class="k">수수료 · 환불</div><div class="v">' + won(tc.fee + tc.refund) + '</div><div class="s">수수료 ' + won(tc.fee) + ' · 환불 ' + won(tc.refund) + '</div></div>';
+  }
+  $('kpis').innerHTML = html;
+
+  // 탭
+  var tabs = [['all', '전체'], ['g8', '8개 앱'], ['lotto', '로또']].concat(APPS.map(function(a){ return [a.id, a.name]; }));
+  $('tabs').innerHTML = tabs.map(function(t){ return '<button type="button" data-t="' + t[0] + '" class="' + (t[0] === tab ? 'on' : '') + '">' + esc(t[1]) + '</button>'; }).join('');
+  [].forEach.call($('tabs').querySelectorAll('button'), function(b){ b.onclick = function(){ ST.tab = b.dataset.t; store.set('weave_sales_tab', ST.tab); paint(); }; });
+
+  // 앱별 표
+  $('appCard').hidden = !!APP[tab];
+  if (!APP[tab]) {
+    var list = APPS.filter(function(a){ return tab === 'all' || (tab === 'lotto' ? a.lotto : !a.lotto); });
+    var rowsH = [], grp = function(lot){ return list.filter(function(a){ return !!a.lotto === lot; }); };
+    var head = '<tr><th class="l">앱</th><th>건수</th><th>총매출</th><th>환불</th><th>수수료</th><th>순매출</th><th>지난 기간 순매출</th><th>증감</th></tr>';
+    [false, true].forEach(function(lot){
+      var g = grp(lot); if (!g.length) return;
+      var tc = blank(), tp = blank();
+      g.forEach(function(a){
+        var c = sum(P.cur, a.id), p = sum(P.prev, a.id); ['orders', 'gross', 'refunds', 'refund', 'fee', 'net'].forEach(function(f){ tc[f] += c[f]; tp[f] += p[f]; });
+        var have = ST.have && ST.have[a.srv];
+        rowsH.push('<tr class="click" data-a="' + a.id + '"><td class="l">' + esc(a.name) + '</td>' + (have
+          ? '<td>' + num(c.orders) + '</td><td>' + won(c.gross) + '</td><td>' + won(c.refund) + '</td><td>' + won(c.fee) + '</td><td><b>' + won(c.net) + '</b></td><td>' + won(p.net) + '</td><td>' + delta(c.net, p.net) + '</td>'
+          : '<td colspan="7" class="l muted">' + (a.srv === 'allim' ? '연결 전' : '로그인 필요') + '</td>') + '</tr>');
+      });
+      rowsH.push('<tr class="sum"><td class="l">' + (lot ? '로또 합계' : '8개 앱 합계') + '</td><td>' + num(tc.orders) + '</td><td>' + won(tc.gross) + '</td><td>' + won(tc.refund) + '</td><td>' + won(tc.fee) + '</td><td>' + won(tc.net) + '</td><td>' + won(tp.net) + '</td><td>' + delta(tc.net, tp.net) + '</td></tr>');
+    });
+    $('tApps').innerHTML = head + rowsH.join('');
+    [].forEach.call($('tApps').querySelectorAll('tr.click'), function(tr){ tr.onclick = function(){ ST.tab = tr.dataset.a; store.set('weave_sales_tab', ST.tab); paint(); scrollTo({ top: 0, behavior: 'smooth' }); }; });
+  }
+
+  // 상품별 · 수단별
+  var by = function(field, nameFn){
+    var m = {}; ST.rows.forEach(function(r){ if (!inRange(r, P.cur) || !scopeOk(r, tab)) return; var k = (APP[tab] ? '' : r.app + '|') + r[field]; m[k] = m[k] || { app: r.app, k: r[field], a: blank() }; addTo(m[k].a, r); });
+    var arr = Object.keys(m).map(function(k){ return m[k]; }).sort(function(x, y){ return y.a.gross - x.a.gross; });
+    var tot = blank(); arr.forEach(function(x){ ['orders', 'gross', 'refunds', 'refund', 'fee', 'net'].forEach(function(f){ tot[f] += x.a[f]; }); });
+    var h = '<tr><th class="l">' + (field === 'product' ? '상품' : '결제수단') + '</th><th>건수</th><th>총매출</th><th>환불</th><th>수수료</th><th>순매출</th></tr>';
+    if (!arr.length) return h + '<tr><td colspan="6" class="l muted">이 기간에는 결제가 없습니다.</td></tr>';
+    return h + arr.map(function(x){ return '<tr><td class="l">' + esc(nameFn(x.k)) + (APP[tab] ? '' : ' <span class="muted">· ' + esc(APP[x.app].name) + '</span>') + '</td><td>' + num(x.a.orders) + '</td><td>' + won(x.a.gross) + '</td><td>' + won(x.a.refund) + '</td><td>' + won(x.a.fee) + '</td><td><b>' + won(x.a.net) + '</b></td></tr>'; }).join('') +
+      '<tr class="sum"><td class="l">합계</td><td>' + num(tot.orders) + '</td><td>' + won(tot.gross) + '</td><td>' + won(tot.refund) + '</td><td>' + won(tot.fee) + '</td><td>' + won(tot.net) + '</td></tr>';
+  };
+  $('tProd').innerHTML = by('product', pname);
+  $('tChan').innerHTML = by('channel', function(c){ return (CH[c] || c) + ' (' + (Number(CFG[c]) || 0) + '%)'; });
+
+  // 날짜별 (길면 달별)
+  var days = D.diff(P.cur[0], P.cur[1]) + 1, monthly = days > 62;
+  var bucket = function(d){ return monthly ? d.slice(0, 7) : d; };
+  var keys = []; if (monthly) { var mm = P.cur[0].slice(0, 7); while (mm <= P.cur[1].slice(0, 7)) { keys.push(mm); mm = D.addM(mm + '-01', 1).slice(0, 7); } }
+  else for (var i = 0; i < days; i++) keys.push(D.add(P.cur[0], i));
+  var bm = {}; keys.forEach(function(k){ bm[k] = blank(); });
+  ST.rows.forEach(function(r){ if (inRange(r, P.cur) && scopeOk(r, tab) && bm[bucket(r.day)]) addTo(bm[bucket(r.day)], r); });
+  $('dayTitle').textContent = monthly ? '달별' : '날짜별';
+  $('tDays').innerHTML = '<tr><th class="l">' + (monthly ? '달' : '날짜') + '</th><th>건수</th><th>총매출</th><th>환불</th><th>수수료</th><th>순매출</th></tr>' +
+    keys.slice().reverse().map(function(k){ var a = bm[k]; return '<tr><td class="l">' + esc(k) + '</td><td>' + num(a.orders) + '</td><td>' + won(a.gross) + '</td><td>' + won(a.refund) + '</td><td>' + won(a.fee) + '</td><td><b>' + won(a.net) + '</b></td></tr>'; }).join('');
+  chart(keys, bm, monthly);
+  $('chartTitle').textContent = (APP[tab] ? APP[tab].name : tab === 'lotto' ? '로또' : tab === 'g8' ? '8개 앱' : '전체') + ' 순매출 흐름';
+  $('chartCap').textContent = monthly ? '달별' : '날짜별';
+}
+function chart(keys, bm, monthly){
+  var W = 900, H = 220, L = 58, B = 26, T = 10, n = keys.length;
+  var vals = keys.map(function(k){ return bm[k].net; }), max = Math.max.apply(null, vals.concat([1]));
+  var step = (W - L - 8) / Math.max(n, 1), bw = Math.max(2, Math.min(36, step * 0.7));
+  var y = function(v){ return T + (H - T - B) * (1 - Math.max(0, v) / max); };
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="순매출 그래프">';
+  [0, 0.5, 1].forEach(function(f){ var v = max * f, yy = y(v); s += '<line x1="' + L + '" x2="' + W + '" y1="' + yy + '" y2="' + yy + '" stroke="var(--line)"/><text x="' + (L - 6) + '" y="' + (yy + 3) + '" text-anchor="end">' + (v >= 10000 ? Math.round(v / 10000).toLocaleString() + '만' : Math.round(v).toLocaleString()) + '</text>'; });
+  var every = Math.ceil(n / 12);
+  keys.forEach(function(k, i){ var v = vals[i], x = L + i * step + (step - bw) / 2, yy = y(v);
+    s += '<rect x="' + x + '" y="' + yy + '" width="' + bw + '" height="' + Math.max(0, H - B - yy) + '" rx="2" fill="var(--bar)"><title>' + k + ' · ' + won(v) + '</title></rect>';
+    if (i % every === 0) s += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + (monthly ? k.slice(2) : k.slice(5)) + '</text>'; });
+  $('chart').innerHTML = s + '</svg>';
+}
+
+/* ── 엑셀 ── */
+function xlsx(){
+  if (!window.XLSX) { alert('엑셀 도구를 읽지 못했습니다. 새로고침 해 주세요.'); return; }
+  var P = ST.per, wb = XLSX.utils.book_new();
+  var line = function(name, a, p){ return { '구분': name, '건수': a.orders, '총매출': Math.round(a.gross), '환불': Math.round(a.refund), '수수료': Math.round(a.fee), '순매출': Math.round(a.net), '지난기간 순매출': p ? Math.round(p.net) : '', '증감(%)': p && p.net ? +(((a.net - p.net) / Math.abs(p.net)) * 100).toFixed(1) : '' }; };
+  var sumRows = APPS.map(function(a){ return line(a.name, sum(P.cur, a.id), sum(P.prev, a.id)); });
+  sumRows.push(line('8개 앱 합계', sum(P.cur, 'g8'), sum(P.prev, 'g8'))); sumRows.push(line('로또 합계', sum(P.cur, 'lotto'), sum(P.prev, 'lotto')));
+  sumRows.unshift({ '구분': '기간 ' + P.cur[0] + ' ~ ' + P.cur[1] + ' (비교 ' + P.prev[0] + ' ~ ' + P.prev[1] + ') · 수수료 구글 ' + CFG.google + '% 애플 ' + CFG.apple + '% 카드 ' + CFG.pg + '% 무통장 ' + CFG.bank + '%' });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sumRows), '앱별 요약');
+  var raw = ST.rows.filter(function(r){ return inRange(r, P.cur); }).sort(function(a, b){ return a.day < b.day ? -1 : a.day > b.day ? 1 : 0; }).map(function(r){
+    var f = Math.max(0, r.gross - r.refund) * rate(r.channel);
+    return { '날짜': r.day, '앱': APP[r.app] ? APP[r.app].name : r.app, '상품': pname(r.product), '상품번호': r.product, '결제수단': CH[r.channel] || r.channel,
+             '건수': r.orders, '총매출': Math.round(r.gross), '환불건수': r.refunds, '환불': Math.round(r.refund), '수수료': Math.round(f), '순매출': Math.round(r.gross - r.refund - f) }; });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(raw.length ? raw : [{ '날짜': '이 기간에는 결제가 없습니다' }]), '날짜·상품·수단별');
+  XLSX.writeFile(wb, '위브앱_매출_' + P.cur[0] + '_' + P.cur[1] + '.xlsx');
+}
+
+/* ── 연결 ── */
+[].forEach.call(document.querySelectorAll('[data-p]'), function(b){ b.onclick = function(){ ST.per = period(b.dataset.p); store.set('weave_sales_per', b.dataset.p); load(); }; });
+$('bCustom').onclick = function(){ var a = $('dFrom').value, b = $('dTo').value; if (!a || !b || a > b) { alert('시작일과 끝일을 확인해 주세요'); return; }
+  if (D.diff(a, b) > 400) { alert('직접 고르는 기간은 400일까지입니다'); return; } ST.per = period('custom', a, b); load(); };
+$('bReload').onclick = function(){ ST.loaded = {}; load(); };
+$('bXl').onclick = xlsx;
+$('bSet').onclick = function(){ var b = $('setBox'); b.hidden = !b.hidden; $('fGoogle').value = CFG.google; $('fApple').value = CFG.apple; $('fPg').value = CFG.pg; $('fBank').value = CFG.bank; $('fUsd').value = CFG.usd; };
+$('bSetSave').onclick = function(){ CFG = { google: +$('fGoogle').value || 0, apple: +$('fApple').value || 0, pg: +$('fPg').value || 0, bank: +$('fBank').value || 0, usd: +$('fUsd').value || 1400 };
+  store.set('weave_sales_cfg', CFG); $('setBox').hidden = true; load(); };
+try { var th = localStorage.getItem('weave_admin_theme'); if (th) document.documentElement.setAttribute('data-theme', th); } catch (e) {}
+
+(async function(){ await Promise.all(Object.keys(SRV).map(check)); paintSrv(); load(); })();
+})();
+</script>
+</body>
+</html>

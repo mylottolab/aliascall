@@ -91,6 +91,9 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
   /* 탭: 큰 탭 → 작은 탭(관리자 화면 주소) */
   var TABS = [
     { id:'home', name:'🏠 처음', c:'var(--acc)', panel:true },
+    /* 💰 2026-11-22 매출 센터 — 10개 앱 기간별(오늘 · 주 · 달 · 연 · 최근) 총매출 · 수수료 · 환불 · 순매출 */
+    { id:'sales', name:'💰 매출 센터', c:'#0f766e', subs:[
+      { id:'sc_all', name:'10개 앱 매출', url: AC + 'weave_sales.html' } ]},
     { id:'stats', name:'📊 매출 · 통계', c:'#7c5cf0', subs:[
       { id:'st_ac', name:'가림 · 바로카 통계', url: AC + 'aliascall_admin_stats.html' },
       { id:'st_bu', name:'부름 · 누름 · 바로너 통계', url: BU + 'burum_admin_stats.html' } ]},
