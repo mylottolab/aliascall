@@ -68,7 +68,7 @@
   '.dh-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}' +
   '.dh-menu button{min-width:0;display:flex;align-items:center;gap:10px;background:var(--dh-card);border:1px solid var(--dh-line);border-radius:14px;padding:10px 12px;font:inherit;color:var(--dh-ink);text-align:left;cursor:pointer;min-height:56px;position:relative}' +
   '.dh-menu button.on{border-color:var(--dh-brand);background:var(--dh-soft)}' +
-  '.dh-menu button.need{border-color:var(--dh-hot)}' +
+  '.dh-menu button.need .t>span{color:var(--dh-hot);font-weight:700}.dh-menu .bd.nd{background:var(--dh-hot);color:var(--dh-hot-ink)}'   /* 🔴 2026-11-23 할 일(!)은 테두리 대신 ! 표시 — 노란 테두리가 「고른 칸」처럼 보였음 */ +
   '.dh-menu button.blank{opacity:.55}' +
   '.dh-menu .d{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--dh-chip);display:grid;place-items:center;font-weight:900}' +
   '.dh-menu .t{display:flex;flex-direction:column;min-width:0}.dh-menu .t b{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
@@ -199,7 +199,7 @@
       menu.innerHTML = ORDER.map(function(k){ var it = S.items[k] || {};
         return '<button type="button" data-k="' + k + '" class="' + (it.need ? 'need ' : '') + (it.blank ? 'blank' : '') + '"><span class="d">' + k + '</span>' +
           '<span class="t"><b>' + esc(((it.mico != null ? it.mico : it.ico) ? (it.mico != null ? it.mico : it.ico) + ' ' : '') + (it.t || '')) + '</b><span>' + esc(it.d || '') + '</span></span>' +
-          (it.badge ? '<span class="bd">' + (it.badge > 99 ? '99+' : it.badge) + '</span>' : '') + '</button>'; }).join('');
+          (it.badge ? '<span class="bd">' + (it.badge > 99 ? '99+' : it.badge) + '</span>' : it.need ? '<span class="bd nd">!</span>' : '') + '</button>'; }).join('');
       [].forEach.call(menu.querySelectorAll('button'), function(b){ b.onclick = function(){ pick(b.dataset.k); try { root.scrollIntoView({ behavior:'smooth', block:'start' }); } catch (e) {} }; });
     }
     function pick(k){
