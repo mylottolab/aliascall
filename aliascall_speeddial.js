@@ -107,18 +107,18 @@
 
   function en(){ try { return (localStorage.getItem('aliascall_lang') || '').indexOf('en') === 0; } catch (e) { return false; } }
   var TX = {
-    ko: { title:'⚡ 단축회선', edit:'편집', done:'완료', empty:'비어 있음', add:'＋ 넣기', gone:'끝난 회선',
+    ko: { title:'⚡ 단축회선', edit:'편집', done:'완료', empty:'비어 있음', add:'＋ 넣기', gone:'끝난 회선', numT:'🔢 또는 가림콜 번호 10자리 (아직 회선이 없는 사람)', numPh:'0000-000-000', numName:'부를 이름 (선택)', numSave:'번호 넣기', numBad:'번호 10자리를 넣어 주세요',
           all:'회선 전체', emg:'긴급 연락', tmp:'임시 연락', mng:'회선 관리', rec:'통화기록',
-          pick:'번 단축회선에 넣을 회선을 고르세요', pickSub:'누르면 그 회선 대화방이 바로 열려 통화 · 메시지를 할 수 있습니다. 이 폰에만 저장됩니다.',
+          pick:'번 단축회선에 넣을 회선이나 번호를 고르세요', pickSub:'누르면 그 회선 대화방이 바로 열려 통화 · 메시지를 할 수 있습니다. 이 폰에만 저장됩니다.',
           inSlot:'번에 있음', clear:'이 칸 비우기', cancel:'닫기', loading:'회선을 읽는 중…', noLines:'아직 회선이 없습니다. 회선을 먼저 만들거나 초대를 받아 들어가 주세요.',
           login:'로그인하면 회선을 단축회선에 넣을 수 있습니다.', goneAsk:'이 회선은 끝났거나 이 폰에서 찾을 수 없습니다. 다른 회선으로 바꿀까요?',
           ph:'번호를 누르고 [음성] · [영상] · [문자] · 숫자를 길게 누르면 단축회선', del:'지움', call:'📞 연결', voice:'📞 음성', video:'🎥 영상', text:'💬 문자', short:'번호는 10자리예요.', noZero:'회선번호는 0으로 시작하지 않아요.',
           none:'없는 회선번호예요. 번호를 다시 확인해 주세요.', resting:'지금 쉬고 있는 회선번호예요(회선 기간이 끝남).',
           secure:'🔒 암호화 회선이라 번호만으로는 대화를 열 수 없어요. 회선 주인에게 초대 링크를 받아 주세요.', fail:'연결하지 못했어요. 잠시 뒤 다시 해 주세요.',
           off:'번호로 연락을 받지 않는 번호예요.', myNum:'📞 내 번호', good:'💎 좋은번호', self:'내 번호예요.', busy:'지금은 연결 요청이 많아요. 잠시 뒤 다시 해 주세요.' },
-    en: { title:'⚡ Quick Lines', edit:'Edit', done:'Done', empty:'Empty', add:'＋ Add', gone:'Ended',
+    en: { title:'⚡ Quick Lines', edit:'Edit', done:'Done', empty:'Empty', add:'＋ Add', gone:'Ended', numT:'🔢 Or a 10-digit Aliascall number (no line yet)', numPh:'0000-000-000', numName:'Name (optional)', numSave:'Add number', numBad:'Enter all 10 digits',
           all:'All lines', emg:'Emergency', tmp:'Temporary', mng:'Manage lines', rec:'Calls',
-          pick:': choose a line', pickSub:'Tap it later to open that line’s chat right away for calls and messages. Saved on this phone only.',
+          pick:': choose a line or number', pickSub:'Tap it later to open that line’s chat right away for calls and messages. Saved on this phone only.',
           inSlot:' in use', clear:'Clear this slot', cancel:'Close', loading:'Loading your lines…', noLines:'You have no lines yet. Open a line or join one by invitation first.',
           login:'Log in to add lines to Quick Lines.', goneAsk:'This line has ended or cannot be found on this phone. Choose another line?',
           ph:'Dial a number, then Voice · Video · Text · hold a digit for Quick Lines', del:'Del', call:'📞 Connect', voice:'📞 Voice', video:'🎥 Video', text:'💬 Text', short:'Numbers have 10 digits.', noZero:'Line numbers never start with 0.',
@@ -202,8 +202,8 @@
     h += '<div class="sd-pad">';
     for (var d = 1; d <= 9; d++) {
       var x = s[d], ln = x ? lineOf(x.ref) : null;
-      var gone = !!(x && lines && !ln);
-      var nm = x ? ((ln && ln.name) || x.name || '') : (editing ? t.add : t.empty);
+      var gone = !!(x && !x.num && lines && !ln);
+      var nm = x ? (x.num ? '🔢 ' + (x.name || fmtNum(x.num)) : ((ln && ln.name) || x.name || '')) : (editing ? t.add : t.empty);
       h += '<button type="button" class="sd-k' + (x ? '' : ' empty') + (gone ? ' gone' : '') + '" data-sd-k="' + d + '"><span class="d">' + d + '</span><span class="nm">' + esc(gone ? (nm + ' · ' + t.gone) : nm) + '</span></button>';
     }
     h += '</div>';
@@ -390,6 +390,7 @@
 
   async function tap(d){
     var s = readSlots(), x = s[d];
+    if (x && x.num && !editing) { dial = x.num; paintAll(); connect('voice'); return; }   /* 🔢 2026-11-22 번호 단축 — 그 번호로 바로 음성 */
     if (x && !editing) {
       await load();
       var ln = lineOf(x.ref);
@@ -416,7 +417,7 @@
     e.bg.style.display = e.sh.style.display = 'block';
     await load();
     var s = readSlots(), used = {};
-    Object.keys(s).forEach(function(k){ if (s[k]) used[s[k].ref] = k; });
+    Object.keys(s).forEach(function(k){ if (s[k] && s[k].ref) used[s[k].ref] = k; });
     var list = '';
     if (!loggedIn && !(lines || []).length) list = '<div class="none">' + esc(t.login) + '</div>';
     else if (!(lines || []).length) list = '<div class="none">' + esc(t.noLines) + '</div>';
@@ -426,7 +427,12 @@
         (ln.detail && ln.detail !== ln.name ? '<small>' + esc(ln.detail) + '</small>' : '') + '</span>' +
         (u ? '<span class="tag">' + esc(u + t.inSlot) + '</span>' : '') + '</button>';
     }).join('');
-    e.sh.innerHTML = '<h3>' + d + esc(t.pick) + '</h3><div class="sub">' + esc(t.pickSub) + '</div>' + list +
+    var cur = s[d] && s[d].num ? s[d] : null, pre = cur ? cur.num : (dial.length === 10 ? dial : '');
+    var numBox = '<div style="margin-top:14px;font-size:13px;font-weight:800">' + esc(t.numT) + '</div>' +
+      '<div style="display:flex;gap:6px;margin-top:6px"><input data-num inputmode="numeric" maxlength="12" placeholder="' + esc(t.numPh) + '" value="' + esc(pre ? fmtNum(pre) : '') + '" style="flex:1.3;min-width:0;padding:11px;border:1px solid #cdd8d7;border-radius:10px;font:inherit;font-size:15px">' +
+      '<input data-nm maxlength="20" placeholder="' + esc(t.numName) + '" value="' + esc(cur ? cur.name || '' : '') + '" style="flex:1;min-width:0;padding:11px;border:1px solid #cdd8d7;border-radius:10px;font:inherit;font-size:14px"></div>' +
+      '<div class="row" style="margin-top:8px"><button type="button" data-numok style="background:#1F6F6B;color:#fff;border-color:#1F6F6B">' + esc(t.numSave) + '</button></div>';
+    e.sh.innerHTML = '<h3>' + d + esc(t.pick) + '</h3><div class="sub">' + esc(t.pickSub) + '</div>' + list + numBox +
       '<div class="row">' + (s[d] ? '<button type="button" class="bad" data-clear>' + esc(t.clear) + '</button>' : '') + '<button type="button" data-close>' + esc(t.cancel) + '</button></div>';
     e.sh.querySelectorAll('[data-i]').forEach(function(b){
       b.onclick = function(){
@@ -436,6 +442,11 @@
         writeSlots(o); closeSheet(); paintAll();
       };
     });
+    e.sh.querySelector('[data-numok]').onclick = function(){
+      var inp = e.sh.querySelector('[data-num]'), v = inp.value.replace(/\D/g, '');
+      if (v.length !== 10) { inp.style.borderColor = '#B4410C'; inp.placeholder = t.numBad; inp.focus(); return; }
+      var o = readSlots(); o[d] = { num: v, name: e.sh.querySelector('[data-nm]').value.trim() }; writeSlots(o); closeSheet(); paintAll();
+    };
     var c = e.sh.querySelector('[data-clear]');
     if (c) c.onclick = function(){ var o = readSlots(); delete o[d]; writeSlots(o); closeSheet(); paintAll(); };
     e.sh.querySelector('[data-close]').onclick = closeSheet;
