@@ -14,6 +14,7 @@
        hint: '숫자를 톡 …',                           // 아무것도 안 골랐을 때 아래 글
        next: '4',                                     // 깜빡일 번호(없으면 null)
        centerTap: { label:'톡 = 전화 걸기', go:function(){} },   // 가운데를 톡 = 본화면 바로가기(선택)
+       centerCall: { label:'📞 전화 걸기', sub:'큰 번호판', color:'#E8734A', go:function(){} },   // (선택) 가운데를 위아래 반으로 — 위 반원 = 전화 걸기
        items: { '1': { ico:'☎️', t:'전화 걸기', d:'한 줄 설명', info:'설명', steps:['…','…','…'], pic:'<svg…>',
                        need:false, badge:0, url:'page.html' | go:function(){} , blank:false, mico:'목록용 아이콘(선택)' }, … '0': {…} }
      });
@@ -47,6 +48,11 @@
   '.dh-ct b{font-size:clamp(14px,4.2vw,19px);line-height:1.25}' +
   '.dh-ct span{font-size:clamp(11px,3vw,13px);color:var(--dh-lab);line-height:1.35}' +
   '.dh-ct .tap{font-style:normal;font-size:clamp(10.5px,2.9vw,12.5px);font-weight:800;color:var(--dh-brand);border:1.5px solid var(--dh-brand);border-radius:999px;padding:2px 8px;margin-top:3px;white-space:nowrap}' +
+  /* 📞 2026-11-23 가운데를 위아래 반으로(centerCall) — 위 = 전화 걸기 · 아래 = 원래 가운데 */
+  '.dh-split .dh-ct{top:60.5%;width:30%;gap:2px}.dh-split .dh-ct b{font-size:clamp(12.5px,3.7vw,16px);line-height:1.2}.dh-split .dh-ct .tap{margin-top:1px;padding:1px 7px;font-size:clamp(9.5px,2.6vw,11.5px)}' +
+  '.dh-split .dh-ct .k2{font:900 clamp(15px,4.6vw,20px)/1 "Pretendard",system-ui,sans-serif;color:var(--dh-brand);margin-right:4px}' +
+  '.dh-call{position:absolute;left:50%;top:40.5%;transform:translate(-50%,-50%);pointer-events:none;color:#fff;text-align:center;line-height:1.15;display:flex;flex-direction:column;align-items:center;gap:1px}' +
+  '.dh-call b{font-size:clamp(13.5px,4.1vw,18px);font-weight:900;white-space:nowrap}.dh-call small{font-size:clamp(9.5px,2.6vw,11.5px);opacity:.92;white-space:nowrap}' +
   '.dh-ct .k{font:900 clamp(26px,8vw,36px)/1 "Pretendard",system-ui,sans-serif;color:var(--dh-brand)}' +
   '.dh-hint{text-align:center;font-size:14.5px;color:var(--dh-sub);margin:0;min-height:22px;line-height:1.55}' +
   '.dh-go{display:flex;gap:8px}' +
@@ -118,6 +124,15 @@
     ORDER.forEach(function(k, i){ var p = pt(angOf(i), RR);
       rings[k] = el('circle', { cx:p[0], cy:p[1], r:HR, fill:'transparent', stroke:'var(--dh-ring)', 'stroke-width':2.5, class:'dh-hole' }, plate); });
     el('circle', { cx:CX, cy:CY, r:R_IN - 3, fill:'var(--dh-center)', stroke:'var(--dh-rim)', 'stroke-width':2 });
+    if (O.centerCall) {   // 📞 위 반원 = 전화 걸기
+      var rc = R_IN - 4;
+      el('path', { d:'M' + (CX - rc) + ',' + CY + ' A' + rc + ',' + rc + ' 0 0 1 ' + (CX + rc) + ',' + CY + ' Z', fill:O.centerCall.color || 'var(--dh-brand)', class:'dh-hole' });
+      el('line', { x1:CX - rc, y1:CY, x2:CX + rc, y2:CY, stroke:'var(--dh-rim)', 'stroke-width':2 });
+      root.classList.add('dh-split');
+      var cl = document.createElement('div'); cl.className = 'dh-call';
+      cl.innerHTML = '<b>' + esc(O.centerCall.label) + '</b>' + (O.centerCall.sub ? '<small>' + esc(O.centerCall.sub) + '</small>' : '');
+      ct.parentNode.appendChild(cl);
+    }
     var s1 = pt(STOP_A + 12, R_OUT - 6), s2 = pt(STOP_A + 12, R_OUT + 16);
     el('line', { x1:s1[0], y1:s1[1], x2:s2[0], y2:s2[1], stroke:'var(--dh-stop)', 'stroke-width':9, 'stroke-linecap':'round' });
     var marks = el('g', {});
@@ -171,6 +186,10 @@
         goEl.querySelector('.o').textContent = '▶ ' + (it.open || T(sel + '번 열기', 'Open ' + sel));
         goEl.querySelector('.c').textContent = T('✕ 닫기', '✕ Close');
       }
+      if (O.centerCall) {   // 📞 아래 반원은 좁아서 이름 · 톡 안내만
+        var c0 = O.center ? O.center() : { title:'' };
+        ct.innerHTML = it ? '<b><span class="k2">' + sel + '</span>' + esc(it.t) + '</b>' : '<b>' + esc(c0.title) + '</b>' + (O.centerTap ? '<em class="tap">' + esc(O.centerTap.label) + '</em>' : '');
+      }
       ORDER.forEach(function(k){ var on = k === sel;
         rings[k].setAttribute('stroke', on ? 'var(--dh-hot)' : 'var(--dh-ring)'); rings[k].setAttribute('stroke-width', on ? 5 : 2.5);
         if (rings[k].classList) rings[k].classList.toggle('dh-blink', !sel && k === S.next); });
@@ -205,6 +224,11 @@
     svg.addEventListener('pointerdown', function(e){
       if (drag) return;
       var p = local(e), best = null, bd = 1e9;
+      if (O.centerCall && Math.hypot(p[0] - CX, p[1] - CY) < R_IN - 4 && p[1] < CY) {   // 📞 위 반원 = 전화 걸기
+        e.preventDefault(); actx(); tick(.08, 1400); buzz(8);
+        if (sel) { sel = null; paint(); }
+        setTimeout(function(){ O.centerCall.go(); }, 60); return;
+      }
       if (O.centerTap && Math.hypot(p[0] - CX, p[1] - CY) < R_IN - 4) {   // 가운데 톡 = 본화면 바로가기
         e.preventDefault(); actx(); tick(.08, 1400); buzz(8);
         if (sel) { sel = null; paint(); }

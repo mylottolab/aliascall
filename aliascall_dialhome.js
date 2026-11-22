@@ -70,6 +70,9 @@
       hint: T('숫자를 톡 누르면 안내 · 멈춤쇠까지 돌리면 바로 실행', 'Tap a number for info · dial it to the stop to open'),
       next: null, items: items(),
       centerTap: { label: T('톡 = 수신 대기', 'Tap = Inbox'), go: view('alert') },
+      /* 📞 2026-11-23 가운데 위 반원 = 전화 걸기(큰 번호판 — 단축회선/단축번호 · 회선번호로 음성 · 영상 · 문자) */
+      centerCall: { label: T('📞 전화 걸기', '📞 Call'), sub: T('큰 번호판', 'Keypad'), color: '#E8734A',
+        go: function(){ if (window.AliasSD && AliasSD.openBig) AliasSD.openBig(); else if (typeof showView === 'function') showView('msg'); } },
       firstScreen: function(){ try { localStorage.setItem('aliascall_home_mode', 'classic'); } catch (e) {} window.ALIASCALL_HOME = 'classic'; clearInterval(timer); box.remove(); grid.style.display = ''; backLink(grid); }
     });
     /* 배지: 첫 화면의 알림 띠 · 승인 문의 띠 숫자를 그대로 */
