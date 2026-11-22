@@ -107,21 +107,21 @@
 
   function en(){ try { return (localStorage.getItem('aliascall_lang') || '').indexOf('en') === 0; } catch (e) { return false; } }
   var TX = {
-    ko: { title:'⚡ 단축회선', edit:'편집', done:'완료', empty:'비어 있음', add:'＋ 넣기', gone:'끝난 회선', numT:'🔢 또는 가림콜 번호 10자리 (아직 회선이 없는 사람)', numPh:'0000-000-000', numName:'부를 이름 (선택)', numSave:'번호 넣기', numBad:'번호 10자리를 넣어 주세요',
+    ko: { title:'⚡ 단축회선/단축번호', big:'⤢ 크게', bigHint:'두 번 톡 = 큰 번호판', edit:'편집', done:'완료', empty:'비어 있음', add:'＋ 넣기', gone:'끝난 회선', numT:'🔢 또는 가림콜 번호 10자리 (아직 회선이 없는 사람)', numPh:'0000-000-000', numName:'부를 이름 (선택)', numSave:'번호 넣기', numBad:'번호 10자리를 넣어 주세요',
           all:'회선 전체', emg:'긴급 연락', tmp:'임시 연락', mng:'회선 관리', rec:'통화기록',
-          pick:'번 단축회선에 넣을 회선이나 번호를 고르세요', pickSub:'누르면 그 회선 대화방이 바로 열려 통화 · 메시지를 할 수 있습니다. 이 폰에만 저장됩니다.',
+          pick:'번 단축회선/단축번호에 넣을 회선이나 번호를 고르세요', pickSub:'누르면 그 회선 대화방이 바로 열려 통화 · 메시지를 할 수 있습니다. 이 폰에만 저장됩니다.',
           inSlot:'번에 있음', clear:'이 칸 비우기', cancel:'닫기', loading:'회선을 읽는 중…', noLines:'아직 회선이 없습니다. 회선을 먼저 만들거나 초대를 받아 들어가 주세요.',
-          login:'로그인하면 회선을 단축회선에 넣을 수 있습니다.', goneAsk:'이 회선은 끝났거나 이 폰에서 찾을 수 없습니다. 다른 회선으로 바꿀까요?',
-          ph:'번호를 누르고 [음성] · [영상] · [문자] · 숫자를 길게 누르면 단축회선', del:'지움', call:'📞 연결', voice:'📞 음성', video:'🎥 영상', text:'💬 문자', short:'번호는 10자리예요.', noZero:'회선번호는 0으로 시작하지 않아요.',
+          login:'로그인하면 회선을 단축회선/단축번호에 넣을 수 있습니다.', goneAsk:'이 회선은 끝났거나 이 폰에서 찾을 수 없습니다. 다른 회선으로 바꿀까요?',
+          ph:'번호를 누르고 [음성] · [영상] · [문자] · 숫자를 길게 누르면 단축회선/단축번호', del:'지움', call:'📞 연결', voice:'📞 음성', video:'🎥 영상', text:'💬 문자', short:'번호는 10자리예요.', noZero:'회선번호는 0으로 시작하지 않아요.',
           none:'없는 회선번호예요. 번호를 다시 확인해 주세요.', resting:'지금 쉬고 있는 회선번호예요(회선 기간이 끝남).',
           secure:'🔒 암호화 회선이라 번호만으로는 대화를 열 수 없어요. 회선 주인에게 초대 링크를 받아 주세요.', fail:'연결하지 못했어요. 잠시 뒤 다시 해 주세요.',
           off:'번호로 연락을 받지 않는 번호예요.', myNum:'📞 내 번호', good:'💎 좋은번호', self:'내 번호예요.', busy:'지금은 연결 요청이 많아요. 잠시 뒤 다시 해 주세요.' },
-    en: { title:'⚡ Quick Lines', edit:'Edit', done:'Done', empty:'Empty', add:'＋ Add', gone:'Ended', numT:'🔢 Or a 10-digit Aliascall number (no line yet)', numPh:'0000-000-000', numName:'Name (optional)', numSave:'Add number', numBad:'Enter all 10 digits',
+    en: { title:'⚡ Quick Lines/Numbers', big:'⤢ Larger', bigHint:'Double-tap = large keypad', edit:'Edit', done:'Done', empty:'Empty', add:'＋ Add', gone:'Ended', numT:'🔢 Or a 10-digit Aliascall number (no line yet)', numPh:'0000-000-000', numName:'Name (optional)', numSave:'Add number', numBad:'Enter all 10 digits',
           all:'All lines', emg:'Emergency', tmp:'Temporary', mng:'Manage lines', rec:'Calls',
           pick:': choose a line or number', pickSub:'Tap it later to open that line’s chat right away for calls and messages. Saved on this phone only.',
           inSlot:' in use', clear:'Clear this slot', cancel:'Close', loading:'Loading your lines…', noLines:'You have no lines yet. Open a line or join one by invitation first.',
-          login:'Log in to add lines to Quick Lines.', goneAsk:'This line has ended or cannot be found on this phone. Choose another line?',
-          ph:'Dial a number, then Voice · Video · Text · hold a digit for Quick Lines', del:'Del', call:'📞 Connect', voice:'📞 Voice', video:'🎥 Video', text:'💬 Text', short:'Numbers have 10 digits.', noZero:'Line numbers never start with 0.',
+          login:'Log in to add lines to Quick Lines/Numbers.', goneAsk:'This line has ended or cannot be found on this phone. Choose another line?',
+          ph:'Dial a number, then Voice · Video · Text · hold a digit for Quick Lines/Numbers', del:'Del', call:'📞 Connect', voice:'📞 Voice', video:'🎥 Video', text:'💬 Text', short:'Numbers have 10 digits.', noZero:'Line numbers never start with 0.',
           none:'No such line number. Please check it.', resting:'This line number is resting (the line has ended).',
           secure:'🔒 This is an encrypted line — a number alone cannot open its chat. Ask the owner for an invitation link.', fail:'Could not connect. Please try again.',
           off:'This number does not take contacts.', myNum:'📞 My number', good:'💎 Special', self:'That is your own number.', busy:'Too many requests right now. Please try again later.' }
@@ -198,7 +198,8 @@
          '<button type="button" data-sd-edit class="' + (editing ? 'on' : '') + '">' + esc(editing ? t.done : t.edit) + '</button></span></div>';
     h += '<div class="sd-panel">';   // 🔴 2026-11-19 번호 칸 · 번호판 · 0줄을 한 판으로 묶어 위아래와 구분
     h += '<div class="sd-num"><span class="v' + (dial ? '' : ' ph') + '" data-sd-v>' + esc(dial ? fmtNum(dial) : t.ph) + '</span>' +
-         (dial ? '<button type="button" data-sd-del aria-label="' + esc(t.del) + '">⌫</button>' : '') + '</div>';
+         (dial ? '<button type="button" data-sd-del aria-label="' + esc(t.del) + '">⌫</button>' : '') +
+         (box.hasAttribute('data-sd-pop') ? '<button type="button" data-sd-big title="' + esc(t.bigHint) + '" style="font-size:13px;font-weight:800;padding:0 10px;white-space:nowrap">' + esc(t.big) + '</button>' : '') + '</div>';
     h += '<div class="sd-pad">';
     for (var d = 1; d <= 9; d++) {
       var x = s[d], ln = x ? lineOf(x.ref) : null;
@@ -335,7 +336,7 @@
         hide: function(){ return [bx.querySelector('.sd-pad'), bx.querySelector('.sd-row0')]; },
         center: function(){ return en() ? ['Aliascall', 'Line number', ''] : ['가림콜', '회선번호', '']; },
         colors: { plate:'#E8734A', rim:'#B4532F', base:'#FFF6EA', ink:'#16302E', stop:'#C9CED3', on:'#E8734A', onInk:'#fff' },
-        text: { ko: { hold: ' · 꾸욱 누르면 단축회선' }, en: { hold: ' · hold for Quick Lines' } },
+        text: { ko: { hold: ' · 꾸욱 누르면 단축회선/단축번호' }, en: { hold: ' · hold for Quick Lines/Numbers' } },
         css: '#sdBig .ps-bar{padding:0 46px}#sdBig .ps-bar,#sdBig .ps-snd{color:#fff}#sdBig .ps-rot p{color:#fff}' +
              '#sdBig .sd-pad [data-sd-zero]{min-height:min(13vh,84px);border-radius:16px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#8ED6CF;font:800 36px "Space Grotesk",sans-serif;cursor:pointer}' +
              '#sdBig .ps-round .sd-pad,#sdBig .ps-round .sd-row0{gap:10px 14px}' +
@@ -369,21 +370,21 @@
   }
   window.addEventListener('popstate', function(){ if (bigOpen) closeBig(true); });
   window.addEventListener('pageshow', function(){ if (bigOpen) closeBig(true); else if (big) big.wrap.classList.remove('show', 'up'); });
-  /* 작은 번호판: 숫자 · 번호 칸 · 0 · 지움 · 연결을 누르면 (편집 중이 아닐 때) 큰 번호판만 엽니다 */
+  /* 🔴 2026-11-23 작은 번호판도 그대로 씁니다(숫자 · 꾸욱 단축 · 음성 · 영상 · 문자).
+     큰 번호판은 [⤢ 크게] 또는 번호 칸 · 판의 빈 곳을 두 번 톡. (숫자 단추를 빠르게 두 번 = 같은 숫자 두 번이라 큰 번호판으로 넘기지 않음) */
   function wirePop(box){
     if (box._sdPop) return; box._sdPop = true;
-    function hit(e){
-      if (editing || !e.target || !e.target.closest) return null;
-      return e.target.closest('.sd-panel,.sd-num,.sd-pad,.sd-row0,.sd-acts');
-    }
-    ['pointerdown', 'mousedown', 'touchstart'].forEach(function(ev){
-      box.addEventListener(ev, function(e){ if (hit(e)) e.stopPropagation(); }, true);
-    });
+    var lastT = 0;
     box.addEventListener('click', function(e){
-      if (!hit(e)) return;
-      e.preventDefault(); e.stopPropagation();
-      openBig();
+      if (editing || !e.target || !e.target.closest) return;
+      if (e.target.closest('[data-sd-big]')) { e.preventDefault(); e.stopPropagation(); openBig(); return; }
+      var area = e.target.closest('.sd-panel'); if (!area) return;
+      if (e.target.closest('button')) { lastT = 0; return; }   // 단추는 제 일만
+      var now = Date.now();
+      if (now - lastT < 400) { lastT = 0; e.preventDefault(); openBig(); return; }
+      lastT = now;
     }, true);
+    box.addEventListener('dblclick', function(e){ if (!editing && e.target.closest && e.target.closest('.sd-panel') && !e.target.closest('button')) { e.preventDefault(); openBig(); } }, true);
   }
   function boxes(){ return document.querySelectorAll('[data-sd]'); }
   function paintAll(){ boxes().forEach(function(b){ paint(b); if (b.hasAttribute('data-sd-pop')) wirePop(b); }); }
