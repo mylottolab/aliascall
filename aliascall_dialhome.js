@@ -6,9 +6,21 @@
    ===================================================================== */
 (function(){
   'use strict';
+  /* 원래 첫 화면(네 칸)에서 다시 다이얼로 돌아오는 작은 링크 */
+  function backLink(grid){
+    if (document.getElementById('acToDial')) return;
+    var EN = false; try { EN = (localStorage.getItem('aliascall_lang') || 'ko') === 'en'; } catch (e) {}
+    var a = document.createElement('a'); a.id = 'acToDial'; a.href = '#';
+    a.textContent = EN ? '☎ Show the dial first screen' : '☎ 다이얼 첫 화면으로 보기';
+    a.style.cssText = 'display:block;text-align:center;margin:10px 0 4px;color:rgba(255,255,255,.9);font-weight:600;font-size:14px;text-decoration:underline';
+    a.onclick = function(e){ e.preventDefault(); try { localStorage.setItem('aliascall_home_mode', 'dial'); } catch (x) {} window.ALIASCALL_HOME = 'dial'; a.remove(); start(); };
+    grid.parentNode.insertBefore(a, grid.nextSibling);
+  }
   function start(){
-    if (window.ALIASCALL_HOME !== 'dial' || !window.DialHome) return;
+    if (!window.DialHome) return;
     if (window.acHeld && acHeld()) return;
+    var g0 = document.querySelector('#viewHome .home-grid');
+    if (window.ALIASCALL_HOME !== 'dial') { if (g0) backLink(g0); return; }
     var home = document.getElementById('viewHome'), grid = home && home.querySelector('.home-grid');
     if (!grid || document.getElementById('acDial')) return;
     var EN = false; try { EN = (localStorage.getItem('aliascall_lang') || 'ko') === 'en'; } catch (e) {}
@@ -58,10 +70,10 @@
       hint: T('숫자를 톡 누르면 안내 · 멈춤쇠까지 돌리면 바로 실행', 'Tap a number for info · dial it to the stop to open'),
       next: null, items: items(),
       centerTap: { label: T('톡 = 수신 대기', 'Tap = Inbox'), go: view('alert') },
-      firstScreen: function(){ try { localStorage.setItem('aliascall_home_mode', 'classic'); } catch (e) {} box.remove(); grid.style.display = ''; }
+      firstScreen: function(){ try { localStorage.setItem('aliascall_home_mode', 'classic'); } catch (e) {} window.ALIASCALL_HOME = 'classic'; clearInterval(timer); box.remove(); grid.style.display = ''; backLink(grid); }
     });
     /* 배지: 첫 화면의 알림 띠 · 승인 문의 띠 숫자를 그대로 */
-    var last = '', w;
+    var last = '', w, timer;
     function sync(){
       var a = document.getElementById('alertsStrip'); w = document.getElementById('waitStrip');
       var na = a && a.classList.contains('show') ? (+((document.getElementById('alertsCount') || {}).textContent) || 0) : 0;
@@ -70,7 +82,7 @@
       dh.update({ items: items({ alerts: na, wait: nw }), next: na ? '3' : nw ? '4' : null,
         hint: na ? T('확인해야 할 알림이 있어요 — 3번을 돌려 보세요', 'You have alerts — dial 3') : nw ? (w.classList.contains('unread') ? T('안 읽은 대화가 있어요 — 4번', 'Unread messages — dial 4') : T('승인을 기다리는 문의가 있어요 — 4번', 'Inquiries waiting — dial 4')) : T('숫자를 톡 누르면 안내 · 멈춤쇠까지 돌리면 바로 실행', 'Tap a number for info · dial it to the stop to open') });
     }
-    sync(); setInterval(sync, 2000);
+    sync(); timer = setInterval(sync, 2000);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
