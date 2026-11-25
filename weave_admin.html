@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>위브앱 통합 관리</title>
 <!--
- 🔴 2026-11-09 신설 — 위브앱솔루션 5개 앱 통합 관리 화면
+ 🔴 2026-11-09 신설 — 위브앱솔루션 앱 통합 관리 화면
    한 화면에서 탭만 바꿔 부름 · 누름 · 바로너(부름 서버) / 가림 · 바로카(에일리어스콜 서버) / 유치대리점을 봅니다.
    각 탭은 이미 있는 관리자 화면을 그대로 안에 띄웁니다(새 서버 기능 · 새 권한 없음).
    ⚠ 로그인 · 관리자 확인은 각 관리자 화면이 스스로 합니다. 이 화면에는 비밀번호 · 키가 없습니다.
@@ -91,9 +91,9 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
   /* 탭: 큰 탭 → 작은 탭(관리자 화면 주소) */
   var TABS = [
     { id:'home', name:'🏠 처음', c:'var(--acc)', panel:true },
-    /* 💰 2026-11-22 매출 센터 — 10개 앱 기간별(오늘 · 주 · 달 · 연 · 최근) 총매출 · 수수료 · 환불 · 순매출 */
+    /* 💰 2026-11-22 매출 센터 — 11개 앱 기간별(오늘 · 주 · 달 · 연 · 최근) 총매출 · 수수료 · 환불 · 순매출 */
     { id:'sales', name:'💰 매출 센터', c:'#0f766e', subs:[
-      { id:'sc_all', name:'10개 앱 매출', url: AC + 'weave_sales.html' } ]},
+      { id:'sc_all', name:'11개 앱 매출', url: AC + 'weave_sales.html' } ]},
     { id:'stats', name:'📊 매출 · 통계', c:'#7c5cf0', subs:[
       { id:'st_ac', name:'가림 · 바로카 통계', url: AC + 'aliascall_admin_stats.html' },
       { id:'st_bu', name:'부름 · 누름 · 바로너 통계', url: BU + 'burum_admin_stats.html' } ]},
@@ -129,6 +129,11 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
       { id:'dg_admin', name:'가게 · 신고 · 멈춤 · 확인됨', url: AC + 'aliascall_admin_dangol.html' } ]},
     { id:'partner', name:'💼 유치대리점', c:'var(--pt)', subs:[
       { id:'pt_admin', name:'대리점 심사 · 정산', url: AC + 'aliascall_admin_partners.html' } ]},
+    /* 🔮 2026-11-25 한국전통운세 — 알림로또 서버(my-lotto-lab) · 같은 관리자 키. 매출은 매출 센터 「9개 앱」에 합산 */
+    { id:'kfortune', name:'🔮 한국전통운세', c:'#A9322A', subs:[
+      { id:'kf_orders', name:'주문 · 매출 · 이용권', url: 'https://my-lotto-lab-api.onrender.com/pay/fortune_admin.html' },
+      { id:'kf_site', name:'사이트 보기', url: 'https://koreanfortune.kr/' },
+      { id:'kf_intro', name:'소개 페이지 · 영상', url: 'https://koreanfortune.kr/intro/' } ]},
     /* 🔴 2026-11-09 로또 두 앱 — 따로 봅니다(합산 없음). 각 화면이 스스로 관리자 로그인을 합니다 */
     { id:'allim', name:'🎱 알림로또', c:'#d9480f', subs:[
       { id:'al_sales', name:'매출 · 입금 · 가입 · 접속', url: 'https://my-lotto-lab-api.onrender.com/pay/admin_points.html' },
@@ -156,7 +161,7 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
     }).join('');
     p.innerHTML = '<div class="wrap">' +
       '<div class="note">탭을 누르면 각 앱의 관리자 화면이 이 안에 열립니다. <b>처음 한 번은 탭 안에서 관리자 로그인</b>을 해 주세요(가림 · 단톡방 · 단골창구 · 유치대리점 탭은 한 번, 부름 · 와파 탭 한 번, 바로카 탭 한 번). 한 번 연 탭은 다른 탭으로 옮겨도 그대로 남아 있습니다.<br>' +
-      '서버는 두 곳입니다 — <b>부름 서버</b>: 부름 · 누름 · 바로너 · 와파 / <b>에일리어스콜 서버</b>: 가림 · 바로카 · 단톡방 · 단골창구 · 유치대리점. 와파 매출은 와파 탭에서 따로 봅니다(위 합계에는 아직 안 들어감). 알림로또 · PaperLotto는 각자 따로 봅니다(합산하지 않음). 알림로또 매출 화면은 서버가 잠들어 있으면 처음 열 때 30초~1분 걸릴 수 있습니다.</div>' +
+      '서버는 두 곳입니다 — <b>부름 서버</b>: 부름 · 누름 · 바로너 · 와파 / <b>에일리어스콜 서버</b>: 가림 · 바로카 · 단톡방 · 단골창구 · 유치대리점. 와파 매출은 와파 탭에서 따로 봅니다(위 합계에는 아직 안 들어감). 알림로또 · PaperLotto는 각자 따로 봅니다(합산하지 않음). 한국전통운세는 알림로또와 같은 관리자 키로 들어가고, 매출은 매출 센터 「9개 앱」 합계에 들어갑니다. 알림로또 매출 화면은 서버가 잠들어 있으면 처음 열 때 30초~1분 걸릴 수 있습니다.</div>' +
       '<h2>바로 가기</h2><div class="grid">' + cards + '</div>' +
       '<h2>매일 볼 곳 (밖의 사이트 — 새 창)</h2><div class="grid">' +
         '<div class="card"><h3>📦 스토어</h3><div class="links">' +
@@ -184,6 +189,7 @@ h2{font-size:15px;margin:6px 0 0;color:var(--sub)}
           '<a href="https://wafa.kr" target="_blank" rel="noopener">와파 <span>wafa.kr ›</span></a>' +
           '<a href="https://dantok.kr" target="_blank" rel="noopener">단톡방 <span>dantok.kr ›</span></a>' +
           '<a href="https://dangol.org" target="_blank" rel="noopener">단골창구 <span>dangol.org ›</span></a>' +
+          '<a href="https://koreanfortune.kr" target="_blank" rel="noopener">한국전통운세 <span>koreanfortune.kr ›</span></a>' +
           '<a href="https://mylottolab.github.io/my-lotto-lab/" target="_blank" rel="noopener">알림로또 <span>mylottolab.github.io ›</span></a>' +
           '<a href="https://paperlotto.com" target="_blank" rel="noopener">PaperLotto <span>paperlotto.com ›</span></a></div></div>' +
       '</div></div>';

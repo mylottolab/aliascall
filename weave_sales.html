@@ -6,10 +6,10 @@
 <meta name="robots" content="noindex,nofollow">
 <title>위브앱 매출 센터</title>
 <!--
- 💰 2026-11-22 신설 — 위브앱솔루션 10개 앱 매출 센터 (weave_admin 의 「매출 센터」 탭)
+ 💰 2026-11-22 신설 — 위브앱솔루션 11개 앱 매출 센터 (weave_admin 의 「매출 센터」 탭)
    · 기간: 달력(오늘 · 이번 주 · 이번 달 · 올해) / 최근(7일 · 30일 · 365일) / 직접 — 지난 기간과 비교(증감 %)
    · 금액: 총매출(고객이 낸 돈) · 환불 · 수수료(결제수단별 비율) · 순매출(회사에 들어오는 돈)
-   · 8개 앱 합계와 로또(알림로또 · PaperLotto) 합계는 따로
+   · 9개 앱 합계와 로또(알림로또 · PaperLotto) 합계는 따로
    · 서버 4곳에 각각 관리자로 연결합니다(가림 · 부름 · PaperLotto 로그인 + 알림로또 관리자 키). 이 화면에는 비밀번호 · 비밀 키가 적혀 있지 않습니다(공개용 anon 키만).
    · 숫자는 각 서버의 weave_sales 함수(관리자만)가 냅니다 — 가림: baroka/sql/28_weave_sales.sql · 부름: wafa/sql/11_weave_sales.sql
      PaperLotto 는 admin-business-reports(payments) · 알림로또는 API /api/admin/weave-sales(관리자 키 · 입금포인트 1P=1원, 관리자 지급 · 옛자료 제외).
@@ -147,7 +147,7 @@ var store = { get: function(k, d){ try { var v = localStorage.getItem(k); return
 /* ── 앱 ── */
 var APPS = [
   { id:'wafa', name:'와파', srv:'burum' }, { id:'burum', name:'부름', srv:'burum' }, { id:'nureum', name:'누름', srv:'burum' }, { id:'baronu', name:'바로너', srv:'burum' },
-  { id:'garim', name:'가림콜', srv:'garim' }, { id:'baroka', name:'바로카', srv:'garim' }, { id:'dantok', name:'단톡방', srv:'garim' }, { id:'dangol', name:'단골창구', srv:'garim' },
+  { id:'garim', name:'가림콜', srv:'garim' }, { id:'baroka', name:'바로카', srv:'garim' }, { id:'dantok', name:'단톡방', srv:'garim' }, { id:'dangol', name:'단골창구', srv:'garim' }, { id:'kfortune', name:'한국전통운세', srv:'allim' },
   { id:'allim', name:'알림로또', srv:'allim', lotto:true }, { id:'paper', name:'PaperLotto', srv:'paper', lotto:true } ];
 var APP = {}; APPS.forEach(function(a){ APP[a.id] = a; });
 var CH = { google:'구글 Play', apple:'애플 App Store', pg:'카드결제(PG)', bank:'무통장입금' };
@@ -197,7 +197,7 @@ var SRV = {
   paper: { name:'PaperLotto 서버', apps:'PaperLotto', url:'https://wzrqaozlbfyejsbvnrxk.supabase.co',
            key:'sb_publishable_3KrYMzwrVlbYr-e9d8UiLA_KgvSs8tC', id:'이메일' },
   /* 알림로또는 Supabase 로그인이 아니라 관리자 키(Render 의 ADMIN_API_KEY — 알림로또 관리자 화면에 넣는 그 키) */
-  allim: { name:'알림로또 서버', apps:'알림로또', url:'https://my-lotto-lab-api.onrender.com', keyed:true, id:'관리자 키' }
+  allim: { name:'알림로또 서버', apps:'알림로또 · 한국전통운세', url:'https://my-lotto-lab-api.onrender.com', keyed:true, id:'관리자 키' }
 };
 Object.keys(SRV).forEach(function(k){
   var s = SRV[k];
@@ -313,7 +313,7 @@ async function fetchSrv(k, from, to){
       if (ra.status === 404) { s.state = 'bad'; s.err = '알림로또 서버 업데이트(배포) 전입니다'; return null; }
       if (!ra.ok) { s.state = 'bad'; s.err = '알림로또 서버 오류 ' + ra.status + ' (잠들어 있으면 잠시 뒤 새로고침)'; return null; }
       var ja = await ra.json();
-      return (ja.rows || []).map(function(x){ return { day: x.day, app: 'allim', product: x.product, channel: x.channel, orders: +x.orders || 0, gross: +x.gross || 0, refunds: +x.refunds || 0, refund: +x.refund || 0 }; });
+      return (ja.rows || []).map(function(x){ return { day: x.day, app: APP[x.app] ? x.app : 'allim', product: x.product, channel: x.channel, orders: +x.orders || 0, gross: +x.gross || 0, refunds: +x.refunds || 0, refund: +x.refund || 0 }; });
     }
     if (k === 'paper') {
       var ses = (await s.sb.auth.getSession()).data.session;
@@ -396,17 +396,17 @@ function paint(){
   var P = ST.per, tab = ST.tab;
   // KPI
   var g8c = sum(P.cur, 'g8'), g8p = sum(P.prev, 'g8'), lc = sum(P.cur, 'lotto'), lp = sum(P.prev, 'lotto');
-  var html = kpi('main', '8개 앱 합계', g8c, g8p) + kpi('', '로또 합계 (따로)', lc, lp);
+  var html = kpi('main', '9개 앱 합계', g8c, g8p) + kpi('', '로또 합계 (따로)', lc, lp);
   if (APP[tab]) html += kpi('main', APP[tab].name, sum(P.cur, tab), sum(P.prev, tab));
   else {
     var tc = sum(P.cur, tab === 'lotto' ? 'lotto' : 'g8');
-    html += '<div class="card kpi"><div class="k">총매출 (' + (tab === 'lotto' ? '로또' : '8개 앱') + ')</div><div class="v">' + won(tc.gross) + '</div><div class="s">결제 ' + num(tc.orders) + '건 · 지난 기간 ' + won((tab === 'lotto' ? lp : g8p).gross) + '</div></div>';
+    html += '<div class="card kpi"><div class="k">총매출 (' + (tab === 'lotto' ? '로또' : '9개 앱') + ')</div><div class="v">' + won(tc.gross) + '</div><div class="s">결제 ' + num(tc.orders) + '건 · 지난 기간 ' + won((tab === 'lotto' ? lp : g8p).gross) + '</div></div>';
     html += '<div class="card kpi"><div class="k">수수료 · 환불</div><div class="v">' + won(tc.fee + tc.refund) + '</div><div class="s">수수료 ' + won(tc.fee) + ' · 환불 ' + won(tc.refund) + '</div></div>';
   }
   $('kpis').innerHTML = html;
 
   // 탭
-  var tabs = [['all', '전체'], ['g8', '8개 앱'], ['lotto', '로또']].concat(APPS.map(function(a){ return [a.id, a.name]; }));
+  var tabs = [['all', '전체'], ['g8', '9개 앱'], ['lotto', '로또']].concat(APPS.map(function(a){ return [a.id, a.name]; }));
   $('tabs').innerHTML = tabs.map(function(t){ return '<button type="button" data-t="' + t[0] + '" class="' + (t[0] === tab ? 'on' : '') + '">' + esc(t[1]) + '</button>'; }).join('');
   [].forEach.call($('tabs').querySelectorAll('button'), function(b){ b.onclick = function(){ ST.tab = b.dataset.t; store.set('weave_sales_tab', ST.tab); paint(); }; });
 
@@ -426,7 +426,7 @@ function paint(){
           ? '<td>' + num(c.orders) + '</td><td>' + won(c.gross) + '</td><td>' + won(c.refund) + '</td><td>' + won(c.fee) + '</td><td><b>' + won(c.net) + '</b></td><td>' + won(p.net) + '</td><td>' + delta(c.net, p.net) + '</td>'
           : '<td colspan="7" class="l muted">' + (SRV[a.srv] && SRV[a.srv].err ? esc(SRV[a.srv].err) : '로그인 필요') + '</td>') + '</tr>');
       });
-      rowsH.push('<tr class="sum"><td class="l">' + (lot ? '로또 합계' : '8개 앱 합계') + '</td><td>' + num(tc.orders) + '</td><td>' + won(tc.gross) + '</td><td>' + won(tc.refund) + '</td><td>' + won(tc.fee) + '</td><td>' + won(tc.net) + '</td><td>' + won(tp.net) + '</td><td>' + delta(tc.net, tp.net) + '</td></tr>');
+      rowsH.push('<tr class="sum"><td class="l">' + (lot ? '로또 합계' : '9개 앱 합계') + '</td><td>' + num(tc.orders) + '</td><td>' + won(tc.gross) + '</td><td>' + won(tc.refund) + '</td><td>' + won(tc.fee) + '</td><td>' + won(tc.net) + '</td><td>' + won(tp.net) + '</td><td>' + delta(tc.net, tp.net) + '</td></tr>');
     });
     $('tApps').innerHTML = head + rowsH.join('');
     [].forEach.call($('tApps').querySelectorAll('tr.click'), function(tr){ tr.onclick = function(){ ST.tab = tr.dataset.a; store.set('weave_sales_tab', ST.tab); paint(); scrollTo({ top: 0, behavior: 'smooth' }); }; });
@@ -456,7 +456,7 @@ function paint(){
   $('tDays').innerHTML = '<tr><th class="l">' + (monthly ? '달' : '날짜') + '</th><th>건수</th><th>총매출</th><th>환불</th><th>수수료</th><th>순매출</th></tr>' +
     keys.slice().reverse().map(function(k){ var a = bm[k]; return '<tr><td class="l">' + esc(k) + '</td><td>' + num(a.orders) + '</td><td>' + won(a.gross) + '</td><td>' + won(a.refund) + '</td><td>' + won(a.fee) + '</td><td><b>' + won(a.net) + '</b></td></tr>'; }).join('');
   chart(keys, bm, monthly);
-  $('chartTitle').textContent = (APP[tab] ? APP[tab].name : tab === 'lotto' ? '로또' : tab === 'g8' ? '8개 앱' : '전체') + ' 순매출 흐름';
+  $('chartTitle').textContent = (APP[tab] ? APP[tab].name : tab === 'lotto' ? '로또' : tab === 'g8' ? '9개 앱' : '전체') + ' 순매출 흐름';
   $('chartCap').textContent = monthly ? '달별' : '날짜별';
 }
 function chart(keys, bm, monthly){
@@ -479,7 +479,7 @@ function xlsx(){
   var P = ST.per, wb = XLSX.utils.book_new();
   var line = function(name, a, p){ return { '구분': name, '건수': a.orders, '총매출': Math.round(a.gross), '환불': Math.round(a.refund), '수수료': Math.round(a.fee), '순매출': Math.round(a.net), '지난기간 순매출': p ? Math.round(p.net) : '', '증감(%)': p && p.net ? +(((a.net - p.net) / Math.abs(p.net)) * 100).toFixed(1) : '' }; };
   var sumRows = APPS.map(function(a){ return line(a.name, sum(P.cur, a.id), sum(P.prev, a.id)); });
-  sumRows.push(line('8개 앱 합계', sum(P.cur, 'g8'), sum(P.prev, 'g8'))); sumRows.push(line('로또 합계', sum(P.cur, 'lotto'), sum(P.prev, 'lotto')));
+  sumRows.push(line('9개 앱 합계', sum(P.cur, 'g8'), sum(P.prev, 'g8'))); sumRows.push(line('로또 합계', sum(P.cur, 'lotto'), sum(P.prev, 'lotto')));
   sumRows.unshift({ '구분': '기간 ' + P.cur[0] + ' ~ ' + P.cur[1] + ' (비교 ' + P.prev[0] + ' ~ ' + P.prev[1] + ') · 수수료 구글 ' + CFG.google + '% 애플 ' + CFG.apple + '% 카드 ' + CFG.pg + '% 무통장 ' + CFG.bank + '%' });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sumRows), '앱별 요약');
   var raw = ST.rows.filter(function(r){ return inRange(r, P.cur); }).sort(function(a, b){ return a.day < b.day ? -1 : a.day > b.day ? 1 : 0; }).map(function(r){
