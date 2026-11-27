@@ -143,6 +143,9 @@ document.addEventListener('click', async (e) => {
   if (b.dataset.unban) { const why = window.prompt('정지를 푸는 사유를 적어 주세요'); if (!why) return; try { await rpc('admin_unsuspend_user', { p_user: b.dataset.unban, p_reason: why }); record(b.dataset.unban); } catch (x) {} }
   if (b.dataset.req) { const why = window.prompt('수사기관 요청: 기관 · 문서번호 · 요청 범위(기간)를 적어 주세요'); if (!why) return; try { await rpc('admin_mod_note', { p_user: b.dataset.req, p_action: 'request', p_reason: why }); record(b.dataset.req); } catch (x) {} }
   if (b.dataset.csv) downloadCsv();
+  if (b.dataset.calls) { let r; try { r = await rpc('admin_call_archive', { p_user: b.dataset.calls }); } catch (x) { return; }
+    if (!r.length) { err('지워진 뒤 따로 보관된 통화 기록이 없습니다(지우지 않은 기록은 앱 · 관리 화면에 그대로 있습니다).'); return; }
+    saveCsv([['표', '보관한 때(한국)', '기록']].concat(r.map((x) => [x.src, kst(x.at, 19), JSON.stringify(x.row)])), 'calls_' + b.dataset.calls.slice(0, 8)); }
 });
 
 /* ── 계정 찾기 · 기록 ── */
@@ -157,15 +160,18 @@ async function record(uid){
   let r; try { r = await rpc('admin_user_record', { p_user: uid }); } catch (e) { return; } REC = r; const u = r.user || {};
   $('rec').innerHTML = '<div class="box"><b>' + esc(idOf(u.login) || uid) + '</b> <span class="small">' + esc(uid) + '</span> ' + (banned(u.banned_until) ? '<span class="tag t-ban">정지 중' + (String(u.banned_until).startsWith('infinity') ? '' : ' ~ ' + kst(u.banned_until, 10)) + '</span>' : '<span class="tag t-ok">정상</span>') +
     '<div class="bar" style="margin-top:10px">' + (banned(u.banned_until) ? '<button class="b b-ok" data-unban="' + esc(uid) + '">정지 풀기</button>' : '<button class="b b-bad" data-ban="' + esc(uid) + '" data-login="' + esc(idOf(u.login)) + '">정지하기</button>') +
-    '<button class="b b-soft" data-req="' + esc(uid) + '">수사기관 요청 기록</button><button class="b b-soft" data-csv="1">접속 기록 내려받기 (CSV)</button></div>' +
+    '<button class="b b-soft" data-req="' + esc(uid) + '">수사기관 요청 기록</button><button class="b b-soft" data-csv="1">접속 기록 내려받기 (CSV)</button><button class="b b-soft" data-calls="' + esc(uid) + '">보관 통화 기록 내려받기 (CSV)</button></div>' +
     '<h2>처리 기록</h2>' + ((r.actions || []).length ? '<div class="tbl" style="max-height:220px"><table><tbody>' + r.actions.map((a) => '<tr><td>' + kst(a.at) + '</td><td>' + esc(ACT[a.action] || a.action) + '</td><td class="w">' + esc(a.reason) + '</td><td>' + esc(a.report_ref || '') + '</td></tr>').join('') + '</tbody></table></div>' : '<div class="small">없음</div>') +
     '<h2>최근 3개월 접속 기록 (' + (r.access || []).length + '건)</h2>' + ((r.access || []).length ? '<div class="tbl" style="max-height:300px"><table><thead><tr><th>일시(한국)</th><th>앱</th><th>IP</th><th>기기 · 브라우저</th></tr></thead><tbody>' + r.access.map((l) => '<tr><td>' + kst(l.at, 19) + '</td><td>' + esc(l.app) + '</td><td>' + esc(l.ip || '') + '</td><td class="w small">' + esc(l.ua || '') + '</td></tr>').join('') + '</tbody></table></div>' : '<div class="small">없음 (기록은 안전 관리 SQL 을 Run 한 뒤부터 쌓입니다)</div>') + '</div>';
 }
 function downloadCsv(){
   if (!REC) return; const u = REC.user || {};
   const rows = [['계정', '아이디', '일시(한국)', '앱', 'IP', '기기 · 브라우저']].concat((REC.access || []).map((l) => [u.id, idOf(u.login), kst(l.at, 19), l.app, l.ip || '', l.ua || '']));
-  const csv = '﻿' + rows.map((r) => r.map((v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'access_' + (idOf(u.login) || u.id) + '_' + kst(new Date().toISOString(), 10) + '.csv'; a.click();
+  saveCsv(rows, 'access_' + (idOf(u.login) || u.id));
+}
+function saveCsv(rows, name){
+  const csv = '\ufeff' + rows.map((r) => r.map((v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = name + '_' + kst(new Date().toISOString(), 10) + '.csv'; a.click();
 }
 
 /* ── 처리 기록 ── */

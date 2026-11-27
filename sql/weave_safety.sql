@@ -193,11 +193,54 @@ begin
   return jsonb_build_object('ok', true);
 end $$;
 
--- ── 4. 기간 지난 기록 지우기 (매일 새벽) ─────────────────────────────────
+-- ── 4. 통화 · 연결 기록 12개월 분리 보관 ─────────────────────────────────
+--   통화 기록 표에서 줄이 지워질 때(이용자가 지움 · 탈퇴로 함께 지워짐) 그 줄을 그대로 옮겨 둡니다.
+--   표 이름을 몰라도 되게, 아래 이름 중 이 서버에 있는 표에만 붙입니다. 대화 내용 표에는 붙이지 않습니다.
+create table if not exists public.weave_call_archive (
+  id          bigserial primary key,
+  src         text not null,
+  row_data    jsonb not null,
+  archived_at timestamptz not null default now()
+);
+create index if not exists weave_call_archive_at on public.weave_call_archive(archived_at);
+alter table public.weave_call_archive enable row level security;
+revoke all on public.weave_call_archive from anon, authenticated;
+
+create or replace function public.weave_call_keep() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into weave_call_archive(src, row_data) values (TG_TABLE_NAME, to_jsonb(OLD));
+  return OLD;
+exception when others then return OLD;   -- 보관이 실패해도 원래 지우기는 막지 않습니다
+end $$;
+
+do $$
+declare t text;
+begin
+  foreach t in array array['calls', 'call_logs', 'call_records', 'call_history', 'burum_dial_log', 'wafa_calls', 'hotline_calls', 'nureum_calls'] loop
+    if to_regclass('public.' || t) is not null then
+      execute format('drop trigger if exists weave_call_keep on public.%I', t);
+      execute format('create trigger weave_call_keep before delete on public.%I for each row execute function public.weave_call_keep()', t);
+      raise notice 'call archive on %', t;
+    end if;
+  end loop;
+end $$;
+
+-- 수사기관 요청 대응: 한 계정이 들어 있는 보관 통화 기록 (관리자만)
+create or replace function public.admin_call_archive(p_user uuid)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  if not weave_is_admin() then raise exception 'not_admin'; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('src', a.src, 'at', a.archived_at, 'row', a.row_data) order by a.archived_at desc)
+                     from (select * from weave_call_archive where row_data::text like '%' || p_user::text || '%' order by archived_at desc limit 500) a), '[]'::jsonb);
+end $$;
+
+-- ── 5. 기간 지난 기록 지우기 (매일 새벽) ─────────────────────────────────
 create or replace function public.weave_purge_logs() returns void
 language sql security definer set search_path = public as $$
   delete from weave_access_log where at < now() - interval '3 months';
   delete from weave_mod_actions where at < now() - interval '1 year' and action <> 'request';
+  delete from weave_call_archive where archived_at < now() - interval '12 months';
 $$;
 revoke all on function public.weave_purge_logs() from public, anon, authenticated;
 
@@ -215,7 +258,7 @@ declare f text;
 begin
   foreach f in array array['admin_suspend_user(uuid,text,integer,text,text)', 'admin_unsuspend_user(uuid,text)', 'admin_mod_note(uuid,text,text,text,text)',
                            'admin_find_user(text)', 'admin_user_record(uuid)', 'admin_mod_recent(integer)', 'admin_alias_reports(text)',
-                           'admin_alias_report_close(text,text,text)'] loop
+                           'admin_alias_report_close(text,text,text)', 'admin_call_archive(uuid)'] loop
     execute format('revoke all on function public.%s from public, anon', f);
     execute format('grant execute on function public.%s to authenticated', f);
   end loop;
@@ -223,4 +266,5 @@ end $$;
 
 select 'weave safety ok' as result,
        (select count(*) from pg_extension where extname = 'pg_cron') as cron_ready,
-       (to_regclass('public.reports') is not null) as has_reports;
+       (to_regclass('public.reports') is not null) as has_reports,
+       (select string_agg(event_object_table, ', ') from information_schema.triggers where trigger_name = 'weave_call_keep') as call_archive_on;
