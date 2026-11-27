@@ -780,6 +780,7 @@ footer a{ color:rgba(255,255,255,.6); text-decoration:none; }
 const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+try { setTimeout(function(){ sb.rpc('weave_log_access', { p_app: 'aliascall' }).then(function(){}, function(){}); }, 2500); } catch (e) {}   /* 🛡 접속 기록(3개월 보관) — weave_safety.sql */
 
 // ── 실시간 수신 감지 + 가벼운 알림 배너 ──
 // 2026-08-19 (3차 — 중복코드 통합): 예전엔 이 화면도 전화 응답(WebRTC)을 통째로 직접 처리했는데,

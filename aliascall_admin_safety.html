@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>신고 · 정지 관리</title>
+<!-- 🛡 2026-11-27 신고 · 이용 정지 · 접속 기록 (가림콜 서버 · 가림콜 · 바로카 · 단톡방 · 단골창구). 서버 함수: weave_safety.sql
+     · 정지하면 그 계정은 로그인 · 토큰 갱신이 막히고 열린 세션이 끊깁니다(길어야 1시간 안에 완전히 막힘).
+     · 모든 처리는 weave_mod_actions 에 남고 1년 보관, 접속 기록은 3개월 보관 뒤 자동 삭제. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{ --bg:#F4F6F8; --card:#fff; --ink:#16212E; --soft:#5A6878; --line:#DDE3EA; --acc:#8A2E2E; --bad:#B4412F; --ok:#1F8A4C; }
+*{ box-sizing:border-box; } [hidden]{ display:none !important; }
+body{ margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; font-size:14px; }
+header{ background:var(--acc); color:#fff; padding:12px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+header h1{ margin:0; font-size:17px; } header .who{ margin-left:auto; font-size:12.5px; opacity:.85; }
+header button{ background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:8px; padding:6px 10px; font-size:12.5px; cursor:pointer; }
+main{ max-width:1300px; margin:0 auto; padding:14px; }
+.tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.tabs button{ border:1px solid var(--line); background:#fff; border-radius:20px; padding:7px 14px; font:inherit; cursor:pointer; }
+.tabs button.on{ background:var(--acc); color:#fff; border-color:var(--acc); }
+h2{ font-size:15px; margin:16px 0 8px; }
+.bar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
+.bar input, .bar select, textarea{ border:1px solid var(--line); border-radius:8px; padding:7px 9px; font:inherit; }
+.bar input{ min-width:240px; }
+.tbl{ overflow:auto; background:#fff; border:1px solid var(--line); border-radius:12px; max-height:640px; }
+table{ border-collapse:collapse; width:100%; } th,td{ padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; } th{ background:#F6ECEC; font-size:12.5px; position:sticky; top:0; white-space:nowrap; }
+td.w{ max-width:360px; white-space:pre-wrap; word-break:break-all; }
+.b{ border:none; border-radius:7px; padding:5px 9px; font:inherit; font-size:12.5px; cursor:pointer; margin:1px; }
+.b-bad{ background:var(--bad); color:#fff; } .b-soft{ background:#EEF1F4; color:var(--ink); } .b-ok{ background:var(--ok); color:#fff; }
+.tag{ display:inline-block; border-radius:20px; padding:1px 8px; font-size:11.5px; font-weight:800; }
+.t-ban{ background:#FBEAE6; color:var(--bad); } .t-ok{ background:#E3F4EA; color:var(--ok); } .t-soft{ background:#EEF1F4; color:var(--soft); }
+.small{ font-size:12px; color:var(--soft); }
+.err{ display:none; background:#FBEAE6; color:var(--bad); border-radius:10px; padding:10px 14px; margin-bottom:12px; }
+.box{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px; }
+#sheet{ position:fixed; inset:0; background:rgba(22,33,46,.55); display:none; align-items:center; justify-content:center; z-index:9; }
+#sheet .in{ background:#fff; border-radius:16px; padding:20px; width:min(460px,94vw); display:flex; flex-direction:column; gap:10px; }
+#login{ position:fixed; inset:0; background:rgba(22,33,46,.55); display:none; align-items:center; justify-content:center; z-index:10; }
+#login .in{ background:#fff; border-radius:16px; padding:22px; width:min(360px,92vw); display:flex; flex-direction:column; gap:10px; }
+#login input{ border:1px solid var(--line); border-radius:8px; padding:10px; font:inherit; }
+#login button{ background:var(--acc); color:#fff; border:none; border-radius:8px; padding:11px; font-weight:800; cursor:pointer; }
+</style>
+</head>
+<body>
+<div id="login"><div class="in"><b style="font-size:17px">신고 · 정지 관리</b><div class="small">가림 통합 관리와 같은 관리자 계정입니다(한쪽에서 로그인하면 함께 유지).</div><input id="lEmail" type="email" placeholder="이메일" autocomplete="username"><input id="lPw" type="password" placeholder="비밀번호" autocomplete="current-password"><button type="button" id="lGo">로그인</button><div class="err" id="lErr"></div></div></div>
+<div id="sheet"><div class="in">
+  <b id="shT">계정 정지</b><div class="small" id="shWho"></div>
+  <label class="small">사유</label>
+  <select id="shWhy"><option>보이스피싱 · 사기</option><option>마약류 · 불법 거래</option><option>성매매 · 음란물</option><option>아동 · 청소년 대상 범죄</option><option>협박 · 스토킹 · 괴롭힘</option><option>불법 도박 · 불법 대부</option><option>스팸 · 광고</option><option>수사기관 요청</option><option>기타</option></select>
+  <textarea id="shNote" rows="3" placeholder="확인한 내용 (예: 신고 3건, 대화에서 거래 장소 안내 확인)"></textarea>
+  <label class="small">기간</label>
+  <select id="shDays"><option value="0">무기한 (해지 수준)</option><option value="30">30일</option><option value="7">7일</option><option value="1">1일</option></select>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="b b-soft" id="shNo" type="button">닫기</button><button class="b b-bad" id="shGo" type="button">정지하기</button></div>
+</div></div>
+
+<header><h1>🛡 신고 · 정지 관리 <span class="small" style="color:#fff;opacity:.8">가림콜 서버 · 가림콜 · 바로카 · 단톡방 · 단골창구</span></h1><span class="who" id="who"></span><button type="button" id="logout">로그아웃</button></header>
+<main>
+<div class="err" id="err"></div>
+<div class="tabs" id="tabs"><button type="button" data-t="find">계정 찾기 · 정지</button><button type="button" data-t="log">처리 기록</button><button type="button" data-t="guide">처리 절차</button></div>
+
+<section id="t_rep" hidden>
+  <div class="bar"><select id="repSt"><option value="open">미처리</option><option value="actioned">조치함</option><option value="dismissed">문제없음</option></select><button class="b b-soft" id="repGo" type="button">새로고침</button><span class="small" id="repCnt"></span></div>
+  <div class="tbl"><table><thead><tr><th>접수</th><th>사유</th><th>신고한 분</th><th>신고된 계정</th><th>신고 내용</th><th>문제의 메시지</th><th>처리</th></tr></thead><tbody id="rep"></tbody></table></div>
+  <p class="small">· 대화 신고(와파 · 부름 · 누름 · 바로너)가 여기에 모입니다. 24시간 안에 확인을 목표로 합니다.<br>· 범죄 의심(사기 · 마약 · 성범죄 · 아동)은 먼저 정지하고 확인합니다. 단순 다툼 · 오해는 문제없음으로 닫습니다.</p>
+</section>
+
+<section id="t_find" hidden>
+  <div class="bar"><input id="q" placeholder="아이디(닉네임 · 이메일) 일부 또는 계정 번호"><button class="b b-soft" id="qGo" type="button">찾기</button></div>
+  <div class="tbl" style="max-height:320px"><table><thead><tr><th>아이디</th><th>가입</th><th>마지막 로그인</th><th>상태</th><th></th></tr></thead><tbody id="found"><tr><td colspan="5" class="small">아이디를 넣고 찾기를 누르세요.</td></tr></tbody></table></div>
+  <div id="rec"></div>
+</section>
+
+<section id="t_log" hidden>
+  <div class="tbl"><table><thead><tr><th>일시</th><th>처리</th><th>계정</th><th>앱</th><th>사유</th><th>신고 번호</th><th>정지 끝</th></tr></thead><tbody id="mods"></tbody></table></div>
+  <p class="small">· 처리 기록은 1년 보관 뒤 자동으로 지워집니다(수사기관 요청 기록은 지우지 않음).</p>
+</section>
+
+<section id="t_guide" hidden><div class="box" style="line-height:1.8">
+  <b>1. 신고 접수</b> — 앱 안 [신고] 또는 고객센터(weapps.kr@gmail.com). 미처리 신고는 매일 한 번 이상 확인합니다.<br>
+  <b>2. 확인</b> — 신고 내용 · 문제의 메시지 · 같은 계정에 대한 다른 신고를 봅니다. 대화 내용을 일부러 더 찾아보지는 않습니다.<br>
+  <b>3. 조치</b> — 범죄 · 불법 이용(사기 · 마약 · 성범죄 · 아동 · 협박)은 <b>무기한 정지</b>. 가벼운 위반은 7일 · 30일 정지 또는 경고. 오해는 문제없음.<br>
+  <b>4. 기록</b> — 모든 조치는 자동으로 남습니다(누가 · 언제 · 왜). 사유 칸은 꼭 적습니다.<br>
+  <b>5. 이의 제기</b> — 정지된 분이 고객센터로 이의를 내면 기록을 다시 보고, 잘못이면 [정지 풀기]에 사유를 적고 풉니다.<br>
+  <b>6. 수사기관 요청</b> — 담당자: 대표 이미화(weapps.kr@gmail.com · 010-9237-9042). 영장 · 통신사실확인자료 제공요청서 등 <b>공문을 받은 경우에만</b> 응합니다(전화 · 메일만으로는 제공하지 않음).
+  공문의 문서번호 · 기관 · 대상 · 기간을 확인하고, 계정 기록에서 [수사기관 요청 기록]을 남긴 뒤 요청 범위의 자료만 [접속 기록 내려받기]로 꺼내 회신합니다. 긴급한 생명 · 신체 위험 신고는 112 에 바로 알립니다.
+</div></section>
+</main>
+<script>
+const SUPABASE_URL = "https://qmwaraittiurkynszjts.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y";
+const SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { storageKey: 'aliascall-admin-auth' } });
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const kst = (t, n) => t ? new Date(new Date(t).getTime() + 9 * 3600e3).toISOString().slice(0, n || 16).replace('T', ' ') : '';
+const idOf = (e) => { const loc = String(e || '').split('@')[0]; try { return decodeURIComponent(loc); } catch (x) { return loc; } };
+const ACT = { suspend:'정지', unsuspend:'정지 풀기', warn:'경고', dismiss:'문제없음', resolve:'조치함', request:'수사기관 요청', note:'메모' };
+const RS = { sexual:'성적', violence:'폭력', abuse:'욕설 · 괴롭힘', spam:'스팸', fraud:'사기 · 금전', privacy:'개인정보', other:'기타' };
+const banned = (u) => u && new Date(u) > new Date();
+function err(t){ $('err').textContent = t || ''; $('err').style.display = t ? 'block' : 'none'; }
+async function rpc(fn, args){
+  const r = await SB.rpc(fn, args || {});
+  if (r.error) { const m = r.error.message || ''; err(/not_admin/.test(m) ? '관리자 권한이 없는 계정입니다.' : /function|does not exist/.test(m) ? '서버에 안전 관리 함수가 아직 없습니다. weave_safety.sql 을 이 서버의 SQL Editor 에서 Run 해 주세요.' : m); throw r.error; }
+  err(''); return r.data;
+}
+let TAB = null;
+function show(t){ TAB = t; document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.t === t)); ['rep','find','log','guide'].forEach((x) => { const s = $('t_' + x); if (s) s.hidden = x !== t; });
+  if (t === 'rep') loadRep(); if (t === 'log') loadMods(); }
+document.querySelectorAll('#tabs button').forEach((b) => b.onclick = () => show(b.dataset.t));
+
+/* ── 정지 창 ── */
+let SH = null;
+function openSheet(user, login, ref, app){ SH = { user, ref, app }; $('shWho').textContent = '대상: ' + (login || user) + (ref ? ' · ' + ref : ''); $('shNote').value = ''; $('shDays').value = '0'; $('sheet').style.display = 'flex'; }
+$('shNo').onclick = () => { $('sheet').style.display = 'none'; };
+$('shGo').onclick = async () => {
+  const why = $('shWhy').value + ($('shNote').value.trim() ? ' — ' + $('shNote').value.trim() : '');
+  const d = +$('shDays').value || null;
+  try { const r = await rpc('admin_suspend_user', { p_user: SH.user, p_reason: why, p_days: d, p_report: SH.ref || null, p_app: SH.app || null });
+    if (!r || !r.ok) { err('정지하지 못했습니다: ' + (r && r.error)); return; }
+    if (SH.ref && /^reports:/.test(SH.ref)) await rpc('admin_alias_report_close', { p_id: SH.ref.split(':')[1], p_status: 'actioned', p_note: why });
+    $('sheet').style.display = 'none'; if (TAB === 'rep') loadRep(); if (SH.user) record(SH.user);
+  } catch (e) {}
+};
+
+/* ── 신고 ── */
+async function loadRep(){
+  $('rep').innerHTML = '<tr><td colspan="7" class="small">불러오는 중…</td></tr>';
+  let rows; try { rows = await rpc('admin_alias_reports', { p_status: $('repSt').value }); } catch (e) { return; }
+  if (rows && rows.error) { err('신고 표 모양이 예상과 다릅니다: ' + rows.msg); rows = []; }
+  $('repCnt').textContent = rows.length + '건';
+  $('rep').innerHTML = rows.length ? rows.map((r) => '<tr><td>' + kst(r.created_at) + '</td><td>' + esc(RS[r.reason] || r.reason) + '</td><td>' + esc(r.reporter_login) +
+    '</td><td>' + esc(r.target_login || '-') + (banned(r.target_banned_until) ? ' <span class="tag t-ban">정지 중</span>' : '') + '</td><td class="w">' + esc(r.detail || '') + '</td><td class="w">' + esc(r.message || '') +
+    '</td><td style="white-space:nowrap">' + (r.handled_status === 'open' && r.target ? '<button class="b b-bad" data-ban="' + esc(r.target) + '" data-login="' + esc(r.target_login) + '" data-ref="reports:' + esc(r.id) + '">정지</button>' +
+      '<button class="b b-soft" data-ok="' + esc(r.id) + '">문제없음</button>' : '<span class="tag t-soft">' + esc(r.handled_status) + '</span> <span class="small">' + esc(r.admin_note || '') + '</span>') +
+    (r.target ? '<button class="b b-soft" data-rec="' + esc(r.target) + '">기록</button>' : '') + '</td></tr>').join('') : '<tr><td colspan="7" class="small">없습니다.</td></tr>';
+}
+if ($('repGo')) { $('repGo').onclick = loadRep; $('repSt').onchange = loadRep; }
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.ban) openSheet(b.dataset.ban, b.dataset.login, b.dataset.ref, b.dataset.app);
+  if (b.dataset.ok) { const note = '확인 결과 문제없음'; try { await rpc('admin_alias_report_close', { p_id: b.dataset.ok, p_status: 'dismissed', p_note: note }); loadRep(); } catch (x) {} }
+  if (b.dataset.rec) { show('find'); record(b.dataset.rec); }
+  if (b.dataset.unban) { const why = window.prompt('정지를 푸는 사유를 적어 주세요'); if (!why) return; try { await rpc('admin_unsuspend_user', { p_user: b.dataset.unban, p_reason: why }); record(b.dataset.unban); } catch (x) {} }
+  if (b.dataset.req) { const why = window.prompt('수사기관 요청: 기관 · 문서번호 · 요청 범위(기간)를 적어 주세요'); if (!why) return; try { await rpc('admin_mod_note', { p_user: b.dataset.req, p_action: 'request', p_reason: why }); record(b.dataset.req); } catch (x) {} }
+  if (b.dataset.csv) downloadCsv();
+});
+
+/* ── 계정 찾기 · 기록 ── */
+$('qGo').onclick = async () => {
+  let rows; try { rows = await rpc('admin_find_user', { p_q: $('q').value }); } catch (e) { return; }
+  $('found').innerHTML = rows.length ? rows.map((u) => '<tr><td>' + esc(idOf(u.login) || (u.anon ? '(가입 없이 시작)' : '-')) + '<div class="small">' + esc(u.id) + '</div></td><td>' + kst(u.created_at, 10) + '</td><td>' + kst(u.last_sign_in_at) +
+    '</td><td>' + (banned(u.banned_until) ? '<span class="tag t-ban">정지 중</span>' : '<span class="tag t-ok">정상</span>') + '</td><td><button class="b b-soft" data-rec="' + esc(u.id) + '">기록 보기</button></td></tr>').join('') : '<tr><td colspan="5" class="small">찾지 못했습니다.</td></tr>';
+};
+$('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('qGo').click(); });
+let REC = null;
+async function record(uid){
+  let r; try { r = await rpc('admin_user_record', { p_user: uid }); } catch (e) { return; } REC = r; const u = r.user || {};
+  $('rec').innerHTML = '<div class="box"><b>' + esc(idOf(u.login) || uid) + '</b> <span class="small">' + esc(uid) + '</span> ' + (banned(u.banned_until) ? '<span class="tag t-ban">정지 중' + (String(u.banned_until).startsWith('infinity') ? '' : ' ~ ' + kst(u.banned_until, 10)) + '</span>' : '<span class="tag t-ok">정상</span>') +
+    '<div class="bar" style="margin-top:10px">' + (banned(u.banned_until) ? '<button class="b b-ok" data-unban="' + esc(uid) + '">정지 풀기</button>' : '<button class="b b-bad" data-ban="' + esc(uid) + '" data-login="' + esc(idOf(u.login)) + '">정지하기</button>') +
+    '<button class="b b-soft" data-req="' + esc(uid) + '">수사기관 요청 기록</button><button class="b b-soft" data-csv="1">접속 기록 내려받기 (CSV)</button></div>' +
+    '<h2>처리 기록</h2>' + ((r.actions || []).length ? '<div class="tbl" style="max-height:220px"><table><tbody>' + r.actions.map((a) => '<tr><td>' + kst(a.at) + '</td><td>' + esc(ACT[a.action] || a.action) + '</td><td class="w">' + esc(a.reason) + '</td><td>' + esc(a.report_ref || '') + '</td></tr>').join('') + '</tbody></table></div>' : '<div class="small">없음</div>') +
+    '<h2>최근 3개월 접속 기록 (' + (r.access || []).length + '건)</h2>' + ((r.access || []).length ? '<div class="tbl" style="max-height:300px"><table><thead><tr><th>일시(한국)</th><th>앱</th><th>IP</th><th>기기 · 브라우저</th></tr></thead><tbody>' + r.access.map((l) => '<tr><td>' + kst(l.at, 19) + '</td><td>' + esc(l.app) + '</td><td>' + esc(l.ip || '') + '</td><td class="w small">' + esc(l.ua || '') + '</td></tr>').join('') + '</tbody></table></div>' : '<div class="small">없음 (기록은 안전 관리 SQL 을 Run 한 뒤부터 쌓입니다)</div>') + '</div>';
+}
+function downloadCsv(){
+  if (!REC) return; const u = REC.user || {};
+  const rows = [['계정', '아이디', '일시(한국)', '앱', 'IP', '기기 · 브라우저']].concat((REC.access || []).map((l) => [u.id, idOf(u.login), kst(l.at, 19), l.app, l.ip || '', l.ua || '']));
+  const csv = '﻿' + rows.map((r) => r.map((v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'access_' + (idOf(u.login) || u.id) + '_' + kst(new Date().toISOString(), 10) + '.csv'; a.click();
+}
+
+/* ── 처리 기록 ── */
+async function loadMods(){
+  let rows; try { rows = await rpc('admin_mod_recent', { p_limit: 300 }); } catch (e) { return; }
+  $('mods').innerHTML = rows.length ? rows.map((a) => '<tr><td>' + kst(a.at) + '</td><td>' + esc(ACT[a.action] || a.action) + '</td><td>' + esc(idOf(a.login) || a.target_user || '') + '</td><td>' + esc(a.app || '') +
+    '</td><td class="w">' + esc(a.reason || '') + '</td><td>' + esc(a.report_ref || '') + '</td><td>' + (a.action === 'suspend' ? (a.until_at ? kst(a.until_at, 10) : '무기한') : '') + '</td></tr>').join('') : '<tr><td colspan="7" class="small">아직 없습니다.</td></tr>';
+}
+
+$('logout').onclick = async () => { await SB.auth.signOut(); location.reload(); };
+async function boot(){ const { data: { session } } = await SB.auth.getSession();
+  if (!session) { $('login').style.display = 'flex'; return; }
+  $('login').style.display = 'none'; $('who').textContent = session.user.email || ''; show('find'); }
+$('lGo').onclick = async () => { const { error } = await SB.auth.signInWithPassword({ email: $('lEmail').value.trim(), password: $('lPw').value });
+  if (error) { $('lErr').textContent = '로그인 실패: ' + error.message; $('lErr').style.display = 'block'; return; } boot(); };
+boot();
+</script>
+</body>
+</html>
