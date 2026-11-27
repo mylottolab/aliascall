@@ -115,9 +115,9 @@ $('shNo').onclick = () => { $('sheet').style.display = 'none'; };
 $('shGo').onclick = async () => {
   const why = $('shWhy').value + ($('shNote').value.trim() ? ' — ' + $('shNote').value.trim() : '');
   const d = +$('shDays').value || null;
-  try { const r = await rpc('admin_suspend_user', { p_user: SH.user, p_reason: why, p_days: d, p_report: SH.ref || null, p_app: SH.app || null });
+  try { const r = await rpc('weave_suspend_user', { p_user: SH.user, p_reason: why, p_days: d, p_report: SH.ref || null, p_app: SH.app || null });
     if (!r || !r.ok) { err('정지하지 못했습니다: ' + (r && r.error)); return; }
-    if (SH.ref && /^reports:/.test(SH.ref)) await rpc('admin_alias_report_close', { p_id: SH.ref.split(':')[1], p_status: 'actioned', p_note: why });
+    if (SH.ref && /^reports:/.test(SH.ref)) await rpc('weave_alias_report_close', { p_id: SH.ref.split(':')[1], p_status: 'actioned', p_note: why });
     $('sheet').style.display = 'none'; if (TAB === 'rep') loadRep(); if (SH.user) record(SH.user);
   } catch (e) {}
 };
@@ -125,7 +125,7 @@ $('shGo').onclick = async () => {
 /* ── 신고 ── */
 async function loadRep(){
   $('rep').innerHTML = '<tr><td colspan="7" class="small">불러오는 중…</td></tr>';
-  let rows; try { rows = await rpc('admin_alias_reports', { p_status: $('repSt').value }); } catch (e) { return; }
+  let rows; try { rows = await rpc('weave_alias_reports', { p_status: $('repSt').value }); } catch (e) { return; }
   if (rows && rows.error) { err('신고 표 모양이 예상과 다릅니다: ' + rows.msg); rows = []; }
   $('repCnt').textContent = rows.length + '건';
   $('rep').innerHTML = rows.length ? rows.map((r) => '<tr><td>' + kst(r.created_at) + '</td><td>' + esc(RS[r.reason] || r.reason) + '</td><td>' + esc(r.reporter_login) +
@@ -138,26 +138,26 @@ if ($('repGo')) { $('repGo').onclick = loadRep; $('repSt').onchange = loadRep; }
 document.addEventListener('click', async (e) => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.ban) openSheet(b.dataset.ban, b.dataset.login, b.dataset.ref, b.dataset.app);
-  if (b.dataset.ok) { const note = '확인 결과 문제없음'; try { await rpc('admin_alias_report_close', { p_id: b.dataset.ok, p_status: 'dismissed', p_note: note }); loadRep(); } catch (x) {} }
+  if (b.dataset.ok) { const note = '확인 결과 문제없음'; try { await rpc('weave_alias_report_close', { p_id: b.dataset.ok, p_status: 'dismissed', p_note: note }); loadRep(); } catch (x) {} }
   if (b.dataset.rec) { show('find'); record(b.dataset.rec); }
-  if (b.dataset.unban) { const why = window.prompt('정지를 푸는 사유를 적어 주세요'); if (!why) return; try { await rpc('admin_unsuspend_user', { p_user: b.dataset.unban, p_reason: why }); record(b.dataset.unban); } catch (x) {} }
-  if (b.dataset.req) { const why = window.prompt('수사기관 요청: 기관 · 문서번호 · 요청 범위(기간)를 적어 주세요'); if (!why) return; try { await rpc('admin_mod_note', { p_user: b.dataset.req, p_action: 'request', p_reason: why }); record(b.dataset.req); } catch (x) {} }
+  if (b.dataset.unban) { const why = window.prompt('정지를 푸는 사유를 적어 주세요'); if (!why) return; try { await rpc('weave_unsuspend_user', { p_user: b.dataset.unban, p_reason: why }); record(b.dataset.unban); } catch (x) {} }
+  if (b.dataset.req) { const why = window.prompt('수사기관 요청: 기관 · 문서번호 · 요청 범위(기간)를 적어 주세요'); if (!why) return; try { await rpc('weave_mod_note', { p_user: b.dataset.req, p_action: 'request', p_reason: why }); record(b.dataset.req); } catch (x) {} }
   if (b.dataset.csv) downloadCsv();
-  if (b.dataset.calls) { let r; try { r = await rpc('admin_call_archive', { p_user: b.dataset.calls }); } catch (x) { return; }
+  if (b.dataset.calls) { let r; try { r = await rpc('weave_call_archive_of', { p_user: b.dataset.calls }); } catch (x) { return; }
     if (!r.length) { err('지워진 뒤 따로 보관된 통화 기록이 없습니다(지우지 않은 기록은 앱 · 관리 화면에 그대로 있습니다).'); return; }
     saveCsv([['표', '보관한 때(한국)', '기록']].concat(r.map((x) => [x.src, kst(x.at, 19), JSON.stringify(x.row)])), 'calls_' + b.dataset.calls.slice(0, 8)); }
 });
 
 /* ── 계정 찾기 · 기록 ── */
 $('qGo').onclick = async () => {
-  let rows; try { rows = await rpc('admin_find_user', { p_q: $('q').value }); } catch (e) { return; }
+  let rows; try { rows = await rpc('weave_find_user', { p_q: $('q').value }); } catch (e) { return; }
   $('found').innerHTML = rows.length ? rows.map((u) => '<tr><td>' + esc(idOf(u.login) || (u.anon ? '(가입 없이 시작)' : '-')) + '<div class="small">' + esc(u.id) + '</div></td><td>' + kst(u.created_at, 10) + '</td><td>' + kst(u.last_sign_in_at) +
     '</td><td>' + (banned(u.banned_until) ? '<span class="tag t-ban">정지 중</span>' : '<span class="tag t-ok">정상</span>') + '</td><td><button class="b b-soft" data-rec="' + esc(u.id) + '">기록 보기</button></td></tr>').join('') : '<tr><td colspan="5" class="small">찾지 못했습니다.</td></tr>';
 };
 $('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('qGo').click(); });
 let REC = null;
 async function record(uid){
-  let r; try { r = await rpc('admin_user_record', { p_user: uid }); } catch (e) { return; } REC = r; const u = r.user || {};
+  let r; try { r = await rpc('weave_user_record', { p_user: uid }); } catch (e) { return; } REC = r; const u = r.user || {};
   $('rec').innerHTML = '<div class="box"><b>' + esc(idOf(u.login) || uid) + '</b> <span class="small">' + esc(uid) + '</span> ' + (banned(u.banned_until) ? '<span class="tag t-ban">정지 중' + (String(u.banned_until).startsWith('infinity') ? '' : ' ~ ' + kst(u.banned_until, 10)) + '</span>' : '<span class="tag t-ok">정상</span>') +
     '<div class="bar" style="margin-top:10px">' + (banned(u.banned_until) ? '<button class="b b-ok" data-unban="' + esc(uid) + '">정지 풀기</button>' : '<button class="b b-bad" data-ban="' + esc(uid) + '" data-login="' + esc(idOf(u.login)) + '">정지하기</button>') +
     '<button class="b b-soft" data-req="' + esc(uid) + '">수사기관 요청 기록</button><button class="b b-soft" data-csv="1">접속 기록 내려받기 (CSV)</button><button class="b b-soft" data-calls="' + esc(uid) + '">보관 통화 기록 내려받기 (CSV)</button></div>' +
@@ -176,7 +176,7 @@ function saveCsv(rows, name){
 
 /* ── 처리 기록 ── */
 async function loadMods(){
-  let rows; try { rows = await rpc('admin_mod_recent', { p_limit: 300 }); } catch (e) { return; }
+  let rows; try { rows = await rpc('weave_mod_recent', { p_limit: 300 }); } catch (e) { return; }
   $('mods').innerHTML = rows.length ? rows.map((a) => '<tr><td>' + kst(a.at) + '</td><td>' + esc(ACT[a.action] || a.action) + '</td><td>' + esc(idOf(a.login) || a.target_user || '') + '</td><td>' + esc(a.app || '') +
     '</td><td class="w">' + esc(a.reason || '') + '</td><td>' + esc(a.report_ref || '') + '</td><td>' + (a.action === 'suspend' ? (a.until_at ? kst(a.until_at, 10) : '무기한') : '') + '</td></tr>').join('') : '<tr><td colspan="7" class="small">아직 없습니다.</td></tr>';
 }

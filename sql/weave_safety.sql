@@ -4,6 +4,7 @@
 --     ① 부름 서버   (azredlrnvsssfjytaotb) — 와파 · 부름 · 누름 · 바로너
 --     ② 가림콜 서버 (qmwaraittiurkynszjts) — 가림콜 · 바로카 · 단톡방 · 단골창구
 --   다시 돌려도 안전합니다. 맨 아래 'weave safety ok' 가 나오면 끝입니다.
+--   2026-11-27 고침: 부름 서버에 이미 있는 admin_find_user 와 겹치지 않게 함수 이름을 모두 weave_ 로 바꿨습니다.
 --   표 3개를 새로 만들고, 기존 reports 표(부름 서버)에는 처리 칸만 더합니다.
 -- =====================================================================
 
@@ -68,7 +69,7 @@ revoke all on public.weave_mod_actions from anon, authenticated;
 
 -- 계정 정지: 로그인 · 토큰 갱신이 막히고(auth.users.banned_until), 열려 있던 세션도 끊습니다.
 --   이미 받은 출입증은 길어야 1시간 안에 끝납니다.
-create or replace function public.admin_suspend_user(p_user uuid, p_reason text, p_days int default null,
+create or replace function public.weave_suspend_user(p_user uuid, p_reason text, p_days int default null,
                                                      p_report text default null, p_app text default null)
 returns jsonb language plpgsql security definer set search_path = public, auth as $$
 declare v_until timestamptz := case when p_days is null or p_days <= 0 then null else now() + make_interval(days => p_days) end;
@@ -84,7 +85,7 @@ begin
   return jsonb_build_object('ok', true, 'until', v_until);
 end $$;
 
-create or replace function public.admin_unsuspend_user(p_user uuid, p_reason text)
+create or replace function public.weave_unsuspend_user(p_user uuid, p_reason text)
 returns jsonb language plpgsql security definer set search_path = public, auth as $$
 begin
   if not weave_is_admin() then raise exception 'not_admin'; end if;
@@ -94,7 +95,7 @@ begin
 end $$;
 
 -- 처리 메모만 남기기 (경고 · 문제없음 · 수사기관 요청 접수 등)
-create or replace function public.admin_mod_note(p_user uuid, p_action text, p_reason text, p_report text default null, p_app text default null)
+create or replace function public.weave_mod_note(p_user uuid, p_action text, p_reason text, p_report text default null, p_app text default null)
 returns jsonb language plpgsql security definer set search_path = public as $$
 begin
   if not weave_is_admin() then raise exception 'not_admin'; end if;
@@ -104,7 +105,7 @@ begin
 end $$;
 
 -- 계정 찾기: 아이디(이메일 · 닉네임) 일부, 또는 계정 번호(uuid)
-create or replace function public.admin_find_user(p_q text)
+create or replace function public.weave_find_user(p_q text)
 returns jsonb language plpgsql stable security definer set search_path = public, auth as $$
 declare q text := trim(coalesce(p_q, '')); r jsonb;
 begin
@@ -121,7 +122,7 @@ begin
 end $$;
 
 -- 한 계정의 정지 · 처리 기록 + 최근 3개월 접속 기록 (신고 확인 · 수사기관 요청 대응용)
-create or replace function public.admin_user_record(p_user uuid)
+create or replace function public.weave_user_record(p_user uuid)
 returns jsonb language plpgsql stable security definer set search_path = public, auth as $$
 begin
   if not weave_is_admin() then raise exception 'not_admin'; end if;
@@ -134,7 +135,7 @@ begin
 end $$;
 
 -- 최근 처리 기록 (관리 화면 목록)
-create or replace function public.admin_mod_recent(p_limit int default 100)
+create or replace function public.weave_mod_recent(p_limit int default 100)
 returns jsonb language plpgsql stable security definer set search_path = public, auth as $$
 begin
   if not weave_is_admin() then raise exception 'not_admin'; end if;
@@ -157,7 +158,7 @@ begin
   end if;
 end $$;
 
-create or replace function public.admin_alias_reports(p_status text default 'open')
+create or replace function public.weave_alias_reports(p_status text default 'open')
 returns jsonb language plpgsql stable security definer set search_path = public, auth as $$
 declare r jsonb;
 begin
@@ -183,7 +184,7 @@ exception when undefined_column or undefined_table then
   return jsonb_build_object('error', 'schema', 'msg', sqlerrm);
 end $$;
 
-create or replace function public.admin_alias_report_close(p_id text, p_status text, p_note text default null)
+create or replace function public.weave_alias_report_close(p_id text, p_status text, p_note text default null)
 returns jsonb language plpgsql security definer set search_path = public as $$
 begin
   if not weave_is_admin() then raise exception 'not_admin'; end if;
@@ -227,7 +228,7 @@ begin
 end $$;
 
 -- 수사기관 요청 대응: 한 계정이 들어 있는 보관 통화 기록 (관리자만)
-create or replace function public.admin_call_archive(p_user uuid)
+create or replace function public.weave_call_archive_of(p_user uuid)
 returns jsonb language plpgsql stable security definer set search_path = public as $$
 begin
   if not weave_is_admin() then raise exception 'not_admin'; end if;
@@ -256,9 +257,9 @@ end $$;
 do $$
 declare f text;
 begin
-  foreach f in array array['admin_suspend_user(uuid,text,integer,text,text)', 'admin_unsuspend_user(uuid,text)', 'admin_mod_note(uuid,text,text,text,text)',
-                           'admin_find_user(text)', 'admin_user_record(uuid)', 'admin_mod_recent(integer)', 'admin_alias_reports(text)',
-                           'admin_alias_report_close(text,text,text)', 'admin_call_archive(uuid)'] loop
+  foreach f in array array['weave_suspend_user(uuid,text,integer,text,text)', 'weave_unsuspend_user(uuid,text)', 'weave_mod_note(uuid,text,text,text,text)',
+                           'weave_find_user(text)', 'weave_user_record(uuid)', 'weave_mod_recent(integer)', 'weave_alias_reports(text)',
+                           'weave_alias_report_close(text,text,text)', 'weave_call_archive_of(uuid)'] loop
     execute format('revoke all on function public.%s from public, anon', f);
     execute format('grant execute on function public.%s to authenticated', f);
   end loop;
