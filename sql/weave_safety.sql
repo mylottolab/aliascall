@@ -156,6 +156,18 @@ begin
                           from (select * from weave_access_log where user_id = p_user order by at desc limit 500) l), '[]'::jsonb));
 end $$;
 
+-- 기간을 정해 한 계정의 접속 기록 보기 (한국 날짜, 시작일 · 끝일 포함, 최대 10,000건)
+create or replace function public.weave_access_between(p_user uuid, p_from date, p_to date)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare f timestamptz := (coalesce(p_from, (now() at time zone 'Asia/Seoul')::date - 29))::timestamp at time zone 'Asia/Seoul';
+        t timestamptz := (coalesce(p_to, (now() at time zone 'Asia/Seoul')::date) + 1)::timestamp at time zone 'Asia/Seoul';
+begin
+  if not weave_is_admin() then raise exception 'not_admin'; end if;
+  return jsonb_build_object('total', (select count(*) from weave_access_log where user_id = p_user and at >= f and at < t),
+    'rows', coalesce((select jsonb_agg(jsonb_build_object('at', l.at, 'app', l.app, 'event', l.event, 'ip', l.ip, 'ua', l.ua, 'dev', l.dev) order by l.at)
+                        from (select * from weave_access_log where user_id = p_user and at >= f and at < t order by at limit 10000) l), '[]'::jsonb));
+end $$;
+
 -- 최근 처리 기록 (관리 화면 목록)
 create or replace function public.weave_mod_recent(p_limit int default 100)
 returns jsonb language plpgsql stable security definer set search_path = public, auth as $$
@@ -349,7 +361,7 @@ declare f text;
 begin
   foreach f in array array['weave_suspend_user(uuid,text,integer,text,text)', 'weave_unsuspend_user(uuid,text)', 'weave_mod_note(uuid,text,text,text,text)',
                            'weave_find_user(text)', 'weave_user_record(uuid)', 'weave_mod_recent(integer)', 'weave_alias_reports(text)',
-                           'weave_alias_report_close(text,text,text)', 'weave_call_archive_of(uuid)'] loop
+                           'weave_alias_report_close(text,text,text)', 'weave_call_archive_of(uuid)', 'weave_access_between(uuid,date,date)'] loop
     execute format('revoke all on function public.%s from public, anon', f);
     execute format('grant execute on function public.%s to authenticated', f);
   end loop;
