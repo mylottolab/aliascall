@@ -4,6 +4,7 @@
 --     ① 부름 서버   (azredlrnvsssfjytaotb) — 와파 · 부름 · 누름 · 바로너
 --     ② 가림콜 서버 (qmwaraittiurkynszjts) — 가림콜 · 바로카 · 단톡방 · 단골창구
 --   다시 돌려도 안전합니다. 맨 아래 'weave safety ok' 가 나오면 끝입니다.
+--   2026-11-27 더함: 하루 만들기 제한(누름 · 바로너 라인, 단톡방 방) · 정지된 계정과 같은 기기 막기.
 --   2026-11-27 고침: 부름 서버에 이미 있는 admin_find_user 와 겹치지 않게 함수 이름을 모두 weave_ 로 바꿨습니다.
 --   표 3개를 새로 만들고, 기존 reports 표(부름 서버)에는 처리 칸만 더합니다.
 -- =====================================================================
@@ -36,20 +37,39 @@ create index if not exists weave_access_log_at on public.weave_access_log(at);
 alter table public.weave_access_log enable row level security;   -- 정책 없음 = 앱에서 직접 읽기 · 쓰기 불가
 revoke all on public.weave_access_log from anon, authenticated;
 
-create or replace function public.weave_log_access(p_app text, p_event text default 'open')
+-- 기기 표시: 앱이 기기마다 만든 무작위 값(실제 기기 번호 아님). 정지된 계정이 같은 기기로 돌아오는지 보는 데만 씁니다. 1년 보관.
+alter table public.weave_access_log add column if not exists dev text;
+create table if not exists public.weave_devices (
+  user_id  uuid not null,
+  dev      text not null,
+  first_at timestamptz not null default now(),
+  last_at  timestamptz not null default now(),
+  primary key (user_id, dev)
+);
+create index if not exists weave_devices_dev on public.weave_devices(dev);
+alter table public.weave_devices enable row level security;
+revoke all on public.weave_devices from anon, authenticated;
+
+drop function if exists public.weave_log_access(text, text);
+create or replace function public.weave_log_access(p_app text, p_event text default 'open', p_dev text default null)
 returns void language plpgsql security definer set search_path = public as $$
 declare h json; v_ip text; v_ua text; v_uid uuid := auth.uid(); v_app text := left(coalesce(p_app, '?'), 30);
+        v_dev text := case when p_dev ~ '^[A-Za-z0-9_-]{8,64}$' then p_dev end;
 begin
   begin h := coalesce(nullif(current_setting('request.headers', true), ''), '{}')::json; exception when others then h := '{}'::json; end;
   v_ip := coalesce(nullif(h ->> 'cf-connecting-ip', ''), nullif(trim(split_part(coalesce(h ->> 'x-forwarded-for', ''), ',', 1)), ''), h ->> 'x-real-ip');
   v_ua := left(h ->> 'user-agent', 300);
+  if v_uid is not null and v_dev is not null then
+    insert into weave_devices(user_id, dev) values (v_uid, v_dev)
+      on conflict (user_id, dev) do update set last_at = now();
+  end if;
   -- 같은 사람 · 같은 앱 · 같은 IP 는 10분에 한 번만
   if exists (select 1 from weave_access_log l where l.app = v_app and l.ip is not distinct from v_ip
                and l.user_id is not distinct from v_uid and l.at > now() - interval '10 minutes') then return; end if;
-  insert into weave_access_log(user_id, app, event, ip, ua) values (v_uid, v_app, left(coalesce(p_event, 'open'), 30), v_ip, v_ua);
+  insert into weave_access_log(user_id, app, event, ip, ua, dev) values (v_uid, v_app, left(coalesce(p_event, 'open'), 30), v_ip, v_ua, v_dev);
 end $$;
-revoke all on function public.weave_log_access(text, text) from public;
-grant execute on function public.weave_log_access(text, text) to anon, authenticated;
+revoke all on function public.weave_log_access(text, text, text) from public;
+grant execute on function public.weave_log_access(text, text, text) to anon, authenticated;
 
 -- ── 2. 정지 · 처리 기록 (1년 보관) ────────────────────────────────────
 create table if not exists public.weave_mod_actions (
@@ -129,6 +149,8 @@ begin
   return jsonb_build_object(
     'user', (select jsonb_build_object('id', u.id, 'login', replace(coalesce(u.email, ''), '@u.alias.internal', ''), 'created_at', u.created_at,
                     'last_sign_in_at', u.last_sign_in_at, 'banned_until', u.banned_until) from auth.users u where u.id = p_user),
+    'banned_device', weave_banned_device(p_user),
+    'devices', (select count(*) from weave_devices where user_id = p_user),
     'actions', coalesce((select jsonb_agg(to_jsonb(a) order by a.at desc) from weave_mod_actions a where a.target_user = p_user), '[]'::jsonb),
     'access', coalesce((select jsonb_agg(jsonb_build_object('at', l.at, 'app', l.app, 'event', l.event, 'ip', l.ip, 'ua', l.ua) order by l.at desc)
                           from (select * from weave_access_log where user_id = p_user order by at desc limit 500) l), '[]'::jsonb));
@@ -236,12 +258,80 @@ begin
                      from (select * from weave_call_archive where row_data::text like '%' || p_user::text || '%' order by archived_at desc limit 500) a), '[]'::jsonb);
 end $$;
 
--- ── 5. 기간 지난 기록 지우기 (매일 새벽) ─────────────────────────────────
+-- ── 5. 하루 만들기 제한 · 정지된 기기 (2026-11-27) ─────────────────────────
+--   누름 · 바로너 새 라인: 가입 없이 시작 하루 3개 · 가입 계정 하루 10개 (지금의 '대기 5개' 제한은 그대로)
+--   단톡방 새 방: 가입 없이 시작 하루 2개 · 가입 계정 하루 5개 (지금의 '열린 방 5개' 제한은 그대로)
+--   결제한 적이 있는 분 · 관리자는 하루 제한에서 뺍니다. 정지된 계정과 같은 기기면 누구든 새로 만들 수 없습니다.
+create or replace function public.weave_is_paid(p_uid uuid) returns boolean
+language plpgsql stable security definer set search_path = public as $$
+declare v boolean := false;
+begin
+  if p_uid is null then return false; end if;
+  if to_regclass('public.nureum_purchases') is not null then
+    begin execute 'select exists(select 1 from nureum_purchases where buyer_id = $1 and status = ''completed'' and amount > 0)' into v using p_uid;
+    exception when others then v := false; end;
+    if v then return true; end if;
+  end if;
+  if to_regclass('public.wafa_subs') is not null then
+    begin execute 'select exists(select 1 from wafa_subs where user_id = $1)' into v using p_uid; exception when others then v := false; end;
+    if v then return true; end if;
+  end if;
+  if to_regclass('public.dt_pay_log') is not null then
+    begin execute 'select exists(select 1 from dt_pay_log where user_id = $1)' into v using p_uid; exception when others then v := false; end;
+    if v then return true; end if;
+  end if;
+  return false;
+end $$;
+
+create or replace function public.weave_banned_device(p_uid uuid) returns boolean
+language sql stable security definer set search_path = public, auth as $$
+  select exists (select 1 from weave_devices d join weave_devices o on o.dev = d.dev and o.user_id <> d.user_id
+                   join auth.users u on u.id = o.user_id
+                  where d.user_id = p_uid and u.banned_until > now());
+$$;
+revoke all on function public.weave_is_paid(uuid), public.weave_banned_device(uuid) from public, anon, authenticated;
+
+-- 트리거 인자: 앱 이름, 가입 없이 시작한 계정의 하루 개수, 가입 계정의 하루 개수, 만든 사람 칸 이름
+create or replace function public.weave_create_guard() returns trigger
+language plpgsql security definer set search_path = public, auth as $$
+declare v_uid uuid := (to_jsonb(NEW) ->> TG_ARGV[3])::uuid;
+        v_anon boolean; v_lim int; v_cnt int;
+        v_day timestamptz := ((now() at time zone 'Asia/Seoul')::date)::timestamp at time zone 'Asia/Seoul';
+        HELP constant text := ' 더 필요하시면 고객센터(weapps.kr@gmail.com)로 알려 주세요.';
+begin
+  if v_uid is null or weave_is_admin() then return NEW; end if;
+  if weave_banned_device(v_uid) then
+    raise exception '이 기기에서는 지금 새로 만들 수 없어요. 고객센터(weapps.kr@gmail.com)로 문의해 주세요.' using hint = 'weave_limit';
+  end if;
+  if weave_is_paid(v_uid) then return NEW; end if;
+  select coalesce((to_jsonb(u) ->> 'is_anonymous')::boolean, false) into v_anon from auth.users u where u.id = v_uid;
+  v_lim := case when coalesce(v_anon, true) then TG_ARGV[1]::int else TG_ARGV[2]::int end;
+  execute format('select count(*) from %I.%I where %I = $1 and created_at >= $2', TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV[3]) into v_cnt using v_uid, v_day;
+  if v_cnt >= v_lim then
+    raise exception '오늘은 더 만들 수 없어요(하루 %개까지). 내일 다시 해 주세요.%', v_lim, HELP using hint = 'weave_limit';
+  end if;
+  return NEW;
+end $$;
+
+do $$
+begin
+  if to_regclass('public.nureum_lines') is not null then
+    drop trigger if exists weave_create_guard on public.nureum_lines;
+    create trigger weave_create_guard before insert on public.nureum_lines for each row execute function public.weave_create_guard('nureum', '3', '10', 'owner_id');
+  end if;
+  if to_regclass('public.dt_rooms') is not null then
+    drop trigger if exists weave_create_guard on public.dt_rooms;
+    create trigger weave_create_guard before insert on public.dt_rooms for each row execute function public.weave_create_guard('dantok', '2', '5', 'owner_id');
+  end if;
+end $$;
+
+-- ── 6. 기간 지난 기록 지우기 (매일 새벽) ─────────────────────────────────
 create or replace function public.weave_purge_logs() returns void
 language sql security definer set search_path = public as $$
   delete from weave_access_log where at < now() - interval '3 months';
   delete from weave_mod_actions where at < now() - interval '1 year' and action <> 'request';
   delete from weave_call_archive where archived_at < now() - interval '12 months';
+  delete from weave_devices where last_at < now() - interval '1 year';
 $$;
 revoke all on function public.weave_purge_logs() from public, anon, authenticated;
 
@@ -268,4 +358,5 @@ end $$;
 select 'weave safety ok' as result,
        (select count(*) from pg_extension where extname = 'pg_cron') as cron_ready,
        (to_regclass('public.reports') is not null) as has_reports,
-       (select string_agg(event_object_table, ', ') from information_schema.triggers where trigger_name = 'weave_call_keep') as call_archive_on;
+       (select string_agg(event_object_table, ', ') from information_schema.triggers where trigger_name = 'weave_call_keep') as call_archive_on,
+       (select string_agg(distinct event_object_table, ', ') from information_schema.triggers where trigger_name = 'weave_create_guard') as daily_limit_on;

@@ -159,6 +159,7 @@ let REC = null;
 async function record(uid){
   let r; try { r = await rpc('weave_user_record', { p_user: uid }); } catch (e) { return; } REC = r; const u = r.user || {};
   $('rec').innerHTML = '<div class="box"><b>' + esc(idOf(u.login) || uid) + '</b> <span class="small">' + esc(uid) + '</span> ' + (banned(u.banned_until) ? '<span class="tag t-ban">정지 중' + (String(u.banned_until).startsWith('infinity') ? '' : ' ~ ' + kst(u.banned_until, 10)) + '</span>' : '<span class="tag t-ok">정상</span>') +
+    (r.banned_device ? ' <span class="tag t-ban">정지된 계정과 같은 기기</span>' : '') + ' <span class="small">기기 ' + (r.devices || 0) + '대</span>' +
     '<div class="bar" style="margin-top:10px">' + (banned(u.banned_until) ? '<button class="b b-ok" data-unban="' + esc(uid) + '">정지 풀기</button>' : '<button class="b b-bad" data-ban="' + esc(uid) + '" data-login="' + esc(idOf(u.login)) + '">정지하기</button>') +
     '<button class="b b-soft" data-req="' + esc(uid) + '">수사기관 요청 기록</button><button class="b b-soft" data-csv="1">접속 기록 내려받기 (CSV)</button><button class="b b-soft" data-calls="' + esc(uid) + '">보관 통화 기록 내려받기 (CSV)</button></div>' +
     '<h2>처리 기록</h2>' + ((r.actions || []).length ? '<div class="tbl" style="max-height:220px"><table><tbody>' + r.actions.map((a) => '<tr><td>' + kst(a.at) + '</td><td>' + esc(ACT[a.action] || a.action) + '</td><td class="w">' + esc(a.reason) + '</td><td>' + esc(a.report_ref || '') + '</td></tr>').join('') + '</tbody></table></div>' : '<div class="small">없음</div>') +
