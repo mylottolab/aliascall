@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>차량 간편 등록 · 1개월 무료 — 가림콜 · 바로카</title>
-<meta name="description" content="차번호만 넣으면 끝. 전화번호 없이 주차 연락을 받는 QR 스티커 — 1개월 무료.">
+<title>차량 간편 등록 · 7일 무료 — 가림콜 · 바로카</title>
+<meta name="description" content="차번호만 넣으면 끝. 전화번호 없이 주차 연락을 받는 QR 스티커 — 7일 무료.">
 <link rel="icon" href="/aliascall_icon_192.png">
-<!-- 🔴 2026-11-12 차량 간편 등록 (garimcall.com/car) — 앱과 따로, 30초 등록 + 1개월 무료 쿠폰 자동
-     · 처음 1개월 전화 + 문자 → 다음 1개월 문자만 → 그 뒤 연결 끊김(이용권으로 다시 열림)
+<!-- 🔴 2026-11-12 차량 간편 등록 (garimcall.com/car) — 앱과 따로, 30초 등록 + 7일 무료 쿠폰 자동
+     · 처음 7일 전화 + 문자 → 다음 7일 문자만 → 그 뒤 연결 끊김(이용권으로 다시 열림)
      · 계정은 닉네임 + 비밀번호(전화번호 없음). 같은 계정으로 가림콜 · 바로카 앱에 그대로 로그인
      · 서버: car_coupon_check · car_coupon_claim (baroka/sql/4_car_coupon.sql) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -64,7 +64,7 @@ input:focus{ border-color:var(--teal); }
 </head>
 <body>
 <div class="hero">
-  <span class="badge">🎁 지금 등록하면 1개월 무료</span>
+  <span class="badge">🎁 지금 등록하면 7일 무료</span>
   <h1>차번호만 넣으면 끝<br>전화번호 없이 주차 연락 받기</h1>
   <p>QR 스티커를 앞유리에 붙이면, 찍은 사람이<br>내 번호를 모른 채 바로 연락합니다.</p>
 </div>
@@ -114,10 +114,10 @@ input:focus{ border-color:var(--teal); }
       </div>
       <div class="err" id="acctErr"></div>
       <label class="agree"><input type="checkbox" id="agree">
-        <span>차번호 · 차 사진을 연락 서비스(위브앱솔루션)를 위해 보관하는 데 동의합니다. 무료는 <b>1개월 전화 + 문자, 그다음 1개월 문자만</b>이며, 그 뒤에는 이용권을 사기 전까지 연결이 멈춥니다. 자동 결제는 없습니다. <a href="aliascall_privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></span></label>
+        <span>차번호 · 차 사진을 연락 서비스(위브앱솔루션)를 위해 보관하는 데 동의합니다. 무료는 <b>7일 전화 + 문자, 그다음 7일 문자만</b>이며, 그 뒤에는 이용권을 사기 전까지 연결이 멈춥니다. 자동 결제는 없습니다. <a href="aliascall_privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></span></label>
     </div>
 
-    <button type="button" class="btn main" id="go">🎁 1개월 무료로 등록하기</button>
+    <button type="button" class="btn main" id="go">🎁 7일 무료로 등록하기</button>
     <div class="err" id="goErr" style="text-align:center"></div>
   </div>
 
@@ -255,7 +255,7 @@ $('go').addEventListener('click', async () => {
     showDone(reg, cp.data, plate);
   } catch (e) {
     console.error(e); $('goErr').textContent = '등록하지 못했어요. ' + (e.message || e);
-  } finally { btn.disabled = false; btn.textContent = '🎁 1개월 무료로 등록하기'; }
+  } finally { btn.disabled = false; btn.textContent = '🎁 7일 무료로 등록하기'; }
 });
 
 function showDone(reg, cp, plate){

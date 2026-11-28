@@ -1330,7 +1330,7 @@ async function signUpOrLoginGuestAccount(){
       is_guest: true,
     });
     if (profileError) console.error('[signup] profiles insert 오류', profileError);
-    /* 🔴 2026-10-18 — 여기서 가입한 분도 30일 무료 체험이 저절로 시작됩니다(마이페이지 환영 화면과 같은 규칙) */
+    /* 🔴 2026-10-18 — 여기서 가입한 분도 7일 무료 체험이 저절로 시작됩니다(마이페이지 환영 화면과 같은 규칙) */
     try {
       let dev = localStorage.getItem('aliascall_device_id');
       if (!dev || dev.length < 16) {
