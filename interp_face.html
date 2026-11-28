@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0E1726">
+<title>마주 보고 통역 · Face-to-face interpreter</title>
+<!-- 🌐 2026-11-29 마주 보고 통역 (가림콜)
+     휴대폰 하나를 가운데 두고 두 사람이 번갈아 말합니다. 위쪽 절반은 맞은편 사람을 위해 거꾸로 보입니다.
+     단추를 한 번 누르면 말하기 시작, 한 번 더 누르면 끝. 통역 음성은 휴대폰 스피커로, 자막은 각자 쪽에.
+     통역 시간은 통화 통역과 같은 잔액에서, 연결돼 있는 동안만 줄어듭니다(30초 말이 없으면 저절로 끊김).
+     서버: interp-token(Edge Function) · interp_beat · interp_close (interp.sql)  /  공용: weave_interp.js -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="weave_interp.js?v=20261129b"></script>
+<style>
+:root{ --ink:#F3F6FB; --soft:#9FB0C8; --bg:#0E1726; --me:#2B6CF6; --you:#F2A33A; --line:rgba(255,255,255,.10); }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ height:100%; margin:0; }
+body{ background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;
+  display:flex; flex-direction:column; overflow:hidden; user-select:none; }
+.half{ flex:1; display:flex; flex-direction:column; padding:18px max(18px, env(safe-area-inset-left,0px)) 14px max(18px, env(safe-area-inset-right,0px)); min-height:0; position:relative; }
+.you{ transform:rotate(180deg); background:linear-gradient(180deg,#16213A 0%, #0E1726 100%); padding-bottom:calc(14px + env(safe-area-inset-top,0px)); }
+.me{ background:linear-gradient(0deg,#121D33 0%, #0E1726 100%); padding-bottom:calc(14px + env(safe-area-inset-bottom,0px)); }
+.lab{ font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--soft); font-weight:700; }
+.cap{ flex:1; display:flex; flex-direction:column; justify-content:center; gap:8px; min-height:0; overflow:hidden; }
+.cap .big{ font-size:clamp(20px,5.6vw,30px); line-height:1.35; font-weight:700; word-break:keep-all; overflow-wrap:anywhere; }
+.cap .small{ font-size:14px; line-height:1.5; color:var(--soft); }
+.cap .hint{ font-size:16px; color:var(--soft); line-height:1.55; }
+.talk{ border:0; border-radius:999px; padding:18px 20px; font-size:19px; font-weight:800; color:#fff; width:100%; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:10px; transition:transform .12s, box-shadow .2s, opacity .2s; }
+.me .talk{ background:var(--me); } .you .talk{ background:var(--you); color:#1B1200; }
+.talk:active{ transform:scale(.98); }
+.talk[disabled]{ opacity:.35; }
+.talk.live{ box-shadow:0 0 0 6px rgba(255,255,255,.12), 0 0 34px 6px rgba(255,255,255,.18); animation:pulse 1.3s infinite; }
+@keyframes pulse{ 50%{ box-shadow:0 0 0 10px rgba(255,255,255,.06), 0 0 44px 10px rgba(255,255,255,.12); } }
+.dot{ width:10px; height:10px; border-radius:50%; background:currentColor; opacity:.9; }
+.mid{ display:flex; align-items:center; gap:8px; padding:8px max(12px, env(safe-area-inset-left,0px)); background:#0A111D; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.mid select{ flex:1; min-width:0; background:#16213A; color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:9px 8px; font-size:14px; }
+.mid .sw{ color:var(--soft); font-size:18px; }
+.mid .bal{ font-size:12px; color:var(--soft); white-space:nowrap; }
+.mid button{ background:#16213A; color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:9px 11px; font-size:14px; }
+.state{ position:absolute; right:18px; top:16px; font-size:12px; color:var(--soft); }
+.note{ position:fixed; inset:0; background:rgba(5,9,16,.86); display:none; align-items:center; justify-content:center; padding:24px; z-index:20; }
+.note .in{ background:#16213A; border-radius:18px; padding:22px 20px; max-width:420px; width:100%; line-height:1.6; font-size:14.5px; }
+.note h2{ margin:0 0 8px; font-size:19px; } .note p{ margin:8px 0; color:#C9D4E5; }
+.note .row{ display:flex; gap:8px; margin-top:14px; } .note button{ flex:1; border:0; border-radius:12px; padding:13px; font-size:15px; font-weight:800; }
+.note .go{ background:var(--me); color:#fff; } .note .no{ background:#24324F; color:var(--ink); }
+.note .strong{ color:#fff; font-weight:700; }
+</style>
+</head>
+<body>
+<section class="half you" id="you">
+  <div class="lab" id="youLab">English</div>
+  <div class="state" id="youState"></div>
+  <div class="cap" id="youCap"><div class="hint" id="youHint"></div></div>
+  <button class="talk" id="youBtn" type="button"><span class="dot"></span><span id="youBtnT">Tap to speak</span></button>
+</section>
+<div class="mid">
+  <button type="button" id="back" aria-label="닫기">✕</button>
+  <select id="myLang" aria-label="내 언어"></select><span class="sw">⇄</span><select id="youLang" aria-label="상대 언어"></select>
+  <span class="bal" id="bal"></span>
+</div>
+<section class="half me" id="me">
+  <div class="lab" id="meLab">한국어</div>
+  <div class="state" id="meState"></div>
+  <div class="cap" id="meCap"><div class="hint" id="meHint"></div></div>
+  <button class="talk" id="meBtn" type="button"><span class="dot"></span><span id="meBtnT">눌러서 말하기</span></button>
+</section>
+
+<div class="note" id="note"><div class="in" id="noteIn"></div></div>
+
+<script>
+var SB = window.supabase.createClient('https://qmwaraittiurkynszjts.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtd2FyYWl0dGl1cmt5bnN6anRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODQ5OTUsImV4cCI6MjEwMjM2MDk5NX0.9Qr2vFzDCSKS54N6C5QN44BvCzIPTMQyVz7nX3GqT9Y');
+var APP = { app: 'aliascall', fnBase: 'https://qmwaraittiurkynszjts.supabase.co/functions/v1', home: 'index.html', login: 'index.html', buy: null, lang: null };
+/* ── 언어별 짧은 문구 (위쪽 = 상대 언어로 보임) ───────────────────────── */
+var TAP = { ko:'눌러서 말하기', en:'Tap to speak', ja:'タップして話す', zh:'点按说话', es:'Toca para hablar', pt:'Toque para falar', fr:'Touchez pour parler',
+  de:'Zum Sprechen tippen', it:'Tocca per parlare', ru:'Нажмите и говорите', hi:'बोलने के लिए टैप करें', id:'Ketuk untuk bicara', vi:'Chạm để nói' };
+var DONE = { ko:'다 말했어요', en:'Done', ja:'話し終わり', zh:'说完了', es:'Listo', pt:'Pronto', fr:'Terminé', de:'Fertig', it:'Fatto', ru:'Готово', hi:'हो गया', id:'Selesai', vi:'Xong' };
+var HINT = { ko:'버튼을 누르고 말한 뒤, 다 말하면 한 번 더 누르세요. 상대 언어로 통역해 들려 드립니다.',
+  en:'Tap the button and speak. Tap again when you finish — I’ll say it in the other person’s language.',
+  ja:'ボタンを押して話し、終わったらもう一度押してください。相手の言葉に通訳します。',
+  zh:'点按按钮说话，说完再点一下。我会翻译成对方的语言。',
+  es:'Toca el botón y habla. Vuelve a tocarlo al terminar; lo diré en el idioma de la otra persona.',
+  pt:'Toque no botão e fale. Toque de novo ao terminar — eu traduzo para o idioma da outra pessoa.',
+  fr:'Touchez le bouton et parlez. Touchez à nouveau quand vous avez fini : je traduis dans la langue de l’autre personne.',
+  de:'Tippen Sie auf die Taste und sprechen Sie. Tippen Sie erneut, wenn Sie fertig sind – ich übersetze in die Sprache Ihres Gegenübers.',
+  it:'Tocca il pulsante e parla. Toccalo di nuovo quando hai finito: lo dirò nella lingua dell’altra persona.',
+  ru:'Нажмите кнопку и говорите. Нажмите ещё раз, когда закончите — я переведу на язык собеседника.',
+  hi:'बटन दबाकर बोलें। बोल लेने पर फिर से दबाएँ — मैं दूसरे व्यक्ति की भाषा में बोलूँगा।',
+  id:'Ketuk tombol lalu bicara. Ketuk lagi setelah selesai — saya terjemahkan ke bahasa lawan bicara.',
+  vi:'Chạm nút rồi nói. Chạm lại khi nói xong — tôi sẽ dịch sang ngôn ngữ của người kia.' };
+var WAIT = { ko:'연결 중…', en:'Connecting…', ja:'接続中…', zh:'连接中…', es:'Conectando…', pt:'Conectando…', fr:'Connexion…', de:'Verbinde…', it:'Connessione…', ru:'Подключение…', hi:'जुड़ रहा है…', id:'Menghubungkan…', vi:'Đang kết nối…' };
+var LIST = { ko:'듣는 중', en:'Listening', ja:'聞いています', zh:'正在听', es:'Escuchando', pt:'Ouvindo', fr:'J’écoute', de:'Höre zu', it:'Ascolto', ru:'Слушаю', hi:'सुन रहा हूँ', id:'Mendengarkan', vi:'Đang nghe' };
+
+var $ = function(id){ return document.getElementById(id); };
+var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); };
+var EN = (navigator.language || 'ko').slice(0, 2) !== 'ko' && APP.lang !== 'ko';
+var my = WI.lastMy(EN ? 'en' : 'ko'), you = WI.lastPeer();
+if (you === my) you = my === 'en' ? 'ko' : 'en';
+var S = null;          // 연결: { sess, out, in, micOut, micIn, beat, idle, players }
+var turn = null;       // 'me' | 'you' | null
+var mic = null, left = 0;
+var IDLE_MS = 30000;
+
+function langName(c){ var l = WI.LANGS.filter(function(x){ return x[0] === c; })[0]; return l ? l[1] : c; }
+function fillSel(sel, val){ sel.innerHTML = WI.LANGS.map(function(l){ var nm = EN ? (l[0] === 'en' ? 'English' : l[2] + ' · ' + l[1]) : (l[0] === 'ko' ? '한국어' : l[3] + ' · ' + l[1]); return '<option value="' + l[0] + '"' + (l[0] === val ? ' selected' : '') + '>' + nm + '</option>'; }).join(''); }
+function paint(){
+  $('meLab').textContent = langName(my); $('youLab').textContent = langName(you);
+  $('meBtnT').textContent = turn === 'me' ? DONE[my] : (S === 'wait' && turn === null ? WAIT[my] : TAP[my]);
+  $('youBtnT').textContent = turn === 'you' ? DONE[you] : TAP[you];
+  $('meBtn').classList.toggle('live', turn === 'me'); $('youBtn').classList.toggle('live', turn === 'you');
+  $('meBtn').disabled = turn === 'you'; $('youBtn').disabled = turn === 'me';
+  $('meState').textContent = turn === 'me' ? LIST[my] : ''; $('youState').textContent = turn === 'you' ? LIST[you] : '';
+  if (!$('meCap').dataset.has) $('meHint').textContent = HINT[my];
+  if (!$('youCap').dataset.has) $('youHint').textContent = HINT[you];
+  $('bal').textContent = (EN ? '' : '남은 ') + WI.fmt(left, EN);
+}
+function show(side, big, small){
+  var c = $(side + 'Cap'); c.dataset.has = '1';
+  c.innerHTML = '<div class="big">' + esc(big || '…') + '</div>' + (small ? '<div class="small">' + esc(small) + '</div>' : '');
+}
+function note(html, btns){
+  $('noteIn').innerHTML = html + '<div class="row">' + btns.map(function(b, i){ return '<button class="' + (b[2] || 'no') + '" data-i="' + i + '">' + b[0] + '</button>'; }).join('') + '</div>';
+  $('note').style.display = 'flex';
+  $('noteIn').querySelectorAll('button').forEach(function(x){ x.onclick = function(){ $('note').style.display = 'none'; var f = btns[+x.dataset.i][1]; f && f(); }; });
+}
+
+/* ── 연결 · 끊기 ─────────────────────────────────────────── */
+async function connectAll(){
+  if (S && S !== 'wait') return true;
+  S = 'wait'; paint();
+  try {
+    if (!mic) mic = (await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } })).getAudioTracks()[0];
+    var sess = await SB.auth.getSession();
+    if (!sess.data.session) { S = null; paint(); needLogin(); return false; }
+    var tok = await (await fetch(APP.fnBase + '/interp-token', { method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sess.data.session.access_token },
+      body: JSON.stringify({ call_ref: 'face', my_lang: my, peer_lang: you, app: APP.app + '-face', dirs: 'both' }) })).json();
+    if (!tok || !tok.ok) { S = null; paint(); fail(tok && tok.error, tok && tok.seconds_left); return false; }
+    left = tok.seconds_left;
+    var st = { sess: tok.session_id, players: [] };
+    st.micOut = mic.clone(); st.micIn = mic.clone(); st.micOut.enabled = false; st.micIn.enabled = false;
+    var play = function(tr, ms){ var a = new Audio(); a.autoplay = true; a.playsInline = true; a.srcObject = ms || new MediaStream([tr]); a.play().catch(function(){}); st.players.push(a); };
+    /* out = 내 말 → 상대 언어 (위쪽 큰 글씨) · in = 상대 말 → 내 언어 (아래쪽 큰 글씨) */
+    var cOut = { o: '', t: '' }, cIn = { o: '', t: '' };
+    var onEv = function(c, side){ return function(ev){
+      var t = ev && ev.type || '', d = ev && (ev.delta || ev.text || ev.transcript) || '';
+      if (/input_transcript\.delta$/.test(t)) c.o += d; else if (/output_transcript\.delta$/.test(t)) c.t += d; else return;
+      /* 두 쪽 모두 큰 글씨는 그 사람의 언어로: 말한 사람은 자기 말을, 듣는 사람은 통역문을 */
+      if (side === 'me') { show('me', c.o, ''); show('you', c.t, ''); } else { show('you', c.o, ''); show('me', c.t, ''); }
+      bumpIdle();
+    }; };
+    st.out = await WI.connect(tok.out.secret, st.micOut, play, onEv(cOut, 'me'));
+    st.in = await WI.connect(tok.in.secret, st.micIn, play, onEv(cIn, 'you'));
+    st.cOut = cOut; st.cIn = cIn;
+    st.beat = setInterval(async function(){
+      var r = await SB.rpc('interp_beat', { p_session: st.sess }); var d = r.data || {};
+      if (typeof d.seconds_left === 'number') { left = d.seconds_left; paint(); }
+      if (d.ok === false) { await closeAll(true); fail('no_balance', 0); }
+    }, 20000);
+    S = st; bumpIdle(); paint(); return true;
+  } catch (e) {
+    console.warn('[face] 연결 실패', e); await closeAll(); fail(e && e.name === 'NotAllowedError' ? 'mic' : 'start_fail'); return false;
+  }
+}
+async function closeAll(serverClosed){
+  var st = S; S = null; turn = null; paint();
+  if (!st || st === 'wait') return;
+  clearInterval(st.beat); clearTimeout(st.idle);
+  [st.out, st.in].forEach(function(c){ try { c && c.pc.close(); } catch (e) {} });
+  [st.micOut, st.micIn].forEach(function(t){ try { t && t.stop(); } catch (e) {} });
+  st.players.forEach(function(a){ try { a.pause(); a.srcObject = null; } catch (e) {} });
+  if (!serverClosed) { try { var r = await SB.rpc('interp_close', { p_session: st.sess, p_reason: 'face' }); if (r.data) { left = r.data.seconds_left; paint(); } } catch (e) {} }
+}
+function bumpIdle(){
+  if (!S || S === 'wait') return;
+  clearTimeout(S.idle);
+  S.idle = setTimeout(function(){ if (turn === null) closeAll(); else bumpIdle(); }, IDLE_MS);
+}
+
+/* ── 말하기 차례 ─────────────────────────────────────────── */
+async function tap(side){
+  if (turn === side) { setTurn(null); return; }
+  if (turn) return;
+  if (!(await connectAll())) return;
+  setTurn(side);
+}
+function setTurn(side){
+  turn = side;
+  if (S && S !== 'wait') {
+    S.micOut.enabled = side === 'me'; S.micIn.enabled = side === 'you';
+    if (side === 'me') { S.cOut.o = ''; S.cOut.t = ''; show('me', '…', ''); }
+    if (side === 'you') { S.cIn.o = ''; S.cIn.t = ''; show('you', '…', ''); }
+  }
+  bumpIdle(); paint();
+}
+$('meBtn').onclick = function(){ tap('me'); };
+$('youBtn').onclick = function(){ tap('you'); };
+
+/* ── 언어 · 닫기 · 안내 ──────────────────────────────────── */
+fillSel($('myLang'), my); fillSel($('youLang'), you);
+$('myLang').onchange = $('youLang').onchange = async function(){
+  var a = $('myLang').value, b = $('youLang').value;
+  if (a === b) { WI.toast(EN ? 'Pick two different languages.' : '서로 다른 언어를 골라 주세요.'); fillSel($('myLang'), my); fillSel($('youLang'), you); return; }
+  my = a; you = b; try { localStorage.setItem('wi_my', my); localStorage.setItem('wi_peer', you); } catch (e) {}
+  await closeAll(); $('meCap').dataset.has = ''; $('youCap').dataset.has = ''; $('meCap').innerHTML = '<div class="hint" id="meHint"></div>'; $('youCap').innerHTML = '<div class="hint" id="youHint"></div>'; paint();
+};
+$('back').onclick = async function(){ await closeAll(); if (history.length > 1) history.back(); else location.href = APP.home; };
+window.addEventListener('pagehide', function(){ closeAll(); });
+document.addEventListener('visibilitychange', function(){ if (document.hidden) closeAll(); });
+
+function needLogin(){
+  note('<h2>🌐 ' + (EN ? 'Please sign in' : '로그인이 필요해요') + '</h2><p>' + (EN ? 'Interpreting uses your interpreting time, so please sign in first.' : '통역 시간을 쓰는 기능이라 먼저 로그인해 주세요.') + '</p>',
+       [[EN ? 'Close' : '닫기'], [EN ? 'Sign in' : '로그인', function(){ location.href = APP.login; }, 'go']]);
+}
+function fail(err, sec){
+  var en = EN;
+  if (err === 'no_balance') note('<h2>🌐 ' + WI.t('title', en) + '</h2><p class="strong">' + WI.t('noBal', en) + '</p><p>' + WI.t('howPay', en) + '</p>',
+       [[en ? 'Close' : '닫기']].concat(APP.buy ? [[WI.t('buy', en), function(){ location.href = APP.buy; }, 'go']] : []));
+  else if (err === 'mic') note('<h2>🎙 ' + (en ? 'Microphone needed' : '마이크가 필요해요') + '</h2><p>' + (en ? 'Allow the microphone for this app in your phone settings, then try again.' : '휴대폰 설정에서 이 앱의 마이크를 허용한 뒤 다시 눌러 주세요.') + '</p>', [[en ? 'OK' : '확인']]);
+  else if (err === 'not_ready') WI.toast(WI.t('notReady', en));
+  else if (err === 'not_logged_in') needLogin();
+  else WI.toast(WI.t('fail', en));
+}
+
+(async function(){
+  paint();
+  try { var b = await WI.balance(SB); left = b.seconds_left || 0; paint(); } catch (e) {}
+  var seen = false; try { seen = localStorage.getItem('wi_face_seen') === '1'; } catch (e) {}
+  if (!seen) note('<h2>🌐 ' + (EN ? 'Face-to-face interpreter' : '마주 보고 통역') + '</h2>' +
+    '<p>' + (EN ? 'Put the phone between you. The top half faces the other person. Take turns: tap, speak, tap again.' : '휴대폰을 두 사람 사이에 두세요. 위쪽 절반은 맞은편 분을 위한 화면입니다. 번갈아 가며 누르고 말한 뒤 한 번 더 누르면 됩니다.') + '</p>' +
+    '<p class="strong">' + WI.t('howPay', EN) + '</p>' +
+    '<p>' + WI.t('privacy', EN).replace(EN ? 'The other person is told interpreting is on.' : '상대에게도 통역 중임이 표시됩니다.', '') + '</p><p>' + WI.t('accuracy', EN) + '</p>' +
+    '<p>' + (EN ? 'Interpreting time is used only while connected; it disconnects by itself after 30 seconds of silence.' : '통역 시간은 연결돼 있는 동안만 쓰이고, 30초 동안 말이 없으면 저절로 끊깁니다.') + '</p>',
+    [[EN ? 'Start' : '시작하기', function(){ try { localStorage.setItem('wi_face_seen', '1'); } catch (e) {} }, 'go']]);
+})();
+</script>
+</body>
+</html>
