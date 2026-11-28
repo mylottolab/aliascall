@@ -172,6 +172,8 @@
            'Turn it on and both sides are interpreted: your words go out in their language, theirs come to you in yours.'],
     howPay: ['본 서비스는 이용권 한도를 갖고 있는 통화자 둘 중 한쪽만 사용 버튼을 누르면 됩니다. 해당 이용료는 누른 쪽의 이용권에서 차감됩니다. 그 외 특별히 준비할 것은 없습니다.',
              'Only one of the two callers needs interpreting time: whoever taps the button. The time is deducted from that person’s balance. Nothing else needs to be prepared.'],
+    howPayFace: ['마주 보고 통역은 이 휴대폰으로 서비스를 이용하는 분(휴대폰 소지자)의 이용권에서만 차감됩니다. 마주한 상대방은 아무것도 준비하거나 내지 않아도 됩니다.',
+                 'Face-to-face interpreting is deducted only from the balance of the person using this phone. The other person doesn’t need to prepare or pay anything.'],
     peerLang: ['상대 언어', 'Their language'], myLang: ['내 언어', 'My language'],
     left: ['남은 통역 시간', 'Interpreting time left'], start: ['통역 시작', 'Start interpreting'], stop: ['통역 끄기', 'Stop interpreting'],
     buy: ['통역 시간 사기', 'Buy interpreting time'],

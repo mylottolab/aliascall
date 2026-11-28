@@ -11,7 +11,7 @@
      통역 시간은 통화 통역과 같은 잔액에서, 연결돼 있는 동안만 줄어듭니다(30초 말이 없으면 저절로 끊김).
      서버: interp-token(Edge Function) · interp_beat · interp_close (interp.sql)  /  공용: weave_interp.js -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="weave_interp.js?v=20261129b"></script>
+<script src="weave_interp.js?v=20261129c"></script>
 <style>
 :root{ --ink:#F3F6FB; --soft:#9FB0C8; --bg:#0E1726; --me:#2B6CF6; --you:#F2A33A; --line:rgba(255,255,255,.10); }
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -215,7 +215,7 @@ function needLogin(){
 }
 function fail(err, sec){
   var en = EN;
-  if (err === 'no_balance') note('<h2>🌐 ' + WI.t('title', en) + '</h2><p class="strong">' + WI.t('noBal', en) + '</p><p>' + WI.t('howPay', en) + '</p>',
+  if (err === 'no_balance') note('<h2>🌐 ' + WI.t('title', en) + '</h2><p class="strong">' + WI.t('noBal', en) + '</p><p>' + WI.t('howPayFace', en) + '</p>',
        [[en ? 'Close' : '닫기']].concat(APP.buy ? [[WI.t('buy', en), function(){ location.href = APP.buy; }, 'go']] : []));
   else if (err === 'mic') note('<h2>🎙 ' + (en ? 'Microphone needed' : '마이크가 필요해요') + '</h2><p>' + (en ? 'Allow the microphone for this app in your phone settings, then try again.' : '휴대폰 설정에서 이 앱의 마이크를 허용한 뒤 다시 눌러 주세요.') + '</p>', [[en ? 'OK' : '확인']]);
   else if (err === 'not_ready') WI.toast(WI.t('notReady', en));
@@ -229,7 +229,7 @@ function fail(err, sec){
   var seen = false; try { seen = localStorage.getItem('wi_face_seen') === '1'; } catch (e) {}
   if (!seen) note('<h2>🌐 ' + (EN ? 'Face-to-face interpreter' : '마주 보고 통역') + '</h2>' +
     '<p>' + (EN ? 'Put the phone between you. The top half faces the other person. Take turns: tap, speak, tap again.' : '휴대폰을 두 사람 사이에 두세요. 위쪽 절반은 맞은편 분을 위한 화면입니다. 번갈아 가며 누르고 말한 뒤 한 번 더 누르면 됩니다.') + '</p>' +
-    '<p class="strong">' + WI.t('howPay', EN) + '</p>' +
+    '<p class="strong">' + WI.t('howPayFace', EN) + '</p>' +
     '<p>' + WI.t('privacy', EN).replace(EN ? 'The other person is told interpreting is on.' : '상대에게도 통역 중임이 표시됩니다.', '') + '</p><p>' + WI.t('accuracy', EN) + '</p>' +
     '<p>' + (EN ? 'Interpreting time is used only while connected; it disconnects by itself after 30 seconds of silence.' : '통역 시간은 연결돼 있는 동안만 쓰이고, 30초 동안 말이 없으면 저절로 끊깁니다.') + '</p>',
     [[EN ? 'Start' : '시작하기', function(){ try { localStorage.setItem('wi_face_seen', '1'); } catch (e) {} }, 'go']]);
